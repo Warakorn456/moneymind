@@ -259,6 +259,33 @@
     .set-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:14px;max-width:580px}
     .set-title{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
 
+    /* ── Tax ── */
+    .tax-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start}
+    .tax-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px}
+    .tax-section-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:18px 0 10px;display:flex;align-items:center;gap:6px}
+    .tax-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+    .tax-row:last-child{border-bottom:none}
+    .tax-row label{font-size:13px;color:var(--muted);flex:1}
+    .tax-inp{width:110px;background:#1a1a2e;border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;color:#e2e8f0;font-family:'Sarabun',sans-serif;outline:none;text-align:right}
+    .tax-inp:focus{border-color:rgba(124,58,237,.6)}
+    .tax-result-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;position:sticky;top:16px}
+    .tax-res-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,.05)}
+    .tax-res-row:last-child{border-bottom:none}
+    .tax-res-row.total{font-size:15px;font-weight:700;padding-top:12px}
+    .tax-badge{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:12px;font-size:16px;font-weight:700;margin:12px 0;width:100%;box-sizing:border-box}
+    .bracket-wrap{margin:12px 0}
+    .bracket-item{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:12px}
+    .bracket-bar-bg{flex:1;height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+    .bracket-bar{height:6px;border-radius:3px;transition:width .3s}
+    .tax-hint{font-size:11px;color:var(--muted);margin-top:4px}
+    .tax-toggle{display:flex;align-items:center;gap:8px}
+    .tax-toggle input[type=checkbox]{width:16px;height:16px;accent-color:var(--primary)}
+    @media(max-width:700px){
+      .tax-grid{grid-template-columns:1fr}
+      .tax-result-panel{position:static}
+      .tax-inp{width:90px}
+    }
+
     /* ── Scrollbar ── */
     ::-webkit-scrollbar{width:5px;height:5px}
     ::-webkit-scrollbar-track{background:transparent}
@@ -439,6 +466,7 @@
     <div class="nav-item" onclick="nav('savings')"><i class="fas fa-piggy-bank"></i> เงินออม</div>
     <div class="nav-item" onclick="nav('debts')"><i class="fas fa-credit-card"></i> หนี้สิน</div>
     <div class="nav-item" onclick="nav('investments')"><i class="fas fa-chart-line"></i> พอร์ตลงทุน</div>
+    <div class="nav-item" onclick="nav('tax')"><i class="fas fa-file-invoice"></i> ภาษีเงินได้</div>
     <div style="margin-top:auto">
       <div class="nav-item" onclick="nav('settings')"><i class="fas fa-cog"></i> ตั้งค่า</div>
     </div>
@@ -621,6 +649,21 @@
         </table>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ════ TAX ════ -->
+  <div id="pg-tax" class="page">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <select id="tax-year" class="finput" style="width:110px" onchange="onTaxYearChange()"></select>
+      <button class="btn btn-ghost" onclick="autoFillTax()"><i class="fas fa-magic"></i> ดึงรายได้อัตโนมัติ</button>
+      <span id="tax-autofill-note" style="font-size:12px;color:var(--muted)"></span>
+    </div>
+    <div class="tax-grid">
+      <!-- Left: Inputs -->
+      <div id="tax-inputs"></div>
+      <!-- Right: Result -->
+      <div class="tax-result-panel" id="tax-result-panel"></div>
     </div>
   </div>
 
@@ -967,7 +1010,7 @@ const USERS_KEY = 'mm_users';   // [{username, salt, hash}] for non-owner
 const SESS_KEY  = 'mm_session'; // {username}
 
 let currentUser = null;
-let DB = { transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''} };
+let DB = { transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{} };
 
 function userDataKey(u){ return DATA_PRE + u; }
 function loadDB(){
@@ -1043,7 +1086,7 @@ async function tryLogin(){
     const hash=await pbkdf2Hash(pass,saltBytes);
     if(hash!==rec.hash){ errEl.textContent='รหัสผ่านไม่ถูกต้อง'; btn.disabled=false; btn.textContent='เข้าสู่ระบบ'; return; }
     currentUser=rec.username;
-    DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''} };
+    DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{} };
     loadDB();
     enterApp();
   }catch{
@@ -1074,7 +1117,7 @@ async function tryRegister(){
     users.push({username:user,salt,hash});
     saveUsers(users);
     currentUser=user;
-    DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''} };
+    DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{} };
     saveDB();
     enterApp();
   }catch{
@@ -1088,7 +1131,7 @@ function doLogout(){
   if(!confirm('ออกจากระบบ?')) return;
   localStorage.removeItem(SESS_KEY);
   currentUser=null;
-  DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''} };
+  DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{} };
   document.getElementById('app-root').style.display='none';
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('login-user').value='';
@@ -1121,7 +1164,7 @@ function checkLogin(){
       // verify data exists
       if(localStorage.getItem(userDataKey(u))||u===_ENC.user){
         currentUser=u;
-        DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''} };
+        DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{} };
         loadDB();
         document.getElementById('login-screen').style.display='none';
         document.getElementById('app-root').style.display='flex';
@@ -1228,7 +1271,7 @@ function getCat(id,type){ const l=type==='income'?INC_CATS:EXP_CATS; return l.fi
 // ══════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════
-const PAGE_TITLE = {dashboard:'แดชบอร์ด',transactions:'รายรับ-รายจ่าย',savings:'เงินออม',debts:'หนี้สิน',investments:'พอร์ตลงทุน',settings:'ตั้งค่า'};
+const PAGE_TITLE = {dashboard:'แดชบอร์ด',transactions:'รายรับ-รายจ่าย',savings:'เงินออม',debts:'หนี้สิน',investments:'พอร์ตลงทุน',tax:'ภาษีเงินได้',settings:'ตั้งค่า'};
 let curPage='dashboard', txFilter='all';
 
 function nav(page){
@@ -1251,6 +1294,7 @@ function renderPage(p){
   else if(p==='savings') renderSavings();
   else if(p==='debts') renderDebts();
   else if(p==='investments') renderInv();
+  else if(p==='tax') renderTax();
   else if(p==='settings') renderSettings();
 }
 
@@ -2465,6 +2509,299 @@ function startInvAutoRefresh(){
 function stopInvAutoRefresh(){
   if(_invRefreshTimer){clearInterval(_invRefreshTimer);_invRefreshTimer=null;}
   if(_invCountdownTimer){clearInterval(_invCountdownTimer);_invCountdownTimer=null;}
+}
+
+// ══════════════════════════════════════════
+//  TAX
+// ══════════════════════════════════════════
+const TAX_BRACKETS=[
+  {min:0,      max:150000,   rate:0,    label:'0–150,000'},
+  {min:150000, max:300000,   rate:0.05, label:'150,001–300,000'},
+  {min:300000, max:500000,   rate:0.10, label:'300,001–500,000'},
+  {min:500000, max:750000,   rate:0.15, label:'500,001–750,000'},
+  {min:750000, max:1000000,  rate:0.20, label:'750,001–1,000,000'},
+  {min:1000000,max:2000000,  rate:0.25, label:'1,000,001–2,000,000'},
+  {min:2000000,max:5000000,  rate:0.30, label:'2,000,001–5,000,000'},
+  {min:5000000,max:Infinity, rate:0.35, label:'5,000,001+'},
+];
+
+function calcTaxAmount(net){
+  let tax=0; const details=[];
+  for(const b of TAX_BRACKETS){
+    if(net<=b.min) break;
+    const taxable=Math.min(net,b.max)-b.min;
+    const t=Math.round(taxable*b.rate);
+    if(taxable>0) details.push({...b,taxable,tax:t});
+    tax+=t;
+  }
+  return {tax:Math.max(0,tax), details};
+}
+
+function getTaxDefaults(year){
+  return {year,salary:0,freelance:0,otherInc:0,withheld:0,
+    spouse:false,children:0,parents:0,disabled:0,
+    lifeIns:0,healthIns:0,annuityIns:0,parentHealthIns:0,sso:0,
+    pvd:0,ssf:0,rmf:0,thaiEsg:0,
+    homeLoan:0,donation:0};
+}
+
+function getTax(){
+  const year=new Date().getFullYear();
+  if(!DB.tax) DB.tax={};
+  if(!DB.tax.year) DB.tax=getTaxDefaults(year);
+  return DB.tax;
+}
+
+function autoFillTax(){
+  const t=getTax();
+  const y=parseInt(document.getElementById('tax-year')?.value||t.year);
+  const txs=(DB.transactions||[]).filter(tx=>new Date(tx.date).getFullYear()===y);
+  t.salary=Math.round(txs.filter(tx=>tx.type==='income'&&['salary','bonus'].includes(tx.category)).reduce((s,tx)=>s+tx.amount,0));
+  t.freelance=Math.round(txs.filter(tx=>tx.type==='income'&&['freelance','rental'].includes(tx.category)).reduce((s,tx)=>s+tx.amount,0));
+  t.otherInc=Math.round(txs.filter(tx=>tx.type==='income'&&['invest_return','other_inc'].includes(tx.category)).reduce((s,tx)=>s+tx.amount,0));
+  t.sso=Math.min(9000,Math.round(txs.filter(tx=>tx.category==='insurance'&&/ประกันสังคม|sso/i.test(tx.description||'')).reduce((s,tx)=>s+tx.amount,0)));
+  t.lifeIns=Math.min(100000,Math.round(txs.filter(tx=>tx.category==='insurance'&&/ชีวิต|life/i.test(tx.description||'')).reduce((s,tx)=>s+tx.amount,0)));
+  saveDB(); renderTax();
+  const note=`ดึงรายได้ปี ${y}: เงินเดือน ฿${t.salary.toLocaleString()} | อิสระ ฿${t.freelance.toLocaleString()} | อื่นๆ ฿${t.otherInc.toLocaleString()}`;
+  document.getElementById('tax-autofill-note').textContent=note;
+}
+
+function onTaxYearChange(){
+  const y=parseInt(document.getElementById('tax-year').value);
+  if(!DB.tax||DB.tax.year!==y){ DB.tax=getTaxDefaults(y); saveDB(); }
+  renderTax();
+}
+
+function taxInp(id,val,max,hint){
+  const capHint=max?` (max ฿${max.toLocaleString()})`:'' ;
+  return `<input class="tax-inp" type="number" min="0" max="${max||9999999}" step="100" value="${val}"
+    onchange="updateTax('${id}',this.value)" id="tinp-${id}">
+    ${hint||capHint?`<div class="tax-hint">${hint||'max ฿'+max.toLocaleString()}</div>`:''}`;
+}
+
+function updateTax(key,val){
+  const t=getTax();
+  if(key==='spouse'||key==='noSpouseIncome') t[key]=(val==='true'||val===true);
+  else t[key]=parseFloat(val)||0;
+  saveDB(); calcTaxLive();
+}
+
+function calcTaxLive(){
+  const t=getTax();
+  const totalInc=t.salary+t.freelance+t.otherInc;
+
+  // ค่าใช้จ่าย
+  const expSalary=Math.min(t.salary*0.5,100000);
+  const expFree=Math.min(t.freelance*0.5,100000);
+  const expOther=Math.min(t.otherInc*0.5,100000);
+  const totalExp=expSalary+expFree+expOther;
+
+  // ลดหย่อนส่วนตัวและครอบครัว
+  const dSelf=60000;
+  const dSpouse=t.spouse?60000:0;
+  const dChildren=(t.children||0)*30000;
+  const dParents=(t.parents||0)*30000;
+  const dDisabled=(t.disabled||0)*60000;
+
+  // ประกัน
+  const dLifeRaw=Math.min(t.lifeIns||0,100000);
+  const dHealthRaw=Math.min(t.healthIns||0,25000);
+  const dLifeHealth=Math.min(dLifeRaw+dHealthRaw,100000);
+  const dAnnuity=Math.min(t.annuityIns||0,200000);
+  const dParentHealth=Math.min(t.parentHealthIns||0,15000);
+  const dSSO=Math.min(t.sso||0,9000);
+
+  // การลงทุน
+  const dPvd=Math.min(t.pvd||0,totalInc*0.15,500000);
+  const dSsf=Math.min(t.ssf||0,totalInc*0.30,200000);
+  const dRmf=Math.min(t.rmf||0,totalInc*0.30,500000);
+  const dEsg=Math.min(t.thaiEsg||0,totalInc*0.30,300000);
+  // SSF+RMF+PVD รวมไม่เกิน 500,000
+  const invCombined=Math.min(dSsf+dRmf+dPvd,500000);
+
+  // อื่นๆ
+  const dHomeLoan=Math.min(t.homeLoan||0,100000);
+
+  const totalDeduct=dSelf+dSpouse+dChildren+dParents+dDisabled
+    +dLifeHealth+dAnnuity+dParentHealth+dSSO
+    +invCombined+dEsg+dHomeLoan;
+
+  const netBefore=Math.max(0,totalInc-totalExp-totalDeduct);
+  // บริจาค max 10% ของเงินได้หลังลดหย่อน (ก่อนบริจาค)
+  const dDonation=Math.min(t.donation||0,netBefore*0.10);
+  const netIncome=Math.max(0,netBefore-dDonation);
+
+  const {tax,details}=calcTaxAmount(netIncome);
+  const withheld=t.withheld||0;
+  const diff=tax-withheld;
+
+  // update result panel
+  const fmt=n=>'฿'+Math.round(n).toLocaleString('th-TH');
+  const p=document.getElementById('tax-result-panel');
+  if(!p) return;
+
+  const bracketMax=details.length?Math.max(...details.map(d=>d.tax),1):1;
+  const bracketHTML=details.map(b=>`
+    <div class="bracket-item">
+      <span style="width:130px;color:var(--muted)">${b.label}</span>
+      <div class="bracket-bar-bg">
+        <div class="bracket-bar" style="width:${(b.tax/bracketMax*100)}%;background:hsl(${250-b.rate*400},70%,60%)"></div>
+      </div>
+      <span style="width:70px;text-align:right;font-weight:600">${fmt(b.tax)}</span>
+      <span style="width:30px;text-align:right;color:var(--muted)">${(b.rate*100).toFixed(0)}%</span>
+    </div>`).join('')||`<div style="font-size:13px;color:var(--muted)">เงินได้สุทธิอยู่ในเกณฑ์ยกเว้นภาษี</div>`;
+
+  p.innerHTML=`
+    <div style="font-size:15px;font-weight:700;margin-bottom:14px">📊 ผลการคำนวณภาษี</div>
+    <div class="tax-res-row"><span>เงินได้รวม</span><span>${fmt(totalInc)}</span></div>
+    <div class="tax-res-row"><span>หัก ค่าใช้จ่าย</span><span style="color:var(--green)">−${fmt(totalExp)}</span></div>
+    <div class="tax-res-row"><span>หัก ค่าลดหย่อน</span><span style="color:var(--green)">−${fmt(totalDeduct+dDonation)}</span></div>
+    <div class="tax-res-row total"><span>เงินได้สุทธิ</span><span style="color:var(--cyan)">${fmt(netIncome)}</span></div>
+
+    <div style="font-size:13px;font-weight:600;margin:14px 0 8px">อัตราภาษีแต่ละขั้น</div>
+    <div class="bracket-wrap">${bracketHTML}</div>
+
+    <div class="tax-badge" style="background:${tax>0?'rgba(239,68,68,.15)':'rgba(16,185,129,.15)'};color:${tax>0?'#ef4444':'#10b981'}">
+      <i class="fas fa-${tax>0?'file-invoice-dollar':'check-circle'}"></i>
+      ภาษีที่ต้องชำระ: <strong>${fmt(tax)}</strong>
+    </div>
+    <div class="tax-res-row"><span>ภาษีถูกหัก ณ ที่จ่าย</span><span>${fmt(withheld)}</span></div>
+    <div class="tax-res-row total">
+      <span>${diff>0?'ต้องชำระเพิ่ม':'ได้รับคืน'}</span>
+      <span style="color:${diff>0?'#ef4444':'#10b981'};font-size:18px">${diff>0?'+':''}${fmt(diff)}</span>
+    </div>
+    ${diff>0?`<div style="font-size:12px;color:var(--muted);margin-top:8px">⚠️ ต้องยื่นแบบ ภ.ง.ด.90/91 ภายใน 31 มี.ค.</div>`:
+             diff<0?`<div style="font-size:12px;color:#10b981;margin-top:8px">✅ ได้รับคืนภาษี ${fmt(-diff)}</div>`:''}
+  `;
+}
+
+function renderTax(){
+  const t=getTax();
+  const curYear=new Date().getFullYear();
+
+  // year selector
+  const ySel=document.getElementById('tax-year');
+  if(ySel){
+    if(!ySel.options.length){
+      for(let y=curYear;y>=curYear-4;y--){
+        const o=document.createElement('option'); o.value=y; o.textContent=`ปี ${y} (${y+543})`; ySel.appendChild(o);
+      }
+    }
+    ySel.value=t.year||curYear;
+  }
+
+  const totalInc=(t.salary||0)+(t.freelance||0)+(t.otherInc||0);
+  const inp=document.getElementById('tax-inputs');
+  if(!inp) return;
+
+  inp.innerHTML=`
+  <!-- รายได้ -->
+  <div class="tax-card">
+    <div class="set-title"><i class="fas fa-coins" style="color:#10b981"></i> รายได้ปี ${t.year||curYear}</div>
+    <div class="tax-row">
+      <div><label>เงินเดือน/ค่าจ้าง (มาตรา 40(1))</label><div class="tax-hint">หัก 50% max ฿100,000</div></div>
+      <input class="tax-inp" type="number" min="0" step="1000" value="${t.salary||0}" onchange="updateTax('salary',this.value)">
+    </div>
+    <div class="tax-row">
+      <div><label>รายได้อิสระ/ค่าเช่า (มาตรา 40(2)(8))</label><div class="tax-hint">หัก 50% max ฿100,000</div></div>
+      <input class="tax-inp" type="number" min="0" step="1000" value="${t.freelance||0}" onchange="updateTax('freelance',this.value)">
+    </div>
+    <div class="tax-row">
+      <div><label>รายได้อื่นๆ</label><div class="tax-hint">ปันผล ดอกเบี้ย ฯลฯ</div></div>
+      <input class="tax-inp" type="number" min="0" step="1000" value="${t.otherInc||0}" onchange="updateTax('otherInc',this.value)">
+    </div>
+    <div class="tax-row" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px">
+      <label style="font-weight:600">รายได้รวม</label>
+      <span style="font-weight:700;color:var(--cyan)">฿${totalInc.toLocaleString('th-TH')}</span>
+    </div>
+  </div>
+
+  <!-- ส่วนตัวและครอบครัว -->
+  <div class="tax-card">
+    <div class="set-title"><i class="fas fa-users" style="color:#a78bfa"></i> ลดหย่อนส่วนตัวและครอบครัว</div>
+    <div class="tax-row"><label>ผู้มีเงินได้ (ตัวเอง)</label><span style="color:var(--green);font-weight:600">฿60,000</span></div>
+    <div class="tax-row">
+      <label>คู่สมรส (ไม่มีรายได้)</label>
+      <label class="tax-toggle"><input type="checkbox" ${t.spouse?'checked':''} onchange="updateTax('spouse',this.checked)"><span style="font-size:13px;color:var(--green)">${t.spouse?'฿60,000':'–'}</span></label>
+    </div>
+    <div class="tax-row">
+      <div><label>จำนวนบุตร</label><div class="tax-hint">30,000/คน</div></div>
+      <input class="tax-inp" type="number" min="0" max="20" step="1" value="${t.children||0}" onchange="updateTax('children',this.value)" style="width:70px">
+    </div>
+    <div class="tax-row">
+      <div><label>อุปการะบิดามารดา (อายุ 60+)</label><div class="tax-hint">30,000/คน max 4 คน</div></div>
+      <input class="tax-inp" type="number" min="0" max="4" step="1" value="${t.parents||0}" onchange="updateTax('parents',this.value)" style="width:70px">
+    </div>
+    <div class="tax-row">
+      <div><label>อุปการะคนพิการ/ทุพพลภาพ</label><div class="tax-hint">60,000/คน</div></div>
+      <input class="tax-inp" type="number" min="0" max="10" step="1" value="${t.disabled||0}" onchange="updateTax('disabled',this.value)" style="width:70px">
+    </div>
+  </div>
+
+  <!-- ประกัน -->
+  <div class="tax-card">
+    <div class="set-title"><i class="fas fa-shield-alt" style="color:#06b6d4"></i> ลดหย่อนประกัน</div>
+    <div class="tax-row">
+      <div><label>ประกันชีวิต/ประกันออมทรัพย์</label><div class="tax-hint">max ฿100,000 (รวมกับสุขภาพ)</div></div>
+      <input class="tax-inp" type="number" min="0" max="100000" step="100" value="${t.lifeIns||0}" onchange="updateTax('lifeIns',this.value)">
+    </div>
+    <div class="tax-row">
+      <div><label>ประกันสุขภาพ</label><div class="tax-hint">max ฿25,000 (รวมชีวิตไม่เกิน 100k)</div></div>
+      <input class="tax-inp" type="number" min="0" max="25000" step="100" value="${t.healthIns||0}" onchange="updateTax('healthIns',this.value)">
+    </div>
+    <div class="tax-row">
+      <div><label>ประกันชีวิตแบบบำนาญ</label><div class="tax-hint">max ฿200,000</div></div>
+      <input class="tax-inp" type="number" min="0" max="200000" step="100" value="${t.annuityIns||0}" onchange="updateTax('annuityIns',this.value)">
+    </div>
+    <div class="tax-row">
+      <div><label>ประกันสุขภาพบิดามารดา</label><div class="tax-hint">max ฿15,000</div></div>
+      <input class="tax-inp" type="number" min="0" max="15000" step="100" value="${t.parentHealthIns||0}" onchange="updateTax('parentHealthIns',this.value)">
+    </div>
+    <div class="tax-row">
+      <div><label>ประกันสังคม</label><div class="tax-hint">max ฿9,000/ปี</div></div>
+      <input class="tax-inp" type="number" min="0" max="9000" step="100" value="${t.sso||0}" onchange="updateTax('sso',this.value)">
+    </div>
+  </div>
+
+  <!-- การลงทุน -->
+  <div class="tax-card">
+    <div class="set-title"><i class="fas fa-chart-line" style="color:#f59e0b"></i> ลดหย่อนการลงทุน</div>
+    <div class="tax-row">
+      <div><label>กองทุน SSF</label><div class="tax-hint">max 30% รายได้ / ฿200,000 (รวม RMF+PVD ไม่เกิน 500k)</div></div>
+      <input class="tax-inp" type="number" min="0" max="200000" step="1000" value="${t.ssf||0}" onchange="updateTax('ssf',this.value)">
+    </div>
+    <div class="tax-row">
+      <div><label>กองทุน RMF</label><div class="tax-hint">max 30% รายได้ / ฿500,000</div></div>
+      <input class="tax-inp" type="number" min="0" max="500000" step="1000" value="${t.rmf||0}" onchange="updateTax('rmf',this.value)">
+    </div>
+    <div class="tax-row">
+      <div><label>กองทุนสำรองเลี้ยงชีพ (PVD/กบข.)</label><div class="tax-hint">max 15% รายได้ / ฿500,000</div></div>
+      <input class="tax-inp" type="number" min="0" max="500000" step="1000" value="${t.pvd||0}" onchange="updateTax('pvd',this.value)">
+    </div>
+    <div class="tax-row">
+      <div><label>กองทุน Thai ESG</label><div class="tax-hint">max 30% รายได้ / ฿300,000</div></div>
+      <input class="tax-inp" type="number" min="0" max="300000" step="1000" value="${t.thaiEsg||0}" onchange="updateTax('thaiEsg',this.value)">
+    </div>
+  </div>
+
+  <!-- อื่นๆ -->
+  <div class="tax-card">
+    <div class="set-title"><i class="fas fa-ellipsis-h" style="color:#94a3b8"></i> ลดหย่อนอื่นๆ</div>
+    <div class="tax-row">
+      <div><label>ดอกเบี้ยเงินกู้ที่อยู่อาศัย</label><div class="tax-hint">max ฿100,000</div></div>
+      <input class="tax-inp" type="number" min="0" max="100000" step="100" value="${t.homeLoan||0}" onchange="updateTax('homeLoan',this.value)">
+    </div>
+    <div class="tax-row">
+      <div><label>เงินบริจาค</label><div class="tax-hint">max 10% ของเงินได้หลังหักลดหย่อน</div></div>
+      <input class="tax-inp" type="number" min="0" step="100" value="${t.donation||0}" onchange="updateTax('donation',this.value)">
+    </div>
+    <div class="tax-row">
+      <div><label>ภาษีถูกหัก ณ ที่จ่าย (ทั้งปี)</label><div class="tax-hint">ดูจากหนังสือรับรองการหักภาษี</div></div>
+      <input class="tax-inp" type="number" min="0" step="100" value="${t.withheld||0}" onchange="updateTax('withheld',this.value)">
+    </div>
+  </div>`;
+
+  calcTaxLive();
 }
 
 // ══════════════════════════════════════════
