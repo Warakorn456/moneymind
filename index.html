@@ -267,7 +267,11 @@
     .bs-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px}
     .bs-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,.05)}
     .bs-row:last-child{border-bottom:none}
-    .bs-row.total{font-weight:700;font-size:14px;padding-top:12px;margin-top:4px;border-top:1px solid var(--border)}
+    .bs-row.total{font-weight:700;font-size:14px;padding-top:12px;margin-top:4px;border-top:1px solid var(--border);border-bottom:none}
+    .bs-inp{background:#0f0f23;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:13px;color:#e2e8f0;font-family:Sarabun,sans-serif;outline:none}
+    .bs-inp:focus{border-color:var(--primary)}
+    .bs-name-inp{flex:1;margin-right:8px}
+    .bs-add-btn{width:100%;margin:5px 0 2px;border-radius:8px;padding:5px;font-size:12px;cursor:pointer;font-family:Sarabun,sans-serif;background:none;border:1px dashed}
     .nw-card{background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(6,182,212,.15));border:1px solid rgba(124,58,237,.3);border-radius:16px;padding:22px;text-align:center;margin-bottom:16px}
     .month-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory}
     .month-scroll::-webkit-scrollbar{height:4px}
@@ -1217,7 +1221,7 @@ const USERS_KEY = 'mm_users';   // [{username, salt, hash}] for non-owner
 const SESS_KEY  = 'mm_session'; // {username}
 
 let currentUser = null;
-let DB = { transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[]}, profile:{} };
+let DB = { transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
 
 function userDataKey(u){ return DATA_PRE + u; }
 function loadDB(){
@@ -1428,7 +1432,7 @@ async function tryLogin(){
     const hash=await pbkdf2Hash(pass,saltBytes);
     if(hash!==rec.hash){ errEl.textContent='รหัสผ่านไม่ถูกต้อง'; btn.disabled=false; btn.textContent='เข้าสู่ระบบ'; return; }
     currentUser=rec.username;
-    DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[]}, profile:{} };
+    DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
     loadDB();
     const _synced2=await fsLoad();
     enterApp();
@@ -1462,7 +1466,7 @@ async function tryRegister(){
     users.push({username:user,salt,hash});
     saveUsers(users);
     currentUser=user;
-    DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[]}, profile:{} };
+    DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
     saveLocalOnly();
     enterApp();
     fsSave();
@@ -1479,7 +1483,7 @@ function doLogout(){
   fsStop();
   localStorage.removeItem(SESS_KEY);
   currentUser=null;
-  DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[]}, profile:{} };
+  DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
   document.getElementById('app-root').style.display='none';
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('login-user').value='';
@@ -1512,7 +1516,7 @@ function checkLogin(){
       // verify data exists
       if(localStorage.getItem(userDataKey(u))||u===_ENC.user){
         currentUser=u;
-        DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[]}, profile:{} };
+        DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
         loadDB();
         document.getElementById('login-screen').style.display='none';
         document.getElementById('app-root').style.display='flex';
@@ -3216,7 +3220,24 @@ function renderTax(){
 // ══════════════════════════════════════════
 //  BALANCE SHEET & FINANCIAL PLAN
 // ══════════════════════════════════════════
-function getPlan(){ if(!DB.plan) DB.plan={monthlyIncome:0,otherAssets:0,items:[]}; return DB.plan; }
+function getPlan(){
+  if(!DB.plan) DB.plan={monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]};
+  if(!DB.plan.extraAssets) DB.plan.extraAssets=[];
+  if(!DB.plan.extraDebts) DB.plan.extraDebts=[];
+  // migrate old single otherAssets field
+  if(DB.plan.otherAssets>0 && DB.plan.extraAssets.length===0){
+    DB.plan.extraAssets.push({id:uid(),name:'สินทรัพย์อื่น',amount:DB.plan.otherAssets});
+    DB.plan.otherAssets=0;
+  }
+  return DB.plan;
+}
+function addBsAsset(){ const p=getPlan(); p.extraAssets.push({id:uid(),name:'',amount:0}); saveDB(); renderBalance(); setTimeout(()=>{const ls=document.querySelectorAll('.bs-name-inp');if(ls.length)ls[ls.length-1].focus();},50); }
+function delBsAsset(id){ const p=getPlan(); p.extraAssets=p.extraAssets.filter(x=>x.id!==id); saveDB(); renderBalance(); }
+function updateBsAsset(id,field,val){ const a=(getPlan().extraAssets||[]).find(x=>x.id===id); if(a){a[field]=field==='amount'?parseFloat(val)||0:val; saveDB();} }
+function addBsDebt(){ const p=getPlan(); p.extraDebts.push({id:uid(),name:'',amount:0}); saveDB(); renderBalance(); setTimeout(()=>{const ls=document.querySelectorAll('.bs-name-inp');if(ls.length)ls[ls.length-1].focus();},50); }
+function delBsDebt(id){ const p=getPlan(); p.extraDebts=p.extraDebts.filter(x=>x.id!==id); saveDB(); renderBalance(); }
+function updateBsDebt(id,field,val){ const d=(getPlan().extraDebts||[]).find(x=>x.id===id); if(d){d[field]=field==='amount'?parseFloat(val)||0:val; saveDB();} }
+
 function ymStr(y,m){ return `${y}-${String(m).padStart(2,'0')}`; }
 function ymAdd(ym,n){ let [y,m]=ym.split('-').map(Number); m+=n; while(m>12){m-=12;y++;} while(m<1){m+=12;y--;} return ymStr(y,m); }
 function ymLabel(ym){ const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']; const [y,m]=ym.split('-').map(Number); return `${MN[m-1]} ${y+543}`; }
@@ -3353,13 +3374,16 @@ function getYearSummary(year){
 }
 
 function calcNetWorth(){
+  const plan=getPlan();
   const savings=(DB.savings||[]).reduce((s,v)=>s+v.current,0);
   const invVal=(DB.investments||[]).reduce((s,inv)=>s+(inv.currentPrice||inv.buyPrice)*inv.qty,0);
-  const otherAssets=getPlan().otherAssets||0;
-  const totalAssets=savings+invVal+otherAssets;
-  const debts=(DB.debts||[]).reduce((s,d)=>s+(d.remaining||d.amount),0);
+  const extraAssetsTotal=(plan.extraAssets||[]).reduce((s,a)=>s+a.amount,0);
+  const totalAssets=savings+invVal+extraAssetsTotal;
+  const trackedDebts=(DB.debts||[]).reduce((s,d)=>s+(d.remaining||d.amount),0);
+  const extraDebtsTotal=(plan.extraDebts||[]).reduce((s,d)=>s+d.amount,0);
+  const debts=trackedDebts+extraDebtsTotal;
   const netWorth=totalAssets-debts;
-  return {savings,invVal,otherAssets,totalAssets,debts,netWorth};
+  return {savings,invVal,extraAssetsTotal,totalAssets,trackedDebts,extraDebtsTotal,debts,netWorth};
 }
 
 function renderBalance(){
@@ -3443,17 +3467,34 @@ function renderBalance(){
       <div class="set-title"><i class="fas fa-coins" style="color:#10b981"></i> สินทรัพย์</div>
       <div class="bs-row"><span>เงินออมทั้งหมด</span><span style="color:#10b981">${fmt(nw.savings)}</span></div>
       <div class="bs-row"><span>มูลค่าพอร์ตลงทุน</span><span style="color:#10b981">${fmt(nw.invVal)}</span></div>
+      ${(plan.extraAssets||[]).map(a=>`
       <div class="bs-row">
-        <span>สินทรัพย์อื่น (บ้าน รถ ฯลฯ)</span>
-        <input style="width:120px;background:#1a1a2e;border:1px solid var(--border);border-radius:8px;padding:4px 8px;font-size:13px;color:#e2e8f0;font-family:Sarabun,sans-serif;text-align:right" type="number" value="${nw.otherAssets}" onchange="getPlan().otherAssets=parseFloat(this.value)||0;saveDB();renderBalance()">
-      </div>
+        <input class="bs-inp bs-name-inp" type="text" value="${a.name.replace(/"/g,'&quot;')}" placeholder="ชื่อสินทรัพย์"
+          onchange="updateBsAsset('${a.id}','name',this.value)">
+        <div style="display:flex;align-items:center;gap:5px">
+          <input class="bs-inp" type="number" value="${a.amount}" style="width:100px;text-align:right;color:#10b981"
+            onchange="updateBsAsset('${a.id}','amount',this.value)">
+          <button onclick="delBsAsset('${a.id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:17px;line-height:1;padding:0 2px">×</button>
+        </div>
+      </div>`).join('')}
+      <button class="bs-add-btn" style="color:#10b981;border-color:rgba(16,185,129,.4)" onclick="addBsAsset()">+ เพิ่มสินทรัพย์</button>
       <div class="bs-row total"><span>รวมสินทรัพย์</span><span style="color:#10b981">${fmt(nw.totalAssets)}</span></div>
     </div>
     <div class="bs-card">
       <div class="set-title"><i class="fas fa-credit-card" style="color:#ef4444"></i> หนี้สิน</div>
-      ${(DB.debts||[]).length?
-        (DB.debts||[]).map(d=>`<div class="bs-row"><span>${d.name}</span><span style="color:#ef4444">${fmt(d.remaining||d.amount)}</span></div>`).join('')
-        :'<div style="font-size:13px;color:var(--muted);padding:8px 0">ไม่มีหนี้สิน ✅</div>'}
+      ${(DB.debts||[]).map(d=>`<div class="bs-row"><span style="color:var(--muted);font-size:12px"><i class="fas fa-link" style="font-size:10px;opacity:.5"></i> ${d.name}</span><span style="color:#ef4444">${fmt(d.remaining||d.amount)}</span></div>`).join('')}
+      ${(plan.extraDebts||[]).map(d=>`
+      <div class="bs-row">
+        <input class="bs-inp bs-name-inp" type="text" value="${d.name.replace(/"/g,'&quot;')}" placeholder="ชื่อหนี้สิน"
+          onchange="updateBsDebt('${d.id}','name',this.value)">
+        <div style="display:flex;align-items:center;gap:5px">
+          <input class="bs-inp" type="number" value="${d.amount}" style="width:100px;text-align:right;color:#ef4444"
+            onchange="updateBsDebt('${d.id}','amount',this.value)">
+          <button onclick="delBsDebt('${d.id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:17px;line-height:1;padding:0 2px">×</button>
+        </div>
+      </div>`).join('')}
+      ${!(DB.debts||[]).length&&!(plan.extraDebts||[]).length?'<div style="font-size:13px;color:var(--muted);padding:8px 0">ไม่มีหนี้สิน ✅</div>':''}
+      <button class="bs-add-btn" style="color:#ef4444;border-color:rgba(239,68,68,.4)" onclick="addBsDebt()">+ เพิ่มหนี้สิน</button>
       <div class="bs-row total"><span>รวมหนี้สิน</span><span style="color:#ef4444">${fmt(nw.debts)}</span></div>
     </div>
   </div>
