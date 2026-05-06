@@ -281,8 +281,15 @@
       .stat-value{font-size:18px!important}
       /* investment table — scroll horizontally */
       .port-grid{grid-template-columns:1fr;gap:12px}
-      .inv-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-      .inv-table{min-width:600px}
+      .inv-table-wrap{overflow-x:unset}
+      .inv-table{min-width:unset;width:100%}
+      .inv-table thead{display:none}
+      .inv-table tr{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;padding:14px;border:1px solid var(--border);border-radius:14px;margin:8px;background:var(--surface2)}
+      .inv-table tr:last-child{border:2px solid rgba(124,58,237,.3);background:rgba(124,58,237,.06)}
+      .inv-table td{display:flex;flex-direction:column;padding:4px 0;border:none;font-size:13px}
+      .inv-table td[data-label]::before{content:attr(data-label);font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+      .inv-table td:first-child{grid-column:1/-1;font-size:15px}
+      .inv-table td:last-child{grid-column:1/-1;flex-direction:row;gap:8px;justify-content:flex-end;padding-top:8px;border-top:1px solid var(--border);margin-top:4px}
       /* charts */
       .chart-wrap{height:200px!important}
       /* budget */
@@ -1832,26 +1839,25 @@ function renderInv(){
       const buyP=inv.buyPrice?`${fmt(inv.buyPrice)}${buyOrig?`<div style="font-size:10px;color:var(--muted)">$${buyOrig}</div>`:''}`:'-';
       const updAt=inv.updatedAt?'<div style="font-size:10px;color:var(--muted)">'+inv.updatedAt+'</div>':'';
       return `<tr>
-        <td><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:${c};flex-shrink:0"></div><span style="font-weight:600">${inv.name}</span></div></td>
-        <td><span class="badge" style="background:${c}20;color:${c}">${inv.type}</span></td>
-        <td style="color:var(--text)">${qty}</td>
-        <td style="color:var(--muted)">${buyP}</td>
-        <td><div style="font-weight:600;color:var(--cyan)">${curP}</div>${updAt}</td>
-        <td style="font-weight:700">${fmt(inv.value)}</td>
-        <td style="color:${pnl>=0?'var(--green)':'var(--red)'};font-weight:700">${pnl>=0?'+':''}${fmt(pnl)}<div style="font-size:11px;opacity:.75">${pnl>=0?'+':''}${pnlP}%</div></td>
-        <td><div style="display:flex;gap:5px">
-          <button class="icon-btn" onclick="refreshInvPrice('${inv.id}')" title="อัปเดตราคา"><i class="fas fa-sync-alt"></i></button>
+        <td><div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;border-radius:50%;background:${c};flex-shrink:0"></div><span style="font-weight:700;font-size:15px">${inv.name}</span><span class="badge" style="background:${c}20;color:${c};margin-left:4px">${inv.type}</span></div></td>
+        <td data-label="จำนวน" style="color:var(--text)">${qty}</td>
+        <td data-label="ราคาซื้อ" style="color:var(--muted)">${buyP}</td>
+        <td data-label="ราคาปัจจุบัน"><div style="font-weight:600;color:var(--cyan)">${curP}</div>${updAt}</td>
+        <td data-label="มูลค่า" style="font-weight:700">${fmt(inv.value)}</td>
+        <td data-label="กำไร/ขาดทุน" style="color:${pnl>=0?'var(--green)':'var(--red)'};font-weight:700">${pnl>=0?'+':''}${fmt(pnl)}<div style="font-size:11px;opacity:.75">${pnl>=0?'+':''}${pnlP}%</div></td>
+        <td><button class="icon-btn" onclick="refreshInvPrice('${inv.id}')" title="อัปเดตราคา"><i class="fas fa-sync-alt"></i></button>
           <button class="icon-btn" onclick="editInv('${inv.id}')"><i class="fas fa-pen"></i></button>
-          <button class="icon-btn del" onclick="delInv('${inv.id}')"><i class="fas fa-trash"></i></button>
-        </div></td>
+          <button class="icon-btn del" onclick="delInv('${inv.id}')"><i class="fas fa-trash"></i></button></td>
       </tr>`;
     }).join('');
     const pp=totCost>0?((totPnL/totCost)*100).toFixed(2):'0.00';
     tbody.innerHTML+=`<tr style="border-top:2px solid var(--border)">
-      <td colspan="3" style="font-weight:700;padding:14px">รวมทั้งหมด</td>
-      <td colspan="2"></td>
-      <td style="font-weight:800;font-size:16px">${fmt(totVal)}</td>
-      <td style="font-weight:800;font-size:15px;color:${totPnL>=0?'var(--green)':'var(--red)'}">
+      <td><span style="font-weight:700">รวมทั้งหมด</span></td>
+      <td data-label="จำนวน"></td>
+      <td data-label="ราคาซื้อ"></td>
+      <td data-label="ราคาปัจจุบัน"></td>
+      <td data-label="มูลค่า" style="font-weight:800;font-size:16px">${fmt(totVal)}</td>
+      <td data-label="กำไร/ขาดทุน" style="font-weight:800;font-size:15px;color:${totPnL>=0?'var(--green)':'var(--red)'}">
         ${totPnL>=0?'+':''}${fmt(totPnL)}<div style="font-size:11px;opacity:.75">${totPnL>=0?'+':''}${pp}%</div>
       </td>
       <td></td>
