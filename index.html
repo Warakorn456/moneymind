@@ -255,6 +255,33 @@
     .fuel-stat-l{font-size:11px;color:var(--muted)}
     .fuel-stat-v{font-size:15px;font-weight:700;color:var(--amber)}
 
+    /* ── Balance / Plan ── */
+    .bs-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+    .bs-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px}
+    .bs-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,.05)}
+    .bs-row:last-child{border-bottom:none}
+    .bs-row.total{font-weight:700;font-size:14px;padding-top:12px;margin-top:4px;border-top:1px solid var(--border)}
+    .nw-card{background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(6,182,212,.15));border:1px solid rgba(124,58,237,.3);border-radius:16px;padding:22px;text-align:center;margin-bottom:16px}
+    .month-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory}
+    .month-scroll::-webkit-scrollbar{height:4px}
+    .month-card{min-width:240px;max-width:260px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;scroll-snap-align:start;flex-shrink:0}
+    .month-card.current{border-color:rgba(124,58,237,.5);background:rgba(124,58,237,.06)}
+    .month-card-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .plan-item{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,.04);gap:6px}
+    .plan-item:last-child{border-bottom:none}
+    .plan-item .pi-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .plan-item .pi-del{opacity:0;background:none;border:none;color:#ef4444;cursor:pointer;padding:2px 4px;font-size:11px;transition:.15s}
+    .plan-item:hover .pi-del{opacity:1}
+    .plan-bar{height:5px;border-radius:3px;background:rgba(255,255,255,.07);margin:8px 0;overflow:hidden}
+    .plan-bar-fill{height:5px;border-radius:3px;transition:width .3s}
+    .plan-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center}
+    .plan-modal-bg.open{display:flex}
+    .plan-modal{background:#13131f;border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
+    @media(max-width:700px){
+      .bs-grid{grid-template-columns:1fr}
+      .month-card{min-width:200px}
+    }
+
     /* ── Settings ── */
     .set-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:14px;max-width:580px}
     .set-title{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
@@ -473,6 +500,7 @@
     <div class="nav-item" onclick="nav('debts')"><i class="fas fa-credit-card"></i> หนี้สิน</div>
     <div class="nav-item" onclick="nav('investments')"><i class="fas fa-chart-line"></i> พอร์ตลงทุน</div>
     <div class="nav-item" onclick="nav('tax')"><i class="fas fa-file-invoice"></i> ภาษีเงินได้</div>
+    <div class="nav-item" onclick="nav('balance')"><i class="fas fa-balance-scale"></i> งบดุล & แผน</div>
     <div style="margin-top:auto">
       <div class="nav-item" onclick="nav('settings')"><i class="fas fa-cog"></i> ตั้งค่า</div>
     </div>
@@ -671,6 +699,11 @@
       <!-- Right: Result -->
       <div class="tax-result-panel" id="tax-result-panel"></div>
     </div>
+  </div>
+
+  <!-- ════ BALANCE & PLAN ════ -->
+  <div id="pg-balance" class="page">
+    <div id="balance-content"></div>
   </div>
 
   <!-- ════ SETTINGS ════ -->
@@ -1004,6 +1037,35 @@
   </div>
 </div>
 
+<!-- Plan item modal -->
+<div class="plan-modal-bg" id="plan-modal-bg" onclick="if(event.target===this) closePlanModal()">
+  <div class="plan-modal">
+    <div style="font-size:16px;font-weight:700;margin-bottom:18px"><i class="fas fa-plus-circle" style="color:var(--primary-l)"></i> เพิ่มรายการแผนการเงิน</div>
+    <div class="fg"><label class="flabel">ชื่อรายการ</label><input class="finput" id="pm-name" placeholder="เช่น ค่าเช่า, ประกัน, เงินเดือน"></div>
+    <div class="fg"><label class="flabel">จำนวนเงิน (บาท)</label><input class="finput" type="number" id="pm-amount" min="0" step="100" placeholder="0"></div>
+    <div class="fg"><label class="flabel">ประเภท</label>
+      <select class="finput" id="pm-type" onchange="onPmTypeChange()">
+        <option value="expense">รายจ่าย</option>
+        <option value="income">รายรับ</option>
+      </select>
+    </div>
+    <div class="fg"><label class="flabel">หมวดหมู่</label><select class="finput" id="pm-cat"></select></div>
+    <div class="fg"><label class="flabel">ความถี่</label>
+      <select class="finput" id="pm-recur" onchange="onPmRecurChange()">
+        <option value="monthly">ทุกเดือน</option>
+        <option value="yearly">ปีละครั้ง</option>
+        <option value="once">ครั้งเดียว</option>
+      </select>
+    </div>
+    <div class="fg"><label class="flabel" id="pm-from-label">เริ่มตั้งแต่เดือน</label><input class="finput" type="month" id="pm-from"></div>
+    <div class="fg" id="pm-to-wrap"><label class="flabel">สิ้นสุดเดือน <span style="color:var(--muted);font-weight:400">(ปล่อยว่าง = ไม่สิ้นสุด)</span></label><input class="finput" type="month" id="pm-to"></div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn btn-primary" style="flex:1" onclick="savePlanItem()">บันทึก</button>
+      <button class="btn btn-ghost" onclick="closePlanModal()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast container -->
 <div class="toast-wrap" id="toasts"></div>
 
@@ -1016,7 +1078,7 @@ const USERS_KEY = 'mm_users';   // [{username, salt, hash}] for non-owner
 const SESS_KEY  = 'mm_session'; // {username}
 
 let currentUser = null;
-let DB = { transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{} };
+let DB = { transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[]} };
 
 function userDataKey(u){ return DATA_PRE + u; }
 function loadDB(){
@@ -1092,7 +1154,7 @@ async function tryLogin(){
     const hash=await pbkdf2Hash(pass,saltBytes);
     if(hash!==rec.hash){ errEl.textContent='รหัสผ่านไม่ถูกต้อง'; btn.disabled=false; btn.textContent='เข้าสู่ระบบ'; return; }
     currentUser=rec.username;
-    DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{} };
+    DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[]} };
     loadDB();
     enterApp();
   }catch{
@@ -1123,7 +1185,7 @@ async function tryRegister(){
     users.push({username:user,salt,hash});
     saveUsers(users);
     currentUser=user;
-    DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{} };
+    DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[]} };
     saveDB();
     enterApp();
   }catch{
@@ -1137,7 +1199,7 @@ function doLogout(){
   if(!confirm('ออกจากระบบ?')) return;
   localStorage.removeItem(SESS_KEY);
   currentUser=null;
-  DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{} };
+  DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[]} };
   document.getElementById('app-root').style.display='none';
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('login-user').value='';
@@ -1170,7 +1232,7 @@ function checkLogin(){
       // verify data exists
       if(localStorage.getItem(userDataKey(u))||u===_ENC.user){
         currentUser=u;
-        DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{} };
+        DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[]} };
         loadDB();
         document.getElementById('login-screen').style.display='none';
         document.getElementById('app-root').style.display='flex';
@@ -1277,7 +1339,7 @@ function getCat(id,type){ const l=type==='income'?INC_CATS:EXP_CATS; return l.fi
 // ══════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════
-const PAGE_TITLE = {dashboard:'แดชบอร์ด',transactions:'รายรับ-รายจ่าย',savings:'เงินออม',debts:'หนี้สิน',investments:'พอร์ตลงทุน',tax:'ภาษีเงินได้',settings:'ตั้งค่า'};
+const PAGE_TITLE = {dashboard:'แดชบอร์ด',transactions:'รายรับ-รายจ่าย',savings:'เงินออม',debts:'หนี้สิน',investments:'พอร์ตลงทุน',tax:'ภาษีเงินได้',balance:'งบดุล & แผนการเงิน',settings:'ตั้งค่า'};
 let curPage='dashboard', txFilter='all';
 
 function nav(page){
@@ -1301,6 +1363,7 @@ function renderPage(p){
   else if(p==='debts') renderDebts();
   else if(p==='investments') renderInv();
   else if(p==='tax') renderTax();
+  else if(p==='balance') renderBalance();
   else if(p==='settings') renderSettings();
 }
 
@@ -2829,6 +2892,197 @@ function renderTax(){
   </div>`;
 
   calcTaxLive();
+}
+
+// ══════════════════════════════════════════
+//  BALANCE SHEET & FINANCIAL PLAN
+// ══════════════════════════════════════════
+function getPlan(){ if(!DB.plan) DB.plan={monthlyIncome:0,otherAssets:0,items:[]}; return DB.plan; }
+function ymStr(y,m){ return `${y}-${String(m).padStart(2,'0')}`; }
+function ymAdd(ym,n){ let [y,m]=ym.split('-').map(Number); m+=n; while(m>12){m-=12;y++;} while(m<1){m+=12;y--;} return ymStr(y,m); }
+function ymLabel(ym){ const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']; const [y,m]=ym.split('-').map(Number); return `${MN[m-1]} ${y+543}`; }
+
+function planItemApplies(item, ym){
+  if(ym < item.from) return false;
+  if(item.recur==='once') return ym===item.from;
+  if(item.recur==='yearly'){ const [,fm]=item.from.split('-'); const [,tm]=ym.split('-'); if(fm!==tm) return false; if(item.to&&ym>item.to) return false; return true; }
+  // monthly
+  if(item.to&&ym>item.to) return false;
+  return true;
+}
+
+function getMonthItems(ym){
+  const plan=getPlan();
+  const result=[];
+  // auto-include debt monthly payments
+  (DB.debts||[]).forEach(d=>{
+    if(d.monthly&&d.monthly>0){
+      const now=new Date(); const curYM=ymStr(now.getFullYear(),now.getMonth()+1);
+      if(ym>=curYM) result.push({id:'debt_'+d.id,name:'ผ่อน '+d.name,amount:d.monthly,cat:'debt_pay',color:'#f43f5e',auto:true,type:'expense'});
+    }
+  });
+  // user plan items
+  plan.items.forEach(item=>{
+    if(planItemApplies(item,ym)) result.push({...item});
+  });
+  return result;
+}
+
+function calcNetWorth(){
+  const savings=(DB.savings||[]).reduce((s,v)=>s+v.current,0);
+  const invVal=(DB.investments||[]).reduce((s,inv)=>s+(inv.currentPrice||inv.buyPrice)*inv.qty,0);
+  const otherAssets=getPlan().otherAssets||0;
+  const totalAssets=savings+invVal+otherAssets;
+  const debts=(DB.debts||[]).reduce((s,d)=>s+(d.remaining||d.amount),0);
+  const netWorth=totalAssets-debts;
+  return {savings,invVal,otherAssets,totalAssets,debts,netWorth};
+}
+
+function renderBalance(){
+  const el=document.getElementById('balance-content');
+  if(!el) return;
+  const plan=getPlan();
+  const nw=calcNetWorth();
+  const fmt=n=>'฿'+Math.round(n).toLocaleString('th-TH');
+  const now=new Date();
+  const curYM=ymStr(now.getFullYear(),now.getMonth()+1);
+
+  // build 12 month cards
+  let monthCards='';
+  for(let i=0;i<12;i++){
+    const ym=ymAdd(curYM,i);
+    const items=getMonthItems(ym);
+    const expenses=items.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);
+    const incItems=items.filter(x=>x.type==='income');
+    const totalInc=(plan.monthlyIncome||0)+incItems.reduce((s,x)=>s+x.amount,0);
+    const balance=totalInc-expenses;
+    const pct=totalInc>0?Math.min(100,Math.round(expenses/totalInc*100)):100;
+    const barColor=pct<70?'var(--green)':pct<90?'var(--amber)':'#ef4444';
+    const itemsHTML=items.length?items.map(it=>`
+      <div class="plan-item">
+        <div class="pi-dot" style="background:${it.color||'#94a3b8'}"></div>
+        <span style="flex:1;color:${it.type==='income'?'var(--green)':'#e2e8f0'}">${it.name}</span>
+        <span style="font-weight:600;color:${it.type==='income'?'var(--green)':'#e2e8f0'}">${it.type==='income'?'+':'−'}${fmt(it.amount)}</span>
+        ${it.auto?'':`<button class="pi-del" onclick="deletePlanItem('${it.id}')"><i class="fas fa-times"></i></button>`}
+      </div>`).join('')
+      :`<div style="font-size:12px;color:var(--muted);padding:6px 0">ไม่มีรายการ</div>`;
+    monthCards+=`
+    <div class="month-card ${i===0?'current':''}">
+      <div class="month-card-hd">
+        <span style="font-weight:700;font-size:14px">${ymLabel(ym)}</span>
+        ${i===0?'<span style="font-size:11px;background:rgba(124,58,237,.2);color:#a78bfa;padding:2px 8px;border-radius:20px">เดือนนี้</span>':''}
+      </div>
+      ${itemsHTML}
+      <div class="plan-bar"><div class="plan-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px">
+        <span style="color:var(--muted)">จ่าย ${fmt(expenses)}</span>
+        <span style="color:${balance>=0?'var(--green)':'#ef4444'};font-weight:600">${balance>=0?'เหลือ':'ขาด'} ${fmt(Math.abs(balance))}</span>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML=`
+  <!-- Net Worth Banner -->
+  <div class="nw-card">
+    <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px">ความมั่งคั่งสุทธิ (Net Worth)</div>
+    <div style="font-size:32px;font-weight:800;color:${nw.netWorth>=0?'#a78bfa':'#ef4444'}">${fmt(nw.netWorth)}</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.4);margin-top:4px">สินทรัพย์ ${fmt(nw.totalAssets)} − หนี้สิน ${fmt(nw.debts)}</div>
+  </div>
+
+  <!-- Balance Sheet -->
+  <div class="bs-grid">
+    <div class="bs-card">
+      <div class="set-title"><i class="fas fa-coins" style="color:#10b981"></i> สินทรัพย์</div>
+      <div class="bs-row"><span>เงินออมทั้งหมด</span><span style="color:#10b981">${fmt(nw.savings)}</span></div>
+      <div class="bs-row"><span>มูลค่าพอร์ตลงทุน</span><span style="color:#10b981">${fmt(nw.invVal)}</span></div>
+      <div class="bs-row">
+        <span>สินทรัพย์อื่น (บ้าน รถ ฯลฯ)</span>
+        <input style="width:120px;background:#1a1a2e;border:1px solid var(--border);border-radius:8px;padding:4px 8px;font-size:13px;color:#e2e8f0;font-family:Sarabun,sans-serif;text-align:right" type="number" value="${nw.otherAssets}" onchange="getPlan().otherAssets=parseFloat(this.value)||0;saveDB();renderBalance()">
+      </div>
+      <div class="bs-row total"><span>รวมสินทรัพย์</span><span style="color:#10b981">${fmt(nw.totalAssets)}</span></div>
+    </div>
+    <div class="bs-card">
+      <div class="set-title"><i class="fas fa-credit-card" style="color:#ef4444"></i> หนี้สิน</div>
+      ${(DB.debts||[]).length?
+        (DB.debts||[]).map(d=>`<div class="bs-row"><span>${d.name}</span><span style="color:#ef4444">${fmt(d.remaining||d.amount)}</span></div>`).join('')
+        :'<div style="font-size:13px;color:var(--muted);padding:8px 0">ไม่มีหนี้สิน ✅</div>'}
+      <div class="bs-row total"><span>รวมหนี้สิน</span><span style="color:#ef4444">${fmt(nw.debts)}</span></div>
+    </div>
+  </div>
+
+  <!-- Monthly income setting -->
+  <div class="bs-card" style="margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <i class="fas fa-wallet" style="color:var(--cyan);font-size:20px"></i>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:600">รายรับที่คาดหวังต่อเดือน</div>
+      <div style="font-size:12px;color:var(--muted)">ใช้เป็นฐานคำนวณยอดคงเหลือแต่ละเดือน</div>
+    </div>
+    <input style="width:140px;background:#1a1a2e;border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:15px;font-weight:700;color:var(--cyan);font-family:Sarabun,sans-serif;text-align:right" type="number" value="${plan.monthlyIncome||0}" placeholder="0" onchange="getPlan().monthlyIncome=parseFloat(this.value)||0;saveDB();renderBalance()">
+  </div>
+
+  <!-- Month planner -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <div style="font-size:15px;font-weight:700"><i class="fas fa-calendar-alt" style="color:var(--primary-l)"></i> แผนค่าใช้จ่าย 12 เดือนข้างหน้า</div>
+    <button class="btn btn-primary" onclick="openPlanModal()"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
+  </div>
+  <div class="month-scroll">${monthCards}</div>
+  `;
+}
+
+function openPlanModal(prefillYM){
+  const plan=getPlan();
+  // populate category options
+  const type=document.getElementById('pm-type').value;
+  onPmTypeChange();
+  const now=new Date();
+  document.getElementById('pm-name').value='';
+  document.getElementById('pm-amount').value='';
+  document.getElementById('pm-recur').value='monthly';
+  document.getElementById('pm-from').value=prefillYM||ymStr(now.getFullYear(),now.getMonth()+1);
+  document.getElementById('pm-to').value='';
+  onPmRecurChange();
+  document.getElementById('plan-modal-bg').classList.add('open');
+  setTimeout(()=>document.getElementById('pm-name').focus(),100);
+}
+function closePlanModal(){ document.getElementById('plan-modal-bg').classList.remove('open'); }
+
+function onPmTypeChange(){
+  const type=document.getElementById('pm-type').value;
+  const cats=type==='income'?INC_CATS:EXP_CATS;
+  document.getElementById('pm-cat').innerHTML=cats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+}
+function onPmRecurChange(){
+  const r=document.getElementById('pm-recur').value;
+  const toWrap=document.getElementById('pm-to-wrap');
+  const fromLabel=document.getElementById('pm-from-label');
+  if(r==='once'){ toWrap.style.display='none'; fromLabel.textContent='เดือนที่เกิดรายการ'; }
+  else if(r==='yearly'){ toWrap.style.display='block'; fromLabel.textContent='เดือนแรกที่เกิด (ใช้เดือนเป็นเดือนประจำปี)'; }
+  else{ toWrap.style.display='block'; fromLabel.textContent='เริ่มตั้งแต่เดือน'; }
+}
+
+function savePlanItem(){
+  const name=document.getElementById('pm-name').value.trim();
+  const amount=parseFloat(document.getElementById('pm-amount').value)||0;
+  const type=document.getElementById('pm-type').value;
+  const cat=document.getElementById('pm-cat').value;
+  const recur=document.getElementById('pm-recur').value;
+  const from=document.getElementById('pm-from').value;
+  const to=document.getElementById('pm-to').value;
+  if(!name){ toast('กรุณาใส่ชื่อรายการ','error'); return; }
+  if(!amount){ toast('กรุณาใส่จำนวนเงิน','error'); return; }
+  if(!from){ toast('กรุณาเลือกเดือน','error'); return; }
+  const cats=type==='income'?INC_CATS:EXP_CATS;
+  const catObj=cats.find(c=>c.id===cat)||{color:'#94a3b8'};
+  const plan=getPlan();
+  plan.items.push({id:'p'+Date.now(),name,amount,type,cat,color:catObj.color,recur,from,to:to||''});
+  saveDB(); closePlanModal(); renderBalance();
+  toast('เพิ่มรายการแล้ว','success');
+}
+
+function deletePlanItem(id){
+  const plan=getPlan();
+  plan.items=plan.items.filter(x=>x.id!==id);
+  saveDB(); renderBalance();
 }
 
 // ── Tax document OCR ──
