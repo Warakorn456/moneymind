@@ -269,18 +269,48 @@
       .sidebar{transform:translateX(-100%)}
       .sidebar.open{transform:none}
       .main{margin-left:0;min-width:0;width:100%}
-      .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px}
-      .page{padding:12px}
-      .topbar{padding:12px 14px;gap:8px}
+
+      /* topbar — แยก 2 แถว */
+      .topbar{padding:10px 14px;flex-direction:column;align-items:stretch;gap:8px}
+      .topbar>div:first-child{display:flex;align-items:center;justify-content:space-between}
       .topbar h2{font-size:16px}
-      .topbar-right{gap:6px}
-      .topbar-right .btn{padding:7px 10px;font-size:12px}
+      .topbar-right{justify-content:space-between;gap:6px}
+      .topbar-right .btn{flex:1;padding:7px 6px;font-size:12px;text-align:center}
+      .month-sel{flex:1}
+      .month-sel select{font-size:12px}
+
+      /* page padding */
+      .page{padding:12px 10px}
+
+      /* stats — 2 คอลัมน์ เท่ากัน */
+      .stats-grid{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+      .stat-card{padding:14px 12px;border-radius:12px}
+      .stat-label{font-size:11px}
+      .stat-value{font-size:17px!important;margin:5px 0 2px}
+      .stat-sub{font-size:10px}
+      .stat-icon{width:30px;height:30px;font-size:13px;top:12px;right:12px}
+
+      /* budget card — 3 คอลัมน์เท่ากัน */
+      .budget-nums{grid-template-columns:repeat(3,1fr);gap:6px}
+      .bnum-v{font-size:14px!important}
+      .bnum-l{font-size:10px}
+      .budget-card{padding:14px 12px;margin-bottom:14px}
+      .budget-title{font-size:11px}
+
+      /* charts — 1 คอลัมน์ */
+      .charts-grid{grid-template-columns:1fr;gap:10px;margin-bottom:14px}
+      .chart-wrap{height:190px!important}
+      .chart-card{padding:14px 12px}
+      .chart-title{font-size:13px}
+      .bottom-grid{grid-template-columns:1fr;gap:10px}
+
+      /* section */
       .sec-hd{flex-wrap:wrap;gap:8px}
-      /* stat cards */
-      .stat-card{padding:14px}
-      .stat-value{font-size:18px!important}
-      /* investment table — scroll horizontally */
-      .port-grid{grid-template-columns:1fr;gap:12px}
+      .sec-title{font-size:14px}
+      .sec-hd .btn{padding:6px 10px;font-size:12px}
+
+      /* investment */
+      .port-grid{grid-template-columns:1fr;gap:10px}
       .inv-table-wrap{overflow-x:unset}
       .inv-table{min-width:unset;width:100%}
       .inv-table thead{display:none}
@@ -290,14 +320,12 @@
       .inv-table td[data-label]::before{content:attr(data-label);font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
       .inv-table td:first-child{grid-column:1/-1;font-size:15px}
       .inv-table td:last-child{grid-column:1/-1;flex-direction:row;gap:8px;justify-content:flex-end;padding-top:8px;border-top:1px solid var(--border);margin-top:4px}
-      /* charts */
-      .chart-wrap{height:200px!important}
-      /* budget */
-      .budget-nums{grid-template-columns:repeat(2,1fr)}
+
       /* modals */
-      .modal{padding:20px 16px;border-radius:16px}
-      .modal-title{font-size:16px}
-      /* savings grid */
+      .modal{padding:18px 14px;border-radius:16px;max-height:95vh}
+      .modal-title{font-size:15px}
+
+      /* savings */
       .savings-grid{grid-template-columns:1fr}
       /* tx list */
       .tx-item{padding:10px 12px}
