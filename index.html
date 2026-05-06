@@ -1268,19 +1268,24 @@ function setSyncStatus(s){
   lb.textContent=label; lb.style.color=color;
 }
 
+const _fsTimeout=ms=>new Promise((_,r)=>setTimeout(()=>r(new Error('หมดเวลา — ตรวจสอบว่าสร้าง Firestore Database แล้วหรือยัง')),ms));
+
 async function fsSave(){
   if(!currentUser||!_fs){ setSyncStatus('error'); return; }
   try{
     setSyncStatus('syncing');
-    await _fs.collection('userdata').doc(currentUser).set({
-      db:JSON.stringify(DB),
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    },{merge:true});
+    await Promise.race([
+      _fs.collection('userdata').doc(currentUser).set({
+        db:JSON.stringify(DB),
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true}),
+      _fsTimeout(8000)
+    ]);
     setSyncStatus('ok');
   }catch(e){
-    console.error('[Firebase] save error:',e);
+    console.error('[Firebase] save:',e.message);
     setSyncStatus('error');
-    toast('Cloud sync ไม่ได้: '+e.message,'error');
+    toast('☁️ Sync ไม่ได้: '+e.message,'error');
   }
 }
 
@@ -1288,7 +1293,10 @@ async function fsLoad(){
   if(!currentUser||!_fs){ setSyncStatus('error'); return false; }
   try{
     setSyncStatus('syncing');
-    const doc=await _fs.collection('userdata').doc(currentUser).get();
+    const doc=await Promise.race([
+      _fs.collection('userdata').doc(currentUser).get(),
+      _fsTimeout(8000)
+    ]);
     if(doc.exists&&doc.data()&&doc.data().db){
       const remote=JSON.parse(doc.data().db);
       DB={...DB,...remote};
