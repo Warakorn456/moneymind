@@ -641,6 +641,14 @@
         <div style="font-size:12px;color:var(--muted);margin-top:6px">รับ Key ฟรีได้ที่ aistudio.google.com → Get API Key</div>
       </div>
       <div id="key-status"></div>
+      <div class="fg" style="margin-top:14px">
+        <label class="flabel">Gemini Model <span style="font-weight:400;color:var(--muted)">(ปล่อยว่างให้ระบบเลือกอัตโนมัติ)</span></label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="model-in" class="finput" placeholder="เช่น gemini-2.5-flash หรือ gemini-2.0-flash-lite">
+          <button class="btn btn-primary" onclick="saveModel()">บันทึก</button>
+        </div>
+        <div id="model-status" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
+      </div>
     </div>
     <div class="set-card">
       <div class="set-title"><i class="fas fa-database" style="color:var(--amber)"></i> จัดการข้อมูล</div>
@@ -1129,28 +1137,63 @@ function checkLogin(){
 }
 
 // ══════════════════════════════════════════
-//  GEMINI MODEL — cached per session
+//  GEMINI MODEL — auto-retry on quota
 // ══════════════════════════════════════════
 let _geminiModel = null;
+const _failedModels = new Set();
+// ลำดับจากใหม่ → เก่า; lite ก่อน full เพราะ quota ต่ำกว่า
+const GEMINI_PREFER = [
+  'gemini-2.5-flash-preview','gemini-2.5-flash',
+  'gemini-2.0-flash-lite','gemini-2.0-flash',
+  'gemini-1.5-flash-8b','gemini-1.5-flash','gemini-1.5-pro',
+];
+
 async function getModel(){
-  if(_geminiModel) return _geminiModel;
-  const PREFER = ['2.0-flash-lite','2.0-flash','2.5-flash-lite','2.5-flash','flash','pro'];
+  // ให้ user override ก่อน
+  if(DB.settings.geminiModel) return DB.settings.geminiModel;
+  if(_geminiModel && !_failedModels.has(_geminiModel)) return _geminiModel;
+  _geminiModel=null;
+  // ดึง list จาก API
   try{
     const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${DB.settings.apiKey}`);
     if(r.ok){
       const d=await r.json();
       const avail=(d.models||[])
         .filter(m=>m.supportedGenerationMethods?.includes('generateContent'))
-        .map(m=>m.name.replace('models/',''));
-      for(const p of PREFER){
-        const hit=avail.find(m=>m.includes(p));
-        if(hit){ _geminiModel=hit; return _geminiModel; }
+        .map(m=>m.name.replace('models/',''))
+        .filter(m=>!_failedModels.has(m));
+      for(const p of GEMINI_PREFER){
+        const hit=avail.find(m=>m.startsWith(p)||m===p);
+        if(hit){ _geminiModel=hit; return hit; }
       }
-      if(avail.length){ _geminiModel=avail[0]; return _geminiModel; }
+      const any=avail[0]; if(any){ _geminiModel=any; return any; }
     }
   }catch{}
-  _geminiModel='gemini-2.0-flash';
-  return _geminiModel;
+  // static fallback — skip failed ones
+  for(const m of GEMINI_PREFER){ if(!_failedModels.has(m)){ _geminiModel=m; return m; } }
+  return 'gemini-2.0-flash-lite';
+}
+
+// wrapper — retry อัตโนมัติถ้า quota หมด
+async function callGemini(contents, genConfig={temperature:0.7,maxOutputTokens:8192}){
+  if(!DB.settings.apiKey) throw new Error('ยังไม่ได้ตั้งค่า API Key — ไปที่ Settings ก่อน');
+  for(let attempt=0;attempt<6;attempt++){
+    const model=await getModel();
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${DB.settings.apiKey}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents,generationConfig:genConfig})
+    });
+    if(r.ok) return {data:await r.json(), model};
+    const e=await r.json();
+    const msg=(e.error?.message||r.status+'');
+    const isQuota=r.status===429||msg.toLowerCase().includes('quota')||msg.toLowerCase().includes('resource_exhausted');
+    if(isQuota){
+      _failedModels.add(model); _geminiModel=null;
+      if(attempt<5) continue; // ลอง model ถัดไป
+    }
+    throw new Error(`[${model}] ${msg}`);
+  }
+  throw new Error('ไม่มี Gemini model ที่ใช้งานได้ — ตรวจสอบ API Key หรือโควต้า');
 }
 
 // ══════════════════════════════════════════
@@ -1554,13 +1597,7 @@ async function aiReadReceipt(dataURL){
     const prompt=isIncome
       ? 'อ่านข้อมูลจากสลิปเงินเดือนหรือเอกสารรายรับนี้ ตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น รูปแบบ: {"amount":number,"gross":number,"deductions":number,"date":"YYYY-MM-DD","description":"string","category":"salary|freelance|invest_return|bonus|rental|other_inc"} โดย amount = ยอดสุทธิที่ได้รับ, gross = รายได้ก่อนหัก, deductions = ยอดหักทั้งหมด ถ้าไม่รู้วันที่ใช้: '+new Date().toISOString().split('T')[0]
       : 'อ่านข้อมูลจากใบเสร็จนี้ ตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น รูปแบบ: {"amount":number,"date":"YYYY-MM-DD","description":"string","category":"food|transport|fuel|housing|utility|health|entertainment|shopping|education|insurance|debt_pay|other_exp"} fuel=ใบเสร็จปั๊มน้ำมัน/เติมน้ำมัน/น้ำมันเชื้อเพลิง ถ้าไม่รู้วันที่ใช้: '+new Date().toISOString().split('T')[0];
-    const preferred=await getModel();
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${preferred}:generateContent?key=${DB.settings.apiKey}`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:mime,data:b64}},{text:prompt}]}]})
-    });
-    if(!r.ok){ const e=await r.json(); throw new Error(`[${preferred}] ${e.error?.message||'error '+r.status}`); }
-    const data=await r.json();
+    const {data,model:preferred}=await callGemini([{parts:[{inline_data:{mime_type:mime,data:b64}},{text:prompt}]}],{temperature:0.1,maxOutputTokens:2048});
     const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
     const m=text.match(/\{[\s\S]*\}/);
     if(!m) throw new Error('ไม่พบ JSON ในคำตอบ');
@@ -1704,9 +1741,6 @@ async function aiReadStatement(b64,mime){
 ดึงทุกรายการที่เห็นในเอกสาร`;
 
   try{
-    if(!DB.settings.apiKey) throw new Error('ยังไม่ได้ตั้งค่า API Key — ไปที่ Settings ก่อน');
-    const model=await getModel();
-
     // PDF: ใช้ File API (รองรับทุก model และไม่มีจำกัดขนาด)
     // Image: ใช้ inline_data ได้เลย
     let part;
@@ -1720,12 +1754,7 @@ async function aiReadStatement(b64,mime){
       part={inline_data:{mime_type:mime,data:b64}};
     }
 
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${DB.settings.apiKey}`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{parts:[part,{text:prompt}]}]})
-    });
-    if(!res.ok){ const e=await res.json(); throw new Error(`[${model}] ${e.error?.message||res.status}`); }
-    const data=await res.json();
+    const {data}=await callGemini([{parts:[part,{text:prompt}]}],{maxOutputTokens:8192,temperature:0.1});
     // Gemini 2.5 thinking model อาจมีหลาย parts — รวมทุก text part
     const parts=data.candidates?.[0]?.content?.parts||[];
     let text=parts.map(p=>p.text||'').join('');
@@ -2319,11 +2348,21 @@ function renderSettings(){
   const k=DB.settings.apiKey;
   document.getElementById('api-key-in').value=k;
   document.getElementById('key-status').innerHTML=k?'<div style="font-size:13px;color:var(--green);margin-top:8px"><i class="fas fa-check-circle"></i> API Key บันทึกแล้ว ('+k.slice(0,12)+'...)</div>':'';
+  const m=DB.settings.geminiModel||'';
+  document.getElementById('model-in').value=m;
+  const active=m||(_geminiModel?'auto: '+_geminiModel:'auto');
+  document.getElementById('model-status').textContent='model ที่ใช้งาน: '+active;
 }
 
 function saveKey(){
   const k=document.getElementById('api-key-in').value.trim();
-  DB.settings.apiKey=k; _geminiModel=null; saveDB(); renderSettings(); toast('บันทึก API Key แล้ว','success');
+  DB.settings.apiKey=k; _geminiModel=null; _failedModels.clear(); saveDB(); renderSettings(); toast('บันทึก API Key แล้ว','success');
+}
+
+function saveModel(){
+  const m=document.getElementById('model-in').value.trim();
+  DB.settings.geminiModel=m; _geminiModel=null; _failedModels.clear(); saveDB(); renderSettings();
+  toast(m?'ตั้ง model: '+m:'รีเซ็ต — ระบบจะเลือกอัตโนมัติ','success');
 }
 
 function exportData(){
@@ -2555,15 +2594,7 @@ async function sendChat(){
     // ใส่ message ล่าสุด
     contents.push({role:'user',parts:[{text:msg}]});
 
-    if(!DB.settings.apiKey) throw new Error('ยังไม่ได้ตั้งค่า API Key — ไปที่ Settings ก่อน');
-    const model=await getModel();
-
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${DB.settings.apiKey}`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents,generationConfig:{temperature:0.7,maxOutputTokens:8192}})
-    });
-    if(!res.ok){const e=await res.json();throw new Error(e.error?.message||res.status);}
-    const data=await res.json();
+    const {data}=await callGemini(contents,{temperature:0.7,maxOutputTokens:8192});
     const reply=data.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'ไม่ได้รับคำตอบ';
     hideTyping();
     addChatMsg('ai', reply);
