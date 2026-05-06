@@ -2549,8 +2549,13 @@ function addChatMsg(role, text){
 function renderChatMsgs(){
   const el=document.getElementById('chat-msgs');
   el.innerHTML=chatHistory.map(m=>{
-    const safe=m.text.replace(/</g,'&lt;').replace(/\n/g,'<br>');
-    return `<div class="chat-bubble ${m.role==='ai'?'ai':'user'}">${safe}</div>`;
+    if(m.role==='user'){
+      const safe=m.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
+      return `<div class="chat-bubble user">${safe}</div>`;
+    }
+    // AI: แสดง HTML ได้ (content มาจาก code เราเอง ไม่มี user input)
+    const html=m.text.replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    return `<div class="chat-bubble ai">${html}</div>`;
   }).join('');
   el.scrollTop=el.scrollHeight;
 }
@@ -2566,12 +2571,178 @@ function showTyping(){
 }
 function hideTyping(){ document.getElementById('chat-typing')?.remove(); }
 
+// ══════════════════════════════════════════
+//  RULE-BASED AI — ไม่ต้อง API
+// ══════════════════════════════════════════
+function rulesAI(msg){
+  const m=msg.toLowerCase().trim();
+  const now=new Date();
+  const curY=now.getFullYear(), curM=now.getMonth()+1;
+  const MN=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+            'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const fmt=n=>'฿'+Math.round(n).toLocaleString('th-TH');
+  const pct=(a,b)=>b?(((a-b)/b)*100).toFixed(1):'–';
+  const prevM=curM===1?12:curM-1, prevY=curM===1?curY-1:curY;
+
+  function txMonth(y,mn){ return (DB.transactions||[]).filter(t=>{ const d=new Date(t.date); return d.getFullYear()===y&&(d.getMonth()+1)===mn; }); }
+  function incSum(txs){ return txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0); }
+  function expSum(txs){ return txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0); }
+  function catSum(txs,cat){ return txs.filter(t=>t.category===cat).reduce((s,t)=>s+t.amount,0); }
+  function topCats(txs,n=5){ const map={}; txs.filter(t=>t.type==='expense').forEach(t=>map[t.category]=(map[t.category]||0)+t.amount); return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,n); }
+  function trend(cur,prev){ const d=parseFloat(pct(cur,prev)); return d>0?`▲+${d}%`:`▼${d}%`; }
+
+  const cur=txMonth(curY,curM), prev=txMonth(prevY,prevM);
+  const curInc=incSum(cur), curExp=expSum(cur), curNet=curInc-curExp;
+  const prevInc=incSum(prev), prevExp=expSum(prev);
+
+  // สรุปภาพรวม
+  if(/สรุป|ภาพรวม|เป็นยังไง|overview|เดือนนี้/.test(m)&&!/เดือนที่แล้ว/.test(m)){
+    const cats=topCats(cur,3);
+    let r=`📊 **สรุปการเงิน ${MN[curM-1]} ${curY}**\n\n`;
+    r+=`💰 รายรับ: **${fmt(curInc)}**\n💸 รายจ่าย: **${fmt(curExp)}**\n`;
+    r+=`${curNet>=0?'✅':'⚠️'} คงเหลือ: **${fmt(Math.abs(curNet))}** ${curNet<0?'(ขาดทุน)':''}\n`;
+    if(prevExp){ r+=`\nเทียบเดือนก่อน: รายจ่าย ${trend(curExp,prevExp)}\n`; }
+    if(cats.length){ r+=`\n**หมวดใช้จ่ายสูงสุด:**\n`; cats.forEach(([c,a],i)=>r+=`${i+1}. ${getCat(c,'expense').label}: ${fmt(a)}\n`); }
+    const sv=(DB.savings||[]).reduce((s,v)=>s+v.current,0);
+    if(sv) r+=`\n💎 เงินออมรวม: ${fmt(sv)}`;
+    return r;
+  }
+
+  // เปรียบเทียบเดือนที่แล้ว
+  if(/เดือนที่แล้ว|เปรียบ|ต่างกัน|compare/.test(m)){
+    let r=`📊 **เปรียบเทียบ ${MN[prevM-1]} → ${MN[curM-1]}**\n\n`;
+    r+=`💰 รายรับ: ${fmt(prevInc)} → ${fmt(curInc)} ${prevInc?'('+trend(curInc,prevInc)+')':''}\n`;
+    r+=`💸 รายจ่าย: ${fmt(prevExp)} → ${fmt(curExp)} ${prevExp?'('+trend(curExp,prevExp)+')':''}\n`;
+    const diff=curExp-prevExp;
+    r+=diff>0?`\n⚠️ ใช้จ่ายเพิ่มขึ้น ${fmt(diff)}`:`\n✅ ประหยัดได้ ${fmt(-diff)} เทียบเดือนก่อน`;
+    return r;
+  }
+
+  // ปีนี้
+  if(/ปีนี้|ทั้งปี|รวมปี/.test(m)){
+    let ti=0,te=0,r=`📆 **สรุปปี ${curY}**\n\n`;
+    for(let mn=1;mn<=curM;mn++){
+      const tx=txMonth(curY,mn), i=incSum(tx), e=expSum(tx);
+      ti+=i; te+=e;
+      r+=`${MN[mn-1]}: รับ ${fmt(i)} จ่าย ${fmt(e)}\n`;
+    }
+    r+=`\n**รวมรายรับ: ${fmt(ti)}\nรวมรายจ่าย: ${fmt(te)}\nคงเหลือ: ${fmt(ti-te)}**`;
+    return r;
+  }
+
+  // หมวดรายจ่าย
+  if(/หมวด|ประเภท|แยก|breakdown/.test(m)){
+    const cats=topCats(cur,10);
+    if(!cats.length) return `ยังไม่มีรายจ่ายเดือน${MN[curM-1]} ครับ`;
+    let r=`📂 **รายจ่ายแยกหมวด ${MN[curM-1]}**\n\n`;
+    cats.forEach(([c,a],i)=>{ const p=(a/curExp*100).toFixed(1); r+=`${i+1}. ${getCat(c,'expense').label}: ${fmt(a)} (${p}%)\n`; });
+    r+=`\n**รวม: ${fmt(curExp)}**`;
+    return r;
+  }
+
+  // รายการใช้จ่ายสูงสุด
+  if(/มากสุด|สูงสุด|เยอะสุด|top/.test(m)){
+    const list=[...cur].filter(t=>t.type==='expense').sort((a,b)=>b.amount-a.amount).slice(0,5);
+    if(!list.length) return 'ยังไม่มีรายจ่ายเดือนนี้ครับ';
+    let r=`💸 **5 รายการสูงสุด ${MN[curM-1]}**\n\n`;
+    list.forEach((t,i)=>r+=`${i+1}. ${t.description||getCat(t.category,'expense').label}: ${fmt(t.amount)}\n`);
+    return r;
+  }
+
+  // น้ำมัน
+  if(/น้ำมัน|ปั๊ม|fuel|เติม/.test(m)){
+    let r=`⛽ **ค่าน้ำมัน 6 เดือนล่าสุด**\n\n`, total=0;
+    for(let i=5;i>=0;i--){ let mn=curM-i,yr=curY; if(mn<=0){mn+=12;yr--;} const s=catSum(txMonth(yr,mn),'fuel'); total+=s; r+=`${MN[mn-1]}: ${fmt(s)}\n`; }
+    r+=`\n**เฉลี่ย/เดือน: ${fmt(total/6)}**`;
+    return r;
+  }
+
+  // อาหาร
+  if(/อาหาร|กิน|ข้าว|food/.test(m)){
+    const s=catSum(cur,'food'), days=new Date().getDate();
+    let r=`🍽️ **ค่าอาหาร${MN[curM-1]}**\n\nรวม: ${fmt(s)}\nเฉลี่ย/วัน: ${fmt(s/days)}\n`;
+    const ps=catSum(prev,'food');
+    if(ps) r+=`เดือนก่อน: ${fmt(ps)} (${trend(s,ps)})`;
+    return r;
+  }
+
+  // รายรับ
+  if(/รายรับ|เงินเดือน|รายได้|income|เงินเข้า/.test(m)){
+    const list=cur.filter(t=>t.type==='income');
+    let r=`💰 **รายรับ${MN[curM-1]}**\n\nรวม: **${fmt(curInc)}**\n`;
+    if(list.length){ r+=`\n**รายละเอียด:**\n`; list.forEach(t=>r+=`• ${t.description||getCat(t.category,'income').label}: ${fmt(t.amount)}\n`); }
+    if(prevInc) r+=`\nเดือนก่อน: ${fmt(prevInc)} (${trend(curInc,prevInc)})`;
+    return r;
+  }
+
+  // เงินออม
+  if(/ออม|savings|สะสม|เงินเก็บ/.test(m)){
+    const savs=DB.savings||[];
+    if(!savs.length) return 'ยังไม่มีข้อมูลเงินออมครับ ไปเพิ่มได้ที่หน้า "เงินออม"';
+    let r=`💎 **เงินออมทั้งหมด**\n\n`, total=0;
+    savs.forEach(s=>{ const p=s.target?` / ${fmt(s.target)} (${(s.current/s.target*100).toFixed(0)}%)`:''; r+=`• ${s.name}: ${fmt(s.current)}${p}\n`; total+=s.current; });
+    r+=`\n**รวม: ${fmt(total)}**`;
+    return r;
+  }
+
+  // หนี้
+  if(/หนี้|debt|ผ่อน|ค้างชำระ|กู้/.test(m)){
+    const debts=DB.debts||[];
+    if(!debts.length) return 'ไม่พบข้อมูลหนี้ครับ ✅';
+    let r=`💳 **หนี้สินทั้งหมด**\n\n`, total=0;
+    debts.forEach(d=>{ const rem=d.remaining||d.amount; r+=`• ${d.name}: ${fmt(rem)}`; if(d.monthly) r+=` (ผ่อน ${fmt(d.monthly)}/เดือน)`; r+='\n'; total+=rem; });
+    r+=`\n**ยอดหนี้รวม: ${fmt(total)}**`;
+    return r;
+  }
+
+  // หุ้น/พอร์ต
+  if(/หุ้น|พอร์ต|ลงทุน|กำไร|ขาดทุน|invest/.test(m)){
+    const invs=DB.investments||[];
+    if(!invs.length) return 'ยังไม่มีข้อมูลพอร์ตครับ';
+    let r=`📈 **พอร์ตลงทุน**\n\n`, tc=0, tv=0;
+    invs.forEach(inv=>{ const cost=inv.buyPrice*inv.qty, val=(inv.currentPrice||inv.buyPrice)*inv.qty, pl=val-cost; r+=`• ${inv.symbol||inv.name}: ${fmt(val)} (${pl>=0?'▲+':'▼'}${fmt(Math.abs(pl))})\n`; tc+=cost; tv+=val; });
+    const pl=tv-tc;
+    r+=`\n**มูลค่ารวม: ${fmt(tv)}\nกำไร/ขาดทุน: ${pl>=0?'▲+':'▼'}${fmt(Math.abs(pl))} (${tc?(pl/tc*100).toFixed(2):0}%)**`;
+    return r;
+  }
+
+  // เฉลี่ย
+  if(/เฉลี่ย|ต่อวัน|average/.test(m)){
+    const days=now.getDate();
+    let r=`📊 **ค่าเฉลี่ยเดือน${MN[curM-1]}**\n\nรายจ่าย/วัน: ${fmt(curExp/days)}\nรายรับ/วัน: ${fmt(curInc/days)}\n`;
+    const cats=topCats(cur,3);
+    if(cats.length){ r+=`\n**หมวดที่ใช้มาก (เฉลี่ย/วัน):**\n`; cats.forEach(([c,a])=>r+=`• ${getCat(c,'expense').label}: ${fmt(a/days)}\n`); }
+    return r;
+  }
+
+  // ยอดคงเหลือ
+  if(/คงเหลือ|balance|เงินเหลือ|ยอด/.test(m)){
+    return `💵 **ยอดคงเหลือ${MN[curM-1]}**\n\nรายรับ: ${fmt(curInc)}\nรายจ่าย: ${fmt(curExp)}\n${curNet>=0?'✅ เหลือ':'⚠️ ขาด'}: **${fmt(Math.abs(curNet))}**`;
+  }
+
+  // คำแนะนำ
+  if(/แนะนำ|ควร|ประหยัด|tip|advice/.test(m)){
+    const savRate=curInc>0?((curNet/curInc)*100):0;
+    let r=`💡 **คำแนะนำการเงิน**\n\nอัตราออมเดือนนี้: ${savRate.toFixed(1)}% `;
+    r+=savRate>=20?'✅ ดีมาก!':savRate>=10?'👍 พอใช้ได้ แต่ลองเพิ่มเป็น 20%':'⚠️ ควรออมอย่างน้อย 10-20%';
+    const top=topCats(cur,1);
+    if(top.length){ const [c,a]=top[0]; r+=`\n\nหมวดใช้มากสุด: **${getCat(c,'expense').label}** (${fmt(a)})`; if(c==='food') r+=` — ลองทำอาหารกินเองบางมื้อ`; else if(c==='shopping') r+=` — ตั้งงบช้อปล่วงหน้า`; else if(c==='fuel') r+=` — วางแผนเส้นทางประหยัดน้ำมัน`; else if(c==='entertainment') r+=` — กำหนดวงเงินบันเทิง/เดือน`; }
+    const debts=DB.debts||[];
+    if(debts.length) r+=`\n\nมีหนี้ ${debts.length} รายการ — แนะนำจ่ายหนี้ดอกเบี้ยสูงก่อน`;
+    return r;
+  }
+
+  // default — สรุปย่อ + แนะนำคำถาม
+  let r=`สวัสดีครับ! ถามเรื่องการเงินได้เลย เช่น:\n"สรุปเดือนนี้" • "แยกหมวดรายจ่าย" • "ค่าน้ำมัน 6 เดือน"\n"เปรียบเทียบเดือนที่แล้ว" • "ยอดหนี้" • "พอร์ตหุ้น" • "คำแนะนำการออม"\n`;
+  if(curInc||curExp) r+=`\n📊 ${MN[curM-1]}: รับ ${fmt(curInc)} | จ่าย ${fmt(curExp)} | ${curNet>=0?'เหลือ '+fmt(curNet):'ขาด '+fmt(-curNet)}`;
+  return r;
+}
+
 async function sendChat(){
   if(chatBusy) return;
   const inp=document.getElementById('chat-input');
   const msg=inp.value.trim();
   if(!msg) return;
-  if(!DB.settings.apiKey){ toast('ตั้งค่า API Key ก่อนนะครับ','error'); return; }
 
   inp.value=''; inp.style.height='42px';
   addChatMsg('user', msg);
@@ -2580,18 +2751,21 @@ async function sendChat(){
   document.getElementById('chat-send').disabled=true;
   showTyping();
 
+  // ── ไม่มี API Key → ใช้ Rule-based AI ──
+  if(!DB.settings.apiKey){
+    await new Promise(r=>setTimeout(r,400)); // simulate thinking
+    hideTyping();
+    addChatMsg('ai', rulesAI(msg)+'\n\n<span style="font-size:11px;color:#64748b">🤖 AI ในตัว — ใส่ Gemini API Key ในตั้งค่าเพื่อใช้ AI เต็มรูปแบบ</span>');
+    chatBusy=false; document.getElementById('chat-send').disabled=false; inp.focus(); return;
+  }
+
+  // ── มี API Key → ลอง Gemini ก่อน fallback ไป rules ──
   try{
     const sysCtx=buildFinanceContext();
-    // สร้าง contents: system context + history + user message
     const contents=[];
-    // ใส่ context เป็น user turn แรก
     contents.push({role:'user',parts:[{text:sysCtx+'\n\n---\nคำถามแรก: เข้าใจข้อมูลแล้วใช่ไหม?'}]});
     contents.push({role:'model',parts:[{text:'เข้าใจครับ พร้อมช่วยวิเคราะห์การเงินของคุณแล้ว ถามได้เลย!'}]});
-    // ใส่ history
-    chatHistory.slice(0,-1).forEach(h=>{
-      contents.push({role:h.role==='ai'?'model':'user',parts:[{text:h.text}]});
-    });
-    // ใส่ message ล่าสุด
+    chatHistory.slice(0,-1).forEach(h=>{ contents.push({role:h.role==='ai'?'model':'user',parts:[{text:h.text}]}); });
     contents.push({role:'user',parts:[{text:msg}]});
 
     const {data}=await callGemini(contents,{temperature:0.7,maxOutputTokens:8192});
@@ -2599,8 +2773,9 @@ async function sendChat(){
     hideTyping();
     addChatMsg('ai', reply);
   }catch(e){
+    // Gemini ล้มเหลว → fallback rules
     hideTyping();
-    addChatMsg('ai','ขอโทษครับ เกิดข้อผิดพลาด: '+e.message);
+    addChatMsg('ai', rulesAI(msg)+'\n\n<span style="font-size:11px;color:#f59e0b">⚠️ Gemini ไม่พร้อมใช้งาน ใช้ AI ในตัวแทน</span>');
   }
   chatBusy=false;
   document.getElementById('chat-send').disabled=false;
