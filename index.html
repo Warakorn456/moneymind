@@ -265,12 +265,54 @@
     @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}.port-grid{grid-template-columns:1fr}}
     @media(max-width:860px){.charts-grid{grid-template-columns:1fr}.bottom-grid{grid-template-columns:1fr}}
     @media(max-width:700px){
+      body{overflow-x:hidden}
       .sidebar{transform:translateX(-100%)}
       .sidebar.open{transform:none}
-      .main{margin-left:0}
-      .stats-grid{grid-template-columns:repeat(2,1fr)}
-      .page{padding:16px}
-      .topbar{padding:14px 16px}
+      .main{margin-left:0;min-width:0;width:100%}
+      .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+      .page{padding:12px}
+      .topbar{padding:12px 14px;gap:8px}
+      .topbar h2{font-size:16px}
+      .topbar-right{gap:6px}
+      .topbar-right .btn{padding:7px 10px;font-size:12px}
+      .sec-hd{flex-wrap:wrap;gap:8px}
+      /* stat cards */
+      .stat-card{padding:14px}
+      .stat-value{font-size:18px!important}
+      /* investment table — scroll horizontally */
+      .port-grid{grid-template-columns:1fr;gap:12px}
+      .inv-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+      .inv-table{min-width:600px}
+      /* charts */
+      .chart-wrap{height:200px!important}
+      /* budget */
+      .budget-nums{grid-template-columns:repeat(2,1fr)}
+      /* modals */
+      .modal{padding:20px 16px;border-radius:16px}
+      .modal-title{font-size:16px}
+      /* savings grid */
+      .savings-grid{grid-template-columns:1fr}
+      /* tx list */
+      .tx-item{padding:10px 12px}
+      /* filter tabs */
+      .filter-tabs{flex-wrap:wrap;gap:4px}
+      .ftab{padding:5px 10px;font-size:12px}
+      /* section buttons */
+      .sec-hd .btn{padding:7px 10px;font-size:12px}
+      /* chat panel */
+      .chat-panel{right:10px;left:10px;width:auto;bottom:84px}
+      .chat-fab{bottom:18px;right:18px;width:50px;height:50px;font-size:20px}
+      /* toast */
+      .toast-wrap{right:10px;left:10px;bottom:80px}
+      .toast{min-width:0}
+      /* fuel card */
+      .fuel-bar-row{height:56px}
+      /* inv live bar */
+      #inv-live-bar{font-size:11px}
+    }
+    @media(max-width:380px){
+      .stats-grid{grid-template-columns:1fr}
+      .budget-nums{grid-template-columns:1fr}
     }
     .hamburger{display:none;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:4px}
     @media(max-width:700px){.hamburger{display:flex}}
@@ -502,6 +544,7 @@
         <div class="chart-wrap" id="port-chart-wrap"><canvas id="ch-port"></canvas></div>
       </div>
       <div class="card" style="padding:0;overflow:hidden">
+        <div class="inv-table-wrap">
         <table class="inv-table">
           <thead>
             <tr>
@@ -517,6 +560,7 @@
           </thead>
           <tbody id="inv-tbody"></tbody>
         </table>
+        </div>
       </div>
     </div>
   </div>
