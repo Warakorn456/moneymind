@@ -3229,7 +3229,7 @@ function getMonthItems(ym){
   return result;
 }
 
-let _expandedYears=new Set();
+let _expandedYears=new Set([new Date().getFullYear()]);
 
 function togglePlanYear(yr){
   if(_expandedYears.has(yr)) _expandedYears.delete(yr);
@@ -3352,9 +3352,6 @@ function renderBalance(){
   const fmt=n=>'฿'+Math.round(n).toLocaleString('th-TH');
   const now=new Date();
   const curYM=ymStr(now.getFullYear(),now.getMonth()+1);
-
-  // auto-expand current year on first load
-  if(_expandedYears.size===0) _expandedYears.add(now.getFullYear());
 
   // build 80-year accordion table
   const startYear=now.getFullYear();
