@@ -277,6 +277,16 @@
     .plan-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center}
     .plan-modal-bg.open{display:flex}
     .plan-modal{background:#13131f;border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
+    .plan-tabs{display:flex;gap:8px;margin-bottom:14px}
+    .plan-tab{padding:7px 18px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;font-size:13px;font-family:Sarabun,sans-serif;transition:.15s}
+    .plan-tab.active{background:var(--primary);border-color:var(--primary);color:#fff}
+    .year-tbl-wrap{overflow-x:auto;max-height:540px;overflow-y:auto;border-radius:12px;border:1px solid var(--border)}
+    .year-table{width:100%;border-collapse:collapse;font-size:13px;min-width:580px}
+    .year-table th{background:#1a1a2e;border-bottom:2px solid var(--border);padding:9px 12px;text-align:center;color:var(--muted);font-weight:600;position:sticky;top:0;z-index:1}
+    .year-table td{border-bottom:1px solid rgba(255,255,255,.05);padding:7px 12px;text-align:right}
+    .year-table td:first-child,.year-table td:nth-child(2),.year-table td:nth-child(3){text-align:center}
+    .year-table tr.yr-cur td{background:rgba(124,58,237,.13);font-weight:700}
+    .year-table tr:hover td{background:rgba(255,255,255,.03)}
     @media(max-width:700px){
       .bs-grid{grid-template-columns:1fr}
       .month-card{min-width:200px}
@@ -3031,6 +3041,20 @@ function getMonthItems(ym){
   return result;
 }
 
+let _planView='month';
+
+function getYearSummary(year){
+  const plan=getPlan();
+  let income=0, expense=0;
+  for(let m=1;m<=12;m++){
+    const ym=ymStr(year,m);
+    const items=getMonthItems(ym);
+    items.forEach(it=>{ if(it.type==='income') income+=it.amount; else expense+=it.amount; });
+    income+=(plan.monthlyIncome||0);
+  }
+  return {income, expense, balance:income-expense};
+}
+
 function calcNetWorth(){
   const savings=(DB.savings||[]).reduce((s,v)=>s+v.current,0);
   const invVal=(DB.investments||[]).reduce((s,inv)=>s+(inv.currentPrice||inv.buyPrice)*inv.qty,0);
@@ -3084,6 +3108,43 @@ function renderBalance(){
     </div>`;
   }
 
+  // build 80-year table
+  const startYear=now.getFullYear();
+  const dobYear=DB.profile&&DB.profile.dob?new Date(DB.profile.dob).getFullYear():null;
+  const hasAge=!!dobYear;
+  let cumNW=nw.netWorth;
+  let yearRows='';
+  for(let yi=0;yi<80;yi++){
+    const yr=startYear+yi;
+    const ys=getYearSummary(yr);
+    cumNW+=ys.balance;
+    const age=hasAge?(yr-dobYear):null;
+    const isCur=yi===0;
+    const rowClass=isCur?'yr-cur':'';
+    const nwColor=cumNW>=0?'#10b981':'#ef4444';
+    const balColor=ys.balance>=0?'#10b981':'#ef4444';
+    yearRows+=`<tr class="${rowClass}">
+      <td>${yr}</td><td>${yr+543}</td>
+      ${hasAge?`<td>${age}</td>`:''}
+      <td style="color:#10b981">${fmt(ys.income)}</td>
+      <td style="color:#ef4444">${fmt(ys.expense)}</td>
+      <td style="color:${balColor};font-weight:600">${ys.balance>=0?'+':''}${fmt(ys.balance)}</td>
+      <td style="color:${nwColor};font-weight:700">${fmt(cumNW)}</td>
+    </tr>`;
+  }
+  const yearTableHTML=`
+  <div class="year-tbl-wrap">
+    <table class="year-table">
+      <thead><tr>
+        <th>ปี ค.ศ.</th><th>พ.ศ.</th>
+        ${hasAge?'<th>อายุ</th>':''}
+        <th>รายรับ/ปี</th><th>รายจ่าย/ปี</th><th>คงเหลือ/ปี</th><th>ทรัพย์สินสะสม</th>
+      </tr></thead>
+      <tbody>${yearRows}</tbody>
+    </table>
+  </div>
+  <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:right">* ทรัพย์สินสะสมเริ่มจาก Net Worth ปัจจุบัน ${fmt(nw.netWorth)}</div>`;
+
   el.innerHTML=`
   <!-- Net Worth Banner -->
   <div class="nw-card">
@@ -3123,12 +3184,18 @@ function renderBalance(){
     <input style="width:140px;background:#1a1a2e;border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:15px;font-weight:700;color:var(--cyan);font-family:Sarabun,sans-serif;text-align:right" type="number" value="${plan.monthlyIncome||0}" placeholder="0" onchange="getPlan().monthlyIncome=parseFloat(this.value)||0;saveDB();renderBalance()">
   </div>
 
-  <!-- Month planner -->
+  <!-- Month/Year planner -->
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-    <div style="font-size:15px;font-weight:700"><i class="fas fa-calendar-alt" style="color:var(--primary-l)"></i> แผนค่าใช้จ่าย 12 เดือนข้างหน้า</div>
+    <div style="font-size:15px;font-weight:700"><i class="fas fa-calendar-alt" style="color:var(--primary-l)"></i> แผนการเงิน</div>
     <button class="btn btn-primary" onclick="openPlanModal()"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
   </div>
-  <div class="month-scroll">${monthCards}</div>
+  <div class="plan-tabs">
+    <button class="plan-tab ${_planView==='month'?'active':''}" onclick="_planView='month';renderBalance()"><i class="fas fa-calendar"></i> รายเดือน 12 เดือน</button>
+    <button class="plan-tab ${_planView==='year'?'active':''}" onclick="_planView='year';renderBalance()"><i class="fas fa-chart-line"></i> รายปี 80 ปี</button>
+  </div>
+  ${_planView==='month'
+    ? `<div class="month-scroll">${monthCards}</div>`
+    : yearTableHTML}
   `;
 }
 
