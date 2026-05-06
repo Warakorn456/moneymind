@@ -280,6 +280,12 @@
     .tax-hint{font-size:11px;color:var(--muted);margin-top:4px}
     .tax-toggle{display:flex;align-items:center;gap:8px}
     .tax-toggle input[type=checkbox]{width:16px;height:16px;accent-color:var(--primary)}
+    .tax-upload-zone{flex:1;min-width:130px;background:rgba(255,255,255,.03);border:2px dashed rgba(255,255,255,.12);border-radius:12px;padding:18px 12px;text-align:center;cursor:pointer;transition:.2s;font-size:13px}
+    .tax-upload-zone:hover{border-color:rgba(124,58,237,.5);background:rgba(124,58,237,.05)}
+    .tax-upload-zone.loading{opacity:.6;pointer-events:none}
+    .tax-preview-card{background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.3);border-radius:12px;padding:16px;margin-top:14px}
+    .tax-preview-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .tax-preview-row:last-child{border-bottom:none}
     @media(max-width:700px){
       .tax-grid{grid-template-columns:1fr}
       .tax-result-panel{position:static}
@@ -2695,6 +2701,27 @@ function renderTax(){
   if(!inp) return;
 
   inp.innerHTML=`
+  <!-- อัปโหลดเอกสาร -->
+  <div class="tax-card">
+    <div class="set-title"><i class="fas fa-cloud-upload-alt" style="color:#a78bfa"></i> สแกนเอกสารด้วย AI</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">โยนสลิปหรือ ทวิ 50 แล้ว AI จะแยกข้อมูลใส่ช่องให้อัตโนมัติ</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div class="tax-upload-zone" id="slip-zone" onclick="document.getElementById('slip-file').click()">
+        <i class="fas fa-file-alt" style="font-size:22px;color:#a78bfa;display:block;margin-bottom:6px"></i>
+        <div style="font-weight:600">สลิปเงินเดือน</div>
+        <div class="tax-hint">รูปภาพหรือ PDF</div>
+      </div>
+      <div class="tax-upload-zone" id="tawi-zone" onclick="document.getElementById('tawi-file').click()">
+        <i class="fas fa-file-invoice" style="font-size:22px;color:#06b6d4;display:block;margin-bottom:6px"></i>
+        <div style="font-weight:600">ทวิ 50</div>
+        <div class="tax-hint">หนังสือรับรองหักภาษี</div>
+      </div>
+    </div>
+    <input type="file" id="slip-file" accept="image/*,.pdf" style="display:none" onchange="processPaySlip(this.files[0]);this.value=''">
+    <input type="file" id="tawi-file" accept="image/*,.pdf" style="display:none" onchange="processTawi50(this.files[0]);this.value=''">
+    <div id="tax-doc-preview"></div>
+  </div>
+
   <!-- รายได้ -->
   <div class="tax-card">
     <div class="set-title"><i class="fas fa-coins" style="color:#10b981"></i> รายได้ปี ${t.year||curYear}</div>
@@ -2802,6 +2829,144 @@ function renderTax(){
   </div>`;
 
   calcTaxLive();
+}
+
+// ── Tax document OCR ──
+function readFileAsDataURL(file){
+  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsDataURL(file); });
+}
+
+function setZoneLoading(id,loading){
+  const z=document.getElementById(id);
+  if(!z) return;
+  if(loading){ z.classList.add('loading'); z.dataset.orig=z.innerHTML; z.innerHTML='<i class="fas fa-spinner fa-spin" style="font-size:22px;margin-bottom:6px;display:block"></i><div>กำลังอ่าน...</div>'; }
+  else{ z.classList.remove('loading'); if(z.dataset.orig) z.innerHTML=z.dataset.orig; }
+}
+
+function showTaxPreview(title, color, icon, rows, onConfirm){
+  const p=document.getElementById('tax-doc-preview');
+  if(!p) return;
+  const rowsHTML=rows.map(([label,val])=>`<div class="tax-preview-row"><span style="color:var(--muted)">${label}</span><span style="font-weight:600;color:${color}">${val}</span></div>`).join('');
+  p.innerHTML=`<div class="tax-preview-card">
+    <div style="font-size:14px;font-weight:700;margin-bottom:10px;color:${color}"><i class="${icon}"></i> ${title}</div>
+    ${rowsHTML}
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-primary" style="flex:1" onclick="(${onConfirm.toString()})()">✅ ใส่ข้อมูลลงช่อง</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('tax-doc-preview').innerHTML=''">ยกเลิก</button>
+    </div>
+  </div>`;
+}
+
+async function processPaySlip(file){
+  if(!file) return;
+  if(!DB.settings.apiKey){ toast('ต้องมี Gemini API Key เพื่อสแกนเอกสาร — ไปที่ตั้งค่า','error'); return; }
+  setZoneLoading('slip-zone',true);
+  try{
+    const dataURL=await readFileAsDataURL(file);
+    const b64=dataURL.split(',')[1];
+    const mime=dataURL.split(';')[0].split(':')[1];
+    const prompt=`อ่านข้อมูลจากสลิปเงินเดือนนี้ ตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น ไม่มี markdown
+{"salary":number,"bonus":number,"sso":number,"pvd":number,"tax_withheld":number,"month":number,"year":number}
+- salary = รายได้รวมก่อนหักทุกอย่าง (gross)
+- bonus = โบนัส/ค่าตอบแทนพิเศษ (ถ้าไม่มีใส่ 0)
+- sso = ประกันสังคมที่หักเดือนนี้
+- pvd = กองทุนสำรองเลี้ยงชีพที่หักเดือนนี้ (ถ้าไม่มีใส่ 0)
+- tax_withheld = ภาษีหัก ณ ที่จ่ายเดือนนี้
+- month = เดือน 1-12, year = ปี ค.ศ. (ถ้าเห็น พ.ศ. ให้ลบ 543)
+ถ้าไม่พบข้อมูลใส่ 0`;
+    const {data}=await callGemini([{parts:[{inline_data:{mime_type:mime,data:b64}},{text:prompt}]}],{temperature:0.1,maxOutputTokens:512});
+    const text=data.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
+    const m=text.match(/\{[\s\S]*\}/);
+    if(!m) throw new Error('ไม่พบข้อมูล — ลองใช้รูปที่ชัดขึ้น');
+    const r=JSON.parse(m[0]);
+    setZoneLoading('slip-zone',false);
+    const fmt=n=>n?'฿'+Math.round(n).toLocaleString('th-TH'):'–';
+    showTaxPreview(
+      `สลิปเงินเดือน ${r.month?`เดือน ${r.month}`:''} ${r.year||''}`, '#a78bfa', 'fas fa-file-alt',
+      [
+        ['เงินเดือน (gross)', fmt(r.salary)],
+        ['โบนัส', fmt(r.bonus)],
+        ['ประกันสังคม', fmt(r.sso)],
+        ['กองทุนสำรองเลี้ยงชีพ', fmt(r.pvd)],
+        ['ภาษีหัก ณ ที่จ่ายเดือนนี้', fmt(r.tax_withheld)],
+      ],
+      function(){
+        const t=getTax();
+        const months=12;
+        if(r.salary) t.salary=Math.round((t.salary||0)+r.salary);
+        if(r.bonus)  t.salary=Math.round((t.salary||0)+r.bonus);
+        if(r.sso)    t.sso=Math.min(9000,Math.round((t.sso||0)+r.sso));
+        if(r.pvd)    t.pvd=Math.round((t.pvd||0)+r.pvd*months);
+        if(r.tax_withheld) t.withheld=Math.round((t.withheld||0)+r.tax_withheld);
+        saveDB(); renderTax();
+        toast('ใส่ข้อมูลสลิปแล้ว','success');
+      }
+    );
+  }catch(e){
+    setZoneLoading('slip-zone',false);
+    toast('อ่านสลิปไม่สำเร็จ: '+e.message,'error');
+  }
+}
+
+async function processTawi50(file){
+  if(!file) return;
+  if(!DB.settings.apiKey){ toast('ต้องมี Gemini API Key เพื่อสแกนเอกสาร — ไปที่ตั้งค่า','error'); return; }
+  setZoneLoading('tawi-zone',true);
+  try{
+    const dataURL=await readFileAsDataURL(file);
+    const b64=dataURL.split(',')[1];
+    const mime=dataURL.split(';')[0].split(':')[1];
+    // ทวิ50 อาจเป็น PDF ขนาดใหญ่ → ใช้ File API
+    let part;
+    if(mime==='application/pdf'){
+      const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+      const uri=await uploadToGeminiFileAPI(bytes,mime,DB.settings.apiKey);
+      part={file_data:{mime_type:'application/pdf',file_uri:uri}};
+    } else {
+      part={inline_data:{mime_type:mime,data:b64}};
+    }
+    const prompt=`อ่านข้อมูลจากหนังสือรับรองการหักภาษี ณ ที่จ่าย (ทวิ 50) นี้ ตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น ไม่มี markdown
+{"payer":"string","income_type":"string","total_income":number,"total_tax":number,"sso":number,"pvd":number,"year":number}
+- payer = ชื่อบริษัท/ผู้จ่ายเงิน
+- income_type = ประเภทเงินได้ เช่น "40(1)" หรือ "เงินเดือน"
+- total_income = รายได้รวมทั้งปีที่ระบุในเอกสาร
+- total_tax = ภาษีที่หักทั้งปีที่ระบุในเอกสาร
+- sso = ประกันสังคมทั้งปี (ถ้าระบุ ถ้าไม่มีใส่ 0)
+- pvd = กองทุนสำรองเลี้ยงชีพทั้งปี (ถ้าระบุ ถ้าไม่มีใส่ 0)
+- year = ปีภาษี ค.ศ. (ถ้าเห็น พ.ศ. ให้ลบ 543)
+ถ้าไม่พบข้อมูลใส่ 0 หรือ string ว่าง`;
+    const {data}=await callGemini([{parts:[part,{text:prompt}]}],{temperature:0.1,maxOutputTokens:512});
+    const text=data.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
+    const m=text.match(/\{[\s\S]*\}/);
+    if(!m) throw new Error('ไม่พบข้อมูล — ลองใช้รูปที่ชัดขึ้น');
+    const r=JSON.parse(m[0]);
+    setZoneLoading('tawi-zone',false);
+    const fmt=n=>n?'฿'+Math.round(n).toLocaleString('th-TH'):'–';
+    showTaxPreview(
+      `ทวิ 50 ${r.year?`ปี ${r.year}`:''} — ${r.payer||''}`, '#06b6d4', 'fas fa-file-invoice',
+      [
+        ['ผู้จ่ายเงิน', r.payer||'–'],
+        ['ประเภทเงินได้', r.income_type||'–'],
+        ['รายได้รวมทั้งปี', fmt(r.total_income)],
+        ['ภาษีที่ถูกหักทั้งปี', fmt(r.total_tax)],
+        ['ประกันสังคม', fmt(r.sso)],
+        ['กองทุนสำรองเลี้ยงชีพ', fmt(r.pvd)],
+      ],
+      function(){
+        const t=getTax();
+        if(r.total_income) t.salary=Math.round(r.total_income);
+        if(r.total_tax)    t.withheld=Math.round(r.total_tax);
+        if(r.sso)          t.sso=Math.min(9000,Math.round(r.sso));
+        if(r.pvd)          t.pvd=Math.round(r.pvd);
+        if(r.year)         t.year=r.year;
+        saveDB(); renderTax();
+        toast('ใส่ข้อมูล ทวิ 50 แล้ว','success');
+      }
+    );
+  }catch(e){
+    setZoneLoading('tawi-zone',false);
+    toast('อ่าน ทวิ 50 ไม่สำเร็จ: '+e.message,'error');
+  }
 }
 
 // ══════════════════════════════════════════
