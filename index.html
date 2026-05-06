@@ -1375,13 +1375,13 @@ async function aiReadReceipt(dataURL){
     const prompt=isIncome
       ? 'อ่านข้อมูลจากสลิปเงินเดือนหรือเอกสารรายรับนี้ ตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น รูปแบบ: {"amount":number,"gross":number,"deductions":number,"date":"YYYY-MM-DD","description":"string","category":"salary|freelance|invest_return|bonus|rental|other_inc"} โดย amount = ยอดสุทธิที่ได้รับ, gross = รายได้ก่อนหัก, deductions = ยอดหักทั้งหมด ถ้าไม่รู้วันที่ใช้: '+new Date().toISOString().split('T')[0]
       : 'อ่านข้อมูลจากใบเสร็จนี้ ตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น รูปแบบ: {"amount":number,"date":"YYYY-MM-DD","description":"string","category":"food|transport|fuel|housing|utility|health|entertainment|shopping|education|insurance|debt_pay|other_exp"} fuel=ใบเสร็จปั๊มน้ำมัน/เติมน้ำมัน/น้ำมันเชื้อเพลิง ถ้าไม่รู้วันที่ใช้: '+new Date().toISOString().split('T')[0];
-    let preferred='gemini-2.0-flash';
+    let preferred='gemini-1.5-flash';
     try{
       const listRes=await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${DB.settings.apiKey}`);
       if(listRes.ok){
         const listData=await listRes.json();
         const available=(listData.models||[]).filter(m=>m.supportedGenerationMethods?.includes('generateContent')).map(m=>m.name.replace('models/',''));
-        if(available.length) preferred=available.find(m=>m.includes('flash'))||available.find(m=>m.includes('pro'))||available[0];
+        if(available.length) preferred=available.find(m=>m.includes('1.5-flash'))||available.find(m=>m.includes('2.5-flash'))||available.find(m=>m.includes('flash'))||available.find(m=>m.includes('pro'))||available[0];
       }
     }catch{}
     const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${preferred}:generateContent?key=${DB.settings.apiKey}`,{
@@ -1534,13 +1534,13 @@ async function aiReadStatement(b64,mime){
 
   try{
     if(!DB.settings.apiKey) throw new Error('ยังไม่ได้ตั้งค่า API Key — ไปที่ Settings ก่อน');
-    let model='gemini-2.0-flash';
+    let model='gemini-1.5-flash';
     try{
       const listRes=await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${DB.settings.apiKey}`);
       if(listRes.ok){
         const listData=await listRes.json();
         const available=(listData.models||[]).filter(m=>m.supportedGenerationMethods?.includes('generateContent')).map(m=>m.name.replace('models/',''));
-        if(available.length) model=available.find(m=>m.includes('flash'))||available.find(m=>m.includes('pro'))||available[0];
+        if(available.length) model=available.find(m=>m.includes('1.5-flash'))||available.find(m=>m.includes('2.5-flash'))||available.find(m=>m.includes('flash'))||available.find(m=>m.includes('pro'))||available[0];
       }
     }catch{}
 
@@ -2394,13 +2394,13 @@ async function sendChat(){
     contents.push({role:'user',parts:[{text:msg}]});
 
     if(!DB.settings.apiKey) throw new Error('ยังไม่ได้ตั้งค่า API Key — ไปที่ Settings ก่อน');
-    let model='gemini-2.0-flash';
+    let model='gemini-1.5-flash';
     try{
       const listRes=await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${DB.settings.apiKey}`);
       if(listRes.ok){
         const listData=await listRes.json();
         const available=(listData.models||[]).filter(m=>m.supportedGenerationMethods?.includes('generateContent')).map(m=>m.name.replace('models/',''));
-        if(available.length) model=available.find(m=>m.includes('flash'))||available.find(m=>m.includes('pro'))||available[0];
+        if(available.length) model=available.find(m=>m.includes('1.5-flash'))||available.find(m=>m.includes('2.5-flash'))||available.find(m=>m.includes('flash'))||available.find(m=>m.includes('pro'))||available[0];
       }
     }catch{}
 
