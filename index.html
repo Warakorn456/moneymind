@@ -161,11 +161,11 @@
 
     /* ── Savings ── */
     .savings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
-    .scard{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;transition:transform .2s,opacity .2s,outline .15s;cursor:grab}
+    .scard{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;transition:transform .2s,opacity .2s,outline .15s;user-select:none}
     .scard:hover{transform:translateY(-2px)}
     .scard.dragging{opacity:.35;transform:scale(.97)}
-    .scard.drag-over{outline:2px dashed var(--primary);outline-offset:3px;background:rgba(124,58,237,.08)}
-    .drag-handle{color:var(--muted);font-size:16px;line-height:1;margin-right:8px;cursor:grab;flex-shrink:0;opacity:.5}
+    .scard.drag-over{outline:2px dashed var(--primary);outline-offset:3px;background:rgba(124,58,237,.08);transform:none}
+    .drag-handle{color:var(--muted);font-size:18px;line-height:1;margin-right:8px;cursor:grab;flex-shrink:0;opacity:.45;display:inline-block}
     .scard-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
     .scard-name{font-size:15px;font-weight:600}
     .scard-sub{font-size:11px;color:var(--muted);margin-top:2px}
@@ -2289,19 +2289,31 @@ function importStmt(){
 // ══════════════════════════════════════════
 const SC={cyan:'#06b6d4',green:'#10b981',purple:'#7c3aed',pink:'#ec4899',amber:'#f59e0b'};
 
+let _savDragId=null;
+function _savStart(e,id){ _savDragId=id; e.dataTransfer.setData('text/plain',id); e.dataTransfer.effectAllowed='move'; setTimeout(()=>e.currentTarget.classList.add('dragging'),0); }
+function _savEnd(e){ e.currentTarget.classList.remove('dragging'); document.querySelectorAll('#savings-grid .scard').forEach(c=>c.classList.remove('drag-over')); }
+function _savOver(e,id){ e.preventDefault(); e.dataTransfer.dropEffect='move'; if(id!==_savDragId){ document.querySelectorAll('#savings-grid .scard').forEach(c=>c.classList.remove('drag-over')); e.currentTarget.classList.add('drag-over'); } }
+function _savLeave(e){ e.currentTarget.classList.remove('drag-over'); }
+function _savDrop(e,id){ e.preventDefault(); if(!_savDragId||_savDragId===id) return; const from=DB.savings.findIndex(s=>s.id===_savDragId),to=DB.savings.findIndex(s=>s.id===id); if(from<0||to<0) return; const [item]=DB.savings.splice(from,1); DB.savings.splice(to,0,item); saveDB(); renderSavings(); }
+
 function renderSavings(){
   const el=document.getElementById('savings-grid');
   if(!DB.savings.length){ el.innerHTML='<div class="empty" style="grid-column:1/-1"><i class="fas fa-piggy-bank"></i><p>เริ่มตั้งเป้าหมายออมเงินกันเถอะ!</p></div>'; return; }
   el.innerHTML=DB.savings.map(s=>{
     const pct=Math.min(100,(s.current/s.target)*100);
     const color=SC[s.color]||'#06b6d4';
-    return `<div class="scard" draggable="true" data-id="${s.id}">
+    return `<div class="scard" draggable="true" data-id="${s.id}"
+      ondragstart="_savStart(event,'${s.id}')"
+      ondragend="_savEnd(event)"
+      ondragover="_savOver(event,'${s.id}')"
+      ondragleave="_savLeave(event)"
+      ondrop="_savDrop(event,'${s.id}')">
       <div class="scard-hd">
         <div style="display:flex;align-items:flex-start">
-          <span class="drag-handle">⠿</span>
+          <span class="drag-handle" title="ลากเพื่อเรียงลำดับ">⠿</span>
           <div><div class="scard-name">${s.name}</div>${s.deadline?`<div class="scard-sub">ถึง ${fmtD(s.deadline)}</div>`:''}</div>
         </div>
-        <div style="display:flex;gap:5px"><button class="icon-btn" onclick="event.stopPropagation();editSav('${s.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="event.stopPropagation();delSav('${s.id}')"><i class="fas fa-trash"></i></button></div>
+        <div style="display:flex;gap:5px"><button class="icon-btn" onclick="editSav('${s.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delSav('${s.id}')"><i class="fas fa-trash"></i></button></div>
       </div>
       <div class="scard-amts"><div class="scard-cur" style="color:${color}">${fmt(s.current)}</div><div class="scard-tgt">/ ${fmt(s.target)}</div></div>
       <div class="pbar"><div class="pfill" style="width:${pct}%;background:${color}"></div></div>
@@ -2311,36 +2323,6 @@ function renderSavings(){
       ${pct>=100?'<div style="margin-top:10px;text-align:center;color:var(--green);font-size:13px;font-weight:700"><i class="fas fa-check-circle"></i> บรรลุเป้าหมายแล้ว!</div>':''}
     </div>`;
   }).join('');
-
-  let dragId=null;
-  el.querySelectorAll('.scard').forEach(card=>{
-    card.addEventListener('dragstart',e=>{
-      dragId=card.dataset.id;
-      e.dataTransfer.effectAllowed='move';
-      setTimeout(()=>card.classList.add('dragging'),0);
-    });
-    card.addEventListener('dragend',()=>{
-      card.classList.remove('dragging');
-      el.querySelectorAll('.scard').forEach(c=>c.classList.remove('drag-over'));
-    });
-    card.addEventListener('dragover',e=>{
-      e.preventDefault();
-      e.dataTransfer.dropEffect='move';
-      el.querySelectorAll('.scard').forEach(c=>c.classList.remove('drag-over'));
-      if(card.dataset.id!==dragId) card.classList.add('drag-over');
-    });
-    card.addEventListener('dragleave',()=>card.classList.remove('drag-over'));
-    card.addEventListener('drop',e=>{
-      e.preventDefault();
-      if(!dragId||dragId===card.dataset.id) return;
-      const fromIdx=DB.savings.findIndex(s=>s.id===dragId);
-      const toIdx=DB.savings.findIndex(s=>s.id===card.dataset.id);
-      if(fromIdx<0||toIdx<0) return;
-      const [item]=DB.savings.splice(fromIdx,1);
-      DB.savings.splice(toIdx,0,item);
-      saveDB(); renderSavings();
-    });
-  });
 }
 
 function openSavModal(){
