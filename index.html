@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
   <title>MoneyMind — การเงินส่วนตัว</title>
   <style>
     #login-screen{position:fixed;inset:0;background:#0d0d1a;z-index:99999;display:none;align-items:center;justify-content:center;font-family:'Sarabun',sans-serif}
@@ -1242,11 +1244,14 @@ const _fbConfig={
   appId:'1:668138190451:web:d181da0bf022bcc0c09c06'
 };
 let _fs=null, _fsUnsub=null;
-try{
-  const _app=firebase.apps.length?firebase.app():firebase.initializeApp(_fbConfig);
-  _fs=firebase.firestore(_app);
-  console.log('[Firebase] Firestore initialized OK');
-}catch(e){ console.error('[Firebase] init error:',e); }
+(function initFirebase(){
+  try{
+    if(typeof firebase==='undefined'){ console.error('[Firebase] SDK ไม่โหลด'); return; }
+    const _app=firebase.apps.length?firebase.app():firebase.initializeApp(_fbConfig);
+    _fs=firebase.firestore(_app);
+    console.log('[Firebase] OK - projectId:',_fbConfig.projectId);
+  }catch(e){ console.error('[Firebase] init error:',e.message); }
+})();
 
 function setSyncStatus(s){
   const ic=document.getElementById('sync-icon');
@@ -1320,13 +1325,28 @@ function fsListen(){
 }
 
 async function fsTest(){
-  if(!_fs){ toast('Firebase SDK โหลดไม่ได้ ❌','error'); return; }
+  if(typeof firebase==='undefined'){
+    alert('❌ Firebase SDK โหลดไม่ได้\nลอง Hard Refresh (Ctrl+Shift+R)');
+    setSyncStatus('error'); return;
+  }
+  if(!_fs){
+    alert('❌ Firebase ไม่ได้ initialized\nดู Console สำหรับ error');
+    setSyncStatus('error'); return;
+  }
   try{
     setSyncStatus('syncing');
-    await _fs.collection('_ping').doc('test').set({t:Date.now()});
+    await _fs.collection('_ping').doc('test').set({t:Date.now(),user:currentUser||'anon'});
     const d=await _fs.collection('_ping').doc('test').get();
-    if(d.exists){ toast('Firebase เชื่อมต่อสำเร็จ ✅','success'); setSyncStatus('ok'); fsSave(); }
-  }catch(e){ toast('Firebase Error: '+e.message,'error'); setSyncStatus('error'); }
+    if(d.exists){
+      alert('✅ Firebase เชื่อมต่อสำเร็จ!\nกำลัง sync ข้อมูล...');
+      setSyncStatus('ok');
+      await fsSave();
+      toast('อัปโหลดข้อมูลขึ้น Cloud แล้ว','success');
+    }
+  }catch(e){
+    alert('❌ Firebase Error:\n'+e.message+'\n\nอาจเป็นเพราะ Firestore Rules ยังไม่เปิด');
+    setSyncStatus('error');
+  }
 }
 
 function fsStop(){ if(_fsUnsub){ _fsUnsub(); _fsUnsub=null; } setSyncStatus('idle'); }
