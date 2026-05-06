@@ -2508,44 +2508,65 @@ function renderPortChart(){
 // ── Currency & FX ──
 let cachedFxRate = null;
 
-async function proxyFetch(url){
-  // 1) direct
-  try{ const r=await fetch(url); if(r.ok) return r.json(); }catch{}
-  // 2) allorigins (reliable CORS proxy)
+async function _fetchWithTimeout(url, ms=7000){
+  const ctrl=new AbortController();
+  const t=setTimeout(()=>ctrl.abort(),ms);
   try{
-    const r=await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url));
-    if(r.ok) return r.json();
-  }catch{}
-  // 3) corsproxy.io fallback
-  const r=await fetch('https://corsproxy.io/?'+encodeURIComponent(url));
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  return r.json();
+    const r=await fetch(url,{signal:ctrl.signal});
+    clearTimeout(t);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const text=await r.text();
+    if(text.startsWith('<')) throw new Error('ได้รับ HTML แทน JSON');
+    return JSON.parse(text);
+  }finally{ clearTimeout(t); }
+}
+
+async function proxyFetch(url){
+  const proxies=[
+    url,
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(url),
+    'https://corsproxy.io/?'+encodeURIComponent(url),
+    'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url),
+    'https://thingproxy.freeboard.io/fetch/'+url,
+  ];
+  let lastErr='';
+  for(const p of proxies){
+    try{ return await _fetchWithTimeout(p,7000); }
+    catch(e){ lastErr=e.message; }
+  }
+  throw new Error('ดึงข้อมูลไม่ได้จากทุก proxy: '+lastErr);
 }
 
 async function yhFetch(ticker){
-  // ลอง Yahoo Finance หลาย endpoint
   const endpoints=[
     `https://query2.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`,
     `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`,
-    `https://query2.finance.yahoo.com/v7/finance/quote?symbols=${ticker}&lang=en-US`,
-    `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ticker}&lang=en-US`,
+    `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${ticker}?modules=price`,
+    `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${ticker}?modules=price`,
+    `https://query2.finance.yahoo.com/v7/finance/quote?symbols=${ticker}`,
+    `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ticker}`,
   ];
   for(const url of endpoints){
     try{
       const d=await proxyFetch(url);
-      // v8 chart response
+      // v8 chart
       if(d.chart?.result?.[0]?.meta?.regularMarketPrice){
         const m=d.chart.result[0].meta;
-        return {price:m.regularMarketPrice, currency:m.currency||'THB'};
+        return {price:m.regularMarketPrice,currency:m.currency||'THB'};
       }
-      // v7 quote response
+      // v10 quoteSummary
+      if(d.quoteSummary?.result?.[0]?.price?.regularMarketPrice?.raw){
+        const p=d.quoteSummary.result[0].price;
+        return {price:p.regularMarketPrice.raw,currency:p.currency||'THB'};
+      }
+      // v7 quote
       if(d.quoteResponse?.result?.[0]?.regularMarketPrice){
         const q=d.quoteResponse.result[0];
-        return {price:q.regularMarketPrice, currency:q.currency||'THB'};
+        return {price:q.regularMarketPrice,currency:q.currency||'THB'};
       }
     }catch{}
   }
-  throw new Error('ไม่พบราคาของ '+ticker+' — ลองตรวจสอบ symbol อีกครั้ง');
+  throw new Error('ไม่พบราคาของ '+ticker);
 }
 
 async function getFxRate(){
