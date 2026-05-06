@@ -3269,6 +3269,7 @@ function renderPlanChart(year){
       inc.push(ys.income); exp.push(ys.expense); nwArr.push(cumNW);
     }
     _planChart=new Chart(canvas,{
+      type:'bar',
       data:{labels,datasets:[
         {type:'bar',label:'รายรับ/ปี',data:inc,backgroundColor:'rgba(16,185,129,.65)',borderRadius:5,order:2},
         {type:'bar',label:'รายจ่าย/ปี',data:exp,backgroundColor:'rgba(239,68,68,.65)',borderRadius:5,order:2},
@@ -3303,6 +3304,7 @@ function renderPlanChart(year){
       inc.push(i); exp.push(e); bal.push(i-e);
     }
     _planChart=new Chart(canvas,{
+      type:'bar',
       data:{labels:MN,datasets:[
         {type:'bar',label:'รายรับ',data:inc,backgroundColor:'rgba(16,185,129,.65)',borderRadius:5,order:2},
         {type:'bar',label:'รายจ่าย',data:exp,backgroundColor:'rgba(239,68,68,.65)',borderRadius:5,order:2},
