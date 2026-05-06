@@ -15,6 +15,10 @@
     .login-btn:hover{opacity:.88}.login-btn:disabled{opacity:.5}
     .login-err{font-size:13px;color:#ef4444;margin-top:10px;min-height:18px}
     .login-icon{font-size:48px;margin-bottom:20px}
+    .login-toggle{font-size:13px;color:#64748b;margin-top:16px;cursor:pointer}
+    .login-toggle span{color:#a78bfa;font-weight:600;cursor:pointer}
+    .login-toggle span:hover{text-decoration:underline}
+    .login-user-info{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(124,58,237,.15);border-radius:10px;margin-bottom:8px;font-size:13px;color:#a78bfa;font-weight:600}
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -392,12 +396,28 @@
   <div class="login-box">
     <div class="login-icon">💰</div>
     <div class="login-logo">MoneyMind</div>
-    <div class="login-sub">ระบบการเงินส่วนตัว</div>
-    <input class="login-inp" id="login-user" type="text" placeholder="ชื่อผู้ใช้" autocomplete="username">
-    <input class="login-inp" id="login-pass" type="password" placeholder="รหัสผ่าน" autocomplete="current-password"
-      onkeydown="if(event.key==='Enter') tryLogin()">
-    <button class="login-btn" id="login-btn" onclick="tryLogin()">เข้าสู่ระบบ</button>
-    <div class="login-err" id="login-err"></div>
+    <div class="login-sub" id="login-mode-sub">ระบบการเงินส่วนตัว</div>
+
+    <!-- Login form -->
+    <div id="form-login">
+      <input class="login-inp" id="login-user" type="text" placeholder="ชื่อผู้ใช้" autocomplete="username">
+      <input class="login-inp" id="login-pass" type="password" placeholder="รหัสผ่าน" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter') tryLogin()">
+      <button class="login-btn" id="login-btn" onclick="tryLogin()">เข้าสู่ระบบ</button>
+      <div class="login-err" id="login-err"></div>
+      <div class="login-toggle">ยังไม่มีบัญชี? <span onclick="switchToRegister()">สมัครใหม่</span></div>
+    </div>
+
+    <!-- Register form -->
+    <div id="form-register" style="display:none">
+      <input class="login-inp" id="reg-user" type="text" placeholder="ชื่อผู้ใช้ (ภาษาอังกฤษ ไม่มีช่องว่าง)" autocomplete="username">
+      <input class="login-inp" id="reg-pass" type="password" placeholder="รหัสผ่าน" autocomplete="new-password">
+      <input class="login-inp" id="reg-pass2" type="password" placeholder="ยืนยันรหัสผ่าน" autocomplete="new-password"
+        onkeydown="if(event.key==='Enter') tryRegister()">
+      <button class="login-btn" id="reg-btn" onclick="tryRegister()">สมัครใช้งาน</button>
+      <div class="login-err" id="reg-err"></div>
+      <div class="login-toggle">มีบัญชีแล้ว? <span onclick="switchToLogin()">เข้าสู่ระบบ</span></div>
+    </div>
   </div>
 </div>
 
@@ -423,7 +443,11 @@
       <div class="nav-item" onclick="nav('settings')"><i class="fas fa-cog"></i> ตั้งค่า</div>
     </div>
   </div>
-  <div class="sidebar-foot">ข้อมูลเก็บในเครื่องของคุณ<br>ปลอดภัย 100%</div>
+  <div class="sidebar-foot">
+    <div class="login-user-info" id="sidebar-user-info" style="display:none"><i class="fas fa-user-circle"></i> <span id="sidebar-username"></span></div>
+    <div style="font-size:12px;color:#475569;margin-bottom:8px">ข้อมูลเก็บในเครื่องของคุณ ปลอดภัย 100%</div>
+    <button onclick="doLogout()" style="width:100%;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:9px;font-size:13px;color:#ef4444;cursor:pointer;font-family:'Sarabun',sans-serif"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</button>
+  </div>
 </nav>
 
 <!-- Main -->
@@ -928,50 +952,180 @@
 
 <script>
 // ══════════════════════════════════════════
-//  DATA
+//  DATA — Multi-user
 // ══════════════════════════════════════════
-const SK = 'moneymind_v1';
+const DATA_PRE  = 'mm_data_';   // mm_data_<username>
+const USERS_KEY = 'mm_users';   // [{username, salt, hash}] for non-owner
+const SESS_KEY  = 'mm_session'; // {username}
+
+let currentUser = null;
 let DB = { transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''} };
 
-function loadDB(){ try{ const d=localStorage.getItem(SK); if(d) DB={...DB,...JSON.parse(d)}; }catch(e){} }
-function saveDB(){ localStorage.setItem(SK,JSON.stringify(DB)); }
+function userDataKey(u){ return DATA_PRE + u; }
+function loadDB(){
+  if(!currentUser) return;
+  try{ const d=localStorage.getItem(userDataKey(currentUser)); if(d) DB={...DB,...JSON.parse(d)}; }catch(e){}
+}
+function saveDB(){
+  if(!currentUser) return;
+  localStorage.setItem(userDataKey(currentUser),JSON.stringify(DB));
+}
 
-// ── Login / Decrypt ──
+// ── helpers ──
+async function pbkdf2Hash(pass, saltBytes){
+  const enc=new TextEncoder();
+  const keyMat=await crypto.subtle.importKey('raw',enc.encode(pass),{name:'PBKDF2'},false,['deriveKey']);
+  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:saltBytes,iterations:100000,hash:'SHA-256'},keyMat,{name:'AES-GCM',length:256},true,['encrypt']);
+  const raw=await crypto.subtle.exportKey('raw',key);
+  return btoa(String.fromCharCode(...new Uint8Array(raw)));
+}
+function randB64(n){ const a=new Uint8Array(n); crypto.getRandomValues(a); return btoa(String.fromCharCode(...a)); }
+function getUsers(){ try{ return JSON.parse(localStorage.getItem(USERS_KEY)||'[]'); }catch{ return []; } }
+function saveUsers(u){ localStorage.setItem(USERS_KEY,JSON.stringify(u)); }
+
+function enterApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-root').style.display='flex';
+  // show username in sidebar
+  const ui=document.getElementById('sidebar-user-info');
+  const un=document.getElementById('sidebar-username');
+  if(ui&&un){ un.textContent=currentUser; ui.style.display='flex'; }
+  localStorage.setItem(SESS_KEY,JSON.stringify({username:currentUser}));
+  initDate(); setTxType('income'); renderDash();
+}
+
+// ── Login ──
 async function tryLogin(){
-  const user=document.getElementById('login-user').value.trim();
+  const user=document.getElementById('login-user').value.trim().toLowerCase();
   const pass=document.getElementById('login-pass').value;
   const errEl=document.getElementById('login-err');
   const btn=document.getElementById('login-btn');
-  if(user!==_ENC.user){ errEl.textContent='ชื่อผู้ใช้ไม่ถูกต้อง'; return; }
+  if(!user||!pass){ errEl.textContent='กรุณากรอกข้อมูลให้ครบ'; return; }
   errEl.textContent=''; btn.disabled=true; btn.textContent='กำลังตรวจสอบ...';
+
+  // ── Owner (warakorn) — decrypt _ENC blob ──
+  if(user===_ENC.user.toLowerCase()){
+    try{
+      const enc=new TextEncoder();
+      const keyMat=await crypto.subtle.importKey('raw',enc.encode(pass),{name:'PBKDF2'},false,['deriveKey']);
+      const salt=Uint8Array.from(atob(_ENC.salt),c=>c.charCodeAt(0));
+      const iv=Uint8Array.from(atob(_ENC.iv),c=>c.charCodeAt(0));
+      const ct=Uint8Array.from(atob(_ENC.data),c=>c.charCodeAt(0));
+      const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:100000,hash:'SHA-256'},keyMat,{name:'AES-GCM',length:256},false,['decrypt']);
+      const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);
+      const data=JSON.parse(new TextDecoder().decode(plain));
+      currentUser=_ENC.user;
+      DB={...DB,...data};
+      // seed owner data into per-user key if first time
+      if(!localStorage.getItem(userDataKey(currentUser))) saveDB();
+      enterApp();
+    }catch{
+      errEl.textContent='รหัสผ่านไม่ถูกต้อง';
+      btn.disabled=false; btn.textContent='เข้าสู่ระบบ';
+    }
+    return;
+  }
+
+  // ── Other users — hash compare ──
+  const users=getUsers();
+  const rec=users.find(u=>u.username===user);
+  if(!rec){ errEl.textContent='ไม่พบชื่อผู้ใช้นี้'; btn.disabled=false; btn.textContent='เข้าสู่ระบบ'; return; }
   try{
-    const enc=new TextEncoder();
-    const keyMat=await crypto.subtle.importKey('raw',enc.encode(pass),{name:'PBKDF2'},false,['deriveKey']);
-    const salt=Uint8Array.from(atob(_ENC.salt),c=>c.charCodeAt(0));
-    const iv=Uint8Array.from(atob(_ENC.iv),c=>c.charCodeAt(0));
-    const ct=Uint8Array.from(atob(_ENC.data),c=>c.charCodeAt(0));
-    const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:100000,hash:'SHA-256'},keyMat,{name:'AES-GCM',length:256},false,['decrypt']);
-    const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);
-    const data=JSON.parse(new TextDecoder().decode(plain));
-    DB={...DB,...data}; saveDB();
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('app-root').style.display='flex';
-    initDate(); setTxType('income'); renderDash();
+    const saltBytes=Uint8Array.from(atob(rec.salt),c=>c.charCodeAt(0));
+    const hash=await pbkdf2Hash(pass,saltBytes);
+    if(hash!==rec.hash){ errEl.textContent='รหัสผ่านไม่ถูกต้อง'; btn.disabled=false; btn.textContent='เข้าสู่ระบบ'; return; }
+    currentUser=rec.username;
+    DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''} };
+    loadDB();
+    enterApp();
   }catch{
-    errEl.textContent='รหัสผ่านไม่ถูกต้อง';
+    errEl.textContent='เกิดข้อผิดพลาด ลองใหม่';
     btn.disabled=false; btn.textContent='เข้าสู่ระบบ';
   }
 }
 
-function checkLogin(){
-  if(localStorage.getItem(SK)){
-    // มีข้อมูลแล้ว ข้ามหน้า login
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('app-root').style.display='flex';
-  } else {
-    document.getElementById('login-screen').style.display='flex';
-    document.getElementById('app-root').style.display='none';
+// ── Register ──
+async function tryRegister(){
+  const user=document.getElementById('reg-user').value.trim().toLowerCase();
+  const pass=document.getElementById('reg-pass').value;
+  const pass2=document.getElementById('reg-pass2').value;
+  const errEl=document.getElementById('reg-err');
+  const btn=document.getElementById('reg-btn');
+  if(!user||!pass||!pass2){ errEl.textContent='กรุณากรอกข้อมูลให้ครบ'; return; }
+  if(!/^[a-z0-9_]{3,20}$/.test(user)){ errEl.textContent='ชื่อผู้ใช้: a-z 0-9 _ ความยาว 3-20 ตัว'; return; }
+  if(pass!==pass2){ errEl.textContent='รหัสผ่านไม่ตรงกัน'; return; }
+  if(pass.length<6){ errEl.textContent='รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'; return; }
+  if(user===_ENC.user.toLowerCase()){ errEl.textContent='ชื่อนี้ถูกใช้งานแล้ว'; return; }
+  const users=getUsers();
+  if(users.find(u=>u.username===user)){ errEl.textContent='ชื่อผู้ใช้นี้ถูกใช้งานแล้ว'; return; }
+  errEl.textContent=''; btn.disabled=true; btn.textContent='กำลังสร้างบัญชี...';
+  try{
+    const salt=randB64(16);
+    const saltBytes=Uint8Array.from(atob(salt),c=>c.charCodeAt(0));
+    const hash=await pbkdf2Hash(pass,saltBytes);
+    users.push({username:user,salt,hash});
+    saveUsers(users);
+    currentUser=user;
+    DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''} };
+    saveDB();
+    enterApp();
+  }catch{
+    errEl.textContent='เกิดข้อผิดพลาด ลองใหม่';
+    btn.disabled=false; btn.textContent='สมัครใช้งาน';
   }
+}
+
+// ── Logout ──
+function doLogout(){
+  if(!confirm('ออกจากระบบ?')) return;
+  localStorage.removeItem(SESS_KEY);
+  currentUser=null;
+  DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''} };
+  document.getElementById('app-root').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-err').textContent='';
+  switchToLogin();
+  stopInvAutoRefresh();
+}
+
+// ── Toggle login/register ──
+function switchToRegister(){
+  document.getElementById('form-login').style.display='none';
+  document.getElementById('form-register').style.display='block';
+  document.getElementById('login-mode-sub').textContent='สร้างบัญชีใหม่';
+  document.getElementById('reg-err').textContent='';
+}
+function switchToLogin(){
+  document.getElementById('form-login').style.display='block';
+  document.getElementById('form-register').style.display='none';
+  document.getElementById('login-mode-sub').textContent='ระบบการเงินส่วนตัว';
+  document.getElementById('login-err').textContent='';
+}
+
+function checkLogin(){
+  // ตรวจ session
+  try{
+    const sess=JSON.parse(localStorage.getItem(SESS_KEY)||'null');
+    if(sess&&sess.username){
+      const u=sess.username;
+      // verify data exists
+      if(localStorage.getItem(userDataKey(u))||u===_ENC.user){
+        currentUser=u;
+        DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''} };
+        loadDB();
+        document.getElementById('login-screen').style.display='none';
+        document.getElementById('app-root').style.display='flex';
+        const ui=document.getElementById('sidebar-user-info');
+        const un=document.getElementById('sidebar-username');
+        if(ui&&un){ un.textContent=currentUser; ui.style.display='flex'; }
+        return;
+      }
+    }
+  }catch{}
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app-root').style.display='none';
 }
 
 // ══════════════════════════════════════════
@@ -2268,9 +2422,8 @@ function stopInvAutoRefresh(){
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
-loadDB();
 checkLogin();
-if(localStorage.getItem(SK)){
+if(currentUser){
   initDate(); setTxType('income'); renderDash();
 }
 
