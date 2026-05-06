@@ -3237,6 +3237,89 @@ function togglePlanYear(yr){
   renderBalance();
 }
 
+let _planChart=null;
+let _planChartYear=null;
+
+function renderPlanChart(year){
+  _planChartYear=year??null;
+  const canvas=document.getElementById('plan-chart');
+  const titleEl=document.getElementById('plan-chart-title');
+  const backBtn=document.getElementById('plan-chart-back');
+  if(!canvas) return;
+  if(_planChart){ _planChart.destroy(); _planChart=null; }
+
+  const fmtK=v=>v>=1000000?'฿'+(v/1000000).toFixed(1)+'M':v>=1000?'฿'+(v/1000).toFixed(0)+'K':'฿'+Math.round(v);
+  const tooltipFmt=ctx=>'  '+ctx.dataset.label+': ฿'+Math.round(ctx.raw).toLocaleString('th-TH');
+  const scaleOpts={
+    x:{ticks:{color:'#64748b',font:{family:'Sarabun',size:11}},grid:{color:'rgba(255,255,255,.05)'}},
+    y:{ticks:{color:'#64748b',font:{family:'Sarabun',size:10},callback:fmtK},grid:{color:'rgba(255,255,255,.06)'},beginAtZero:true},
+  };
+
+  if(year==null){
+    // ── Yearly view (20 ปี) ──
+    if(titleEl) titleEl.innerHTML='<i class="fas fa-chart-bar" style="color:var(--primary-l)"></i> ภาพรวมรายปี (20 ปีข้างหน้า)';
+    if(backBtn) backBtn.style.display='none';
+    const nw0=calcNetWorth(); let cumNW=nw0.netWorth;
+    const labels=[],inc=[],exp=[],nwArr=[];
+    const sy=new Date().getFullYear();
+    for(let i=0;i<20;i++){
+      const yr=sy+i; const ys=getYearSummary(yr);
+      cumNW+=ys.balance;
+      labels.push(String(yr));
+      inc.push(ys.income); exp.push(ys.expense); nwArr.push(cumNW);
+    }
+    _planChart=new Chart(canvas,{
+      data:{labels,datasets:[
+        {type:'bar',label:'รายรับ/ปี',data:inc,backgroundColor:'rgba(16,185,129,.65)',borderRadius:5,order:2},
+        {type:'bar',label:'รายจ่าย/ปี',data:exp,backgroundColor:'rgba(239,68,68,.65)',borderRadius:5,order:2},
+        {type:'line',label:'ทรัพย์สินสะสม',data:nwArr,borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.08)',borderWidth:2,pointRadius:3,fill:true,yAxisID:'y2',order:1},
+      ]},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        onClick(e,els){
+          if(els.length){ renderPlanChart(sy+els[0].index); }
+        },
+        plugins:{
+          legend:{labels:{color:'#cbd5e1',font:{family:'Sarabun',size:12}}},
+          tooltip:{callbacks:{label:tooltipFmt}},
+        },
+        scales:{...scaleOpts,
+          y2:{position:'right',ticks:{color:'#a78bfa',font:{family:'Sarabun',size:10},callback:fmtK},grid:{display:false}},
+        },
+      }
+    });
+  } else {
+    // ── Monthly view (12 เดือนของปีนั้น) ──
+    if(titleEl) titleEl.innerHTML=`<i class="fas fa-calendar" style="color:var(--cyan)"></i> รายละเอียดรายเดือน ปี ${year} (${year+543})`;
+    if(backBtn) backBtn.style.display='inline-flex';
+    const plan=getPlan();
+    const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const inc=[],exp=[],bal=[];
+    for(let m=1;m<=12;m++){
+      const ym=ymStr(year,m);
+      const items=getMonthItems(ym);
+      const i=(plan.monthlyIncome||0)+items.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);
+      const e=items.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);
+      inc.push(i); exp.push(e); bal.push(i-e);
+    }
+    _planChart=new Chart(canvas,{
+      data:{labels:MN,datasets:[
+        {type:'bar',label:'รายรับ',data:inc,backgroundColor:'rgba(16,185,129,.65)',borderRadius:5,order:2},
+        {type:'bar',label:'รายจ่าย',data:exp,backgroundColor:'rgba(239,68,68,.65)',borderRadius:5,order:2},
+        {type:'line',label:'คงเหลือ/เดือน',data:bal,borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.08)',borderWidth:2,pointRadius:5,pointHoverRadius:7,fill:true,order:1},
+      ]},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{labels:{color:'#cbd5e1',font:{family:'Sarabun',size:12}}},
+          tooltip:{callbacks:{label:tooltipFmt}},
+        },
+        scales:scaleOpts,
+      }
+    });
+  }
+}
+
 function getYearSummary(year){
   const plan=getPlan();
   let income=0, expense=0;
@@ -3368,6 +3451,16 @@ function renderBalance(){
     <input id="plan-income-inp" style="width:160px;background:#1a1a2e;border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:16px;font-weight:700;color:var(--cyan);font-family:Sarabun,sans-serif;text-align:right;outline:none" type="number" value="${plan.monthlyIncome||0}" placeholder="0" onchange="getPlan().monthlyIncome=parseFloat(this.value)||0;saveDB();renderBalance()" onkeydown="if(event.key==='Enter'){getPlan().monthlyIncome=parseFloat(this.value)||0;saveDB();renderBalance();this.blur()}" onfocus="this.select()">
   </div>
 
+  <!-- Plan Chart -->
+  <div class="bs-card" style="margin-bottom:16px;padding:18px 20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <div id="plan-chart-title" style="font-size:15px;font-weight:700"><i class="fas fa-chart-bar" style="color:var(--primary-l)"></i> ภาพรวมรายปี (20 ปีข้างหน้า)</div>
+      <button id="plan-chart-back" onclick="renderPlanChart(null)" style="display:none;background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);color:#a78bfa;border-radius:8px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:Sarabun,sans-serif"><i class="fas fa-arrow-left"></i> กลับภาพรวม</button>
+    </div>
+    <div style="position:relative;height:280px"><canvas id="plan-chart"></canvas></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px"><i class="fas fa-hand-pointer"></i> คลิกที่แท่งกราฟปีเพื่อดูรายละเอียดรายเดือน</div>
+  </div>
+
   <!-- Plan Accordion -->
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
     <div style="font-size:15px;font-weight:700"><i class="fas fa-chart-line" style="color:var(--primary-l)"></i> แผนการเงิน 80 ปี</div>
@@ -3386,6 +3479,7 @@ function renderBalance(){
   </div>
   <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:right">* ทรัพย์สินสะสมเริ่มจาก Net Worth ปัจจุบัน ${fmt(nw.netWorth)}</div>
   `;
+  renderPlanChart(_planChartYear);
 }
 
 function openPlanModal(prefillYM){
