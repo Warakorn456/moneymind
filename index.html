@@ -4090,6 +4090,35 @@ function calcRetirePlan(r){
   const surplus=portAtRetire-fundNeeded;
   return {age,yearsToRetire,yearsInRetire,futureMonthly,fundNeeded,curPort,portAtRetire,shortfall,monthlyNeeded,surplus,nAccum,nRetire,mAccum,mPost};
 }
+function onWhatIfChange(){
+  const extra=parseFloat(document.getElementById('r-whatif-extra').value)||0;
+  const r=getRetire();
+  const c=calcRetirePlan(r);
+  renderRetireChart(r,c,extra);
+  const resEl=document.getElementById('r-whatif-result');
+  if(!resEl) return;
+  if(extra<=0){ resEl.style.display='none'; return; }
+  // compute what-if portfolio at retire
+  const n=c.nAccum; const mA=c.mAccum;
+  const portBase=c.portAtRetire; // no extra
+  const extraFV=mA>0?extra*(Math.pow(1+mA,n)-1)/mA:extra*n;
+  const wiPort=portBase+extraFV;
+  const diff=wiPort-c.fundNeeded;
+  const onTrack=diff>=0;
+  const fmtB=v=>'฿'+Math.round(v).toLocaleString('th-TH');
+  resEl.style.display='block';
+  resEl.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+    <div><span style="color:var(--muted)">พอร์ต ณ เกษียณ:</span> <span style="font-weight:700;color:#10b981">${fmtB(wiPort)}</span></div>
+    <div style="width:1px;height:16px;background:rgba(255,255,255,.15)"></div>
+    <div><span style="color:var(--muted)">เป้าหมาย:</span> <span style="font-weight:700">${fmtB(c.fundNeeded)}</span></div>
+    <div style="width:1px;height:16px;background:rgba(255,255,255,.15)"></div>
+    <div style="font-weight:700;color:${onTrack?'var(--green)':'var(--amber)'}">
+      <i class="fas ${onTrack?'fa-check-circle':'fa-minus-circle'}" style="margin-right:4px"></i>
+      ${onTrack?'เกิน '+fmtB(diff):'ยังขาดอีก '+fmtB(-diff)}
+    </div>
+    ${onTrack?'<span style="font-size:11px;background:rgba(16,185,129,.15);color:var(--green);padding:2px 10px;border-radius:20px">บรรลุเป้า!</span>':''}
+  </div>`;
+}
 function saveRetire(){
   const r=getRetire();
   r.retireAge=parseInt(document.getElementById('r-retire-age').value)||60;
@@ -4134,45 +4163,59 @@ function renderRetireResults(){
 
   renderRetireChart(r,c);
 }
-function renderRetireChart(r,c){
+function renderRetireChart(r,c,extraMonthly=0){
   const ctx=document.getElementById('ch-retire');
   if(!ctx) return;
   if(_chRetire){ _chRetire.destroy(); _chRetire=null; }
-  const labels=[], portLine=[], targetLine=[];
-  const mAccum=c.mAccum; const nAccum=c.nAccum; const mPost=c.mPost;
+  const labels=[], portLine=[], whatIfLine=[], targetLine=[];
+  const mAccum=c.mAccum; const mPost=c.mPost;
   const curPort=c.curPort;
-  const monthlyAdd=c.monthlyNeeded>0?c.monthlyNeeded:0;
   const totalYears=r.lifeAge-(c.age||30);
+  // portfolio at retire with what-if extra monthly
+  let whatIfPortAtRetire=0;
   for(let y=0;y<=totalYears;y++){
     labels.push((c.age||30)+y+' ปี');
     const n=y*12;
+    const fvFactor=mAccum>0?(Math.pow(1+mAccum,n)-1)/mAccum:n;
     if(y<=c.yearsToRetire){
       const pv=curPort*Math.pow(1+mAccum,n);
-      const contrib=mAccum>0?monthlyAdd*(Math.pow(1+mAccum,n)-1)/mAccum:monthlyAdd*n;
-      portLine.push(Math.round(pv+contrib));
+      // base line: no extra contributions
+      portLine.push(Math.round(pv));
+      // what-if line: with extra monthly
+      const whatIfVal=pv+(mAccum>0?extraMonthly*fvFactor:extraMonthly*n);
+      whatIfLine.push(Math.round(whatIfVal));
       targetLine.push(Math.round(c.fundNeeded));
+      if(y===c.yearsToRetire) whatIfPortAtRetire=whatIfVal;
     } else {
       const mAfter=(y-c.yearsToRetire)*12;
-      const remaining=mPost>0
+      // base drawdown (no contributions during accumulation)
+      const baseR=mPost>0
         ? c.portAtRetire*Math.pow(1+mPost,mAfter)-c.futureMonthly*(Math.pow(1+mPost,mAfter)-1)/mPost
         : c.portAtRetire-c.futureMonthly*mAfter;
-      portLine.push(Math.max(0,Math.round(remaining)));
+      portLine.push(Math.max(0,Math.round(baseR)));
+      // what-if drawdown
+      const wiR=mPost>0
+        ? whatIfPortAtRetire*Math.pow(1+mPost,mAfter)-c.futureMonthly*(Math.pow(1+mPost,mAfter)-1)/mPost
+        : whatIfPortAtRetire-c.futureMonthly*mAfter;
+      whatIfLine.push(Math.max(0,Math.round(wiR)));
       targetLine.push(null);
     }
   }
   const retireIdx=c.yearsToRetire;
+  const showWhatIf=extraMonthly>0;
   _chRetire=new Chart(ctx.getContext('2d'),{
     type:'line',
     data:{labels,datasets:[
-      {label:'พอร์ตที่คาดการณ์',data:portLine,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.12)',fill:true,tension:.4,pointRadius:0,pointHoverRadius:4,borderWidth:2},
+      {label:'พอร์ตปัจจุบัน (ไม่เพิ่มออม)',data:portLine,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.10)',fill:true,tension:.4,pointRadius:0,pointHoverRadius:4,borderWidth:2},
+      ...(showWhatIf?[{label:`ถ้าเพิ่ม ฿${extraMonthly.toLocaleString('th-TH')}/เดือน`,data:whatIfLine,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.10)',fill:true,tension:.4,pointRadius:0,pointHoverRadius:4,borderWidth:2.5,borderDash:[]}]:[]),
       {label:'เป้าหมาย ณ วันเกษียณ',data:targetLine,borderColor:'#ef4444',borderDash:[6,4],backgroundColor:'transparent',fill:false,tension:0,pointRadius:0,borderWidth:1.5},
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
       plugins:{
-        legend:{labels:{color:'#e2e8f0',font:{family:'Sarabun',size:12},padding:14}},
+        legend:{display:false},
         tooltip:{callbacks:{label:c=>' '+c.dataset.label+': ฿'+Math.round(c.raw).toLocaleString('th-TH')}},
-        annotation:{annotations:{retireLine:{type:'line',xMin:retireIdx,xMax:retireIdx,borderColor:'rgba(245,158,11,.7)',borderWidth:2,borderDash:[4,4],label:{content:'เกษียณ',enabled:true,position:'start',color:'#f59e0b',font:{size:11,family:'Sarabun'}}}}}
+        annotation:{annotations:{retireLine:{type:'line',xMin:retireIdx,xMax:retireIdx,borderColor:'rgba(245,158,11,.7)',borderWidth:2,borderDash:[4,4],label:{content:'เกษียณ อายุ '+r.retireAge+' ปี',enabled:true,position:'start',color:'#f59e0b',font:{size:11,family:'Sarabun'}}}}}
       },
       scales:{
         x:{ticks:{color:'#94a3b8',font:{family:'Sarabun',size:11},maxTicksLimit:12},grid:{display:false}},
@@ -4275,11 +4318,32 @@ function renderRetire(){
 
       <!-- Chart -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px">
-        <div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px">
           <i class="fas fa-chart-area" style="color:#7c3aed"></i> กราฟการเติบโตของพอร์ตตลอดชีวิต
-          <span style="font-size:11px;color:var(--muted);font-weight:400">— เส้นแดง = เงินที่ต้องการ ณ เกษียณ</span>
         </div>
-        <div style="height:280px"><canvas id="ch-retire"></canvas></div>
+        <!-- What-if input -->
+        <div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.25);border-radius:12px;padding:12px 16px;margin-bottom:14px">
+          <div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:10px"><i class="fas fa-magic" style="margin-right:5px"></i>จำลอง: ถ้าลงทุนเพิ่มเดือนละเท่านี้จะเป็นอย่างไร?</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:200px">
+              <span style="font-size:13px;white-space:nowrap;color:var(--muted)">เพิ่มเดือนละ</span>
+              <input type="number" id="r-whatif-extra" class="finput" style="flex:1;max-width:160px" placeholder="0" min="0" step="500" value="0" oninput="onWhatIfChange()">
+              <span style="font-size:13px;white-space:nowrap;color:var(--muted)">บาท</span>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;border-color:rgba(16,185,129,.4);color:#10b981" onclick="document.getElementById('r-whatif-extra').value=1000;onWhatIfChange()">+1,000</button>
+              <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;border-color:rgba(16,185,129,.4);color:#10b981" onclick="document.getElementById('r-whatif-extra').value=5000;onWhatIfChange()">+5,000</button>
+              <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;border-color:rgba(16,185,129,.4);color:#10b981" onclick="document.getElementById('r-whatif-extra').value=10000;onWhatIfChange()">+10,000</button>
+            </div>
+          </div>
+          <div id="r-whatif-result" style="margin-top:10px;font-size:13px;display:none"></div>
+        </div>
+        <div style="height:300px"><canvas id="ch-retire"></canvas></div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--muted)">
+          <span><span style="display:inline-block;width:20px;height:3px;background:#7c3aed;border-radius:2px;vertical-align:middle;margin-right:4px"></span>พอร์ตปัจจุบัน (ไม่เพิ่มออม)</span>
+          <span><span style="display:inline-block;width:20px;height:3px;background:#10b981;border-radius:2px;vertical-align:middle;margin-right:4px"></span>ถ้าออมเพิ่ม</span>
+          <span><span style="display:inline-block;width:20px;height:3px;background:#ef4444;border-radius:2px;border-top:2px dashed #ef4444;vertical-align:middle;margin-right:4px"></span>เป้าหมาย</span>
+        </div>
       </div>
 
       <!-- Assumptions box -->
