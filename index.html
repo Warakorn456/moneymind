@@ -1018,7 +1018,10 @@
       <div class="fg"><label class="flabel">ดอกเบี้ย (% ต่อปี)</label><input type="number" id="debt-rate" class="finput" placeholder="0" step="0.1"></div>
       <div class="fg"><label class="flabel">ผ่อน/เดือน (บาท)</label><input type="number" id="debt-pay" class="finput" placeholder="0"></div>
     </div>
-    <div class="fg"><label class="flabel">วันครบกำหนด</label><input type="date" id="debt-due" class="finput"></div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">วันเริ่มผ่อน</label><input type="date" id="debt-start" class="finput"></div>
+      <div class="fg"><label class="flabel">วันครบกำหนด</label><input type="date" id="debt-due" class="finput"></div>
+    </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeM('m-debt')">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveDebt()">บันทึก</button>
@@ -2376,16 +2379,26 @@ function renderDebts(){
   const el=document.getElementById('debt-list');
   if(!DB.debts.length){ el.innerHTML='<div class="empty"><i class="fas fa-check-circle"></i><p>ยอดเยี่ยม! ไม่มีหนี้สิน</p></div>'; return; }
   const now=new Date();
+  const nowY=now.getFullYear(), nowM=now.getMonth()+1;
   const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  const months=[];
-  for(let i=11;i>=0;i--){
-    const d2=new Date(now.getFullYear(),now.getMonth()-i,1);
-    months.push({ym:`${d2.getFullYear()}-${String(d2.getMonth()+1).padStart(2,'0')}`,label:MN[d2.getMonth()]+'\''+String(d2.getFullYear()+543).slice(2),isCur:i===0});
-  }
   el.innerHTML=DB.debts.map(d=>{
     const pct=Math.min(100,((d.total-d.remaining)/d.total)*100);
+    // build month range: startDate → dueDate (fallback to 12-month window)
+    let sy,sm,ey,em;
+    if(d.startDate){ [sy,sm]=d.startDate.split('-').map(Number); }
+    else { sy=nowY; sm=nowM-11; if(sm<=0){sm+=12;sy--;} }
+    if(d.dueDate){ [ey,em]=d.dueDate.split('-').map(Number); }
+    else { ey=nowY; em=nowM; }
+    const months=[];
+    let cy=sy,cm=sm;
+    while(cy<ey||(cy===ey&&cm<=em)){
+      const ym=`${cy}-${String(cm).padStart(2,'0')}`;
+      months.push({ym,label:MN[cm-1]+'\''+String(cy+543).slice(2),isCur:cy===nowY&&cm===nowM});
+      cm++; if(cm>12){cm=1;cy++;}
+      if(months.length>600) break; // safety cap
+    }
     const pm=d.paidMonths||[];
-    const paidCount=months.filter(m=>pm.includes(m.ym)).length;
+    const paidCount=pm.filter(m=>months.some(x=>x.ym===m)).length;
     const chips=months.map(m=>{
       const paid=pm.includes(m.ym);
       return `<button onclick="toggleDebtMonth('${d.id}','${m.ym}')" style="padding:4px 9px;border-radius:8px;font-size:11px;font-weight:${m.isCur?700:400};cursor:pointer;font-family:Sarabun,sans-serif;border:1px solid;transition:.15s;background:${paid?'rgba(16,185,129,.18)':m.isCur?'rgba(124,58,237,.12)':'rgba(255,255,255,.03)'};color:${paid?'#10b981':m.isCur?'#a78bfa':'#64748b'};border-color:${paid?'rgba(16,185,129,.45)':m.isCur?'rgba(124,58,237,.4)':'rgba(255,255,255,.08)'}">${paid?'✓ ':''}${m.label}</button>`;
@@ -2408,7 +2421,7 @@ function renderDebts(){
       <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,.06);padding-top:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <span style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.4px">ติ๊กเดือนที่จ่ายแล้ว</span>
-          <span style="font-size:11px;color:${paidCount>0?'#10b981':'var(--muted)'}">จ่ายแล้ว ${paidCount}/12 เดือน</span>
+          <span style="font-size:11px;color:${paidCount>0?'#10b981':'var(--muted)'}">จ่ายแล้ว ${paidCount}/${months.length} เดือน</span>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:5px">${chips}</div>
       </div>
@@ -2427,7 +2440,7 @@ function toggleDebtMonth(id,ym){
 function openDebtModal(){
   document.getElementById('debt-eid').value='';
   document.getElementById('debt-m-title').textContent='เพิ่มหนี้สิน';
-  ['debt-name','debt-total','debt-rem','debt-rate','debt-pay','debt-due'].forEach(id=>document.getElementById(id).value='');
+  ['debt-name','debt-total','debt-rem','debt-rate','debt-pay','debt-start','debt-due'].forEach(id=>document.getElementById(id).value='');
   openM('m-debt');
 }
 
@@ -2440,6 +2453,7 @@ function editDebt(id){
   document.getElementById('debt-rem').value=d.remaining;
   document.getElementById('debt-rate').value=d.rate||'';
   document.getElementById('debt-pay').value=d.pay||'';
+  document.getElementById('debt-start').value=d.startDate||'';
   document.getElementById('debt-due').value=d.dueDate||'';
   openM('m-debt');
 }
@@ -2451,10 +2465,11 @@ function saveDebt(){
   const remaining=parseFloat(document.getElementById('debt-rem').value);
   const rate=parseFloat(document.getElementById('debt-rate').value)||0;
   const pay=parseFloat(document.getElementById('debt-pay').value)||0;
+  const startDate=document.getElementById('debt-start').value;
   const dueDate=document.getElementById('debt-due').value;
   if(!name){ toast('กรุณาใส่ชื่อหนี้','error'); return; }
   if(!total||total<=0){ toast('กรุณาใส่ยอดหนี้','error'); return; }
-  const obj={name,total,remaining:remaining||total,rate,pay,dueDate};
+  const obj={name,total,remaining:remaining||total,rate,pay,startDate,dueDate};
   if(id){ const i=DB.debts.findIndex(d=>d.id===id); if(i>=0) DB.debts[i]={...DB.debts[i],...obj}; toast('แก้ไขแล้ว','success'); }
   else { DB.debts.push({id:uid(),...obj}); toast('เพิ่มหนี้แล้ว','success'); }
   saveDB(); closeM('m-debt'); renderDebts();
