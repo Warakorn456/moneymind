@@ -1217,6 +1217,11 @@ function userDataKey(u){ return DATA_PRE + u; }
 function loadDB(){
   if(!currentUser) return;
   try{ const d=localStorage.getItem(userDataKey(currentUser)); if(d) DB={...DB,...JSON.parse(d)}; }catch(e){}
+  // ล้างโมเดล TTS/embedding ออกจาก settings ถ้าเคยบันทึกไว้
+  if(DB.settings?.geminiModel && /(tts|embedding|aqa)/i.test(DB.settings.geminiModel)){
+    DB.settings.geminiModel=''; saveLocalOnly();
+  }
+  _geminiModel=null; // force re-pick model ทุกครั้งที่ login
 }
 function saveLocalOnly(){
   if(!currentUser) return;
@@ -1578,9 +1583,11 @@ async function callGemini(contents, genConfig={temperature:0.7,maxOutputTokens:8
     const e=await r.json();
     const msg=(e.error?.message||r.status+'');
     const isQuota=r.status===429||msg.toLowerCase().includes('quota')||msg.toLowerCase().includes('resource_exhausted');
-    if(isQuota){
+    // โมเดล TTS/embedding ให้ input token น้อย หรือไม่รองรับ vision → blacklist แล้วลองโมเดลถัดไป
+    const isWrongModel=/input token count exceed|maximum number of tokens|does not support|not supported for this model/i.test(msg);
+    if(isQuota||isWrongModel){
       _failedModels.add(model); _geminiModel=null;
-      if(attempt<5) continue; // ลอง model ถัดไป
+      if(attempt<5) continue;
     }
     throw new Error(`[${model}] ${msg}`);
   }
