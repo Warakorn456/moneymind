@@ -1571,10 +1571,13 @@ async function getModel(){
 }
 
 // wrapper — retry อัตโนมัติถ้า quota หมด
-async function callGemini(contents, genConfig={temperature:0.7,maxOutputTokens:8192}){
+// modelPref: optional string[] — ลอง model เหล่านี้ก่อน getModel() (ใช้สำหรับงานที่ต้องการโมเดลที่ไม่ใช่ thinking)
+async function callGemini(contents, genConfig={temperature:0.7,maxOutputTokens:8192}, modelPref=null){
   if(!DB.settings.apiKey) throw new Error('ยังไม่ได้ตั้งค่า API Key — ไปที่ Settings ก่อน');
   for(let attempt=0;attempt<6;attempt++){
-    const model=await getModel();
+    const model=modelPref
+      ? (modelPref.find(m=>!_failedModels.has(m)) || await getModel())
+      : await getModel();
     const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${DB.settings.apiKey}`,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({contents,generationConfig:genConfig})
@@ -2159,16 +2162,43 @@ async function uploadToGeminiFileAPI(bytes, mime, apiKey){
   return d.file.uri;
 }
 
+// โมเดลที่เหมาะกับงาน structured JSON + File API (ไม่ใช่ thinking model)
+const STMT_MODEL_PREF=['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-flash','gemini-1.5-pro','gemini-2.5-flash'];
+
 async function aiReadStatement(b64,mime){
-  const prompt=`อ่านรายการธุรกรรมทั้งหมดจาก Bank Statement นี้
-ตอบเป็น JSON array เท่านั้น ไม่มีข้อความอื่น ไม่มี markdown
-รูปแบบแต่ละรายการ: {"date":"YYYY-MM-DD","description":"string","amount":number,"type":"income|expense","category":"food|transport|fuel|housing|utility|health|entertainment|shopping|education|insurance|debt_pay|salary|freelance|invest_return|bonus|other_inc|other_exp"}
-- fuel: รายการเติมน้ำมัน, ปั๊มน้ำมัน, PTT, Shell, Bangchak, Esso, Caltex
-- type=income: เงินเข้า, โอนเข้า, ดอกเบี้ยรับ
-- type=expense: เงินออก, โอนออก, ถอนเงิน, ชำระบัตร
-- amount ให้เป็นตัวเลขบวกเสมอ
+  const prompt=`อ่านรายการธุรกรรมทั้งหมดจาก Bank Statement นี้ แล้วตอบเป็น JSON array เท่านั้น ไม่มีข้อความอื่น ไม่มี markdown ไม่มี code block
+
+รูปแบบแต่ละรายการ:
+{"date":"YYYY-MM-DD","description":"string","amount":number,"type":"income|expense","category":"food|transport|fuel|housing|utility|health|entertainment|shopping|education|insurance|debt_pay|salary|freelance|invest_return|bonus|other_inc|other_exp"}
+
+กฎการแปลงวันที่:
+- รูปแบบ DD-MM-YY เช่น 12-06-25 = 2025-06-12
+- รูปแบบ DD/MM/YYYY เช่น 12/06/2025 = 2025-06-12
+- พ.ศ. → ลบ 543 เช่น 2568 = 2025
+
+กฎ type:
+- income: รับโอนเงิน, รับโอนเงิน/ฝาก, เงินเข้า, ฝากเงิน, รับดอกเบี้ย, ดอกเบี้ยรับ, รับเงินคืน, โอนเข้า, ยอดยกมา (ยกเว้น ยอดยกมา ให้ข้าม)
+- expense: ถอนเงิน, ชำระเงิน, โอนเงิน (ที่ไม่ใช่รับ), ชำระบัตร, หักบัญชี, เงินออก
+- ถ้าคอลัมน์แยก ถอนเงิน / ฝากเงิน: ถอนเงิน=expense, ฝากเงิน=income
+
+กฎ category:
+- fuel: PTT, Shell, Bangchak, Esso, Caltex, ปั๊มน้ำมัน, เติมน้ำมัน
+- food: ร้านอาหาร, RESTAURANT, COFFEE, STARBUCKS, LINE MAN, กินข้าว
+- transport: Grab, BTS, MRT, แท็กซี่, Taxi, บขส, รถไฟ
+- salary: เงินเดือน, ค่าจ้าง, salary
+- debt_pay: ผ่อน, ชำระหนี้, บัตรเครดิต, credit card
+- shopping: ห้างสรรพสินค้า, 7-Eleven, Makro, Lotus, Big C, Amazon
+- other_inc: รายรับอื่น (income ที่ไม่ตรงหมวดใด)
+- other_exp: รายจ่ายอื่น (expense ที่ไม่ตรงหมวดใด)
+
+กฎอื่น:
+- amount เป็นตัวเลขบวกเสมอ (ไม่ติดลบ)
+- ข้าม: ยอดยกมา, ยอดคงเหลือ, ยอดยกไป, บรรทัดหัวตาราง
+- ดึงทุกรายการในทุกหน้าของเอกสาร
+- description ใช้ข้อความใน column รายละเอียด หรือ รายการ (เลือกที่ยาวกว่า)
 - ถ้าไม่รู้วันที่ให้ใช้: ${new Date().toISOString().split('T')[0]}
-ดึงทุกรายการที่เห็นในเอกสาร`;
+
+ตอบเฉพาะ JSON array เท่านั้น เริ่มด้วย [ จบด้วย ]`;
 
   try{
     // PDF: ใช้ File API (รองรับทุก model และไม่มีจำกัดขนาด)
@@ -2184,7 +2214,7 @@ async function aiReadStatement(b64,mime){
       part={inline_data:{mime_type:mime,data:b64}};
     }
 
-    const {data}=await callGemini([{parts:[part,{text:prompt}]}],{maxOutputTokens:65536,temperature:0.1});
+    const {data}=await callGemini([{parts:[part,{text:prompt}]}],{maxOutputTokens:65536,temperature:0.1},STMT_MODEL_PREF);
     // กรอง thinking parts ออก (Gemini 2.5) — เอาเฉพาะ text ปกติ
     const parts=data.candidates?.[0]?.content?.parts||[];
     let text=parts.filter(p=>!p.thought).map(p=>p.text||'').join('').trim();
