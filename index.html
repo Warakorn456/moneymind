@@ -4057,10 +4057,11 @@ function calcNetWorth(){
 // ══════════════════════════════════════════
 let _chRetire=null;
 function getRetire(){
-  if(!DB.retire) DB.retire={retireAge:60,lifeAge:85,monthlyExpense:30000,inflation:3,returnRate:7,postReturnRate:4,sso:750,pvd:0,portOverride:null};
+  if(!DB.retire) DB.retire={retireAge:60,lifeAge:85,monthlyExpense:30000,inflation:3,returnRate:7,postReturnRate:4,sso:750,pvd:0,portOverride:null,curAgeOverride:null};
   if(DB.retire.sso===undefined) DB.retire.sso=750;
   if(DB.retire.pvd===undefined) DB.retire.pvd=0;
   if(!('portOverride' in DB.retire)) DB.retire.portOverride=null;
+  if(!('curAgeOverride' in DB.retire)) DB.retire.curAgeOverride=null;
   return DB.retire;
 }
 function _fvAnnuity(monthly, mRate, n){
@@ -4069,8 +4070,8 @@ function _fvAnnuity(monthly, mRate, n){
 }
 function calcRetirePlan(r){
   const dob=DB.profile&&DB.profile.dob?new Date(DB.profile.dob):null;
-  const curAge=dob?Math.floor((Date.now()-dob)/(365.25*24*3600*1000)):null;
-  const age=curAge||30;
+  const autoAge=dob?Math.floor((Date.now()-dob)/(365.25*24*3600*1000)):null;
+  const age=r.curAgeOverride!=null?r.curAgeOverride:(autoAge||30);
   const yearsToRetire=Math.max(1,r.retireAge-age);
   const yearsInRetire=Math.max(1,r.lifeAge-r.retireAge);
   const mAccum=r.returnRate/100/12;
@@ -4153,6 +4154,8 @@ function saveRetire(){
   r.postReturnRate=parseFloat(document.getElementById('r-post-return').value)||4;
   r.sso=parseFloat(document.getElementById('r-sso').value)||0;
   r.pvd=parseFloat(document.getElementById('r-pvd').value)||0;
+  const ageEl=document.getElementById('r-cur-age');
+  r.curAgeOverride=ageEl?(parseFloat(ageEl.value)||null):null;
   const portValEl=document.getElementById('r-port-value');
   r.portOverride=portValEl&&document.getElementById('r-port-manual-display').style.display!=='none'
     ?(parseFloat(portValEl.value)||0) : null;
@@ -4270,7 +4273,10 @@ function renderRetire(){
       <!-- ข้อมูลส่วนตัว -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px">
         <div style="font-size:13px;font-weight:700;color:#a78bfa;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="fas fa-user-clock"></i> ข้อมูลส่วนตัว</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:10px">อายุปัจจุบัน: <span style="color:#e2e8f0;font-weight:700">${curAge?curAge+' ปี':'ไม่ทราบ (ตั้งค่าในประวัติส่วนตัว)'}</span></div>
+        <div class="fg" style="margin-bottom:10px"><label class="flabel">อายุปัจจุบัน (ปี)</label>
+          <input type="number" id="r-cur-age" class="finput" value="${r.curAgeOverride!=null?r.curAgeOverride:(curAge||30)}" min="1" max="100" step="1" oninput="saveRetire()">
+          ${curAge?`<div style="font-size:11px;color:var(--muted);margin-top:3px">คำนวณจากวันเกิด: ${curAge} ปี</div>`:`<div style="font-size:11px;color:var(--amber);margin-top:3px">ไม่พบวันเกิด — ตั้งค่าได้ที่หน้า <span onclick="nav('profile')" style="color:#a78bfa;cursor:pointer">ประวัติส่วนตัว</span></div>`}
+        </div>
         <div class="fg"><label class="flabel">อายุเกษียณ (ปี)</label>
           <input type="number" id="r-retire-age" class="finput" value="${r.retireAge}" min="30" max="80" oninput="saveRetire()"></div>
         <div class="fg"><label class="flabel">อายุขัย (ปี)</label>
