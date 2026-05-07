@@ -4057,7 +4057,8 @@ function calcNetWorth(){
 // ══════════════════════════════════════════
 let _chRetire=null;
 function getRetire(){
-  if(!DB.retire) DB.retire={retireAge:60,lifeAge:85,monthlyExpense:30000,inflation:3,returnRate:7,postReturnRate:4};
+  if(!DB.retire) DB.retire={retireAge:60,lifeAge:85,monthlyExpense:30000,inflation:3,returnRate:7,postReturnRate:4,salaryGrowth:3};
+  if(DB.retire.salaryGrowth===undefined) DB.retire.salaryGrowth=3;
   return DB.retire;
 }
 function calcRetirePlan(r){
@@ -4090,6 +4091,23 @@ function calcRetirePlan(r){
   const surplus=portAtRetire-fundNeeded;
   return {age,yearsToRetire,yearsInRetire,futureMonthly,fundNeeded,curPort,portAtRetire,shortfall,monthlyNeeded,surplus,nAccum,nRetire,mAccum,mPost};
 }
+function _calcWhatIfFV(extra, c, salaryGrowthPct){
+  // FV of monthly contributions that grow annually by salaryGrowthPct%
+  const mA=c.mAccum; const n=c.nAccum;
+  const annualGrowth=salaryGrowthPct/100;
+  if(annualGrowth<=0 || extra<=0){
+    return mA>0?extra*(Math.pow(1+mA,n)-1)/mA:extra*n;
+  }
+  // sum month by month: in year y (0-indexed), monthly contribution = extra*(1+g)^y
+  let fv=0;
+  for(let m=0;m<n;m++){
+    const yr=Math.floor(m/12);
+    const contrib=extra*Math.pow(1+annualGrowth,yr);
+    const monthsLeft=n-m;
+    fv+=mA>0?contrib*Math.pow(1+mA,monthsLeft):contrib;
+  }
+  return fv;
+}
 function onWhatIfChange(){
   const extra=parseFloat(document.getElementById('r-whatif-extra').value)||0;
   const r=getRetire();
@@ -4098,17 +4116,15 @@ function onWhatIfChange(){
   const resEl=document.getElementById('r-whatif-result');
   if(!resEl) return;
   if(extra<=0){ resEl.style.display='none'; return; }
-  // compute what-if portfolio at retire
-  const n=c.nAccum; const mA=c.mAccum;
-  const portBase=c.portAtRetire; // no extra
-  const extraFV=mA>0?extra*(Math.pow(1+mA,n)-1)/mA:extra*n;
-  const wiPort=portBase+extraFV;
+  const extraFV=_calcWhatIfFV(extra,c,r.salaryGrowth||0);
+  const wiPort=c.portAtRetire+extraFV;
   const diff=wiPort-c.fundNeeded;
   const onTrack=diff>=0;
   const fmtB=v=>'฿'+Math.round(v).toLocaleString('th-TH');
+  const growNote=r.salaryGrowth>0?`<span style="font-size:11px;color:var(--muted)">(ออมเพิ่มตามเงินเดือน +${r.salaryGrowth}%/ปี)</span>`:'';
   resEl.style.display='block';
   resEl.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
-    <div><span style="color:var(--muted)">พอร์ต ณ เกษียณ:</span> <span style="font-weight:700;color:#10b981">${fmtB(wiPort)}</span></div>
+    <div><span style="color:var(--muted)">พอร์ต ณ เกษียณ:</span> <span style="font-weight:700;color:#10b981">${fmtB(wiPort)}</span> ${growNote}</div>
     <div style="width:1px;height:16px;background:rgba(255,255,255,.15)"></div>
     <div><span style="color:var(--muted)">เป้าหมาย:</span> <span style="font-weight:700">${fmtB(c.fundNeeded)}</span></div>
     <div style="width:1px;height:16px;background:rgba(255,255,255,.15)"></div>
@@ -4127,6 +4143,7 @@ function saveRetire(){
   r.inflation=parseFloat(document.getElementById('r-inflation').value)||3;
   r.returnRate=parseFloat(document.getElementById('r-return').value)||7;
   r.postReturnRate=parseFloat(document.getElementById('r-post-return').value)||4;
+  r.salaryGrowth=parseFloat(document.getElementById('r-salary-growth').value)||0;
   saveDB();
   renderRetireResults();
 }
@@ -4170,30 +4187,35 @@ function renderRetireChart(r,c,extraMonthly=0){
   const labels=[], portLine=[], whatIfLine=[], targetLine=[];
   const mAccum=c.mAccum; const mPost=c.mPost;
   const curPort=c.curPort;
+  const salaryGrowth=(r.salaryGrowth||0)/100;
   const totalYears=r.lifeAge-(c.age||30);
-  // portfolio at retire with what-if extra monthly
+  // precompute what-if FV at each year (growing contributions)
   let whatIfPortAtRetire=0;
   for(let y=0;y<=totalYears;y++){
     labels.push((c.age||30)+y+' ปี');
     const n=y*12;
-    const fvFactor=mAccum>0?(Math.pow(1+mAccum,n)-1)/mAccum:n;
     if(y<=c.yearsToRetire){
       const pv=curPort*Math.pow(1+mAccum,n);
-      // base line: no extra contributions
       portLine.push(Math.round(pv));
-      // what-if line: with extra monthly
-      const whatIfVal=pv+(mAccum>0?extraMonthly*fvFactor:extraMonthly*n);
-      whatIfLine.push(Math.round(whatIfVal));
+      // what-if: sum growing monthly contributions compounded to year y
+      let wiFV=0;
+      if(extraMonthly>0){
+        for(let m=0;m<n;m++){
+          const yr=Math.floor(m/12);
+          const contrib=extraMonthly*Math.pow(1+salaryGrowth,yr);
+          const rem=n-m;
+          wiFV+=mAccum>0?contrib*Math.pow(1+mAccum,rem):contrib;
+        }
+      }
+      whatIfLine.push(Math.round(pv+wiFV));
       targetLine.push(Math.round(c.fundNeeded));
-      if(y===c.yearsToRetire) whatIfPortAtRetire=whatIfVal;
+      if(y===c.yearsToRetire) whatIfPortAtRetire=pv+wiFV;
     } else {
       const mAfter=(y-c.yearsToRetire)*12;
-      // base drawdown (no contributions during accumulation)
       const baseR=mPost>0
         ? c.portAtRetire*Math.pow(1+mPost,mAfter)-c.futureMonthly*(Math.pow(1+mPost,mAfter)-1)/mPost
         : c.portAtRetire-c.futureMonthly*mAfter;
       portLine.push(Math.max(0,Math.round(baseR)));
-      // what-if drawdown
       const wiR=mPost>0
         ? whatIfPortAtRetire*Math.pow(1+mPost,mAfter)-c.futureMonthly*(Math.pow(1+mPost,mAfter)-1)/mPost
         : whatIfPortAtRetire-c.futureMonthly*mAfter;
@@ -4267,6 +4289,9 @@ function renderRetire(){
         <div class="fg"><label class="flabel">ผลตอบแทนช่วงเกษียณ (%/ปี)</label>
           <input type="number" id="r-post-return" class="finput" value="${r.postReturnRate}" min="0" max="15" step="0.5" oninput="saveRetire()">
           <div style="font-size:11px;color:var(--muted);margin-top:3px">ช่วงเกษียณมักใช้พอร์ตที่มั่นคง ~3–5%</div></div>
+        <div class="fg"><label class="flabel"><i class="fas fa-level-up-alt" style="color:#f59e0b;margin-right:4px"></i>เงินเดือนขึ้นปีละ (%/ปี)</label>
+          <input type="number" id="r-salary-growth" class="finput" value="${r.salaryGrowth||3}" min="0" max="30" step="0.5" oninput="saveRetire()">
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">ใช้กับการจำลอง "ถ้าออมเพิ่ม" — เงินที่ออมจะเพิ่มตามเงินเดือน</div></div>
         <div style="padding:10px;background:rgba(16,185,129,.08);border-radius:10px;border:1px solid rgba(16,185,129,.2);font-size:12px;color:var(--muted);margin-top:4px">
           <i class="fas fa-info-circle" style="color:#10b981;margin-right:4px"></i>พอร์ตปัจจุบัน: <span style="color:#10b981;font-weight:700">${'฿'+Math.round(curPort).toLocaleString('th-TH')}</span>
           ${curPort===0?'<br><span style="color:var(--amber)">ยังไม่มีการลงทุน — ไปหน้า <a onclick="nav(\'investments\')" style="color:#a78bfa;cursor:pointer">พอร์ตลงทุน</a> เพื่อเพิ่ม</span>':''}
