@@ -73,7 +73,25 @@
     .page.active{display:block}
     @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
-    /* ── Stats Grid ── */
+    /* ── Dashboard Hero ── */
+    .dash-hero{background:linear-gradient(135deg,rgba(124,58,237,.22) 0%,rgba(6,182,212,.12) 60%,rgba(16,185,129,.08) 100%);border:1px solid rgba(124,58,237,.3);border-radius:20px;padding:24px 28px;margin-bottom:20px;position:relative;overflow:hidden}
+    .dash-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,.18),transparent 70%);pointer-events:none}
+    .dash-hero::after{content:'';position:absolute;bottom:-30px;left:30%;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(6,182,212,.12),transparent 70%);pointer-events:none}
+    .dash-hero-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px}
+    .dash-hero-nw{flex:1}
+    .dash-hero-label{font-size:11px;color:rgba(255,255,255,.45);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .dash-hero-amount{font-size:38px;font-weight:900;line-height:1;letter-spacing:-1px}
+    .dash-hero-sub{font-size:12px;color:rgba(255,255,255,.4);margin-top:6px}
+    .dash-hero-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+    .dash-hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .dash-hero-stat{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;position:relative;overflow:hidden;transition:background .2s}
+    .dash-hero-stat:hover{background:rgba(255,255,255,.09)}
+    .dash-hero-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0}
+    .dhs-green::before{background:var(--green)}.dhs-red::before{background:var(--red)}.dhs-blue::before{background:var(--blue)}.dhs-amber::before{background:var(--amber)}
+    .dhs-label{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+    .dhs-value{font-size:18px;font-weight:800;line-height:1}
+    .dhs-sub{font-size:10px;color:rgba(255,255,255,.35);margin-top:3px}
+    /* ── Stats Grid (used in other pages) ── */
     .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
     .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:default}
     .stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.35)}
@@ -382,8 +400,8 @@
     ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
 
     /* ── Responsive ── */
-    @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}.port-grid{grid-template-columns:1fr}}
-    @media(max-width:860px){.charts-grid{grid-template-columns:1fr}.bottom-grid{grid-template-columns:1fr}}
+    @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}.port-grid{grid-template-columns:1fr}.dash-hero-stats{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:860px){.charts-grid{grid-template-columns:1fr}.bottom-grid{grid-template-columns:1fr}.dash-hero-amount{font-size:28px}}
     @media(max-width:700px){
       body{overflow-x:hidden}
       .sidebar{transform:translateX(-100%)}
@@ -402,6 +420,11 @@
       /* page padding */
       .page{padding:12px 10px}
 
+      .dash-hero{padding:16px;margin-bottom:14px;border-radius:16px}
+      .dash-hero-amount{font-size:26px}
+      .dash-hero-stats{grid-template-columns:repeat(2,1fr);gap:8px}
+      .dhs-value{font-size:15px}
+      .dash-hero-actions .btn{padding:7px 10px;font-size:12px}
       /* stats — 2 คอลัมน์ เท่ากัน */
       .stats-grid{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
       .stat-card{padding:14px 12px;border-radius:12px}
@@ -601,88 +624,136 @@
 
   <!-- ════ DASHBOARD ════ -->
   <div id="pg-dashboard" class="page active">
-    <div class="stats-grid">
-      <div class="stat-card sc-green">
-        <div class="stat-icon"><i class="fas fa-arrow-down"></i></div>
-        <div class="stat-label">รายรับรวม</div>
-        <div class="stat-value" id="s-income">฿0</div>
-        <div class="stat-sub">เดือนนี้</div>
+
+    <!-- ── Hero Card ── -->
+    <div class="dash-hero">
+      <div class="dash-hero-top">
+        <div class="dash-hero-nw">
+          <div class="dash-hero-label"><i class="fas fa-crown" style="margin-right:5px;opacity:.6"></i>ความมั่งคั่งสุทธิ (Net Worth)</div>
+          <div class="dash-hero-amount" id="s-networth" style="color:#c4b5fd">฿0</div>
+          <div class="dash-hero-sub" id="s-networth-sub">สินทรัพย์ − หนี้สิน</div>
+        </div>
+        <div class="dash-hero-actions">
+          <button class="btn btn-primary" style="padding:9px 16px;font-size:13px;gap:6px" onclick="openTxModal();document.querySelector('#m-tx .type-btn.inc')?.click()">
+            <i class="fas fa-plus"></i> รายรับ
+          </button>
+          <button class="btn" style="padding:9px 16px;font-size:13px;background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4);color:#f87171;gap:6px" onclick="openTxModal();document.querySelector('#m-tx .type-btn.exp')?.click()">
+            <i class="fas fa-minus"></i> รายจ่าย
+          </button>
+          <button class="btn btn-ghost" style="padding:9px 14px;font-size:13px" onclick="nav('balance')">
+            <i class="fas fa-balance-scale"></i>
+          </button>
+        </div>
       </div>
-      <div class="stat-card sc-red">
-        <div class="stat-icon"><i class="fas fa-arrow-up"></i></div>
-        <div class="stat-label">รายจ่ายรวม</div>
-        <div class="stat-value" id="s-expense">฿0</div>
-        <div class="stat-sub">เดือนนี้</div>
-      </div>
-      <div class="stat-card sc-blue">
-        <div class="stat-icon"><i class="fas fa-wallet"></i></div>
-        <div class="stat-label">คงเหลือ</div>
-        <div class="stat-value" id="s-balance">฿0</div>
-        <div class="stat-sub">รายรับ − รายจ่าย</div>
-      </div>
-      <div class="stat-card sc-amber">
-        <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
-        <div class="stat-label">พอร์ตลงทุน</div>
-        <div class="stat-value" id="s-portfolio">฿0</div>
-        <div class="stat-sub">มูลค่าปัจจุบัน</div>
-      </div>
-      <div class="stat-card" style="background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(139,92,246,.08));border-color:rgba(124,58,237,.35);cursor:pointer" onclick="nav('balance')">
-        <div class="stat-icon" style="color:#a78bfa"><i class="fas fa-crown"></i></div>
-        <div class="stat-label">ความมั่งคั่งสุทธิ</div>
-        <div class="stat-value" id="s-networth" style="font-size:18px">฿0</div>
-        <div class="stat-sub" id="s-networth-sub">สินทรัพย์ − หนี้สิน</div>
+      <!-- 4 mini stats -->
+      <div class="dash-hero-stats">
+        <div class="dash-hero-stat dhs-green">
+          <div class="dhs-label"><i class="fas fa-arrow-down" style="margin-right:4px"></i>รายรับ</div>
+          <div class="dhs-value" id="s-income" style="color:#34d399">฿0</div>
+          <div class="dhs-sub">เดือนนี้</div>
+        </div>
+        <div class="dash-hero-stat dhs-red">
+          <div class="dhs-label"><i class="fas fa-arrow-up" style="margin-right:4px"></i>รายจ่าย</div>
+          <div class="dhs-value" id="s-expense" style="color:#f87171">฿0</div>
+          <div class="dhs-sub">เดือนนี้</div>
+        </div>
+        <div class="dash-hero-stat dhs-blue">
+          <div class="dhs-label"><i class="fas fa-wallet" style="margin-right:4px"></i>คงเหลือ</div>
+          <div class="dhs-value" id="s-balance" style="color:#60a5fa">฿0</div>
+          <div class="dhs-sub">รายรับ − รายจ่าย</div>
+        </div>
+        <div class="dash-hero-stat dhs-amber">
+          <div class="dhs-label"><i class="fas fa-chart-pie" style="margin-right:4px"></i>พอร์ตลงทุน</div>
+          <div class="dhs-value" id="s-portfolio" style="color:#fbbf24">฿0</div>
+          <div class="dhs-sub">มูลค่าปัจจุบัน</div>
+        </div>
       </div>
     </div>
 
-    <!-- งบประมาณเดือนนี้ (จากเงินเดือนสิ้นเดือนก่อน) -->
+    <!-- ── Budget Card ── -->
     <div class="budget-card" id="budget-card">
       <div class="budget-top">
-        <div>
-          <div class="budget-title"><i class="fas fa-calendar-check"></i> งบประมาณเดือนนี้</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:3px">จากรายรับที่ยกมาจากเดือนก่อน</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:10px;background:rgba(124,58,237,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="fas fa-calendar-check" style="color:#a78bfa;font-size:15px"></i>
+          </div>
+          <div>
+            <div class="budget-title">งบประมาณเดือนนี้</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:1px" id="b-src-label"></div>
+          </div>
         </div>
         <div id="budget-pct-badge"></div>
       </div>
       <div class="budget-nums">
-        <div class="bnum"><div class="bnum-l">งบที่มี</div><div class="bnum-v" id="b-budget" style="color:var(--primary-l)">฿0</div></div>
-        <div class="bnum"><div class="bnum-l">ใช้แล้ว</div><div class="bnum-v" id="b-spent" style="color:var(--red)">฿0</div></div>
-        <div class="bnum"><div class="bnum-l">คงเหลือ</div><div class="bnum-v" id="b-left">฿0</div></div>
+        <div class="bnum">
+          <div class="bnum-l">งบที่มี</div>
+          <div class="bnum-v" id="b-budget" style="color:var(--primary-l)">฿0</div>
+        </div>
+        <div class="bnum">
+          <div class="bnum-l">ใช้แล้ว</div>
+          <div class="bnum-v" id="b-spent" style="color:var(--red)">฿0</div>
+        </div>
+        <div class="bnum">
+          <div class="bnum-l">คงเหลือ</div>
+          <div class="bnum-v" id="b-left">฿0</div>
+        </div>
       </div>
       <div class="budget-bar-wrap">
         <div class="budget-bar-fill" id="b-bar" style="width:0%"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted)">
+      <div style="display:flex;justify-content:flex-end;margin-top:6px;font-size:11px;color:var(--muted)">
         <span id="b-bar-label">0% ใช้แล้ว</span>
-        <span id="b-src-label"></span>
       </div>
     </div>
 
-    <!-- Mini Balance Sheet -->
-    <div id="dash-bs-section" style="margin-bottom:18px"></div>
-
+    <!-- ── Charts Row ── -->
     <div class="charts-grid">
-      <div class="chart-card">
-        <div class="chart-title"><i class="fas fa-chart-pie" style="color:var(--primary-l)"></i> รายจ่ายแยกหมวด</div>
+      <div class="chart-card" style="border-top:2px solid rgba(124,58,237,.5)">
+        <div class="chart-title">
+          <div style="width:32px;height:32px;border-radius:9px;background:rgba(124,58,237,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="fas fa-chart-pie" style="color:#a78bfa;font-size:13px"></i>
+          </div>
+          <span>รายจ่ายแยกหมวด</span>
+        </div>
         <div class="chart-wrap"><canvas id="ch-cat"></canvas></div>
       </div>
-      <div class="chart-card">
-        <div class="chart-title"><i class="fas fa-chart-bar" style="color:var(--cyan)"></i> รายรับ vs รายจ่าย 6 เดือน</div>
+      <div class="chart-card" style="border-top:2px solid rgba(6,182,212,.5)">
+        <div class="chart-title">
+          <div style="width:32px;height:32px;border-radius:9px;background:rgba(6,182,212,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="fas fa-chart-bar" style="color:#06b6d4;font-size:13px"></i>
+          </div>
+          <span>รายรับ vs รายจ่าย 6 เดือน</span>
+        </div>
         <div class="chart-wrap"><canvas id="ch-trend"></canvas></div>
       </div>
     </div>
 
+    <!-- ── Mini Balance Sheet ── -->
+    <div id="dash-bs-section" style="margin-bottom:18px"></div>
+
+    <!-- ── Bottom Grid ── -->
     <div class="bottom-grid">
-      <div class="card">
+      <div class="card" style="border-top:2px solid rgba(16,185,129,.4)">
         <div class="sec-hd">
-          <div class="sec-title">รายการล่าสุด</div>
-          <button class="btn btn-ghost btn-sm" onclick="nav('transactions')">ดูทั้งหมด</button>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center">
+              <i class="fas fa-receipt" style="color:#10b981;font-size:12px"></i>
+            </div>
+            <div class="sec-title">รายการล่าสุด</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="nav('transactions')">ดูทั้งหมด →</button>
         </div>
         <div id="recent-tx" class="tx-list"></div>
       </div>
-      <div class="card">
+      <div class="card" style="border-top:2px solid rgba(239,68,68,.4)">
         <div class="sec-hd">
-          <div class="sec-title">ภาพรวมหนี้สิน</div>
-          <button class="btn btn-ghost btn-sm" onclick="nav('debts')">ดูทั้งหมด</button>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:30px;height:30px;border-radius:8px;background:rgba(239,68,68,.12);display:flex;align-items:center;justify-content:center">
+              <i class="fas fa-credit-card" style="color:#ef4444;font-size:12px"></i>
+            </div>
+            <div class="sec-title">ภาพรวมหนี้สิน</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="nav('debts')">ดูทั้งหมด →</button>
         </div>
         <div id="debt-summary"></div>
       </div>
