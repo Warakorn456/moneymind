@@ -4057,9 +4057,14 @@ function calcNetWorth(){
 // ══════════════════════════════════════════
 let _chRetire=null;
 function getRetire(){
-  if(!DB.retire) DB.retire={retireAge:60,lifeAge:85,monthlyExpense:30000,inflation:3,returnRate:7,postReturnRate:4,salaryGrowth:3};
-  if(DB.retire.salaryGrowth===undefined) DB.retire.salaryGrowth=3;
+  if(!DB.retire) DB.retire={retireAge:60,lifeAge:85,monthlyExpense:30000,inflation:3,returnRate:7,postReturnRate:4,sso:750,pvd:0};
+  if(DB.retire.sso===undefined) DB.retire.sso=750;
+  if(DB.retire.pvd===undefined) DB.retire.pvd=0;
   return DB.retire;
+}
+function _fvAnnuity(monthly, mRate, n){
+  if(monthly<=0) return 0;
+  return mRate>0 ? monthly*(Math.pow(1+mRate,n)-1)/mRate : monthly*n;
 }
 function calcRetirePlan(r){
   const dob=DB.profile&&DB.profile.dob?new Date(DB.profile.dob):null;
@@ -4071,42 +4076,22 @@ function calcRetirePlan(r){
   const mPost=r.postReturnRate/100/12;
   const nAccum=yearsToRetire*12;
   const nRetire=yearsInRetire*12;
-  // inflation-adjusted monthly expense at retirement
   const futureMonthly=r.monthlyExpense*Math.pow(1+r.inflation/100,yearsToRetire);
-  // fund needed at retirement (PV of annuity during retirement)
   const fundNeeded=mPost>0
     ? futureMonthly*(1-Math.pow(1+mPost,-nRetire))/mPost
     : futureMonthly*nRetire;
-  // current portfolio grows
   const curPort=(DB.investments||[]).reduce((s,i)=>s+i.value,0);
-  const portAtRetire=curPort*Math.pow(1+mAccum,nAccum);
-  // shortfall
+  // base portfolio + SSO + PVD all compounded to retirement
+  const portGrowth=curPort*Math.pow(1+mAccum,nAccum);
+  const ssoFV=_fvAnnuity(r.sso||0,mAccum,nAccum);
+  const pvdFV=_fvAnnuity(r.pvd||0,mAccum,nAccum);
+  const portAtRetire=portGrowth+ssoFV+pvdFV;
   const shortfall=Math.max(0,fundNeeded-portAtRetire);
-  // monthly investment needed to cover shortfall (FV of annuity)
   const monthlyNeeded=mAccum>0
     ? shortfall*mAccum/(Math.pow(1+mAccum,nAccum)-1)
     : shortfall/nAccum;
-  // projected total portfolio at retire including monthly contributions
-  const totalPortAtRetire=portAtRetire; // contributions handled separately in chart
   const surplus=portAtRetire-fundNeeded;
-  return {age,yearsToRetire,yearsInRetire,futureMonthly,fundNeeded,curPort,portAtRetire,shortfall,monthlyNeeded,surplus,nAccum,nRetire,mAccum,mPost};
-}
-function _calcWhatIfFV(extra, c, salaryGrowthPct){
-  // FV of monthly contributions that grow annually by salaryGrowthPct%
-  const mA=c.mAccum; const n=c.nAccum;
-  const annualGrowth=salaryGrowthPct/100;
-  if(annualGrowth<=0 || extra<=0){
-    return mA>0?extra*(Math.pow(1+mA,n)-1)/mA:extra*n;
-  }
-  // sum month by month: in year y (0-indexed), monthly contribution = extra*(1+g)^y
-  let fv=0;
-  for(let m=0;m<n;m++){
-    const yr=Math.floor(m/12);
-    const contrib=extra*Math.pow(1+annualGrowth,yr);
-    const monthsLeft=n-m;
-    fv+=mA>0?contrib*Math.pow(1+mA,monthsLeft):contrib;
-  }
-  return fv;
+  return {age,yearsToRetire,yearsInRetire,futureMonthly,fundNeeded,curPort,portAtRetire,portGrowth,ssoFV,pvdFV,shortfall,monthlyNeeded,surplus,nAccum,nRetire,mAccum,mPost};
 }
 function onWhatIfChange(){
   const extra=parseFloat(document.getElementById('r-whatif-extra').value)||0;
@@ -4116,15 +4101,14 @@ function onWhatIfChange(){
   const resEl=document.getElementById('r-whatif-result');
   if(!resEl) return;
   if(extra<=0){ resEl.style.display='none'; return; }
-  const extraFV=_calcWhatIfFV(extra,c,r.salaryGrowth||0);
+  const extraFV=_fvAnnuity(extra,c.mAccum,c.nAccum);
   const wiPort=c.portAtRetire+extraFV;
   const diff=wiPort-c.fundNeeded;
   const onTrack=diff>=0;
   const fmtB=v=>'฿'+Math.round(v).toLocaleString('th-TH');
-  const growNote=r.salaryGrowth>0?`<span style="font-size:11px;color:var(--muted)">(ออมเพิ่มตามเงินเดือน +${r.salaryGrowth}%/ปี)</span>`:'';
   resEl.style.display='block';
   resEl.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
-    <div><span style="color:var(--muted)">พอร์ต ณ เกษียณ:</span> <span style="font-weight:700;color:#10b981">${fmtB(wiPort)}</span> ${growNote}</div>
+    <div><span style="color:var(--muted)">พอร์ต ณ เกษียณ:</span> <span style="font-weight:700;color:#10b981">${fmtB(wiPort)}</span></div>
     <div style="width:1px;height:16px;background:rgba(255,255,255,.15)"></div>
     <div><span style="color:var(--muted)">เป้าหมาย:</span> <span style="font-weight:700">${fmtB(c.fundNeeded)}</span></div>
     <div style="width:1px;height:16px;background:rgba(255,255,255,.15)"></div>
@@ -4143,7 +4127,8 @@ function saveRetire(){
   r.inflation=parseFloat(document.getElementById('r-inflation').value)||3;
   r.returnRate=parseFloat(document.getElementById('r-return').value)||7;
   r.postReturnRate=parseFloat(document.getElementById('r-post-return').value)||4;
-  r.salaryGrowth=parseFloat(document.getElementById('r-salary-growth').value)||0;
+  r.sso=parseFloat(document.getElementById('r-sso').value)||0;
+  r.pvd=parseFloat(document.getElementById('r-pvd').value)||0;
   saveDB();
   renderRetireResults();
 }
@@ -4158,6 +4143,8 @@ function renderRetireResults(){
   document.getElementById('r-res-fund').textContent=fmtB(c.fundNeeded);
   document.getElementById('r-res-port-now').textContent=fmtB(c.curPort);
   document.getElementById('r-res-port-retire').textContent=fmtB(c.portAtRetire);
+  const ssopvd=document.getElementById('r-res-ssopvd');
+  if(ssopvd) ssopvd.textContent=fmtB(c.ssoFV+c.pvdFV);
 
   const surplusEl=document.getElementById('r-res-surplus');
   surplusEl.textContent=(onTrack?'+':'')+fmtB(c.surplus);
@@ -4187,29 +4174,22 @@ function renderRetireChart(r,c,extraMonthly=0){
   const labels=[], portLine=[], whatIfLine=[], targetLine=[];
   const mAccum=c.mAccum; const mPost=c.mPost;
   const curPort=c.curPort;
-  const salaryGrowth=(r.salaryGrowth||0)/100;
   const totalYears=r.lifeAge-(c.age||30);
-  // precompute what-if FV at each year (growing contributions)
   let whatIfPortAtRetire=0;
   for(let y=0;y<=totalYears;y++){
     labels.push((c.age||30)+y+' ปี');
     const n=y*12;
     if(y<=c.yearsToRetire){
+      // base = portfolio growth + SSO + PVD accumulated to year y
       const pv=curPort*Math.pow(1+mAccum,n);
-      portLine.push(Math.round(pv));
-      // what-if: sum growing monthly contributions compounded to year y
-      let wiFV=0;
-      if(extraMonthly>0){
-        for(let m=0;m<n;m++){
-          const yr=Math.floor(m/12);
-          const contrib=extraMonthly*Math.pow(1+salaryGrowth,yr);
-          const rem=n-m;
-          wiFV+=mAccum>0?contrib*Math.pow(1+mAccum,rem):contrib;
-        }
-      }
-      whatIfLine.push(Math.round(pv+wiFV));
+      const ssoY=_fvAnnuity(r.sso||0,mAccum,n);
+      const pvdY=_fvAnnuity(r.pvd||0,mAccum,n);
+      portLine.push(Math.round(pv+ssoY+pvdY));
+      // what-if = base + extra flat monthly
+      const extraFV=_fvAnnuity(extraMonthly,mAccum,n);
+      whatIfLine.push(Math.round(pv+ssoY+pvdY+extraFV));
       targetLine.push(Math.round(c.fundNeeded));
-      if(y===c.yearsToRetire) whatIfPortAtRetire=pv+wiFV;
+      if(y===c.yearsToRetire) whatIfPortAtRetire=pv+ssoY+pvdY+extraFV;
     } else {
       const mAfter=(y-c.yearsToRetire)*12;
       const baseR=mPost>0
@@ -4289,9 +4269,12 @@ function renderRetire(){
         <div class="fg"><label class="flabel">ผลตอบแทนช่วงเกษียณ (%/ปี)</label>
           <input type="number" id="r-post-return" class="finput" value="${r.postReturnRate}" min="0" max="15" step="0.5" oninput="saveRetire()">
           <div style="font-size:11px;color:var(--muted);margin-top:3px">ช่วงเกษียณมักใช้พอร์ตที่มั่นคง ~3–5%</div></div>
-        <div class="fg"><label class="flabel"><i class="fas fa-level-up-alt" style="color:#f59e0b;margin-right:4px"></i>เงินเดือนขึ้นปีละ (%/ปี)</label>
-          <input type="number" id="r-salary-growth" class="finput" value="${r.salaryGrowth||3}" min="0" max="30" step="0.5" oninput="saveRetire()">
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">ใช้กับการจำลอง "ถ้าออมเพิ่ม" — เงินที่ออมจะเพิ่มตามเงินเดือน</div></div>
+        <div class="fg"><label class="flabel"><i class="fas fa-shield-alt" style="color:#06b6d4;margin-right:4px"></i>ประกันสังคม (บาท/เดือน)</label>
+          <input type="number" id="r-sso" class="finput" value="${r.sso||0}" min="0" step="50" oninput="saveRetire()">
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">ส่วนชราภาพ — สูงสุด ฿750/เดือน (เงินเดือน ≥ 15,000 บาท)</div></div>
+        <div class="fg"><label class="flabel"><i class="fas fa-building" style="color:#a78bfa;margin-right:4px"></i>กองทุนสำรองเลี้ยงชีพ (บาท/เดือน)</label>
+          <input type="number" id="r-pvd" class="finput" value="${r.pvd||0}" min="0" step="100" oninput="saveRetire()">
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">ลูกจ้าง + นายจ้างรวมกัน (เช่น เงินเดือน 30,000 × 10% = 3,000 บาท)</div></div>
         <div style="padding:10px;background:rgba(16,185,129,.08);border-radius:10px;border:1px solid rgba(16,185,129,.2);font-size:12px;color:var(--muted);margin-top:4px">
           <i class="fas fa-info-circle" style="color:#10b981;margin-right:4px"></i>พอร์ตปัจจุบัน: <span style="color:#10b981;font-weight:700">${'฿'+Math.round(curPort).toLocaleString('th-TH')}</span>
           ${curPort===0?'<br><span style="color:var(--amber)">ยังไม่มีการลงทุน — ไปหน้า <a onclick="nav(\'investments\')" style="color:#a78bfa;cursor:pointer">พอร์ตลงทุน</a> เพื่อเพิ่ม</span>':''}
@@ -4314,7 +4297,8 @@ function renderRetire(){
         <div class="stat-card sc-amber"><div class="stat-label">ค่าใช้จ่าย ณ เกษียณ</div><div class="stat-value" id="r-res-future-exp" style="font-size:16px">—</div><div class="stat-sub">หลังปรับเงินเฟ้อ</div></div>
         <div class="stat-card sc-red"><div class="stat-label">เงินทุนที่ต้องการ</div><div class="stat-value" id="r-res-fund" style="font-size:16px">—</div><div class="stat-sub">ณ วันเกษียณ</div></div>
         <div class="stat-card" style="background:rgba(30,41,59,.6);border-color:var(--border)"><div class="stat-label">พอร์ตปัจจุบัน</div><div class="stat-value" id="r-res-port-now" style="font-size:16px">—</div><div class="stat-sub">มูลค่าวันนี้</div></div>
-        <div class="stat-card sc-green"><div class="stat-label">พอร์ตที่คาด ณ เกษียณ</div><div class="stat-value" id="r-res-port-retire" style="font-size:16px">—</div><div class="stat-sub">โดยไม่เพิ่มออม</div></div>
+        <div class="stat-card sc-green"><div class="stat-label">พอร์ตที่คาด ณ เกษียณ</div><div class="stat-value" id="r-res-port-retire" style="font-size:16px">—</div><div class="stat-sub" id="r-res-port-retire-sub">รวม SSO+PVD</div></div>
+        <div class="stat-card" style="background:rgba(6,182,212,.1);border-color:rgba(6,182,212,.3)"><div class="stat-label">SSO + PVD ณ เกษียณ</div><div class="stat-value" id="r-res-ssopvd" style="font-size:16px;color:#06b6d4">—</div><div class="stat-sub">สะสมทบต้น</div></div>
         <div class="stat-card" style="background:rgba(30,41,59,.6);border-color:var(--border)"><div class="stat-label">เงินเกิน/ขาด</div><div class="stat-value" id="r-res-surplus" style="font-size:16px">—</div><div class="stat-sub">เปรียบเทียบเป้า</div></div>
       </div>
 
