@@ -1353,7 +1353,8 @@ const _fbConfig={
   messagingSenderId:'668138190451',
   appId:'1:668138190451:web:d181da0bf022bcc0c09c06'
 };
-let _fs=null, _fsUnsub=null;
+let _fs=null, _fsUnsub=null, _pendingRemoteSync=false;
+function _flushPendingSync(){ if(!_pendingRemoteSync) return; _pendingRemoteSync=false; setTimeout(()=>{ renderPage(curPage); toast('โหลดข้อมูลใหม่จากอุปกรณ์อื่นแล้ว ☁️','success'); },120); }
 (function initFirebase(){
   try{
     if(typeof firebase==='undefined'){ console.error('[Firebase] SDK ไม่โหลด'); return; }
@@ -1436,8 +1437,16 @@ function fsListen(){
       DB={...DB,...remote};
       saveLocalOnly();
       setSyncStatus('ok');
-      renderPage(curPage);
-      toast('ซิงค์จากอุปกรณ์อื่นแล้ว ☁️','success');
+      // ถ้ามี modal เปิดอยู่หรือ user กำลังพิมพ์ → อย่า re-render ทับ
+      const modalOpen=document.querySelector('.overlay.active,.plan-modal-bg.active,.modal-bg.active,[class*="modal"][style*="flex"],[class*="modal"][style*="block"]');
+      const inputFocused=document.activeElement&&['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName);
+      if(modalOpen||inputFocused){
+        toast('มีข้อมูลใหม่จากอุปกรณ์อื่น ☁️ (จะโหลดหลังปิดฟอร์ม)','info');
+        _pendingRemoteSync=true;
+      } else {
+        renderPage(curPage);
+        toast('ซิงค์จากอุปกรณ์อื่นแล้ว ☁️','success');
+      }
     }catch(e){ console.error('[Firebase] snapshot parse:',e); }
   },e=>{ console.error('[Firebase] listener:',e); setSyncStatus('error'); });
 }
@@ -3474,7 +3483,7 @@ function clearAll(){
 //  MODAL UTILS
 // ══════════════════════════════════════════
 function openM(id){ document.getElementById(id).classList.add('show'); }
-function closeM(id){ document.getElementById(id).classList.remove('show'); }
+function closeM(id){ document.getElementById(id).classList.remove('show'); _flushPendingSync(); }
 
 document.querySelectorAll('.overlay').forEach(ov=>{
   ov.addEventListener('click',e=>{ if(e.target===ov) ov.classList.remove('show'); });
@@ -4278,7 +4287,7 @@ function getProfile(){
   if(!p.family.children) p.family.children=[];
   return p;
 }
-function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); _flushPendingSync(); }
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 
 function profSave(key,val){ getProfile()[key]=val; saveDB(); }
