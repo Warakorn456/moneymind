@@ -1828,33 +1828,49 @@ function renderTxChart(year){
   const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   let labels=[],datasets=[],yearList=[];
 
+  // aggregate ใน 1 pass — เพื่อ performance เมื่อมีรายการเยอะ
+  const agg={}; // agg[yr][type][cat] = [12 months]
+  const allYears=new Set();
+  DB.transactions.forEach(t=>{
+    const d=new Date(t.date); const yr=d.getFullYear(); const mo=d.getMonth();
+    allYears.add(yr);
+    if(!agg[yr]) agg[yr]={};
+    if(!agg[yr][t.type]) agg[yr][t.type]={};
+    if(!agg[yr][t.type][t.category]) agg[yr][t.type][t.category]=new Array(12).fill(0);
+    agg[yr][t.type][t.category][mo]+=t.amount;
+  });
+  const getMonths=(yr,type,cat)=>agg[yr]?.[type]?.[cat]||new Array(12).fill(0);
+  const getTotal=(yr,type,cat)=>getMonths(yr,type,cat).reduce((s,v)=>s+v,0);
+  const hasAny=(type,cat)=>year==null
+    ? yearList.some(yr=>getTotal(yr,type,cat)>0)
+    : getMonths(year,type,cat).some(v=>v>0);
+
   if(year==null){
-    yearList=[...new Set(DB.transactions.map(t=>new Date(t.date).getFullYear()))].sort();
+    yearList=[...allYears].sort();
     if(!yearList.includes(nowY)) yearList.push(nowY);
     yearList=yearList.slice(-5);
     labels=yearList.map(String);
     datasets=[
       ...INC_CATS.map(cat=>({label:cat.label,stack:'income',backgroundColor:cat.color+'bb',borderWidth:0,
-        data:yearList.map(yr=>DB.transactions.filter(t=>t.type==='income'&&t.category===cat.id&&new Date(t.date).getFullYear()===yr).reduce((s,t)=>s+t.amount,0))})),
+        data:yearList.map(yr=>getTotal(yr,'income',cat.id))})),
       ...EXP_CATS.map(cat=>({label:cat.label,stack:'expense',backgroundColor:cat.color+'bb',borderWidth:0,
-        data:yearList.map(yr=>DB.transactions.filter(t=>t.type==='expense'&&t.category===cat.id&&new Date(t.date).getFullYear()===yr).reduce((s,t)=>s+t.amount,0))}))
+        data:yearList.map(yr=>getTotal(yr,'expense',cat.id))}))
     ];
   } else {
     labels=MN;
     datasets=[
       ...INC_CATS.map(cat=>({label:cat.label,stack:'income',backgroundColor:cat.color+'bb',borderWidth:0,
-        data:Array.from({length:12},(_,i)=>DB.transactions.filter(t=>t.type==='income'&&t.category===cat.id&&new Date(t.date).getFullYear()===year&&new Date(t.date).getMonth()===i).reduce((s,t)=>s+t.amount,0))})),
+        data:[...getMonths(year,'income',cat.id)]})),
       ...EXP_CATS.map(cat=>({label:cat.label,stack:'expense',backgroundColor:cat.color+'bb',borderWidth:0,
-        data:Array.from({length:12},(_,i)=>DB.transactions.filter(t=>t.type==='expense'&&t.category===cat.id&&new Date(t.date).getFullYear()===year&&new Date(t.date).getMonth()===i).reduce((s,t)=>s+t.amount,0))}))
+        data:[...getMonths(year,'expense',cat.id)]}))
     ];
   }
 
-  const relTx=year==null?DB.transactions:DB.transactions.filter(t=>new Date(t.date).getFullYear()===year);
   const legendHtml=`<div style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06)">
     <span style="font-size:11px;color:var(--green);font-weight:700;width:100%">รายรับ</span>
-    ${INC_CATS.filter(c=>relTx.some(t=>t.type==='income'&&t.category===c.id)).map(c=>`<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)"><span style="width:9px;height:9px;border-radius:2px;background:${c.color};display:inline-block;flex-shrink:0"></span>${c.label}</span>`).join('')}
+    ${INC_CATS.filter(c=>hasAny('income',c.id)).map(c=>`<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)"><span style="width:9px;height:9px;border-radius:2px;background:${c.color};display:inline-block;flex-shrink:0"></span>${c.label}</span>`).join('')}
     <span style="font-size:11px;color:var(--red);font-weight:700;width:100%;margin-top:4px">รายจ่าย</span>
-    ${EXP_CATS.filter(c=>relTx.some(t=>t.type==='expense'&&t.category===c.id)).map(c=>`<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)"><span style="width:9px;height:9px;border-radius:2px;background:${c.color};display:inline-block;flex-shrink:0"></span>${c.label}</span>`).join('')}
+    ${EXP_CATS.filter(c=>hasAny('expense',c.id)).map(c=>`<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)"><span style="width:9px;height:9px;border-radius:2px;background:${c.color};display:inline-block;flex-shrink:0"></span>${c.label}</span>`).join('')}
   </div>`;
 
   el.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-bottom:16px">
@@ -1887,13 +1903,23 @@ function renderTxChart(year){
   });
 }
 
-function renderTx(){
-  renderTxChart(_txChartYear);
+let _txPage=0;
+const TX_PAGE_SIZE=100;
+function renderTx(appendMore=false){
+  if(!appendMore){ _txPage=0; renderTxChart(_txChartYear); }
   const el=document.getElementById('tx-list');
   let txs=[...DB.transactions].sort((a,b)=>new Date(b.date)-new Date(a.date));
   if(txFilter!=='all') txs=txs.filter(t=>t.type===txFilter);
   if(!txs.length){ el.innerHTML='<div class="empty"><i class="fas fa-receipt"></i><p>ยังไม่มีรายการ</p></div>'; return; }
-  el.innerHTML=txs.map(t=>txHTML(t)).join('');
+  const slice=txs.slice(0,(_txPage+1)*TX_PAGE_SIZE);
+  const hasMore=slice.length<txs.length;
+  const moreBtn=hasMore?`<div style="text-align:center;padding:12px"><button onclick="_txPage++;renderTx(true)" style="background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);color:#a78bfa;border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer;font-family:Sarabun,sans-serif">โหลดเพิ่ม (เหลือ ${txs.length-slice.length} รายการ)</button></div>`:'';
+  if(appendMore){
+    document.getElementById('tx-load-more')?.remove();
+    el.insertAdjacentHTML('beforeend',txs.slice(_txPage*TX_PAGE_SIZE,(_txPage+1)*TX_PAGE_SIZE).map(t=>txHTML(t)).join('')+(hasMore?`<div id="tx-load-more">${moreBtn}</div>`:''));
+  } else {
+    el.innerHTML=slice.map(t=>txHTML(t)).join('')+(hasMore?`<div id="tx-load-more">${moreBtn}</div>`:'');
+  }
 }
 
 function setFilter(f,el){ txFilter=f; document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); renderTx(); }
