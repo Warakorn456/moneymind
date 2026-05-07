@@ -4144,47 +4144,99 @@ function buildFinanceContext(){
   const now=new Date();
   const m=now.getMonth(), y=now.getFullYear();
   const allTx=DB.transactions||[];
+  const userName=(DB.profile?.name||currentUser||'คุณ').split('@')[0];
+
+  // เดือนนี้
   const monthTxs=allTx.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});
   const inc=monthTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const exp=monthTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
 
-  // รายจ่ายแยกหมวด
+  // รายจ่ายแยกหมวด (เดือนนี้)
   const catMap={};
   monthTxs.filter(t=>t.type==='expense').forEach(t=>{catMap[t.category]=(catMap[t.category]||0)+t.amount;});
-  const catStr=Object.entries(catMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}: ฿${v.toLocaleString()}`).join(', ');
+  const catLabel={food:'อาหาร',transport:'เดินทาง',fuel:'น้ำมัน',housing:'ที่พัก',utility:'สาธารณูปโภค',health:'สุขภาพ',entertainment:'บันเทิง',shopping:'ช้อปปิ้ง',education:'การศึกษา',insurance:'ประกัน',debt_pay:'ผ่อนหนี้',other_exp:'อื่นๆ'};
+  const catStr=Object.entries(catMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${catLabel[k]||k} ${fmt(v)}`).join(', ');
 
-  // เป้าหมายออม
-  const savStr=(DB.savings||[]).map(s=>`${s.name} (${fmt(s.current)}/${fmt(s.target)} = ${Math.round(s.current/s.target*100)}%)`).join(' | ')||'ไม่มี';
-
-  // หนี้
-  const debtTotal=(DB.debts||[]).reduce((s,d)=>s+d.remaining,0);
-  const debtStr=(DB.debts||[]).map(d=>`${d.name} คงเหลือ ${fmt(d.remaining)}`).join(' | ')||'ไม่มี';
-
-  // พอร์ตลงทุน
-  const invTotal=(DB.investments||[]).reduce((s,i)=>s+i.value,0);
-  const invStr=(DB.investments||[]).map(i=>`${i.name}(${i.symbol}) ${fmt(i.value)}`).join(' | ')||'ไม่มี';
-
-  // 3 เดือนย้อนหลัง
+  // 6 เดือนย้อนหลัง
   let trend='';
-  for(let i=2;i>=0;i--){
+  for(let i=5;i>=0;i--){
     const dm=new Date(y,m-i,1);
     const txs=allTx.filter(t=>{const d=new Date(t.date);return d.getMonth()===dm.getMonth()&&d.getFullYear()===dm.getFullYear();});
     const mi=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
     const me=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-    trend+=`${dm.toLocaleDateString('th-TH',{month:'short',year:'numeric'})}: รับ ฿${mi.toLocaleString()} จ่าย ฿${me.toLocaleString()} | `;
+    if(mi||me) trend+=`${dm.toLocaleDateString('th-TH',{month:'short',year:'2-digit'})}: รับ ${fmt(mi)} จ่าย ${fmt(me)} คงเหลือ ${fmt(mi-me)} | `;
   }
 
-  return `คุณคือผู้ช่วยวิเคราะห์การเงินส่วนตัวภาษาไทย ตอบกระชับ เป็นมิตร ให้คำแนะนำที่เป็นประโยชน์จริง
+  // เป้าหมายออม
+  const savStr=(DB.savings||[]).map(s=>{
+    const pct=s.target?Math.round(s.current/s.target*100):0;
+    const left=Math.max(0,s.target-s.current);
+    return `${s.name}: ${fmt(s.current)}/${fmt(s.target)} (${pct}% เหลืออีก ${fmt(left)})`;
+  }).join('\n  ')||'ไม่มี';
 
-ข้อมูลการเงินของผู้ใช้ (${now.toLocaleDateString('th-TH',{month:'long',year:'numeric'})}):
-• รายรับเดือนนี้: ฿${inc.toLocaleString()}
-• รายจ่ายเดือนนี้: ฿${exp.toLocaleString()}
-• คงเหลือ: ฿${(inc-exp).toLocaleString()}
-• หมวดรายจ่าย: ${catStr||'ยังไม่มีข้อมูล'}
-• เป้าหมายออม: ${savStr}
-• หนี้รวม: ฿${debtTotal.toLocaleString()} — ${debtStr}
-• พอร์ตลงทุนรวม: ฿${invTotal.toLocaleString()} — ${invStr}
-• แนวโน้ม 3 เดือน: ${trend}`;
+  // หนี้
+  const debtTotal=(DB.debts||[]).reduce((s,d)=>s+(d.remaining||0),0);
+  const debtMonthly=(DB.debts||[]).reduce((s,d)=>s+(d.pay||0),0);
+  const debtStr=(DB.debts||[]).map(d=>`${d.name}: คงเหลือ ${fmt(d.remaining||0)} ผ่อน ${fmt(d.pay||0)}/เดือน`).join('\n  ')||'ไม่มี';
+
+  // พอร์ตลงทุน
+  const invList=DB.investments||[];
+  const invTotal=invList.reduce((s,i)=>s+(i.currentPrice||i.buyPrice||0)*i.qty,0);
+  const invCost=invList.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
+  const invPnl=invTotal-invCost;
+  const invStr=invList.map(i=>{
+    const val=(i.currentPrice||i.buyPrice||0)*i.qty;
+    const pnl=((i.currentPrice||i.buyPrice)-i.buyPrice)*i.qty;
+    return `${i.name}(${i.symbol}): ${fmt(val)} (${pnl>=0?'+':''}${fmt(pnl)})`;
+  }).join('\n  ')||'ไม่มี';
+
+  // งบดุล / net worth
+  let nw={savings:0,invVal:0,extraAssetsTotal:0,totalAssets:0,trackedDebts:0,extraDebtsTotal:0,debts:0,netWorth:0};
+  try{ nw=calcNetWorth(); }catch{}
+  const plan=getPlan();
+  const extraAStr=(plan.extraAssets||[]).map(a=>`${a.name}: ${fmt(a.amount)}`).join(', ')||'ไม่มี';
+  const extraDStr=(plan.extraDebts||[]).map(d=>`${d.name}: ${fmt(d.amount)}`).join(', ')||'ไม่มี';
+
+  // ภาษี
+  const tax=DB.tax||{};
+  const taxStr=tax.salary?`รายได้รวม ${fmt(tax.salary)} ภาษีหัก ณ ที่จ่าย ${fmt(tax.withheld||0)} ประกันสังคม ${fmt(tax.sso||0)}`:'ยังไม่มีข้อมูล';
+
+  return `คุณคือ "มายา" เลขาการเงินส่วนตัวของ${userName} มีความเชี่ยวชาญด้านการเงินส่วนบุคคล
+- ตอบภาษาไทย กระชับ เป็นมิตร เหมือนเลขาที่รู้จักเจ้านายดี ใช้ชื่อ "${userName}" เมื่อเหมาะสม
+- ให้คำแนะนำที่ปฏิบัติได้จริง ไม่ใช่แค่บอกตัวเลข
+- ถ้าข้อมูลไม่เพียงพอ ให้บอกตรงๆ และแนะนำว่าควรเพิ่มข้อมูลอะไร
+- ใช้ bullet points และ bold (**) ให้อ่านง่าย
+
+═══ ข้อมูลการเงินของ${userName} (อัปเดต ${now.toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'})}) ═══
+
+📅 เดือนนี้ (${now.toLocaleDateString('th-TH',{month:'long',year:'numeric'})}):
+  รายรับ: ${fmt(inc)} | รายจ่าย: ${fmt(exp)} | คงเหลือ: ${fmt(inc-exp)}
+  หมวดรายจ่าย: ${catStr||'ยังไม่มีข้อมูล'}
+  ผ่อนหนี้ต่อเดือน: ${fmt(debtMonthly)}
+
+📊 แนวโน้ม 6 เดือน:
+  ${trend||'ยังไม่มีข้อมูล'}
+
+🏦 งบดุลสุทธิ (Net Worth):
+  สินทรัพย์รวม: ${fmt(nw.totalAssets)} (เงินออม ${fmt(nw.savings)} + ลงทุน ${fmt(nw.invVal)} + อื่นๆ ${fmt(nw.extraAssetsTotal)})
+  หนี้สินรวม: ${fmt(nw.debts)} (หนี้ติดตาม ${fmt(nw.trackedDebts)} + อื่นๆ ${fmt(nw.extraDebtsTotal)})
+  ความมั่งคั่งสุทธิ: ${fmt(nw.netWorth)}
+  สินทรัพย์อื่น: ${extraAStr}
+  หนี้สินอื่น: ${extraDStr}
+
+🎯 เป้าหมายออม:
+  ${savStr}
+
+💳 หนี้สิน:
+  รวมคงเหลือ: ${fmt(debtTotal)} | ผ่อนรวม: ${fmt(debtMonthly)}/เดือน
+  ${debtStr}
+
+📈 พอร์ตลงทุน:
+  มูลค่ารวม: ${fmt(invTotal)} | ต้นทุน: ${fmt(invCost)} | กำไร/ขาดทุน: ${invPnl>=0?'+':''}${fmt(invPnl)}
+  ${invStr}
+
+📋 ภาษีปีนี้:
+  ${taxStr}`;
 }
 
 function toggleChat(){
@@ -4192,7 +4244,7 @@ function toggleChat(){
   const panel=document.getElementById('chat-panel');
   if(chatOpen){
     panel.classList.remove('hidden');
-    if(chatHistory.length===0) addChatMsg('ai','สวัสดีครับ! 👋 ผมคือผู้ช่วย AI ของคุณ\nถามได้เลยนะครับ เช่น "เดือนนี้ใช้จ่ายเกินไหม?" หรือ "ควรปรับพอร์ตอย่างไร?"');
+    if(chatHistory.length===0){const n=(DB.profile?.name||currentUser||'').split('@')[0];addChatMsg('ai',`สวัสดีค่ะ${n?` คุณ${n}`:''}! 👋 หนูคือมายา เลขาการเงินส่วนตัวของคุณ\nหนูรู้ข้อมูลการเงินทั้งหมดของคุณแล้ว — ถามได้เลยค่ะ`);}
     setTimeout(()=>document.getElementById('chat-input').focus(),100);
   } else {
     panel.classList.add('hidden');
@@ -4463,20 +4515,22 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 <div id="chat-panel" class="chat-panel hidden">
   <div class="chat-head">
-    <div class="chat-head-icon"><i class="fas fa-robot"></i></div>
+    <div class="chat-head-icon"><i class="fas fa-user-tie"></i></div>
     <div class="chat-head-info">
-      <div class="chat-head-title">ผู้ช่วย AI การเงิน</div>
-      <div class="chat-head-sub">วิเคราะห์ข้อมูลของคุณแบบ Real-time</div>
+      <div class="chat-head-title">มายา — เลขาการเงินส่วนตัว</div>
+      <div class="chat-head-sub">รู้ข้อมูลการเงินทั้งหมดของคุณ</div>
     </div>
+    <button onclick="chatHistory=[];renderChatMsgs();toggleChat();toggleChat();" title="เคลียร์แชท" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 8px;font-size:13px;margin-right:2px"><i class="fas fa-trash-alt"></i></button>
     <button class="chat-head-close" onclick="toggleChat()"><i class="fas fa-times"></i></button>
   </div>
   <div class="chat-msgs" id="chat-msgs"></div>
   <div class="chat-quick" id="chat-quick">
-    <button class="chat-q" onclick="chatQuick('เดือนนี้ใช้จ่ายเกินไหม?')">💸 ใช้จ่ายเกินไหม?</button>
-    <button class="chat-q" onclick="chatQuick('สรุปภาพรวมการเงินของฉัน')">📊 ภาพรวมการเงิน</button>
-    <button class="chat-q" onclick="chatQuick('ควรออมเงินเพิ่มไหม?')">🎯 ควรออมเพิ่มไหม?</button>
-    <button class="chat-q" onclick="chatQuick('หนี้สินของฉันน่าเป็นห่วงไหม?')">💳 หนี้น่าเป็นห่วงไหม?</button>
-    <button class="chat-q" onclick="chatQuick('วิเคราะห์พอร์ตลงทุนของฉัน')">📈 วิเคราะห์พอร์ต</button>
+    <button class="chat-q" onclick="chatQuick('สรุปภาพรวมการเงินของฉันเดือนนี้')">📊 สรุปเดือนนี้</button>
+    <button class="chat-q" onclick="chatQuick('Net Worth ของฉันตอนนี้เป็นเท่าไร และควรปรับปรุงอะไรบ้าง?')">🏦 Net Worth</button>
+    <button class="chat-q" onclick="chatQuick('รายจ่ายหมวดไหนที่ลดได้บ้าง? ช่วยวิเคราะห์ให้หน่อย')">✂️ ลดรายจ่าย</button>
+    <button class="chat-q" onclick="chatQuick('ควรปิดหนี้ไหนก่อน? แนะนำกลยุทธ์การจัดการหนี้ให้หน่อย')">💳 จัดการหนี้</button>
+    <button class="chat-q" onclick="chatQuick('เป้าหมายออมของฉันถึงเป้าได้เมื่อไร ถ้าออมต่อเนื่องเดือนละเท่าเดิม?')">🎯 เป้าหมายออม</button>
+    <button class="chat-q" onclick="chatQuick('วิเคราะห์พอร์ตลงทุนของฉัน กำไร/ขาดทุนเป็นเท่าไร และควรปรับอะไรบ้าง?')">📈 วิเคราะห์พอร์ต</button>
   </div>
   <div class="chat-foot">
     <textarea class="chat-input" id="chat-input" placeholder="ถามอะไรก็ได้เกี่ยวกับการเงินของคุณ..." rows="1"></textarea>
