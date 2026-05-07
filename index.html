@@ -316,6 +316,13 @@
     .prof-field input:focus,.prof-field select:focus,.prof-field textarea:focus{border-color:rgba(124,58,237,.5)}
     .prof-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px}
     .prof-entry{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px;margin-bottom:10px;position:relative}
+    .fam-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:14px}
+    .fam-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:16px;position:relative}
+    .fam-card-icon{font-size:28px;text-align:center;margin-bottom:8px}
+    .fam-card-label{font-size:11px;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+    .fam-card .prof-field label{font-size:10px}
+    .fam-age-badge{display:inline-block;background:rgba(124,58,237,.2);color:#a78bfa;font-size:11px;padding:2px 8px;border-radius:20px;margin-top:4px}
+    .fam-children-list{display:flex;flex-direction:column;gap:8px}
     .prof-entry-del{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:4px 6px;border-radius:6px}
     .prof-entry-del:hover{color:#ef4444;background:rgba(239,68,68,.1)}
     .skill-bar-wrap{height:4px;border-radius:2px;background:rgba(255,255,255,.08);margin-top:6px;overflow:hidden}
@@ -836,6 +843,28 @@
       <div style="display:flex;gap:10px;margin-top:6px">
         <button class="btn btn-primary" style="flex:1" onclick="saveSkillEntry()">บันทึก</button>
         <button class="btn btn-ghost" onclick="closeModal('skill-modal-bg')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Child Modal -->
+  <div class="plan-modal-bg" id="child-modal-bg" onclick="if(event.target===this)closeModal('child-modal-bg')">
+    <div class="plan-modal">
+      <div style="font-size:16px;font-weight:700;margin-bottom:18px"><i class="fas fa-child" style="color:#06b6d4"></i> ข้อมูลลูก</div>
+      <input type="hidden" id="child-edit-id">
+      <div class="fg"><label class="flabel">ชื่อ-นามสกุล</label><input class="finput" id="child-name" placeholder="ชื่อ นามสกุล"></div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">วันเกิด</label><input type="date" id="child-dob" class="finput"></div>
+        <div class="fg"><label class="flabel">เพศ</label>
+          <select class="finput" id="child-gender">
+            <option>ชาย</option><option>หญิง</option><option>ไม่ระบุ</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label class="flabel">หมายเหตุ / รายละเอียด</label><textarea class="finput" id="child-note" rows="3" placeholder="รายละเอียดเพิ่มเติม เช่น โรงเรียน สุขภาพ ฯลฯ"></textarea></div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="btn btn-primary" style="flex:1" onclick="saveChild()">บันทึก</button>
+        <button class="btn btn-ghost" onclick="closeModal('child-modal-bg')">ยกเลิก</button>
       </div>
     </div>
   </div>
@@ -3878,6 +3907,11 @@ function getProfile(){
   if(!p.skills)    p.skills=[];
   if(!p.interests) p.interests=[];
   if(!p.hobbies)   p.hobbies=[];
+  if(!p.family)    p.family={father:{},mother:{},partner:{},children:[]};
+  if(!p.family.father)   p.family.father={};
+  if(!p.family.mother)   p.family.mother={};
+  if(!p.family.partner)  p.family.partner={};
+  if(!p.family.children) p.family.children=[];
   return p;
 }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
@@ -3904,6 +3938,46 @@ function uploadProfilePhoto(inp){
 function calcAge(dob){ if(!dob) return ''; const d=new Date(dob),now=new Date(); let a=now.getFullYear()-d.getFullYear(); if(now<new Date(now.getFullYear(),d.getMonth(),d.getDate())) a--; return a+' ปี'; }
 function ymLabelWork(ym){ if(!ym) return 'ปัจจุบัน'; const [y,m]=ym.split('-').map(Number); const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']; return `${MN[m-1]} ${y+543}`; }
 function workDuration(from,to){ if(!from) return ''; const f=new Date(from+'-01'), t=to?new Date(to+'-01'):new Date(); const months=Math.max(0,Math.round((t-f)/2592000000)); if(months<12) return months+'เดือน'; return Math.floor(months/12)+'ปี '+(months%12?months%12+'เดือน':''); }
+
+function famSave(member,field,val){ getProfile().family[member][field]=val; saveDB(); if(field==='dob') renderProfile(); }
+function famMemberCard(key,icon,label,data,hasRelation=false){
+  const age=data.dob?`<span class="fam-age-badge">${calcAge(data.dob)}</span>`:'';
+  const relOpts=['แฟน','สามี','ภรรยา','คู่ชีวิต','หมั้น'];
+  return `<div class="fam-card">
+    <div class="fam-card-icon">${icon}</div>
+    <div class="fam-card-label">${label}</div>
+    <div class="prof-field" style="margin-bottom:8px"><label>ชื่อ-นามสกุล</label>
+      <input type="text" value="${(data.name||'').replace(/"/g,'&quot;')}" placeholder="ชื่อ นามสกุล" onchange="famSave('${key}','name',this.value)"></div>
+    <div class="prof-field" style="margin-bottom:8px"><label>วันเกิด</label>
+      <input type="date" value="${data.dob||''}" onchange="famSave('${key}','dob',this.value)"></div>
+    ${data.dob?`<div style="text-align:center;margin-bottom:8px">${age}</div>`:''}
+    ${hasRelation?`<div class="prof-field" style="margin-bottom:8px"><label>ความสัมพันธ์</label>
+      <select onchange="famSave('${key}','relationship',this.value)">${relOpts.map(o=>`<option${(data.relationship||'แฟน')===o?' selected':''}>${o}</option>`).join('')}</select></div>`:''}
+    <div class="prof-field"><label>หมายเหตุ / รายละเอียด</label>
+      <textarea rows="2" placeholder="รายละเอียดเพิ่มเติม..." onchange="famSave('${key}','note',this.value)">${data.note||''}</textarea></div>
+  </div>`;
+}
+
+function openChildModal(id){
+  const p=getProfile();
+  const c=id?p.family.children.find(x=>x.id===id):null;
+  document.getElementById('child-edit-id').value=id||'';
+  document.getElementById('child-name').value=c?.name||'';
+  document.getElementById('child-dob').value=c?.dob||'';
+  document.getElementById('child-gender').value=c?.gender||'ชาย';
+  document.getElementById('child-note').value=c?.note||'';
+  openModal('child-modal-bg');
+  setTimeout(()=>document.getElementById('child-name').focus(),100);
+}
+function saveChild(){
+  const id=document.getElementById('child-edit-id').value||('ch'+Date.now());
+  const p=getProfile();
+  const entry={id,name:document.getElementById('child-name').value.trim(),dob:document.getElementById('child-dob').value,gender:document.getElementById('child-gender').value,note:document.getElementById('child-note').value.trim()};
+  const idx=p.family.children.findIndex(c=>c.id===id);
+  if(idx>=0) p.family.children[idx]=entry; else p.family.children.push(entry);
+  saveDB(); closeModal('child-modal-bg'); renderProfile();
+}
+function deleteChild(id){ const p=getProfile(); p.family.children=p.family.children.filter(c=>c.id!==id); saveDB(); renderProfile(); }
 
 function renderProfile(){
   const p=getProfile();
@@ -3985,6 +4059,39 @@ function renderProfile(){
     <div class="prof-grid" style="margin-top:10px;grid-template-columns:1fr">
       ${profField('address','ที่อยู่','textarea','บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด')}
       ${profField('bio','แนะนำตัวสั้นๆ','textarea','สรุปตัวเองในไม่กี่ประโยค...')}
+    </div>
+  </div>
+
+  <!-- ครอบครัว -->
+  <div class="prof-section">
+    <div class="set-title" style="margin-bottom:14px"><i class="fas fa-home" style="color:#f59e0b"></i> ครอบครัว</div>
+
+    <div class="fam-grid">
+      ${famMemberCard('father','👨','พ่อ',p.family.father)}
+      ${famMemberCard('mother','👩','แม่',p.family.mother)}
+      ${famMemberCard('partner','💑','แฟน / คู่ชีวิต',p.family.partner,true)}
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:600;color:var(--text)"><i class="fas fa-child" style="color:#06b6d4;margin-right:6px"></i>ลูก</div>
+      <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px" onclick="openChildModal()"><i class="fas fa-plus"></i> เพิ่มลูก</button>
+    </div>
+    <div class="fam-children-list">
+      ${(p.family.children||[]).length===0?'<div style="font-size:13px;color:var(--muted);padding:6px 0">ยังไม่มีข้อมูล</div>':
+        (p.family.children||[]).map(c=>`
+        <div class="prof-entry" style="display:flex;align-items:flex-start;gap:14px">
+          <div style="font-size:24px;line-height:1;margin-top:2px">${c.gender==='หญิง'?'👧':'👦'}</div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:14px">${c.name||'ไม่ระบุชื่อ'}</div>
+            ${c.dob?`<div style="font-size:12px;color:var(--muted);margin-top:2px"><i class="fas fa-birthday-cake"></i> ${new Date(c.dob).toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'})} <span class="fam-age-badge">${calcAge(c.dob)}</span></div>`:''}
+            ${c.gender?`<div style="font-size:12px;color:var(--muted);margin-top:2px">${c.gender}</div>`:''}
+            ${c.note?`<div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5">${c.note}</div>`:''}
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button onclick="openChildModal('${c.id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px"><i class="fas fa-edit"></i></button>
+            <button onclick="deleteChild('${c.id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:4px"><i class="fas fa-times"></i></button>
+          </div>
+        </div>`).join('')}
     </div>
   </div>
 
