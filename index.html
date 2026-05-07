@@ -568,6 +568,7 @@
     <div class="nav-item" onclick="nav('investments')"><i class="fas fa-chart-line"></i> พอร์ตลงทุน</div>
     <div class="nav-item" onclick="nav('tax')"><i class="fas fa-file-invoice"></i> ภาษีเงินได้</div>
     <div class="nav-item" onclick="nav('balance')"><i class="fas fa-balance-scale"></i> งบดุล & แผน</div>
+    <div class="nav-item" onclick="nav('retire')"><i class="fas fa-umbrella-beach"></i> แผนเกษียณ</div>
     <div class="nav-item" onclick="nav('profile')"><i class="fas fa-id-card"></i> ประวัติส่วนตัว</div>
     <div style="margin-top:auto">
       <div class="nav-item" onclick="nav('settings')"><i class="fas fa-cog"></i> ตั้งค่า</div>
@@ -761,6 +762,11 @@
   <!-- ════ BALANCE & PLAN ════ -->
   <div id="pg-balance" class="page">
     <div id="balance-content"></div>
+  </div>
+
+  <!-- ════ RETIRE ════ -->
+  <div id="pg-retire" class="page">
+    <div id="retire-content"></div>
   </div>
 
   <!-- ════ PROFILE ════ -->
@@ -1834,7 +1840,7 @@ function getCat(id,type){ const l=type==='income'?INC_CATS:EXP_CATS; return l.fi
 // ══════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════
-const PAGE_TITLE = {dashboard:'แดชบอร์ด',transactions:'รายรับ-รายจ่าย',savings:'เงินออม',debts:'หนี้สิน',investments:'พอร์ตลงทุน',tax:'ภาษีเงินได้',balance:'งบดุล & แผนการเงิน',profile:'ประวัติส่วนตัว',settings:'ตั้งค่า'};
+const PAGE_TITLE = {dashboard:'แดชบอร์ด',transactions:'รายรับ-รายจ่าย',savings:'เงินออม',debts:'หนี้สิน',investments:'พอร์ตลงทุน',tax:'ภาษีเงินได้',balance:'งบดุล & แผนการเงิน',retire:'แผนเกษียณ',profile:'ประวัติส่วนตัว',settings:'ตั้งค่า'};
 let curPage='dashboard', txFilter='all';
 
 function nav(page){
@@ -1859,6 +1865,7 @@ function renderPage(p){
   else if(p==='investments') renderInv();
   else if(p==='tax') renderTax();
   else if(p==='balance') renderBalance();
+  else if(p==='retire') renderRetire();
   else if(p==='profile') renderProfile();
   else if(p==='settings') renderSettings();
 }
@@ -4043,6 +4050,250 @@ function calcNetWorth(){
   const debts=trackedDebts+extraDebtsTotal;
   const netWorth=totalAssets-debts;
   return {invVal,extraAssetsTotal,totalAssets,trackedDebts,extraDebtsTotal,debts,netWorth};
+}
+
+// ══════════════════════════════════════════
+//  RETIRE PLANNER
+// ══════════════════════════════════════════
+let _chRetire=null;
+function getRetire(){
+  if(!DB.retire) DB.retire={retireAge:60,lifeAge:85,monthlyExpense:30000,inflation:3,returnRate:7,postReturnRate:4};
+  return DB.retire;
+}
+function calcRetirePlan(r){
+  const dob=DB.profile&&DB.profile.dob?new Date(DB.profile.dob):null;
+  const curAge=dob?Math.floor((Date.now()-dob)/(365.25*24*3600*1000)):null;
+  const age=curAge||30;
+  const yearsToRetire=Math.max(1,r.retireAge-age);
+  const yearsInRetire=Math.max(1,r.lifeAge-r.retireAge);
+  const mAccum=r.returnRate/100/12;
+  const mPost=r.postReturnRate/100/12;
+  const nAccum=yearsToRetire*12;
+  const nRetire=yearsInRetire*12;
+  // inflation-adjusted monthly expense at retirement
+  const futureMonthly=r.monthlyExpense*Math.pow(1+r.inflation/100,yearsToRetire);
+  // fund needed at retirement (PV of annuity during retirement)
+  const fundNeeded=mPost>0
+    ? futureMonthly*(1-Math.pow(1+mPost,-nRetire))/mPost
+    : futureMonthly*nRetire;
+  // current portfolio grows
+  const curPort=(DB.investments||[]).reduce((s,i)=>s+i.value,0);
+  const portAtRetire=curPort*Math.pow(1+mAccum,nAccum);
+  // shortfall
+  const shortfall=Math.max(0,fundNeeded-portAtRetire);
+  // monthly investment needed to cover shortfall (FV of annuity)
+  const monthlyNeeded=mAccum>0
+    ? shortfall*mAccum/(Math.pow(1+mAccum,nAccum)-1)
+    : shortfall/nAccum;
+  // projected total portfolio at retire including monthly contributions
+  const totalPortAtRetire=portAtRetire; // contributions handled separately in chart
+  const surplus=portAtRetire-fundNeeded;
+  return {age,yearsToRetire,yearsInRetire,futureMonthly,fundNeeded,curPort,portAtRetire,shortfall,monthlyNeeded,surplus,nAccum,nRetire,mAccum,mPost};
+}
+function saveRetire(){
+  const r=getRetire();
+  r.retireAge=parseInt(document.getElementById('r-retire-age').value)||60;
+  r.lifeAge=parseInt(document.getElementById('r-life-age').value)||85;
+  r.monthlyExpense=parseFloat(document.getElementById('r-monthly-exp').value)||0;
+  r.inflation=parseFloat(document.getElementById('r-inflation').value)||3;
+  r.returnRate=parseFloat(document.getElementById('r-return').value)||7;
+  r.postReturnRate=parseFloat(document.getElementById('r-post-return').value)||4;
+  saveDB();
+  renderRetireResults();
+}
+function renderRetireResults(){
+  const r=getRetire();
+  const c=calcRetirePlan(r);
+  const fmtB=n=>'฿'+Math.round(n).toLocaleString('th-TH');
+  const onTrack=c.surplus>=0;
+
+  document.getElementById('r-res-years').textContent=c.yearsToRetire+' ปี';
+  document.getElementById('r-res-future-exp').textContent=fmtB(c.futureMonthly)+'/เดือน';
+  document.getElementById('r-res-fund').textContent=fmtB(c.fundNeeded);
+  document.getElementById('r-res-port-now').textContent=fmtB(c.curPort);
+  document.getElementById('r-res-port-retire').textContent=fmtB(c.portAtRetire);
+
+  const surplusEl=document.getElementById('r-res-surplus');
+  surplusEl.textContent=(onTrack?'+':'')+fmtB(c.surplus);
+  surplusEl.style.color=onTrack?'var(--green)':'var(--red)';
+
+  const needEl=document.getElementById('r-res-monthly-need');
+  needEl.parentElement.style.display=onTrack?'none':'flex';
+  needEl.textContent=fmtB(c.monthlyNeeded)+'/เดือน';
+
+  const badge=document.getElementById('r-status-badge');
+  badge.innerHTML=onTrack
+    ?'<i class="fas fa-check-circle" style="color:var(--green)"></i> <span style="color:var(--green)">อยู่ในเส้นทางที่ดี!</span>'
+    :'<i class="fas fa-exclamation-triangle" style="color:var(--amber)"></i> <span style="color:var(--amber)">ต้องเพิ่มการออม/ลงทุน</span>';
+
+  // progress bar
+  const pct=Math.min(100,(c.portAtRetire/c.fundNeeded)*100);
+  document.getElementById('r-prog-bar').style.width=pct+'%';
+  document.getElementById('r-prog-bar').style.background=pct>=100?'var(--green)':pct>=60?'var(--amber)':'var(--red)';
+  document.getElementById('r-prog-pct').textContent=pct.toFixed(1)+'%';
+
+  renderRetireChart(r,c);
+}
+function renderRetireChart(r,c){
+  const ctx=document.getElementById('ch-retire');
+  if(!ctx) return;
+  if(_chRetire){ _chRetire.destroy(); _chRetire=null; }
+  const labels=[], portLine=[], targetLine=[];
+  const mAccum=c.mAccum; const nAccum=c.nAccum; const mPost=c.mPost;
+  const curPort=c.curPort;
+  const monthlyAdd=c.monthlyNeeded>0?c.monthlyNeeded:0;
+  const totalYears=r.lifeAge-(c.age||30);
+  for(let y=0;y<=totalYears;y++){
+    labels.push((c.age||30)+y+' ปี');
+    const n=y*12;
+    if(y<=c.yearsToRetire){
+      const pv=curPort*Math.pow(1+mAccum,n);
+      const contrib=mAccum>0?monthlyAdd*(Math.pow(1+mAccum,n)-1)/mAccum:monthlyAdd*n;
+      portLine.push(Math.round(pv+contrib));
+      targetLine.push(Math.round(c.fundNeeded));
+    } else {
+      const mAfter=(y-c.yearsToRetire)*12;
+      const remaining=mPost>0
+        ? c.portAtRetire*Math.pow(1+mPost,mAfter)-c.futureMonthly*(Math.pow(1+mPost,mAfter)-1)/mPost
+        : c.portAtRetire-c.futureMonthly*mAfter;
+      portLine.push(Math.max(0,Math.round(remaining)));
+      targetLine.push(null);
+    }
+  }
+  const retireIdx=c.yearsToRetire;
+  _chRetire=new Chart(ctx.getContext('2d'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'พอร์ตที่คาดการณ์',data:portLine,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.12)',fill:true,tension:.4,pointRadius:0,pointHoverRadius:4,borderWidth:2},
+      {label:'เป้าหมาย ณ วันเกษียณ',data:targetLine,borderColor:'#ef4444',borderDash:[6,4],backgroundColor:'transparent',fill:false,tension:0,pointRadius:0,borderWidth:1.5},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:'#e2e8f0',font:{family:'Sarabun',size:12},padding:14}},
+        tooltip:{callbacks:{label:c=>' '+c.dataset.label+': ฿'+Math.round(c.raw).toLocaleString('th-TH')}},
+        annotation:{annotations:{retireLine:{type:'line',xMin:retireIdx,xMax:retireIdx,borderColor:'rgba(245,158,11,.7)',borderWidth:2,borderDash:[4,4],label:{content:'เกษียณ',enabled:true,position:'start',color:'#f59e0b',font:{size:11,family:'Sarabun'}}}}}
+      },
+      scales:{
+        x:{ticks:{color:'#94a3b8',font:{family:'Sarabun',size:11},maxTicksLimit:12},grid:{display:false}},
+        y:{ticks:{color:'#94a3b8',font:{family:'Sarabun',size:11},callback:v=>v>=1e6?'฿'+(v/1e6).toFixed(1)+'M':v>=1e3?'฿'+(v/1e3).toFixed(0)+'K':'฿'+v},grid:{color:'rgba(255,255,255,.04)'}}
+      }
+    }
+  });
+}
+function renderRetire(){
+  const el=document.getElementById('retire-content');
+  if(!el) return;
+  const r=getRetire();
+  const dob=DB.profile&&DB.profile.dob?new Date(DB.profile.dob):null;
+  const curAge=dob?Math.floor((Date.now()-dob)/(365.25*24*3600*1000)):null;
+  const curPort=(DB.investments||[]).reduce((s,i)=>s+i.value,0);
+
+  el.innerHTML=`
+  <div style="display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:18px;align-items:start">
+
+    <!-- ── INPUT PANEL ── -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- ข้อมูลส่วนตัว -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px">
+        <div style="font-size:13px;font-weight:700;color:#a78bfa;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="fas fa-user-clock"></i> ข้อมูลส่วนตัว</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:10px">อายุปัจจุบัน: <span style="color:#e2e8f0;font-weight:700">${curAge?curAge+' ปี':'ไม่ทราบ (ตั้งค่าในประวัติส่วนตัว)'}</span></div>
+        <div class="fg"><label class="flabel">อายุเกษียณ (ปี)</label>
+          <input type="number" id="r-retire-age" class="finput" value="${r.retireAge}" min="30" max="80" oninput="saveRetire()"></div>
+        <div class="fg"><label class="flabel">อายุขัย (ปี)</label>
+          <input type="number" id="r-life-age" class="finput" value="${r.lifeAge}" min="60" max="120" oninput="saveRetire()"></div>
+      </div>
+
+      <!-- ค่าใช้จ่ายและเงินเฟ้อ -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px">
+        <div style="font-size:13px;font-weight:700;color:#06b6d4;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="fas fa-shopping-cart"></i> ค่าใช้จ่ายและเงินเฟ้อ</div>
+        <div class="fg"><label class="flabel">ค่าใช้จ่ายต่อเดือนเมื่อเกษียณ (บาท ณ วันนี้)</label>
+          <input type="number" id="r-monthly-exp" class="finput" value="${r.monthlyExpense}" min="0" step="1000" oninput="saveRetire()"></div>
+        <div class="fg"><label class="flabel">อัตราเงินเฟ้อ (%/ปี)</label>
+          <input type="number" id="r-inflation" class="finput" value="${r.inflation}" min="0" max="20" step="0.5" oninput="saveRetire()">
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">ไทยเฉลี่ยประมาณ 2–4% ต่อปี</div></div>
+      </div>
+
+      <!-- ผลตอบแทน -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px">
+        <div style="font-size:13px;font-weight:700;color:#10b981;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="fas fa-chart-line"></i> ผลตอบแทนการลงทุน</div>
+        <div class="fg"><label class="flabel">ผลตอบแทนช่วงสะสม (%/ปี)</label>
+          <input type="number" id="r-return" class="finput" value="${r.returnRate}" min="0" max="30" step="0.5" oninput="saveRetire()">
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">กองทุนรวมหุ้นไทย ~7–10%, SSF/RMF ~6–8%</div></div>
+        <div class="fg"><label class="flabel">ผลตอบแทนช่วงเกษียณ (%/ปี)</label>
+          <input type="number" id="r-post-return" class="finput" value="${r.postReturnRate}" min="0" max="15" step="0.5" oninput="saveRetire()">
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">ช่วงเกษียณมักใช้พอร์ตที่มั่นคง ~3–5%</div></div>
+        <div style="padding:10px;background:rgba(16,185,129,.08);border-radius:10px;border:1px solid rgba(16,185,129,.2);font-size:12px;color:var(--muted);margin-top:4px">
+          <i class="fas fa-info-circle" style="color:#10b981;margin-right:4px"></i>พอร์ตปัจจุบัน: <span style="color:#10b981;font-weight:700">${'฿'+Math.round(curPort).toLocaleString('th-TH')}</span>
+          ${curPort===0?'<br><span style="color:var(--amber)">ยังไม่มีการลงทุน — ไปหน้า <a onclick="nav(\'investments\')" style="color:#a78bfa;cursor:pointer">พอร์ตลงทุน</a> เพื่อเพิ่ม</span>':''}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RESULTS PANEL ── -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- Status badge -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div style="font-size:15px;font-weight:700">สถานะแผนเกษียณ</div>
+        <div id="r-status-badge" style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px"></div>
+      </div>
+
+      <!-- Key numbers -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">
+        <div class="stat-card sc-blue"><div class="stat-label">เวลาที่เหลือ</div><div class="stat-value" id="r-res-years" style="font-size:20px">—</div><div class="stat-sub">ก่อนเกษียณ</div></div>
+        <div class="stat-card sc-amber"><div class="stat-label">ค่าใช้จ่าย ณ เกษียณ</div><div class="stat-value" id="r-res-future-exp" style="font-size:16px">—</div><div class="stat-sub">หลังปรับเงินเฟ้อ</div></div>
+        <div class="stat-card sc-red"><div class="stat-label">เงินทุนที่ต้องการ</div><div class="stat-value" id="r-res-fund" style="font-size:16px">—</div><div class="stat-sub">ณ วันเกษียณ</div></div>
+        <div class="stat-card" style="background:rgba(30,41,59,.6);border-color:var(--border)"><div class="stat-label">พอร์ตปัจจุบัน</div><div class="stat-value" id="r-res-port-now" style="font-size:16px">—</div><div class="stat-sub">มูลค่าวันนี้</div></div>
+        <div class="stat-card sc-green"><div class="stat-label">พอร์ตที่คาด ณ เกษียณ</div><div class="stat-value" id="r-res-port-retire" style="font-size:16px">—</div><div class="stat-sub">โดยไม่เพิ่มออม</div></div>
+        <div class="stat-card" style="background:rgba(30,41,59,.6);border-color:var(--border)"><div class="stat-label">เงินเกิน/ขาด</div><div class="stat-value" id="r-res-surplus" style="font-size:16px">—</div><div class="stat-sub">เปรียบเทียบเป้า</div></div>
+      </div>
+
+      <!-- Monthly needed (shown only if shortfall) -->
+      <div id="r-monthly-need-row" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#f59e0b"><i class="fas fa-piggy-bank" style="margin-right:6px"></i>ต้องลงทุนเพิ่มต่อเดือน</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">เพื่อให้ถึงเป้าหมาย ณ วันเกษียณ</div>
+        </div>
+        <div id="r-res-monthly-need" style="font-size:22px;font-weight:800;color:#f59e0b">—</div>
+      </div>
+
+      <!-- Progress bar -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
+          <span style="font-weight:600">ความคืบหน้าสู่เป้าหมาย</span>
+          <span id="r-prog-pct" style="font-weight:700;color:#a78bfa">0%</span>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;height:14px;overflow:hidden">
+          <div id="r-prog-bar" style="height:100%;border-radius:8px;transition:width .5s;width:0%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px">
+          <span>฿0</span><span id="r-res-fund2">เป้าหมาย</span>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+          <i class="fas fa-chart-area" style="color:#7c3aed"></i> กราฟการเติบโตของพอร์ตตลอดชีวิต
+          <span style="font-size:11px;color:var(--muted);font-weight:400">— เส้นแดง = เงินที่ต้องการ ณ เกษียณ</span>
+        </div>
+        <div style="height:280px"><canvas id="ch-retire"></canvas></div>
+      </div>
+
+      <!-- Assumptions box -->
+      <div style="background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:14px;padding:14px 18px;font-size:12px;color:var(--muted);line-height:1.8">
+        <div style="font-weight:700;color:#a78bfa;margin-bottom:6px"><i class="fas fa-info-circle" style="margin-right:4px"></i>สมมติฐานในการคำนวณ</div>
+        <div>• ค่าใช้จ่ายเติบโตตามเงินเฟ้อทบต้นทุกปีจนถึงวันเกษียณ</div>
+        <div>• เงินทุนที่ต้องการ = PV ของค่าใช้จ่ายรายเดือนตลอดช่วงเกษียณ (annuity)</div>
+        <div>• พอร์ตเติบโตแบบทบต้นรายเดือนตามผลตอบแทนที่ตั้งค่า</div>
+        <div>• ไม่รวมเงินบำนาญ SSO / ประกันสังคม / รายได้อื่นในวัยเกษียณ</div>
+      </div>
+    </div>
+  </div>`;
+
+  renderRetireResults();
 }
 
 function renderBalance(){
