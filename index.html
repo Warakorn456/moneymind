@@ -861,6 +861,11 @@
         <input type="hidden" id="port-color" value="#7c3aed">
       </div>
       <div class="fg"><label class="flabel">หมายเหตุ (ไม่บังคับ)</label><textarea class="finput" id="port-note" rows="2" placeholder="รายละเอียดเพิ่มเติม เป้าหมายมูลค่า ฯลฯ"></textarea></div>
+      <div class="fg" style="margin-top:4px">
+        <label class="flabel"><i class="fas fa-piggy-bank" style="color:#06b6d4"></i> ลิ้งกับเป้าหมายออมเงิน</label>
+        <select class="finput" id="port-saving-id"><option value="">— ไม่ลิ้ง —</option></select>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">เมื่อลิ้งแล้ว สามารถส่งยอดพอร์ตไปอัปเดตเป้าหมายออมได้</div>
+      </div>
       <div style="display:flex;gap:10px;margin-top:6px">
         <button class="btn btn-primary" style="flex:1" onclick="savePort()">บันทึก</button>
         <button class="btn btn-ghost" onclick="closeModal('port-modal-bg')">ยกเลิก</button>
@@ -2600,6 +2605,11 @@ function renderSavings(){
         <span>${pct.toFixed(1)}% สำเร็จ</span><span>เหลือ ${fmt(Math.max(0,s.target-s.current))}</span>
       </div>
       ${pct>=100?'<div style="margin-top:10px;text-align:center;color:var(--green);font-size:13px;font-weight:700"><i class="fas fa-check-circle"></i> บรรลุเป้าหมายแล้ว!</div>':''}
+      ${(()=>{
+        const linkedPort=(getPortfolios()).find(p=>p.linkedSavingId===s.id);
+        if(!linkedPort) return '';
+        return `<div style="margin-top:8px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--cyan);cursor:pointer" onclick="nav('investments')" title="ไปหน้าพอร์ตลงทุน"><i class="fas fa-link"></i> จากพอร์ต: <b>${linkedPort.name}</b> <i class="fas fa-arrow-right" style="font-size:10px;opacity:.7"></i></div>`;
+      })()}
     </div>`;
   }).join('');
 }
@@ -2786,6 +2796,9 @@ function openPortModal(id){
   document.getElementById('port-name').value=p?.name||'';
   document.getElementById('port-purpose').value=p?.purpose||'ออมเพื่อเกษียณ';
   document.getElementById('port-note').value=p?.note||'';
+  // populate savings dropdown
+  const savSel=document.getElementById('port-saving-id');
+  savSel.innerHTML='<option value="">— ไม่ลิ้ง —</option>'+(DB.savings||[]).map(s=>`<option value="${s.id}"${s.id===(p?.linkedSavingId||'')?'  selected':''}>${s.name}</option>`).join('');
   const color=p?.color||'#7c3aed';
   document.getElementById('port-color').value=color;
   document.querySelectorAll('#port-color-picker [data-color]').forEach(el=>{
@@ -2816,7 +2829,8 @@ function savePort(){
   const name=document.getElementById('port-name').value.trim();
   if(!name){toast('กรุณาใส่ชื่อพอร์ต','error');return;}
   const ports=getPortfolios();
-  const entry={id,name,purpose:document.getElementById('port-purpose').value,color:document.getElementById('port-color').value,note:document.getElementById('port-note').value.trim()};
+  const linkedSavingId=document.getElementById('port-saving-id').value||null;
+  const entry={id,name,purpose:document.getElementById('port-purpose').value,color:document.getElementById('port-color').value,note:document.getElementById('port-note').value.trim(),linkedSavingId};
   const idx=ports.findIndex(p=>p.id===id);
   if(idx>=0) ports[idx]=entry; else ports.push(entry);
   saveDB(); closeModal('port-modal-bg'); renderInv();
@@ -2827,6 +2841,16 @@ function deletePort(id){
   DB.portfolios=getPortfolios().filter(p=>p.id!==id);
   DB.investments.forEach(i=>{ if(i.portId===id) i.portId=null; });
   saveDB(); openPortModal(); renderInv();
+}
+function syncPortToSaving(portId){
+  const port=getPortfolios().find(p=>p.id===portId);
+  if(!port||!port.linkedSavingId){ toast('ไม่พบพอร์ตหรือยังไม่ได้ลิ้งเป้าหมาย','error'); return; }
+  const sv=(DB.savings||[]).find(s=>s.id===port.linkedSavingId);
+  if(!sv){ toast('ไม่พบเป้าหมายออมที่ลิ้งไว้','error'); return; }
+  const totalVal=(DB.investments||[]).filter(i=>i.portId===portId).reduce((s,i)=>s+i.value,0);
+  sv.current=totalVal;
+  saveDB(); renderSavings();
+  toast(`ส่งยอด ${fmt(totalVal)} ไปยัง "${sv.name}" แล้ว`,'success');
 }
 function _updatePortDropdown(selectedId){
   const sel=document.getElementById('inv-portid');
@@ -2880,6 +2904,16 @@ function _portSection(port, invList, colorDot){
       </div>
       <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px" onclick="openInvModal('${port.id}')"><i class="fas fa-plus"></i> เพิ่มในพอร์ตนี้</button>
       ${port.note?`<div style="width:100%;font-size:12px;color:var(--muted);padding-top:4px;border-top:1px solid rgba(255,255,255,.05);margin-top:6px"><i class="fas fa-sticky-note" style="margin-right:4px"></i>${port.note}</div>`:''}
+      ${(()=>{
+        if(!port.linkedSavingId) return '';
+        const sv=(DB.savings||[]).find(s=>s.id===port.linkedSavingId);
+        if(!sv) return '';
+        return `<div style="width:100%;display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,.05);margin-top:4px">
+          <span style="font-size:12px;color:var(--cyan)"><i class="fas fa-piggy-bank" style="margin-right:4px"></i>ลิ้งกับ: <b>${sv.name}</b></span>
+          <button class="btn btn-primary" style="padding:4px 12px;font-size:12px" onclick="syncPortToSaving('${port.id}')"><i class="fas fa-sync-alt" style="margin-right:4px"></i>ส่งยอดไปเงินออม</button>
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="nav('savings')"><i class="fas fa-arrow-right" style="margin-right:4px"></i>ไปหน้าเงินออม</button>
+        </div>`;
+      })()}
     </div>
     <div class="inv-table-wrap"><table class="inv-table"><thead><tr><th>ชื่อ</th><th>จำนวน</th><th>ราคาซื้อ</th><th>ราคาปัจจุบัน</th><th>มูลค่า</th><th>กำไร/ขาดทุน</th><th></th></tr></thead>
     <tbody>${_invTableRows(invList)}</tbody></table></div>
