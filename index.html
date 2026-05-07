@@ -2382,7 +2382,6 @@ function renderDebts(){
   const nowY=now.getFullYear(), nowM=now.getMonth()+1;
   const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   el.innerHTML=DB.debts.map(d=>{
-    const pct=Math.min(100,((d.total-d.remaining)/d.total)*100);
     // build month range: startDate → dueDate (fallback to 12-month window)
     let sy,sm,ey,em;
     if(d.startDate){ [sy,sm]=d.startDate.split('-').map(Number); }
@@ -2395,10 +2394,13 @@ function renderDebts(){
       const ym=`${cy}-${String(cm).padStart(2,'0')}`;
       months.push({ym,label:MN[cm-1]+'\''+String(cy+543).slice(2),isCur:cy===nowY&&cm===nowM});
       cm++; if(cm>12){cm=1;cy++;}
-      if(months.length>600) break; // safety cap
+      if(months.length>600) break;
     }
     const pm=d.paidMonths||[];
     const paidCount=pm.filter(m=>months.some(x=>x.ym===m)).length;
+    const paidAmt=paidCount*(d.pay||0);
+    const calcRemaining=Math.max(0,d.total-paidAmt);
+    const pct=d.total>0?Math.min(100,paidAmt/d.total*100):0;
     const chips=months.map(m=>{
       const paid=pm.includes(m.ym);
       return `<button onclick="toggleDebtMonth('${d.id}','${m.ym}')" style="padding:4px 9px;border-radius:8px;font-size:11px;font-weight:${m.isCur?700:400};cursor:pointer;font-family:Sarabun,sans-serif;border:1px solid;transition:.15s;background:${paid?'rgba(16,185,129,.18)':m.isCur?'rgba(124,58,237,.12)':'rgba(255,255,255,.03)'};color:${paid?'#10b981':m.isCur?'#a78bfa':'#64748b'};border-color:${paid?'rgba(16,185,129,.45)':m.isCur?'rgba(124,58,237,.4)':'rgba(255,255,255,.08)'}">${paid?'✓ ':''}${m.label}</button>`;
@@ -2407,12 +2409,12 @@ function renderDebts(){
       <div class="dcard-hd">
         <div><div class="dcard-name">${d.name}</div>${d.dueDate?`<div style="font-size:11px;color:var(--muted);margin-top:2px">ครบกำหนด ${fmtD(d.dueDate)}</div>`:''}</div>
         <div style="display:flex;align-items:center;gap:10px">
-          <div style="text-align:right"><div style="font-size:22px;font-weight:800;color:var(--red)">${fmt(d.remaining)}</div><div style="font-size:11px;color:var(--muted)">คงเหลือ</div></div>
+          <div style="text-align:right"><div style="font-size:22px;font-weight:800;color:${calcRemaining<=0?'var(--green)':'var(--red)'}">${fmt(calcRemaining)}</div><div style="font-size:11px;color:var(--muted)">คงเหลือ</div></div>
           <div style="display:flex;gap:5px"><button class="icon-btn" onclick="editDebt('${d.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delDebt('${d.id}')"><i class="fas fa-trash"></i></button></div>
         </div>
       </div>
       <div class="pbar"><div class="pfill" style="width:${pct}%;background:linear-gradient(90deg,var(--green),#059669)"></div></div>
-      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--muted)"><span>ชำระแล้ว ${pct.toFixed(1)}%</span><span>${fmt(d.total-d.remaining)} / ${fmt(d.total)}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--muted)"><span>ชำระแล้ว ${pct.toFixed(1)}%</span><span>${fmt(paidAmt)} / ${fmt(d.total)}</span></div>
       <div class="dstats">
         <div class="dstat"><div class="dstat-l">ยอดเต็ม</div><div class="dstat-v">${fmt(d.total)}</div></div>
         <div class="dstat"><div class="dstat-l">ดอกเบี้ย/ปี</div><div class="dstat-v" style="color:var(--amber)">${d.rate||0}%</div></div>
@@ -2434,7 +2436,8 @@ function toggleDebtMonth(id,ym){
   if(!d.paidMonths) d.paidMonths=[];
   const idx=d.paidMonths.indexOf(ym);
   if(idx>=0) d.paidMonths.splice(idx,1); else d.paidMonths.push(ym);
-  saveDB(); renderDebts();
+  d.remaining=Math.max(0,d.total-d.paidMonths.length*(d.pay||0));
+  saveDB(); renderDebts(); renderDebtSummary();
 }
 
 function openDebtModal(){
