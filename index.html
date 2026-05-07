@@ -498,6 +498,19 @@
 </head>
 <body>
 
+<!-- Lock Screen -->
+<div id="lock-screen" style="display:none;position:fixed;inset:0;background:rgba(13,13,26,.97);backdrop-filter:blur(12px);z-index:99998;align-items:center;justify-content:center;font-family:'Sarabun',sans-serif">
+  <div class="login-box" style="max-width:340px">
+    <div style="font-size:40px;margin-bottom:12px">🔒</div>
+    <div class="login-logo">แอปถูกล็อก</div>
+    <div id="lock-user-label" class="login-sub" style="margin-bottom:24px"></div>
+    <input class="login-inp" id="lock-pass" type="password" placeholder="ใส่รหัสผ่านเพื่อปลดล็อก" autocomplete="current-password" onkeydown="if(event.key==='Enter')tryUnlock()">
+    <div class="login-err" id="lock-err"></div>
+    <button class="login-btn" onclick="tryUnlock()" style="margin-top:8px">ปลดล็อก</button>
+    <div style="margin-top:16px"><span onclick="lockLogout()" style="font-size:13px;color:#64748b;cursor:pointer;text-decoration:underline">ออกจากระบบ</span></div>
+  </div>
+</div>
+
 <!-- Login Screen -->
 <div id="login-screen">
   <div class="login-box">
@@ -863,6 +876,24 @@
       </div>
     </div>
     <div class="set-card">
+      <div class="set-title"><i class="fas fa-shield-alt" style="color:#10b981"></i> ความปลอดภัย</div>
+      <div class="fg">
+        <label class="flabel">ล็อกแอปอัตโนมัติหลังไม่ใช้งาน</label>
+        <select id="lock-timeout-sel" class="finput" style="width:200px" onchange="saveLockTimeout(this.value)">
+          <option value="0">ปิด (ไม่ล็อก)</option>
+          <option value="5">5 นาที</option>
+          <option value="10">10 นาที</option>
+          <option value="15">15 นาที (แนะนำ)</option>
+          <option value="30">30 นาที</option>
+          <option value="60">1 ชั่วโมง</option>
+        </select>
+      </div>
+      <div style="margin-top:10px">
+        <button class="btn btn-ghost" onclick="lockApp()"><i class="fas fa-lock"></i> ล็อกแอปทันที</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px"><i class="fas fa-info-circle"></i> Session หมดอายุหลัง ${SESS_MAX_DAYS} วัน — ต้อง login ใหม่</div>
+    </div>
+    <div class="set-card">
       <div class="set-title"><i class="fas fa-database" style="color:var(--amber)"></i> จัดการข้อมูล</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-ghost" onclick="exportData()"><i class="fas fa-download"></i> ส่งออก JSON</button>
@@ -1208,7 +1239,8 @@
 // ══════════════════════════════════════════
 const DATA_PRE  = 'mm_data_';   // mm_data_<username>
 const USERS_KEY = 'mm_users';   // [{username, salt, hash}] for non-owner
-const SESS_KEY  = 'mm_session'; // {username}
+const SESS_KEY  = 'mm_session'; // {username, ts}
+const SESS_MAX_DAYS = 30;       // session หมดอายุหลัง 30 วัน
 
 let currentUser = null;
 let DB = { transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
@@ -1380,7 +1412,8 @@ function enterApp(){
   const ui=document.getElementById('sidebar-user-info');
   const un=document.getElementById('sidebar-username');
   if(ui&&un){ un.textContent=currentUser; ui.style.display='flex'; }
-  localStorage.setItem(SESS_KEY,JSON.stringify({username:currentUser}));
+  localStorage.setItem(SESS_KEY,JSON.stringify({username:currentUser,ts:Date.now()}));
+  resetLockTimer();
   initDate(); setTxType('income'); renderDash();
 }
 
@@ -1502,14 +1535,97 @@ function switchToLogin(){
   document.getElementById('login-err').textContent='';
 }
 
+// ══════════════════════════════════════════
+//  AUTO-LOCK
+// ══════════════════════════════════════════
+let _lockTimer=null;
+let _appLocked=false;
+
+function getLockTimeout(){
+  // นาที — 0=ปิด, default 15 นาที
+  return parseInt(DB?.settings?.lockTimeout??15,10);
+}
+
+function resetLockTimer(){
+  if(_appLocked) return;
+  const mins=getLockTimeout();
+  if(!mins) return;
+  clearTimeout(_lockTimer);
+  _lockTimer=setTimeout(lockApp, mins*60*1000);
+}
+
+function lockApp(){
+  if(!currentUser||_appLocked) return;
+  _appLocked=true;
+  clearTimeout(_lockTimer);
+  const el=document.getElementById('lock-screen');
+  const lbl=document.getElementById('lock-user-label');
+  if(lbl) lbl.textContent=`บัญชี: ${currentUser}`;
+  if(el){ el.style.display='flex'; document.getElementById('lock-pass').value=''; document.getElementById('lock-err').textContent=''; setTimeout(()=>document.getElementById('lock-pass').focus(),100); }
+}
+
+async function tryUnlock(){
+  const pass=document.getElementById('lock-pass').value;
+  const errEl=document.getElementById('lock-err');
+  if(!pass){ errEl.textContent='กรุณาใส่รหัสผ่าน'; return; }
+  errEl.textContent='กำลังตรวจสอบ...';
+  try{
+    let ok=false;
+    if(currentUser===_ENC.user){
+      try{
+        const enc=new TextEncoder();
+        const keyMat=await crypto.subtle.importKey('raw',enc.encode(pass),{name:'PBKDF2'},false,['deriveKey']);
+        const salt=Uint8Array.from(atob(_ENC.salt),c=>c.charCodeAt(0));
+        const iv=Uint8Array.from(atob(_ENC.iv),c=>c.charCodeAt(0));
+        const ct=Uint8Array.from(atob(_ENC.data),c=>c.charCodeAt(0));
+        const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:100000,hash:'SHA-256'},keyMat,{name:'AES-GCM',length:256},false,['decrypt']);
+        await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);
+        ok=true;
+      }catch{}
+    } else {
+      const users=getUsers();
+      const rec=users.find(u=>u.username===currentUser);
+      if(rec){
+        const saltBytes=Uint8Array.from(atob(rec.salt),c=>c.charCodeAt(0));
+        const hash=await pbkdf2Hash(pass,saltBytes);
+        ok=(hash===rec.hash);
+      }
+    }
+    if(ok){
+      _appLocked=false;
+      document.getElementById('lock-screen').style.display='none';
+      document.getElementById('lock-pass').value='';
+      resetLockTimer();
+    } else {
+      errEl.textContent='รหัสผ่านไม่ถูกต้อง';
+    }
+  }catch{ errEl.textContent='เกิดข้อผิดพลาด ลองใหม่'; }
+}
+
+function lockLogout(){
+  _appLocked=false;
+  document.getElementById('lock-screen').style.display='none';
+  logout();
+}
+
+// ลงทะเบียน event listeners สำหรับ reset timer
+['mousemove','keydown','click','touchstart','scroll'].forEach(ev=>
+  document.addEventListener(ev, resetLockTimer, {passive:true})
+);
+// ตรวจเมื่อ tab กลับมา active
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&currentUser&&!_appLocked) resetLockTimer(); if(!document.hidden&&currentUser&&_appLocked) lockApp(); });
+
 function checkLogin(){
   // ตรวจ session
   try{
     const sess=JSON.parse(localStorage.getItem(SESS_KEY)||'null');
     if(sess&&sess.username){
       const u=sess.username;
-      // verify data exists
-      if(localStorage.getItem(userDataKey(u))||u===_ENC.user){
+      // ตรวจ session expiry (30 วัน)
+      if(sess.ts && Date.now()-sess.ts > SESS_MAX_DAYS*86400*1000){
+        localStorage.removeItem(SESS_KEY);
+        // ไม่ return — ตกไป showLoginScreen
+      } else if(localStorage.getItem(userDataKey(u))||u===_ENC.user){
         currentUser=u;
         DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
         loadDB();
@@ -1518,6 +1634,7 @@ function checkLogin(){
         const ui=document.getElementById('sidebar-user-info');
         const un=document.getElementById('sidebar-username');
         if(ui&&un){ un.textContent=currentUser; ui.style.display='flex'; }
+        resetLockTimer();
         // sync from Firestore in background (show local data immediately)
         fsLoad().then(synced=>{ if(synced) renderPage(curPage); else fsSave(); fsListen(); });
         return;
@@ -2933,6 +3050,15 @@ function renderSettings(){
   document.getElementById('model-in').value=m;
   const active=m||(_geminiModel?'auto: '+_geminiModel:'auto');
   document.getElementById('model-status').textContent='model ที่ใช้งาน: '+active;
+  const lt=document.getElementById('lock-timeout-sel');
+  if(lt) lt.value=String(DB.settings.lockTimeout??15);
+}
+
+function saveLockTimeout(val){
+  DB.settings.lockTimeout=parseInt(val,10);
+  saveDB();
+  resetLockTimer();
+  toast(val==='0'?'ปิดการล็อกอัตโนมัติ':`ล็อกอัตโนมัติหลัง ${val} นาที`,'success');
 }
 
 function saveKey(){
