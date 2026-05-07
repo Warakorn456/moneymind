@@ -726,33 +726,12 @@
           <span id="inv-countdown" style="color:var(--muted)"></span>
         </div>
       </div>
-      <button class="btn btn-primary" onclick="openInvModal()"><i class="fas fa-plus"></i> เพิ่มการลงทุน</button>
-    </div>
-    <div class="port-grid" id="port-grid">
-      <div class="chart-card">
-        <div class="chart-title"><i class="fas fa-chart-pie" style="color:var(--amber)"></i> สัดส่วนพอร์ต</div>
-        <div class="chart-wrap" id="port-chart-wrap"><canvas id="ch-port"></canvas></div>
-      </div>
-      <div class="card" style="padding:0;overflow:hidden">
-        <div class="inv-table-wrap">
-        <table class="inv-table">
-          <thead>
-            <tr>
-              <th>ชื่อ</th>
-              <th>ประเภท</th>
-              <th>จำนวน</th>
-              <th>ราคาซื้อ</th>
-              <th>ราคาปัจจุบัน</th>
-              <th>มูลค่า</th>
-              <th>กำไร/ขาดทุน</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="inv-tbody"></tbody>
-        </table>
-        </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="openPortModal()"><i class="fas fa-layer-group"></i> จัดการพอร์ต</button>
+        <button class="btn btn-primary" onclick="openInvModal()"><i class="fas fa-plus"></i> เพิ่มการลงทุน</button>
       </div>
     </div>
+    <div id="inv-content"></div>
   </div>
 
   <!-- ════ TAX ════ -->
@@ -844,6 +823,41 @@
         <button class="btn btn-primary" style="flex:1" onclick="saveSkillEntry()">บันทึก</button>
         <button class="btn btn-ghost" onclick="closeModal('skill-modal-bg')">ยกเลิก</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Portfolio Modal -->
+  <div class="plan-modal-bg" id="port-modal-bg" onclick="if(event.target===this)closeModal('port-modal-bg')">
+    <div class="plan-modal" style="max-width:460px">
+      <div style="font-size:16px;font-weight:700;margin-bottom:18px"><i class="fas fa-layer-group" style="color:var(--primary-l)"></i> <span id="port-modal-title">สร้างพอร์ตใหม่</span></div>
+      <input type="hidden" id="port-edit-id">
+      <div class="fg"><label class="flabel">ชื่อพอร์ต</label><input class="finput" id="port-name" placeholder="เช่น พอร์ตระยะยาว, เก็งกำไร"></div>
+      <div class="fg"><label class="flabel">วัตถุประสงค์ / หน้าที่</label>
+        <select class="finput" id="port-purpose">
+          <option value="ออมเพื่อเกษียณ">🧓 ออมเพื่อเกษียณ</option>
+          <option value="เก็งกำไรระยะสั้น">⚡ เก็งกำไรระยะสั้น</option>
+          <option value="เงินปันผล">💰 รับเงินปันผล</option>
+          <option value="ลงทุนระยะกลาง">📈 ลงทุนระยะกลาง</option>
+          <option value="ลงทุนต่างประเทศ">🌍 ลงทุนต่างประเทศ</option>
+          <option value="กองทุนรวม">💼 กองทุนรวม</option>
+          <option value="คริปโตเคอร์เรนซี">🪙 คริปโตเคอร์เรนซี</option>
+          <option value="ทองคำ">🥇 ทองคำ / สินค้าโภคภัณฑ์</option>
+          <option value="อื่นๆ">📦 อื่นๆ</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flabel">สี</label>
+        <div id="port-color-picker" style="display:flex;gap:8px;flex-wrap:wrap;padding:6px 0">
+          ${['#7c3aed','#06b6d4','#10b981','#f59e0b','#ef4444','#3b82f6','#ec4899','#84cc16','#f97316','#a78bfa'].map(c=>`<div onclick="selectPortColor('${c}')" style="width:26px;height:26px;border-radius:50%;background:${c};cursor:pointer;border:2px solid transparent;transition:border-color .2s" data-color="${c}"></div>`).join('')}
+        </div>
+        <input type="hidden" id="port-color" value="#7c3aed">
+      </div>
+      <div class="fg"><label class="flabel">หมายเหตุ (ไม่บังคับ)</label><textarea class="finput" id="port-note" rows="2" placeholder="รายละเอียดเพิ่มเติม เป้าหมายมูลค่า ฯลฯ"></textarea></div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="btn btn-primary" style="flex:1" onclick="savePort()">บันทึก</button>
+        <button class="btn btn-ghost" onclick="closeModal('port-modal-bg')">ยกเลิก</button>
+      </div>
+      <!-- รายการพอร์ตที่มีอยู่ -->
+      <div id="port-list-in-modal" style="margin-top:18px;border-top:1px solid var(--border);padding-top:14px"></div>
     </div>
   </div>
 
@@ -1081,6 +1095,10 @@
   <div class="modal" style="max-width:520px">
     <div class="modal-title"><i class="fas fa-chart-line" style="color:var(--green)"></i><span id="inv-m-title">เพิ่มการลงทุน</span></div>
     <input type="hidden" id="inv-eid">
+    <div class="fg" style="margin-bottom:14px">
+      <label class="flabel">พอร์ต</label>
+      <select id="inv-portid" class="finput"><option value="">— ไม่ระบุพอร์ต —</option></select>
+    </div>
     <div class="frow">
       <div class="fg">
         <label class="flabel">Ticker / ชื่อ</label>
@@ -2743,77 +2761,207 @@ function getInvColor(inv,idx){
   return CHART_PALETTE[idx % CHART_PALETTE.length];
 }
 
-function renderInv(){
-  const tbody=document.getElementById('inv-tbody');
-  const totVal=DB.investments.reduce((s,i)=>s+i.value,0);
-  const totCost=DB.investments.reduce((s,i)=>s+i.cost,0);
-  const totPnL=totVal-totCost;
+// ── Portfolio helpers ──
+function getPortfolios(){
+  if(!DB.portfolios) DB.portfolios=[];
+  return DB.portfolios;
+}
+function getPortById(id){ return getPortfolios().find(p=>p.id===id)||null; }
+const PORT_COLORS=['#7c3aed','#06b6d4','#10b981','#f59e0b','#ef4444','#3b82f6','#ec4899','#84cc16','#f97316','#a78bfa'];
 
-  if(!DB.investments.length){
-    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:48px">ยังไม่มีการลงทุน</td></tr>';
-  } else {
-    // เรียงจากมูลค่ามากไปน้อย
-    const sorted=[...DB.investments].sort((a,b)=>b.value-a.value);
-    tbody.innerHTML=sorted.map((inv,idx)=>{
-      const pnl=inv.value-inv.cost;
-      const pnlP=inv.cost>0?((pnl/inv.cost)*100).toFixed(2):'0.00';
-      const c=getInvColor(inv,idx);
-      const qty=inv.qty||'-';
-      const isUSD=inv.currency==='USD';
-      const fx=inv.fxRate||1;
-      const buyOrig=isUSD&&inv.buyPrice?(inv.buyPrice/fx).toFixed(2):null;
-      const curOrig=isUSD&&inv.curPrice?(inv.curPrice/fx).toFixed(2):null;
-      const curP=inv.curPrice?`${fmt(inv.curPrice)}${curOrig?`<div style="font-size:10px;color:var(--muted)">$${curOrig}</div>`:''}`:'-';
-      const buyP=inv.buyPrice?`${fmt(inv.buyPrice)}${buyOrig?`<div style="font-size:10px;color:var(--muted)">$${buyOrig}</div>`:''}`:'-';
-      const updAt=inv.updatedAt?'<div style="font-size:10px;color:var(--muted)">'+inv.updatedAt+'</div>':'';
-      return `<tr>
-        <td><div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;border-radius:50%;background:${c};flex-shrink:0"></div><span style="font-weight:700;font-size:15px">${inv.name}</span><span class="badge" style="background:${c}20;color:${c};margin-left:4px">${inv.type}</span></div></td>
-        <td data-label="จำนวน" style="color:var(--text)">${qty}</td>
-        <td data-label="ราคาซื้อ" style="color:var(--muted)">${buyP}</td>
-        <td data-label="ราคาปัจจุบัน"><div style="font-weight:600;color:var(--cyan)">${curP}</div>${updAt}</td>
-        <td data-label="มูลค่า" style="font-weight:700">${fmt(inv.value)}</td>
-        <td data-label="กำไร/ขาดทุน" style="color:${pnl>=0?'var(--green)':'var(--red)'};font-weight:700">${pnl>=0?'+':''}${fmt(pnl)}<div style="font-size:11px;opacity:.75">${pnl>=0?'+':''}${pnlP}%</div></td>
-        <td><button class="icon-btn" onclick="refreshInvPrice('${inv.id}')" title="อัปเดตราคา"><i class="fas fa-sync-alt"></i></button>
-          <button class="icon-btn" onclick="editInv('${inv.id}')"><i class="fas fa-pen"></i></button>
-          <button class="icon-btn del" onclick="delInv('${inv.id}')"><i class="fas fa-trash"></i></button></td>
-      </tr>`;
-    }).join('');
-    const pp=totCost>0?((totPnL/totCost)*100).toFixed(2):'0.00';
-    tbody.innerHTML+=`<tr style="border-top:2px solid var(--border)">
-      <td><span style="font-weight:700">รวมทั้งหมด</span></td>
-      <td data-label="จำนวน"></td>
-      <td data-label="ราคาซื้อ"></td>
-      <td data-label="ราคาปัจจุบัน"></td>
-      <td data-label="มูลค่า" style="font-weight:800;font-size:16px">${fmt(totVal)}</td>
-      <td data-label="กำไร/ขาดทุน" style="font-weight:800;font-size:15px;color:${totPnL>=0?'var(--green)':'var(--red)'}">
-        ${totPnL>=0?'+':''}${fmt(totPnL)}<div style="font-size:11px;opacity:.75">${totPnL>=0?'+':''}${pp}%</div>
-      </td>
-      <td></td>
+function openPortModal(id){
+  const ports=getPortfolios();
+  const p=id?ports.find(x=>x.id===id):null;
+  document.getElementById('port-edit-id').value=id||'';
+  document.getElementById('port-modal-title').textContent=id?'แก้ไขพอร์ต':'สร้างพอร์ตใหม่';
+  document.getElementById('port-name').value=p?.name||'';
+  document.getElementById('port-purpose').value=p?.purpose||'ออมเพื่อเกษียณ';
+  document.getElementById('port-note').value=p?.note||'';
+  const color=p?.color||'#7c3aed';
+  document.getElementById('port-color').value=color;
+  document.querySelectorAll('#port-color-picker [data-color]').forEach(el=>{
+    el.style.borderColor=el.dataset.color===color?'#fff':'transparent';
+  });
+  // แสดงพอร์ตที่มีอยู่
+  const listEl=document.getElementById('port-list-in-modal');
+  if(ports.length){
+    listEl.innerHTML=`<div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--muted)">พอร์ตที่มีอยู่</div>`+
+      ports.map(pt=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px">
+        <div style="width:12px;height:12px;border-radius:50%;background:${pt.color};flex-shrink:0"></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:600">${pt.name}</div><div style="font-size:11px;color:var(--muted)">${pt.purpose}</div></div>
+        <button onclick="openPortModal('${pt.id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 6px"><i class="fas fa-edit"></i></button>
+        <button onclick="deletePort('${pt.id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:4px 6px"><i class="fas fa-trash"></i></button>
+      </div>`).join('');
+  } else { listEl.innerHTML=''; }
+  openModal('port-modal-bg');
+  setTimeout(()=>document.getElementById('port-name').focus(),100);
+}
+function selectPortColor(c){
+  document.getElementById('port-color').value=c;
+  document.querySelectorAll('#port-color-picker [data-color]').forEach(el=>{
+    el.style.borderColor=el.dataset.color===c?'#fff':'transparent';
+  });
+}
+function savePort(){
+  const id=document.getElementById('port-edit-id').value||uid();
+  const name=document.getElementById('port-name').value.trim();
+  if(!name){toast('กรุณาใส่ชื่อพอร์ต','error');return;}
+  const ports=getPortfolios();
+  const entry={id,name,purpose:document.getElementById('port-purpose').value,color:document.getElementById('port-color').value,note:document.getElementById('port-note').value.trim()};
+  const idx=ports.findIndex(p=>p.id===id);
+  if(idx>=0) ports[idx]=entry; else ports.push(entry);
+  saveDB(); closeModal('port-modal-bg'); renderInv();
+  toast(idx>=0?'แก้ไขพอร์ตแล้ว':'สร้างพอร์ตใหม่แล้ว','success');
+}
+function deletePort(id){
+  if(!confirm('ลบพอร์ตนี้? การลงทุนในพอร์ตจะถูกย้ายไป "ไม่ระบุพอร์ต"')) return;
+  DB.portfolios=getPortfolios().filter(p=>p.id!==id);
+  DB.investments.forEach(i=>{ if(i.portId===id) i.portId=null; });
+  saveDB(); openPortModal(); renderInv();
+}
+function _updatePortDropdown(selectedId){
+  const sel=document.getElementById('inv-portid');
+  if(!sel) return;
+  sel.innerHTML='<option value="">— ไม่ระบุพอร์ต —</option>'+
+    getPortfolios().map(p=>`<option value="${p.id}"${p.id===selectedId?' selected':''}>${p.name}</option>`).join('');
+}
+
+// ── renderInv (grouped by portfolio) ──
+function _invTableRows(list){
+  if(!list.length) return `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px;font-size:13px">ไม่มีการลงทุน</td></tr>`;
+  const sorted=[...list].sort((a,b)=>b.value-a.value);
+  return sorted.map((inv,idx)=>{
+    const pnl=inv.value-inv.cost;
+    const pnlP=inv.cost>0?((pnl/inv.cost)*100).toFixed(2):'0.00';
+    const c=getInvColor(inv,idx);
+    const isUSD=inv.currency==='USD'; const fx=inv.fxRate||1;
+    const buyOrig=isUSD&&inv.buyPrice?(inv.buyPrice/fx).toFixed(2):null;
+    const curOrig=isUSD&&inv.curPrice?(inv.curPrice/fx).toFixed(2):null;
+    const curP=inv.curPrice?`${fmt(inv.curPrice)}${curOrig?`<div style="font-size:10px;color:var(--muted)">$${curOrig}</div>`:''}`:'-';
+    const buyP=inv.buyPrice?`${fmt(inv.buyPrice)}${buyOrig?`<div style="font-size:10px;color:var(--muted)">$${buyOrig}</div>`:''}`:'-';
+    const updAt=inv.updatedAt?`<div style="font-size:10px;color:var(--muted)">${inv.updatedAt}</div>`:'';
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;border-radius:50%;background:${c};flex-shrink:0"></div><span style="font-weight:700;font-size:15px">${inv.name}</span><span class="badge" style="background:${c}20;color:${c};margin-left:4px">${inv.type}</span></div></td>
+      <td data-label="จำนวน">${inv.qty||'-'}</td>
+      <td data-label="ราคาซื้อ" style="color:var(--muted)">${buyP}</td>
+      <td data-label="ราคาปัจจุบัน"><div style="font-weight:600;color:var(--cyan)">${curP}</div>${updAt}</td>
+      <td data-label="มูลค่า" style="font-weight:700">${fmt(inv.value)}</td>
+      <td data-label="กำไร/ขาดทุน" style="color:${pnl>=0?'var(--green)':'var(--red)'};font-weight:700">${pnl>=0?'+':''}${fmt(pnl)}<div style="font-size:11px;opacity:.75">${pnl>=0?'+':''}${pnlP}%</div></td>
+      <td><button class="icon-btn" onclick="refreshInvPrice('${inv.id}')" title="อัปเดตราคา"><i class="fas fa-sync-alt"></i></button>
+        <button class="icon-btn" onclick="editInv('${inv.id}')"><i class="fas fa-pen"></i></button>
+        <button class="icon-btn del" onclick="delInv('${inv.id}')"><i class="fas fa-trash"></i></button></td>
     </tr>`;
+  }).join('');
+}
+function _portSection(port, invList, colorDot){
+  const val=invList.reduce((s,i)=>s+i.value,0);
+  const cost=invList.reduce((s,i)=>s+i.cost,0);
+  const pnl=val-cost;
+  const pnlP=cost>0?((pnl/cost)*100).toFixed(1):'0.0';
+  return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:14px;overflow:hidden">
+    <div style="padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)">
+      <div style="width:14px;height:14px;border-radius:50%;background:${colorDot};flex-shrink:0"></div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:700">${port.name}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">${port.purpose}</div>
+      </div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap">
+        <div style="text-align:right"><div style="font-size:11px;color:var(--muted)">มูลค่า</div><div style="font-size:15px;font-weight:700">${fmt(val)}</div></div>
+        <div style="text-align:right"><div style="font-size:11px;color:var(--muted)">กำไร/ขาดทุน</div><div style="font-size:15px;font-weight:700;color:${pnl>=0?'var(--green)':'var(--red)'}">${pnl>=0?'+':''}${fmt(pnl)} (${pnl>=0?'+':''}${pnlP}%)</div></div>
+      </div>
+      <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px" onclick="openInvModal('${port.id}')"><i class="fas fa-plus"></i> เพิ่มในพอร์ตนี้</button>
+      ${port.note?`<div style="width:100%;font-size:12px;color:var(--muted);padding-top:4px;border-top:1px solid rgba(255,255,255,.05);margin-top:6px"><i class="fas fa-sticky-note" style="margin-right:4px"></i>${port.note}</div>`:''}
+    </div>
+    <div class="inv-table-wrap"><table class="inv-table"><thead><tr><th>ชื่อ</th><th>จำนวน</th><th>ราคาซื้อ</th><th>ราคาปัจจุบัน</th><th>มูลค่า</th><th>กำไร/ขาดทุน</th><th></th></tr></thead>
+    <tbody>${_invTableRows(invList)}</tbody></table></div>
+  </div>`;
+}
+
+function renderInv(){
+  const el=document.getElementById('inv-content');
+  if(!el) return;
+  const allInv=DB.investments||[];
+  const ports=getPortfolios();
+  const totVal=allInv.reduce((s,i)=>s+i.value,0);
+  const totCost=allInv.reduce((s,i)=>s+i.cost,0);
+  const totPnL=totVal-totCost;
+  const totPP=totCost>0?((totPnL/totCost)*100).toFixed(2):'0.00';
+
+  if(!allInv.length){
+    el.innerHTML=`<div class="empty"><i class="fas fa-chart-pie"></i><p>ยังไม่มีการลงทุน<br><span style="font-size:13px">กด "+ เพิ่มการลงทุน" เพื่อเริ่มต้น</span></p></div>`;
+    return;
   }
+
+  // Summary bar
+  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px">
+    <div class="stat-card sc-blue"><div class="stat-label">มูลค่ารวม</div><div class="stat-value" style="font-size:20px">${fmt(totVal)}</div></div>
+    <div class="stat-card ${totPnL>=0?'sc-green':'sc-red'}"><div class="stat-label">กำไร/ขาดทุนรวม</div><div class="stat-value" style="font-size:20px;color:${totPnL>=0?'var(--green)':'var(--red)'}">${totPnL>=0?'+':''}${fmt(totPnL)}</div><div class="stat-sub">${totPnL>=0?'+':''}${totPP}%</div></div>
+    <div class="stat-card sc-amber"><div class="stat-label">จำนวนพอร์ต</div><div class="stat-value" style="font-size:20px">${ports.length||'-'}</div><div class="stat-sub">ตัวสินทรัพย์ ${allInv.length}</div></div>
+  </div>`;
+
+  // Pie chart + portfolio list
+  html+=`<div class="port-grid" style="margin-bottom:16px">
+    <div class="chart-card"><div class="chart-title"><i class="fas fa-chart-pie" style="color:var(--amber)"></i> สัดส่วนพอร์ต</div>
+      <div class="chart-wrap" id="port-chart-wrap"><canvas id="ch-port"></canvas></div></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${ports.length===0?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;color:var(--muted);font-size:13px"><i class="fas fa-layer-group" style="font-size:28px;display:block;margin-bottom:8px;opacity:.3"></i>ยังไม่มีพอร์ต<br>กด "จัดการพอร์ต" เพื่อสร้าง</div>`:
+        ports.map((p,i)=>{
+          const pInv=allInv.filter(x=>x.portId===p.id);
+          const pVal=pInv.reduce((s,x)=>s+x.value,0);
+          const pct=totVal>0?((pVal/totVal)*100).toFixed(1):'0.0';
+          return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px">
+            <div style="width:12px;height:12px;border-radius:50%;background:${p.color};flex-shrink:0"></div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:700">${p.name}</div><div style="font-size:11px;color:var(--muted)">${p.purpose}</div></div>
+            <div style="text-align:right"><div style="font-size:14px;font-weight:700">${fmt(pVal)}</div><div style="font-size:11px;color:var(--muted)">${pct}%</div></div>
+          </div>`;
+        }).join('')
+      }
+    </div>
+  </div>`;
+
+  // Portfolio sections
+  if(ports.length){
+    ports.forEach((p,i)=>{
+      const pInv=allInv.filter(x=>x.portId===p.id);
+      html+=_portSection(p,pInv,p.color);
+    });
+  }
+  // ไม่ระบุพอร์ต
+  const uncat=allInv.filter(x=>!x.portId||!getPortById(x.portId));
+  if(uncat.length||!ports.length){
+    html+=_portSection({id:'',name:'ไม่ระบุพอร์ต',purpose:'',color:'#64748b',note:''},uncat,'#64748b');
+  }
+
+  el.innerHTML=html;
   renderPortChart();
 }
 
 function renderPortChart(){
   const wrap=document.getElementById('port-chart-wrap');
+  if(!wrap) return;
   if(chPort) chPort.destroy();
   if(!DB.investments.length){ wrap.innerHTML='<div class="empty"><i class="fas fa-chart-pie"></i><p>ยังไม่มีการลงทุน</p></div>'; return; }
   if(!wrap.querySelector('canvas')){ const c=document.createElement('canvas'); c.id='ch-port'; wrap.innerHTML=''; wrap.appendChild(c); }
-  // เรียงตามมูลค่า แล้วแยกสีรายหุ้น
-  const sorted=[...DB.investments].sort((a,b)=>b.value-a.value);
-  const labels=sorted.map(i=>i.name);
-  const data=sorted.map(i=>i.value);
-  const colors=sorted.map((inv,idx)=>getInvColor(inv,idx));
+  const ports=getPortfolios();
+  let labels,data,colors;
+  if(ports.length){
+    // แสดงสัดส่วนตามพอร์ต
+    const groups=[...ports.map(p=>({name:p.name,color:p.color,val:DB.investments.filter(i=>i.portId===p.id).reduce((s,i)=>s+i.value,0)}))];
+    const uncat=DB.investments.filter(i=>!i.portId||!getPortById(i.portId)).reduce((s,i)=>s+i.value,0);
+    if(uncat>0) groups.push({name:'ไม่ระบุพอร์ต',color:'#64748b',val:uncat});
+    labels=groups.map(g=>g.name); data=groups.map(g=>g.val); colors=groups.map(g=>g.color);
+  } else {
+    const sorted=[...DB.investments].sort((a,b)=>b.value-a.value);
+    labels=sorted.map(i=>i.name); data=sorted.map(i=>i.value); colors=sorted.map((inv,idx)=>getInvColor(inv,idx));
+  }
   const total=data.reduce((a,b)=>a+b,0);
   const c2=document.getElementById('ch-port').getContext('2d');
-  chPort=new Chart(c2,{
-    type:'doughnut',
+  chPort=new Chart(c2,{type:'doughnut',
     data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:2,borderColor:'#13131f',hoverOffset:10}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{
       legend:{position:'bottom',labels:{color:'#e2e8f0',font:{family:'Sarabun',size:11},padding:10,boxWidth:9,boxHeight:9,
-        generateLabels:chart=>sorted.map((inv,i)=>({text:`${inv.name}  ${((inv.value/total)*100).toFixed(1)}%`,fillStyle:colors[i],strokeStyle:'transparent',fontColor:'#e2e8f0',index:i}))
-      }},
-      tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.raw)} (${((c.raw/total)*100).toFixed(1)}%)`}}
+        generateLabels:chart=>labels.map((l,i)=>({text:`${l}  ${((data[i]/total)*100).toFixed(1)}%`,fillStyle:colors[i],strokeStyle:'transparent',fontColor:'#e2e8f0',index:i}))
+      }},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.raw)} (${((c.raw/total)*100).toFixed(1)}%)`}}
     },cutout:'60%'}
   });
 }
@@ -3008,7 +3156,7 @@ async function refreshInvPrice(id){
   }catch(e){ toast('อัปเดตไม่ได้: '+e.message,'error'); }
 }
 
-function openInvModal(){
+function openInvModal(prePortId){
   document.getElementById('inv-eid').value='';
   document.getElementById('inv-m-title').textContent='เพิ่มการลงทุน';
   ['inv-name','inv-qty','inv-buyprice','inv-curprice','inv-updated'].forEach(id=>document.getElementById(id).value='');
@@ -3020,6 +3168,7 @@ function openInvModal(){
   document.getElementById('buyprice-convert').textContent='';
   document.getElementById('curprice-convert').textContent='';
   setCurrency('THB');
+  _updatePortDropdown(prePortId||'');
   openM('m-inv');
 }
 
@@ -3037,6 +3186,7 @@ function editInv(id){
   document.getElementById('inv-buyprice').value=isUSD?((inv.buyPrice/fx).toFixed(4)):inv.buyPrice||'';
   document.getElementById('inv-curprice').value=isUSD?((inv.curPrice/fx).toFixed(4)):inv.curPrice||'';
   document.getElementById('inv-updated').value=inv.updatedAt||'';
+  _updatePortDropdown(inv.portId||'');
   calcInvTotals();
   invNameHint();
   openM('m-inv');
@@ -3057,7 +3207,8 @@ async function saveInv(){
   const fx=currency==='USD'?await getFxRate():1;
   const buyPrice=rawBuy*fx, curPrice=rawCur*fx;
   const cost=qty*buyPrice, value=qty*(curPrice||buyPrice);
-  const obj={name,type,qty,buyPrice,curPrice,cost,value,currency,fxRate:fx,updatedAt};
+  const portId=document.getElementById('inv-portid').value||null;
+  const obj={name,type,qty,buyPrice,curPrice,cost,value,currency,fxRate:fx,updatedAt,portId};
   if(id){ const i=DB.investments.findIndex(x=>x.id===id); if(i>=0) DB.investments[i]={...DB.investments[i],...obj}; toast('แก้ไขแล้ว','success'); }
   else { DB.investments.push({id:uid(),...obj}); toast('เพิ่มการลงทุนแล้ว','success'); }
   saveDB(); closeM('m-inv'); renderInv();
