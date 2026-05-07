@@ -2375,8 +2375,21 @@ function delSav(id){
 function renderDebts(){
   const el=document.getElementById('debt-list');
   if(!DB.debts.length){ el.innerHTML='<div class="empty"><i class="fas fa-check-circle"></i><p>ยอดเยี่ยม! ไม่มีหนี้สิน</p></div>'; return; }
+  const now=new Date();
+  const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const months=[];
+  for(let i=11;i>=0;i--){
+    const d2=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push({ym:`${d2.getFullYear()}-${String(d2.getMonth()+1).padStart(2,'0')}`,label:MN[d2.getMonth()]+'\''+String(d2.getFullYear()+543).slice(2),isCur:i===0});
+  }
   el.innerHTML=DB.debts.map(d=>{
     const pct=Math.min(100,((d.total-d.remaining)/d.total)*100);
+    const pm=d.paidMonths||[];
+    const paidCount=months.filter(m=>pm.includes(m.ym)).length;
+    const chips=months.map(m=>{
+      const paid=pm.includes(m.ym);
+      return `<button onclick="toggleDebtMonth('${d.id}','${m.ym}')" style="padding:4px 9px;border-radius:8px;font-size:11px;font-weight:${m.isCur?700:400};cursor:pointer;font-family:Sarabun,sans-serif;border:1px solid;transition:.15s;background:${paid?'rgba(16,185,129,.18)':m.isCur?'rgba(124,58,237,.12)':'rgba(255,255,255,.03)'};color:${paid?'#10b981':m.isCur?'#a78bfa':'#64748b'};border-color:${paid?'rgba(16,185,129,.45)':m.isCur?'rgba(124,58,237,.4)':'rgba(255,255,255,.08)'}">${paid?'✓ ':''}${m.label}</button>`;
+    }).join('');
     return `<div class="dcard">
       <div class="dcard-hd">
         <div><div class="dcard-name">${d.name}</div>${d.dueDate?`<div style="font-size:11px;color:var(--muted);margin-top:2px">ครบกำหนด ${fmtD(d.dueDate)}</div>`:''}</div>
@@ -2392,8 +2405,23 @@ function renderDebts(){
         <div class="dstat"><div class="dstat-l">ดอกเบี้ย/ปี</div><div class="dstat-v" style="color:var(--amber)">${d.rate||0}%</div></div>
         <div class="dstat"><div class="dstat-l">ผ่อน/เดือน</div><div class="dstat-v">${fmt(d.pay||0)}</div></div>
       </div>
+      <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,.06);padding-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.4px">ติ๊กเดือนที่จ่ายแล้ว</span>
+          <span style="font-size:11px;color:${paidCount>0?'#10b981':'var(--muted)'}">จ่ายแล้ว ${paidCount}/12 เดือน</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">${chips}</div>
+      </div>
     </div>`;
   }).join('');
+}
+
+function toggleDebtMonth(id,ym){
+  const d=DB.debts.find(x=>x.id===id); if(!d) return;
+  if(!d.paidMonths) d.paidMonths=[];
+  const idx=d.paidMonths.indexOf(ym);
+  if(idx>=0) d.paidMonths.splice(idx,1); else d.paidMonths.push(ym);
+  saveDB(); renderDebts();
 }
 
 function openDebtModal(){
