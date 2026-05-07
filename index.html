@@ -1537,7 +1537,6 @@ const _failedModels = new Set();
 const GEMINI_PREFER = [
   'gemini-2.5-flash-preview','gemini-2.5-flash',
   'gemini-2.0-flash-lite','gemini-2.0-flash',
-  'gemini-1.5-flash-8b','gemini-1.5-flash','gemini-1.5-pro',
 ];
 
 async function getModel(){
@@ -2162,8 +2161,8 @@ async function uploadToGeminiFileAPI(bytes, mime, apiKey){
   return d.file.uri;
 }
 
-// โมเดลที่เหมาะกับงาน structured JSON + File API (ไม่ใช่ thinking model)
-const STMT_MODEL_PREF=['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-flash','gemini-1.5-pro','gemini-2.5-flash'];
+// โมเดลสำหรับ statement — 2.5-flash ปิด thinking ด้วย thinkingBudget:0
+const STMT_MODEL_PREF=['gemini-2.5-flash','gemini-2.5-flash-preview','gemini-2.0-flash','gemini-2.0-flash-lite'];
 
 async function aiReadStatement(b64,mime){
   const prompt=`อ่านรายการธุรกรรมทั้งหมดจาก Bank Statement นี้ แล้วตอบเป็น JSON array เท่านั้น ไม่มีข้อความอื่น ไม่มี markdown ไม่มี code block
@@ -2214,7 +2213,7 @@ async function aiReadStatement(b64,mime){
       part={inline_data:{mime_type:mime,data:b64}};
     }
 
-    const {data}=await callGemini([{parts:[part,{text:prompt}]}],{maxOutputTokens:65536,temperature:0.1},STMT_MODEL_PREF);
+    const {data}=await callGemini([{parts:[part,{text:prompt}]}],{maxOutputTokens:65536,temperature:0.1,thinkingConfig:{thinkingBudget:0}},STMT_MODEL_PREF);
     // กรอง thinking parts ออก (Gemini 2.5) — เอาเฉพาะ text ปกติ
     const parts=data.candidates?.[0]?.content?.parts||[];
     let text=parts.filter(p=>!p.thought).map(p=>p.text||'').join('').trim();
