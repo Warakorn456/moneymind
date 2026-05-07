@@ -1072,6 +1072,10 @@
         </select>
       </div>
     </div>
+    <div class="fg">
+      <label class="flabel"><i class="fas fa-layer-group" style="color:var(--cyan)"></i> ลิ้งกับพอร์ตลงทุน (ตัวเลขวิ่งมาอัตโนมัติ)</label>
+      <select class="finput" id="sav-port-id" onchange="onSavPortChange()"><option value="">— ไม่ลิ้ง —</option></select>
+    </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeM('m-sav')">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveSav()">บันทึก</button>
@@ -2583,9 +2587,21 @@ function _savDrop(e,id){ e.preventDefault(); if(!_savDragId||_savDragId===id) re
 function renderSavings(){
   const el=document.getElementById('savings-grid');
   if(!DB.savings.length){ el.innerHTML='<div class="empty" style="grid-column:1/-1"><i class="fas fa-piggy-bank"></i><p>เริ่มตั้งเป้าหมายออมเงินกันเถอะ!</p></div>'; return; }
+  // auto-sync linked portfolios
+  let _changed=false;
+  DB.savings.forEach(s=>{
+    const portId=s.linkedPortId||(getPortfolios().find(p=>p.linkedSavingId===s.id)||{}).id||null;
+    if(portId){
+      const pv=(DB.investments||[]).filter(i=>i.portId===portId).reduce((t,i)=>t+i.value,0);
+      if(pv!==s.current){ s.current=pv; _changed=true; }
+    }
+  });
+  if(_changed) saveLocalOnly();
   el.innerHTML=DB.savings.map(s=>{
     const pct=Math.min(100,(s.current/s.target)*100);
     const color=SC[s.color]||'#06b6d4';
+    // resolve linked portfolio (savings-side or portfolio-side)
+    const linkedPort=getPortfolios().find(p=>p.id===s.linkedPortId)||getPortfolios().find(p=>p.linkedSavingId===s.id);
     return `<div class="scard" draggable="true" data-id="${s.id}"
       ondragstart="_savStart(event,'${s.id}')"
       ondragend="_savEnd(event)"
@@ -2593,9 +2609,15 @@ function renderSavings(){
       ondragleave="_savLeave(event)"
       ondrop="_savDrop(event,'${s.id}')">
       <div class="scard-hd">
-        <div style="display:flex;align-items:flex-start">
+        <div style="display:flex;align-items:flex-start;gap:6px">
           <span class="drag-handle" title="ลากเพื่อเรียงลำดับ">⠿</span>
-          <div><div class="scard-name">${s.name}</div>${s.deadline?`<div class="scard-sub">ถึง ${fmtD(s.deadline)}</div>`:''}</div>
+          <div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <span class="scard-name">${s.name}</span>
+              ${linkedPort?`<span style="font-size:11px;background:rgba(6,182,212,.15);color:var(--cyan);padding:2px 8px;border-radius:20px;white-space:nowrap"><i class="fas fa-link" style="margin-right:3px"></i>${linkedPort.name}</span>`:''}
+            </div>
+            ${s.deadline?`<div class="scard-sub">ถึง ${fmtD(s.deadline)}</div>`:''}
+          </div>
         </div>
         <div style="display:flex;gap:5px"><button class="icon-btn" onclick="editSav('${s.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delSav('${s.id}')"><i class="fas fa-trash"></i></button></div>
       </div>
@@ -2605,21 +2627,28 @@ function renderSavings(){
         <span>${pct.toFixed(1)}% สำเร็จ</span><span>เหลือ ${fmt(Math.max(0,s.target-s.current))}</span>
       </div>
       ${pct>=100?'<div style="margin-top:10px;text-align:center;color:var(--green);font-size:13px;font-weight:700"><i class="fas fa-check-circle"></i> บรรลุเป้าหมายแล้ว!</div>':''}
-      ${(()=>{
-        const linkedPort=(getPortfolios()).find(p=>p.linkedSavingId===s.id);
-        if(!linkedPort) return '';
-        return `<div style="margin-top:8px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--cyan);cursor:pointer" onclick="nav('investments')" title="ไปหน้าพอร์ตลงทุน"><i class="fas fa-link"></i> จากพอร์ต: <b>${linkedPort.name}</b> <i class="fas fa-arrow-right" style="font-size:10px;opacity:.7"></i></div>`;
-      })()}
+      ${linkedPort?`<div style="margin-top:8px;font-size:11px;color:var(--muted);text-align:right;cursor:pointer" onclick="nav('investments')">ดูพอร์ต <i class="fas fa-arrow-right"></i></div>`:''}
     </div>`;
   }).join('');
 }
 
+function _populateSavPortDropdown(selectedPortId=''){
+  const sel=document.getElementById('sav-port-id'); if(!sel) return;
+  sel.innerHTML='<option value="">— ไม่ลิ้ง —</option>'+getPortfolios().map(p=>`<option value="${p.id}"${p.id===selectedPortId?' selected':''}>${p.name}</option>`).join('');
+}
+function onSavPortChange(){
+  const portId=document.getElementById('sav-port-id').value;
+  if(!portId) return;
+  const portVal=(DB.investments||[]).filter(i=>i.portId===portId).reduce((s,i)=>s+i.value,0);
+  document.getElementById('sav-cur').value=portVal.toFixed(2);
+}
 function openSavModal(){
   document.getElementById('sav-eid').value='';
   document.getElementById('sav-m-title').textContent='เพิ่มเป้าหมายออม';
   ['sav-name','sav-tgt','sav-dl'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('sav-cur').value='0';
   document.getElementById('sav-color').value='cyan';
+  _populateSavPortDropdown();
   openM('m-sav');
 }
 
@@ -2632,6 +2661,7 @@ function editSav(id){
   document.getElementById('sav-cur').value=s.current;
   document.getElementById('sav-dl').value=s.deadline||'';
   document.getElementById('sav-color').value=s.color;
+  _populateSavPortDropdown(s.linkedPortId||'');
   openM('m-sav');
 }
 
@@ -2639,13 +2669,17 @@ function saveSav(){
   const id=document.getElementById('sav-eid').value;
   const name=document.getElementById('sav-name').value.trim();
   const target=parseFloat(document.getElementById('sav-tgt').value);
-  const current=parseFloat(document.getElementById('sav-cur').value)||0;
+  const linkedPortId=document.getElementById('sav-port-id').value||null;
+  // if linked, always use live portfolio value
+  const current=linkedPortId
+    ? (DB.investments||[]).filter(i=>i.portId===linkedPortId).reduce((s,i)=>s+i.value,0)
+    : (parseFloat(document.getElementById('sav-cur').value)||0);
   const deadline=document.getElementById('sav-dl').value;
   const color=document.getElementById('sav-color').value;
   if(!name){ toast('กรุณาใส่ชื่อเป้าหมาย','error'); return; }
   if(!target||target<=0){ toast('กรุณาใส่จำนวนเป้าหมาย','error'); return; }
-  if(id){ const i=DB.savings.findIndex(s=>s.id===id); if(i>=0) DB.savings[i]={...DB.savings[i],name,target,current,deadline,color}; toast('แก้ไขแล้ว','success'); }
-  else { DB.savings.push({id:uid(),name,target,current,deadline,color}); toast('เพิ่มเป้าหมายแล้ว','success'); }
+  if(id){ const i=DB.savings.findIndex(s=>s.id===id); if(i>=0) DB.savings[i]={...DB.savings[i],name,target,current,deadline,color,linkedPortId}; toast('แก้ไขแล้ว','success'); }
+  else { DB.savings.push({id:uid(),name,target,current,deadline,color,linkedPortId}); toast('เพิ่มเป้าหมายแล้ว','success'); }
   saveDB(); closeM('m-sav'); renderSavings();
 }
 
