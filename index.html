@@ -3905,15 +3905,14 @@ function getYearSummary(year){
 
 function calcNetWorth(){
   const plan=getPlan();
-  const savings=(DB.savings||[]).reduce((s,v)=>s+v.current,0);
-  const invVal=(DB.investments||[]).reduce((s,inv)=>s+(inv.currentPrice||inv.buyPrice)*inv.qty,0);
+  const invVal=(DB.investments||[]).reduce((s,inv)=>s+inv.value,0);
   const extraAssetsTotal=(plan.extraAssets||[]).reduce((s,a)=>s+a.amount,0);
-  const totalAssets=savings+invVal+extraAssetsTotal;
+  const totalAssets=invVal+extraAssetsTotal;
   const trackedDebts=(DB.debts||[]).reduce((s,d)=>s+(d.remaining||d.amount),0);
   const extraDebtsTotal=(plan.extraDebts||[]).reduce((s,d)=>s+d.amount,0);
   const debts=trackedDebts+extraDebtsTotal;
   const netWorth=totalAssets-debts;
-  return {savings,invVal,extraAssetsTotal,totalAssets,trackedDebts,extraDebtsTotal,debts,netWorth};
+  return {invVal,extraAssetsTotal,totalAssets,trackedDebts,extraDebtsTotal,debts,netWorth};
 }
 
 function renderBalance(){
@@ -3995,8 +3994,22 @@ function renderBalance(){
   <div class="bs-grid">
     <div class="bs-card">
       <div class="set-title"><i class="fas fa-coins" style="color:#10b981"></i> สินทรัพย์</div>
-      <div class="bs-row"><span>เงินออมทั้งหมด</span><span style="color:#10b981">${fmt(nw.savings)}</span></div>
-      <div class="bs-row"><span>มูลค่าพอร์ตลงทุน</span><span style="color:#10b981">${fmt(nw.invVal)}</span></div>
+      ${(()=>{
+        const ports=getPortfolios();
+        const allInv=DB.investments||[];
+        let rows='';
+        ports.forEach(p=>{
+          const pVal=allInv.filter(i=>i.portId===p.id).reduce((s,i)=>s+i.value,0);
+          rows+=`<div class="bs-row"><span style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};flex-shrink:0"></span>${p.name}</span><span style="color:#10b981">${fmt(pVal)}</span></div>`;
+        });
+        const uncat=allInv.filter(i=>!i.portId||!ports.find(p=>p.id===i.portId));
+        if(uncat.length){
+          const uVal=uncat.reduce((s,i)=>s+i.value,0);
+          rows+=`<div class="bs-row"><span style="color:var(--muted);font-size:12px">ไม่ระบุพอร์ต</span><span style="color:#10b981">${fmt(uVal)}</span></div>`;
+        }
+        if(!allInv.length) rows+=`<div class="bs-row"><span style="color:var(--muted);font-size:12px">ยังไม่มีการลงทุน</span><span>฿0</span></div>`;
+        return rows;
+      })()}
       ${(plan.extraAssets||[]).map(a=>`
       <div class="bs-row">
         <input class="bs-inp bs-name-inp" type="text" value="${a.name.replace(/"/g,'&quot;')}" placeholder="ชื่อสินทรัพย์"
@@ -4681,7 +4694,7 @@ function buildFinanceContext(){
   ${trend||'ยังไม่มีข้อมูล'}
 
 🏦 งบดุลสุทธิ (Net Worth):
-  สินทรัพย์รวม: ${fmt(nw.totalAssets)} (เงินออม ${fmt(nw.savings)} + ลงทุน ${fmt(nw.invVal)} + อื่นๆ ${fmt(nw.extraAssetsTotal)})
+  สินทรัพย์รวม: ${fmt(nw.totalAssets)} (ลงทุน ${fmt(nw.invVal)} + อื่นๆ ${fmt(nw.extraAssetsTotal)})
   หนี้สินรวม: ${fmt(nw.debts)} (หนี้ติดตาม ${fmt(nw.trackedDebts)} + อื่นๆ ${fmt(nw.extraDebtsTotal)})
   ความมั่งคั่งสุทธิ: ${fmt(nw.netWorth)}
   สินทรัพย์อื่น: ${extraAStr}
