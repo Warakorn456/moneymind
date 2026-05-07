@@ -3634,7 +3634,7 @@ function onTaxYearChange(){
 function taxInp(id,val,max,hint){
   const capHint=max?` (max ฿${max.toLocaleString()})`:'' ;
   return `<input class="tax-inp" type="number" min="0" max="${max||9999999}" step="100" value="${val}"
-    onchange="updateTax('${id}',this.value)" id="tinp-${id}">
+    oninput="updateTax('${id}',this.value)" id="tinp-${id}">
     ${hint||capHint?`<div class="tax-hint">${hint||'max ฿'+max.toLocaleString()}</div>`:''}`;
 }
 
@@ -3780,15 +3780,15 @@ function renderTax(){
     <div class="set-title"><i class="fas fa-coins" style="color:#10b981"></i> รายได้ปี ${t.year||curYear}</div>
     <div class="tax-row">
       <div><label>เงินเดือน/ค่าจ้าง (มาตรา 40(1))</label><div class="tax-hint">หัก 50% max ฿100,000</div></div>
-      <input class="tax-inp" type="number" min="0" step="1000" value="${t.salary||0}" onchange="updateTax('salary',this.value)">
+      <input class="tax-inp" type="number" min="0" step="1000" value="${t.salary||0}" oninput="updateTax('salary',this.value)">
     </div>
     <div class="tax-row">
       <div><label>รายได้อิสระ/ค่าเช่า (มาตรา 40(2)(8))</label><div class="tax-hint">หัก 50% max ฿100,000</div></div>
-      <input class="tax-inp" type="number" min="0" step="1000" value="${t.freelance||0}" onchange="updateTax('freelance',this.value)">
+      <input class="tax-inp" type="number" min="0" step="1000" value="${t.freelance||0}" oninput="updateTax('freelance',this.value)">
     </div>
     <div class="tax-row">
       <div><label>รายได้อื่นๆ</label><div class="tax-hint">ปันผล ดอกเบี้ย ฯลฯ</div></div>
-      <input class="tax-inp" type="number" min="0" step="1000" value="${t.otherInc||0}" onchange="updateTax('otherInc',this.value)">
+      <input class="tax-inp" type="number" min="0" step="1000" value="${t.otherInc||0}" oninput="updateTax('otherInc',this.value)">
     </div>
     <div class="tax-row" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px">
       <label style="font-weight:600">รายได้รวม</label>
@@ -3806,15 +3806,15 @@ function renderTax(){
     </div>
     <div class="tax-row">
       <div><label>จำนวนบุตร</label><div class="tax-hint">30,000/คน</div></div>
-      <input class="tax-inp" type="number" min="0" max="20" step="1" value="${t.children||0}" onchange="updateTax('children',this.value)" style="width:70px">
+      <input class="tax-inp" type="number" min="0" max="20" step="1" value="${t.children||0}" oninput="updateTax('children',this.value)" style="width:70px">
     </div>
     <div class="tax-row">
       <div><label>อุปการะบิดามารดา (อายุ 60+)</label><div class="tax-hint">30,000/คน max 4 คน</div></div>
-      <input class="tax-inp" type="number" min="0" max="4" step="1" value="${t.parents||0}" onchange="updateTax('parents',this.value)" style="width:70px">
+      <input class="tax-inp" type="number" min="0" max="4" step="1" value="${t.parents||0}" oninput="updateTax('parents',this.value)" style="width:70px">
     </div>
     <div class="tax-row">
       <div><label>อุปการะคนพิการ/ทุพพลภาพ</label><div class="tax-hint">60,000/คน</div></div>
-      <input class="tax-inp" type="number" min="0" max="10" step="1" value="${t.disabled||0}" onchange="updateTax('disabled',this.value)" style="width:70px">
+      <input class="tax-inp" type="number" min="0" max="10" step="1" value="${t.disabled||0}" oninput="updateTax('disabled',this.value)" style="width:70px">
     </div>
   </div>
 
@@ -3823,23 +3823,23 @@ function renderTax(){
     <div class="set-title"><i class="fas fa-shield-alt" style="color:#06b6d4"></i> ลดหย่อนประกัน</div>
     <div class="tax-row">
       <div><label>ประกันชีวิต/ประกันออมทรัพย์</label><div class="tax-hint">max ฿100,000 (รวมกับสุขภาพ)</div></div>
-      <input class="tax-inp" type="number" min="0" max="100000" step="100" value="${t.lifeIns||0}" onchange="updateTax('lifeIns',this.value)">
+      <input class="tax-inp" type="number" min="0" max="100000" step="100" value="${t.lifeIns||0}" oninput="updateTax('lifeIns',this.value)">
     </div>
     <div class="tax-row">
       <div><label>ประกันสุขภาพ</label><div class="tax-hint">max ฿25,000 (รวมชีวิตไม่เกิน 100k)</div></div>
-      <input class="tax-inp" type="number" min="0" max="25000" step="100" value="${t.healthIns||0}" onchange="updateTax('healthIns',this.value)">
+      <input class="tax-inp" type="number" min="0" max="25000" step="100" value="${t.healthIns||0}" oninput="updateTax('healthIns',this.value)">
     </div>
     <div class="tax-row">
       <div><label>ประกันชีวิตแบบบำนาญ</label><div class="tax-hint">max ฿200,000</div></div>
-      <input class="tax-inp" type="number" min="0" max="200000" step="100" value="${t.annuityIns||0}" onchange="updateTax('annuityIns',this.value)">
+      <input class="tax-inp" type="number" min="0" max="200000" step="100" value="${t.annuityIns||0}" oninput="updateTax('annuityIns',this.value)">
     </div>
     <div class="tax-row">
       <div><label>ประกันสุขภาพบิดามารดา</label><div class="tax-hint">max ฿15,000</div></div>
-      <input class="tax-inp" type="number" min="0" max="15000" step="100" value="${t.parentHealthIns||0}" onchange="updateTax('parentHealthIns',this.value)">
+      <input class="tax-inp" type="number" min="0" max="15000" step="100" value="${t.parentHealthIns||0}" oninput="updateTax('parentHealthIns',this.value)">
     </div>
     <div class="tax-row">
       <div><label>ประกันสังคม</label><div class="tax-hint">max ฿9,000/ปี</div></div>
-      <input class="tax-inp" type="number" min="0" max="9000" step="100" value="${t.sso||0}" onchange="updateTax('sso',this.value)">
+      <input class="tax-inp" type="number" min="0" max="9000" step="100" value="${t.sso||0}" oninput="updateTax('sso',this.value)">
     </div>
   </div>
 
@@ -3848,19 +3848,19 @@ function renderTax(){
     <div class="set-title"><i class="fas fa-chart-line" style="color:#f59e0b"></i> ลดหย่อนการลงทุน</div>
     <div class="tax-row">
       <div><label>กองทุน SSF</label><div class="tax-hint">max 30% รายได้ / ฿200,000 (รวม RMF+PVD ไม่เกิน 500k)</div></div>
-      <input class="tax-inp" type="number" min="0" max="200000" step="1000" value="${t.ssf||0}" onchange="updateTax('ssf',this.value)">
+      <input class="tax-inp" type="number" min="0" max="200000" step="1000" value="${t.ssf||0}" oninput="updateTax('ssf',this.value)">
     </div>
     <div class="tax-row">
       <div><label>กองทุน RMF</label><div class="tax-hint">max 30% รายได้ / ฿500,000</div></div>
-      <input class="tax-inp" type="number" min="0" max="500000" step="1000" value="${t.rmf||0}" onchange="updateTax('rmf',this.value)">
+      <input class="tax-inp" type="number" min="0" max="500000" step="1000" value="${t.rmf||0}" oninput="updateTax('rmf',this.value)">
     </div>
     <div class="tax-row">
       <div><label>กองทุนสำรองเลี้ยงชีพ (PVD/กบข.)</label><div class="tax-hint">max 15% รายได้ / ฿500,000</div></div>
-      <input class="tax-inp" type="number" min="0" max="500000" step="1000" value="${t.pvd||0}" onchange="updateTax('pvd',this.value)">
+      <input class="tax-inp" type="number" min="0" max="500000" step="1000" value="${t.pvd||0}" oninput="updateTax('pvd',this.value)">
     </div>
     <div class="tax-row">
       <div><label>กองทุน Thai ESG</label><div class="tax-hint">max 30% รายได้ / ฿300,000</div></div>
-      <input class="tax-inp" type="number" min="0" max="300000" step="1000" value="${t.thaiEsg||0}" onchange="updateTax('thaiEsg',this.value)">
+      <input class="tax-inp" type="number" min="0" max="300000" step="1000" value="${t.thaiEsg||0}" oninput="updateTax('thaiEsg',this.value)">
     </div>
   </div>
 
@@ -3869,15 +3869,15 @@ function renderTax(){
     <div class="set-title"><i class="fas fa-ellipsis-h" style="color:#94a3b8"></i> ลดหย่อนอื่นๆ</div>
     <div class="tax-row">
       <div><label>ดอกเบี้ยเงินกู้ที่อยู่อาศัย</label><div class="tax-hint">max ฿100,000</div></div>
-      <input class="tax-inp" type="number" min="0" max="100000" step="100" value="${t.homeLoan||0}" onchange="updateTax('homeLoan',this.value)">
+      <input class="tax-inp" type="number" min="0" max="100000" step="100" value="${t.homeLoan||0}" oninput="updateTax('homeLoan',this.value)">
     </div>
     <div class="tax-row">
       <div><label>เงินบริจาค</label><div class="tax-hint">max 10% ของเงินได้หลังหักลดหย่อน</div></div>
-      <input class="tax-inp" type="number" min="0" step="100" value="${t.donation||0}" onchange="updateTax('donation',this.value)">
+      <input class="tax-inp" type="number" min="0" step="100" value="${t.donation||0}" oninput="updateTax('donation',this.value)">
     </div>
     <div class="tax-row">
       <div><label>ภาษีถูกหัก ณ ที่จ่าย (ทั้งปี)</label><div class="tax-hint">ดูจากหนังสือรับรองการหักภาษี</div></div>
-      <input class="tax-inp" type="number" min="0" step="100" value="${t.withheld||0}" onchange="updateTax('withheld',this.value)">
+      <input class="tax-inp" type="number" min="0" step="100" value="${t.withheld||0}" oninput="updateTax('withheld',this.value)">
     </div>
   </div>`;
 
