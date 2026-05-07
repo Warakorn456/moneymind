@@ -4057,9 +4057,10 @@ function calcNetWorth(){
 // ══════════════════════════════════════════
 let _chRetire=null;
 function getRetire(){
-  if(!DB.retire) DB.retire={retireAge:60,lifeAge:85,monthlyExpense:30000,inflation:3,returnRate:7,postReturnRate:4,sso:750,pvd:0};
+  if(!DB.retire) DB.retire={retireAge:60,lifeAge:85,monthlyExpense:30000,inflation:3,returnRate:7,postReturnRate:4,sso:750,pvd:0,portOverride:null};
   if(DB.retire.sso===undefined) DB.retire.sso=750;
   if(DB.retire.pvd===undefined) DB.retire.pvd=0;
+  if(!('portOverride' in DB.retire)) DB.retire.portOverride=null;
   return DB.retire;
 }
 function _fvAnnuity(monthly, mRate, n){
@@ -4080,7 +4081,8 @@ function calcRetirePlan(r){
   const fundNeeded=mPost>0
     ? futureMonthly*(1-Math.pow(1+mPost,-nRetire))/mPost
     : futureMonthly*nRetire;
-  const curPort=(DB.investments||[]).reduce((s,i)=>s+i.value,0);
+  const autoPort=(DB.investments||[]).reduce((s,i)=>s+i.value,0);
+  const curPort=r.portOverride!=null?r.portOverride:autoPort;
   // base portfolio + SSO + PVD all compounded to retirement
   const portGrowth=curPort*Math.pow(1+mAccum,nAccum);
   const ssoFV=_fvAnnuity(r.sso||0,mAccum,nAccum);
@@ -4092,6 +4094,28 @@ function calcRetirePlan(r){
     : shortfall/nAccum;
   const surplus=portAtRetire-fundNeeded;
   return {age,yearsToRetire,yearsInRetire,futureMonthly,fundNeeded,curPort,portAtRetire,portGrowth,ssoFV,pvdFV,shortfall,monthlyNeeded,surplus,nAccum,nRetire,mAccum,mPost};
+}
+function setRetirePortMode(mode){
+  const isManual=mode==='manual';
+  const autoBtn=document.getElementById('r-port-auto-btn');
+  const manBtn=document.getElementById('r-port-manual-btn');
+  const autoDiv=document.getElementById('r-port-auto-display');
+  const manDiv=document.getElementById('r-port-manual-display');
+  if(!autoBtn) return;
+  autoBtn.style.background=isManual?'transparent':'rgba(16,185,129,.25)';
+  autoBtn.style.color=isManual?'var(--muted)':'#10b981';
+  autoBtn.style.borderColor=isManual?'var(--border)':'rgba(16,185,129,.5)';
+  manBtn.style.background=isManual?'rgba(124,58,237,.2)':'transparent';
+  manBtn.style.color=isManual?'#a78bfa':'var(--muted)';
+  manBtn.style.borderColor=isManual?'rgba(124,58,237,.4)':'var(--border)';
+  autoDiv.style.display=isManual?'none':'block';
+  manDiv.style.display=isManual?'block':'none';
+  if(!isManual){
+    // switched back to auto → clear override
+    const r=getRetire(); r.portOverride=null; saveDB(); renderRetireResults();
+  } else {
+    saveRetire();
+  }
 }
 function onWhatIfChange(){
   const extra=parseFloat(document.getElementById('r-whatif-extra').value)||0;
@@ -4129,6 +4153,9 @@ function saveRetire(){
   r.postReturnRate=parseFloat(document.getElementById('r-post-return').value)||4;
   r.sso=parseFloat(document.getElementById('r-sso').value)||0;
   r.pvd=parseFloat(document.getElementById('r-pvd').value)||0;
+  const portValEl=document.getElementById('r-port-value');
+  r.portOverride=portValEl&&document.getElementById('r-port-manual-display').style.display!=='none'
+    ?(parseFloat(portValEl.value)||0) : null;
   saveDB();
   renderRetireResults();
 }
@@ -4275,9 +4302,24 @@ function renderRetire(){
         <div class="fg"><label class="flabel"><i class="fas fa-building" style="color:#a78bfa;margin-right:4px"></i>กองทุนสำรองเลี้ยงชีพ (บาท/เดือน)</label>
           <input type="number" id="r-pvd" class="finput" value="${r.pvd||0}" min="0" step="100" oninput="saveRetire()">
           <div style="font-size:11px;color:var(--muted);margin-top:3px">ลูกจ้าง + นายจ้างรวมกัน (เช่น เงินเดือน 30,000 × 10% = 3,000 บาท)</div></div>
-        <div style="padding:10px;background:rgba(16,185,129,.08);border-radius:10px;border:1px solid rgba(16,185,129,.2);font-size:12px;color:var(--muted);margin-top:4px">
-          <i class="fas fa-info-circle" style="color:#10b981;margin-right:4px"></i>พอร์ตปัจจุบัน: <span style="color:#10b981;font-weight:700">${'฿'+Math.round(curPort).toLocaleString('th-TH')}</span>
-          ${curPort===0?'<br><span style="color:var(--amber)">ยังไม่มีการลงทุน — ไปหน้า <a onclick="nav(\'investments\')" style="color:#a78bfa;cursor:pointer">พอร์ตลงทุน</a> เพื่อเพิ่ม</span>':''}
+        <div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.25);border-radius:12px;padding:12px 14px;margin-top:4px">
+          <div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:10px"><i class="fas fa-wallet" style="margin-right:5px"></i>พอร์ตเริ่มต้น (ปัจจุบัน)</div>
+          <div style="display:flex;gap:6px;margin-bottom:10px">
+            <button id="r-port-auto-btn" onclick="setRetirePortMode('auto')"
+              style="flex:1;padding:6px;font-size:12px;border-radius:8px;border:1px solid rgba(16,185,129,.5);background:rgba(16,185,129,.25);color:#10b981;cursor:pointer;font-family:Sarabun,sans-serif;font-weight:600">
+              <i class="fas fa-sync-alt" style="margin-right:4px"></i>ดึงจากพอร์ตลงทุน</button>
+            <button id="r-port-manual-btn" onclick="setRetirePortMode('manual')"
+              style="flex:1;padding:6px;font-size:12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:Sarabun,sans-serif;font-weight:600">
+              <i class="fas fa-pen" style="margin-right:4px"></i>กรอกเอง</button>
+          </div>
+          <div id="r-port-auto-display" style="font-size:13px;color:var(--muted)">
+            มูลค่าพอร์ตล่าสุด: <span style="color:#10b981;font-weight:700">${'฿'+Math.round(curPort).toLocaleString('th-TH')}</span>
+            ${curPort===0?'<span style="color:var(--amber);margin-left:6px;font-size:11px">ยังไม่มีข้อมูลพอร์ต</span>':''}
+          </div>
+          <div id="r-port-manual-display" style="display:none">
+            <input type="number" id="r-port-value" class="finput" value="${r.portOverride!=null?r.portOverride:curPort}" min="0" step="10000" placeholder="0" oninput="saveRetire()" style="margin-top:2px">
+            <div style="font-size:11px;color:var(--muted);margin-top:3px">กรอกมูลค่าพอร์ตที่ต้องการใช้คำนวณ</div>
+          </div>
         </div>
       </div>
     </div>
@@ -4367,6 +4409,8 @@ function renderRetire(){
   </div>`;
 
   renderRetireResults();
+  // restore port mode toggle
+  if(r.portOverride!=null) setTimeout(()=>setRetirePortMode('manual'),0);
 }
 
 function renderBalance(){
