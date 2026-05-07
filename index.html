@@ -2184,34 +2184,51 @@ async function aiReadStatement(b64,mime){
       part={inline_data:{mime_type:mime,data:b64}};
     }
 
-    const {data}=await callGemini([{parts:[part,{text:prompt}]}],{maxOutputTokens:8192,temperature:0.1});
-    // Gemini 2.5 thinking model อาจมีหลาย parts — รวมทุก text part
+    const {data}=await callGemini([{parts:[part,{text:prompt}]}],{maxOutputTokens:65536,temperature:0.1});
+    // กรอง thinking parts ออก (Gemini 2.5) — เอาเฉพาะ text ปกติ
     const parts=data.candidates?.[0]?.content?.parts||[];
-    let text=parts.map(p=>p.text||'').join('');
+    let text=parts.filter(p=>!p.thought).map(p=>p.text||'').join('').trim();
+    if(!text) text=parts.map(p=>p.text||'').join('').trim(); // fallback ถ้า filter ทำให้ว่าง
     console.log('[Statement AI raw]',text.slice(0,500));
     text=text.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
 
+    function cleanAmounts(str){
+      return str.replace(/"amount"\s*:\s*"([\d,]+\.?\d*)"/g,(_,n)=>`"amount":${parseFloat(n.replace(/,/g,''))}`);
+    }
     function tryParse(str){
-      // แก้ตัวเลขแบบไทย: "1,234.56" → 1234.56
-      const cleaned=str.replace(/"amount"\s*:\s*"([\d,]+\.?\d*)"/g,(_,n)=>`"amount":${parseFloat(n.replace(/,/g,''))}`);
-      try{ return JSON.parse(cleaned); }catch{}
+      try{ return JSON.parse(cleanAmounts(str)); }catch{}
       try{ return JSON.parse(str); }catch{}
       return null;
     }
+    // กรณี JSON truncate — ดึง objects ที่สมบูรณ์ออกมาทีละตัว
+    function extractObjects(str){
+      const out=[];
+      const re=/\{(?:[^{}"\\]|"(?:[^"\\]|\\.)*"|\\.|{[^{}]*})*\}/g;
+      let m;
+      while((m=re.exec(str))!==null){
+        try{
+          const o=JSON.parse(m[0]);
+          if(o.date&&o.amount!==undefined&&o.type) out.push(o);
+        }catch{}
+      }
+      return out.length?out:null;
+    }
 
     let rows=null;
-    // 1) หา array ใน wrapper object: {"transactions":[...]} หรือ {"data":[...]}
-    const objM=text.match(/\{[\s\S]*\}/);
-    if(objM){ try{ const o=JSON.parse(objM[0]); const k=Object.keys(o).find(k=>Array.isArray(o[k])); if(k) rows=o[k]; }catch{} }
-    // 2) หา array ตรง ๆ
-    if(!rows){ const m1=text.match(/\[[\s\S]*\]/); if(m1) rows=tryParse(m1[0]); }
-    // 3) ตำแหน่ง [ และ ] สุดท้าย
+    // 1) wrapper object: {"transactions":[...]}
+    const ob=text.match(/\{[\s\S]*\}/);
+    if(ob){ try{ const o=JSON.parse(ob[0]); const k=Object.keys(o).find(k=>Array.isArray(o[k])); if(k) rows=o[k]; }catch{} }
+    // 2) array ตรง
     if(!rows){ const a=text.indexOf('['),b=text.lastIndexOf(']'); if(a>=0&&b>a) rows=tryParse(text.slice(a,b+1)); }
+    // 3) truncated — ดึง objects ที่สมบูรณ์
+    if(!rows||!rows.length){ const a=text.indexOf('['); rows=extractObjects(a>=0?text.slice(a):text); }
 
     if(!rows||!Array.isArray(rows)||!rows.length){
-      const preview=text.slice(0,120).replace(/</g,'&lt;');
+      const preview=text.slice(0,200).replace(/</g,'&lt;');
       throw new Error(`AI ไม่พบรายการธุรกรรม — AI ตอบ: "${preview}…"`);
     }
+    const truncated=text.lastIndexOf(']')<0&&text.length>100;
+    if(truncated) toast(`พบ ${rows.length} รายการ (response ถูกตัด — บางรายการอาจหาย)`,'info');
     stmtRows=rows.map((r,i)=>({...r,id:'s'+i,selected:true,amount:Math.abs(r.amount)||0}));
     document.getElementById('stmt-proc').style.display='none';
     showStmtReview();
