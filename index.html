@@ -625,6 +625,12 @@
         <div class="stat-value" id="s-portfolio">฿0</div>
         <div class="stat-sub">มูลค่าปัจจุบัน</div>
       </div>
+      <div class="stat-card" style="background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(139,92,246,.08));border-color:rgba(124,58,237,.35);cursor:pointer" onclick="nav('balance')">
+        <div class="stat-icon" style="color:#a78bfa"><i class="fas fa-crown"></i></div>
+        <div class="stat-label">ความมั่งคั่งสุทธิ</div>
+        <div class="stat-value" id="s-networth" style="font-size:18px">฿0</div>
+        <div class="stat-sub" id="s-networth-sub">สินทรัพย์ − หนี้สิน</div>
+      </div>
     </div>
 
     <!-- งบประมาณเดือนนี้ (จากเงินเดือนสิ้นเดือนก่อน) -->
@@ -649,6 +655,9 @@
         <span id="b-src-label"></span>
       </div>
     </div>
+
+    <!-- Mini Balance Sheet -->
+    <div id="dash-bs-section" style="margin-bottom:18px"></div>
 
     <div class="charts-grid">
       <div class="chart-card">
@@ -1895,6 +1904,7 @@ function renderDash(){
   document.getElementById('s-portfolio').textContent=fmt(port);
 
   renderBudgetCard();
+  renderDashNetWorth();
   renderCatChart();
   renderTrendChart();
   renderRecentTx();
@@ -1991,6 +2001,113 @@ function renderDebtSummary(){
   const total=DB.debts.reduce((s,d)=>s+d.remaining,0);
   el.innerHTML=`<div style="text-align:center;margin-bottom:14px"><div style="font-size:26px;font-weight:800;color:var(--red)">${fmt(total)}</div><div style="font-size:12px;color:var(--muted)">ยอดหนี้คงเหลือรวม</div></div>`
     +DB.debts.slice(0,3).map(d=>{const pct=Math.min(100,((d.total-d.remaining)/d.total)*100);return`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>${d.name}</span><span style="color:var(--muted)">${fmt(d.remaining)}</span></div><div class="pbar"><div class="pfill" style="width:${pct}%;background:var(--red)"></div></div></div>`;}).join('');
+}
+
+function renderDashNetWorth(){
+  const nw=calcNetWorth();
+  const ports=getPortfolios();
+  const allInv=DB.investments||[];
+  const allDebts=DB.debts||[];
+  const plan=getPlan();
+
+  // update stat card
+  const nwEl=document.getElementById('s-networth');
+  const nwSub=document.getElementById('s-networth-sub');
+  if(nwEl){ nwEl.textContent=fmt(nw.netWorth); nwEl.style.color=nw.netWorth>=0?'#a78bfa':'var(--red)'; }
+  if(nwSub){ nwSub.textContent=`${fmt(nw.totalAssets)} − ${fmt(nw.debts)}`; }
+
+  // build asset rows
+  let assetRows='';
+  if(ports.length){
+    ports.forEach(p=>{
+      const pVal=allInv.filter(i=>i.portId===p.id).reduce((s,i)=>s+i.value,0);
+      assetRows+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <span style="display:flex;align-items:center;gap:8px;font-size:13px">
+          <span style="width:9px;height:9px;border-radius:50%;background:${p.color};flex-shrink:0;display:inline-block"></span>${p.name}
+        </span>
+        <span style="font-size:13px;font-weight:700;color:#10b981">${fmt(pVal)}</span>
+      </div>`;
+    });
+  }
+  const uncat=allInv.filter(i=>!i.portId||!ports.find(p=>p.id===i.portId));
+  if(uncat.length){
+    const uVal=uncat.reduce((s,i)=>s+i.value,0);
+    assetRows+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+      <span style="font-size:13px;color:var(--muted)">ไม่ระบุพอร์ต</span>
+      <span style="font-size:13px;font-weight:700;color:#10b981">${fmt(uVal)}</span>
+    </div>`;
+  }
+  (plan.extraAssets||[]).forEach(a=>{
+    assetRows+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+      <span style="font-size:13px;color:var(--muted)">${a.name||'สินทรัพย์อื่น'}</span>
+      <span style="font-size:13px;font-weight:700;color:#10b981">${fmt(a.amount)}</span>
+    </div>`;
+  });
+  if(!assetRows) assetRows=`<div style="font-size:12px;color:var(--muted);padding:10px 0;text-align:center">ยังไม่มีข้อมูล</div>`;
+
+  // build debt rows
+  let debtRows='';
+  allDebts.forEach(d=>{
+    debtRows+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+      <span style="font-size:13px">${d.name}</span>
+      <span style="font-size:13px;font-weight:700;color:#ef4444">${fmt(d.remaining||d.amount)}</span>
+    </div>`;
+  });
+  (plan.extraDebts||[]).forEach(d=>{
+    debtRows+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+      <span style="font-size:13px;color:var(--muted)">${d.name||'หนี้อื่น'}</span>
+      <span style="font-size:13px;font-weight:700;color:#ef4444">${fmt(d.amount)}</span>
+    </div>`;
+  });
+  if(!debtRows) debtRows=`<div style="font-size:12px;color:var(--green);padding:10px 0;text-align:center"><i class="fas fa-check-circle"></i> ไม่มีหนี้สิน</div>`;
+
+  const nwColor=nw.netWorth>=0?'#a78bfa':'#ef4444';
+  const el=document.getElementById('dash-bs-section');
+  if(!el) return;
+  el.innerHTML=`
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(124,58,237,.06)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <i class="fas fa-balance-scale" style="color:#a78bfa;font-size:16px"></i>
+        <span style="font-size:15px;font-weight:700">งบดุล & ความมั่งคั่งสุทธิ</span>
+      </div>
+      <button class="btn btn-ghost" style="padding:4px 12px;font-size:12px" onclick="nav('balance')"><i class="fas fa-arrow-right" style="margin-right:4px"></i>รายละเอียด</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+      <!-- สินทรัพย์ -->
+      <div style="padding:16px 18px;border-right:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+          <i class="fas fa-coins" style="color:#10b981;font-size:13px"></i>
+          <span style="font-size:12px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.5px">สินทรัพย์</span>
+        </div>
+        ${assetRows}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;margin-top:4px">
+          <span style="font-size:13px;font-weight:700">รวม</span>
+          <span style="font-size:15px;font-weight:800;color:#10b981">${fmt(nw.totalAssets)}</span>
+        </div>
+      </div>
+      <!-- หนี้สิน -->
+      <div style="padding:16px 18px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+          <i class="fas fa-credit-card" style="color:#ef4444;font-size:13px"></i>
+          <span style="font-size:12px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:.5px">หนี้สิน</span>
+        </div>
+        ${debtRows}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;margin-top:4px">
+          <span style="font-size:13px;font-weight:700">รวม</span>
+          <span style="font-size:15px;font-weight:800;color:#ef4444">${fmt(nw.debts)}</span>
+        </div>
+      </div>
+    </div>
+    <!-- Net Worth footer -->
+    <div style="padding:14px 20px;border-top:1px solid var(--border);background:rgba(124,58,237,.06);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:2px">ความมั่งคั่งสุทธิ (Net Worth)</div>
+        <div style="font-size:11px;color:var(--muted)">${fmt(nw.totalAssets)} − ${fmt(nw.debts)}</div>
+      </div>
+      <div style="font-size:26px;font-weight:900;color:${nwColor}">${nw.netWorth>=0?'':'-'}${fmt(Math.abs(nw.netWorth))}</div>
+    </div>
+  </div>`;
 }
 
 // ══════════════════════════════════════════
