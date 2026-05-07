@@ -847,7 +847,16 @@
       </div>
       <div class="fg"><label class="flabel">สี</label>
         <div id="port-color-picker" style="display:flex;gap:8px;flex-wrap:wrap;padding:6px 0">
-          ${['#7c3aed','#06b6d4','#10b981','#f59e0b','#ef4444','#3b82f6','#ec4899','#84cc16','#f97316','#a78bfa'].map(c=>`<div onclick="selectPortColor('${c}')" style="width:26px;height:26px;border-radius:50%;background:${c};cursor:pointer;border:2px solid transparent;transition:border-color .2s" data-color="${c}"></div>`).join('')}
+          <div onclick="selectPortColor('#7c3aed')" data-color="#7c3aed" style="width:26px;height:26px;border-radius:50%;background:#7c3aed;cursor:pointer;border:2px solid white;transition:border-color .2s"></div>
+          <div onclick="selectPortColor('#06b6d4')" data-color="#06b6d4" style="width:26px;height:26px;border-radius:50%;background:#06b6d4;cursor:pointer;border:2px solid transparent;transition:border-color .2s"></div>
+          <div onclick="selectPortColor('#10b981')" data-color="#10b981" style="width:26px;height:26px;border-radius:50%;background:#10b981;cursor:pointer;border:2px solid transparent;transition:border-color .2s"></div>
+          <div onclick="selectPortColor('#f59e0b')" data-color="#f59e0b" style="width:26px;height:26px;border-radius:50%;background:#f59e0b;cursor:pointer;border:2px solid transparent;transition:border-color .2s"></div>
+          <div onclick="selectPortColor('#ef4444')" data-color="#ef4444" style="width:26px;height:26px;border-radius:50%;background:#ef4444;cursor:pointer;border:2px solid transparent;transition:border-color .2s"></div>
+          <div onclick="selectPortColor('#3b82f6')" data-color="#3b82f6" style="width:26px;height:26px;border-radius:50%;background:#3b82f6;cursor:pointer;border:2px solid transparent;transition:border-color .2s"></div>
+          <div onclick="selectPortColor('#ec4899')" data-color="#ec4899" style="width:26px;height:26px;border-radius:50%;background:#ec4899;cursor:pointer;border:2px solid transparent;transition:border-color .2s"></div>
+          <div onclick="selectPortColor('#84cc16')" data-color="#84cc16" style="width:26px;height:26px;border-radius:50%;background:#84cc16;cursor:pointer;border:2px solid transparent;transition:border-color .2s"></div>
+          <div onclick="selectPortColor('#f97316')" data-color="#f97316" style="width:26px;height:26px;border-radius:50%;background:#f97316;cursor:pointer;border:2px solid transparent;transition:border-color .2s"></div>
+          <div onclick="selectPortColor('#a78bfa')" data-color="#a78bfa" style="width:26px;height:26px;border-radius:50%;background:#a78bfa;cursor:pointer;border:2px solid transparent;transition:border-color .2s"></div>
         </div>
         <input type="hidden" id="port-color" value="#7c3aed">
       </div>
