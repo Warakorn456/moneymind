@@ -590,7 +590,6 @@
     <div class="nav-item" onclick="nav('banks')"><i class="fas fa-university"></i> ธนาคาร</div>
     <div class="nav-item" onclick="nav('debts')"><i class="fas fa-credit-card"></i> หนี้สิน</div>
     <div class="nav-item" onclick="nav('investments')"><i class="fas fa-chart-line"></i> พอร์ตลงทุน</div>
-    <div class="nav-item" onclick="nav('news')"><i class="fas fa-newspaper"></i> ข่าวสาร</div>
     <div class="nav-item" onclick="nav('tax')"><i class="fas fa-file-invoice"></i> ภาษีเงินได้</div>
     <div class="nav-item" onclick="nav('balance')"><i class="fas fa-balance-scale"></i> งบดุล & แผน</div>
     <div class="nav-item" onclick="nav('retire')"><i class="fas fa-umbrella-beach"></i> แผนเกษียณ</div>
@@ -730,6 +729,9 @@
       </div>
     </div>
 
+    <!-- ── Bank Accounts ── -->
+    <div id="dash-banks-section" style="margin-bottom:18px"></div>
+
     <!-- ── Mini Balance Sheet ── -->
     <div id="dash-bs-section" style="margin-bottom:18px"></div>
 
@@ -824,11 +826,6 @@
       </div>
     </div>
     <div id="inv-content"></div>
-  </div>
-
-  <!-- ════ NEWS ════ -->
-  <div id="pg-news" class="page">
-    <div id="news-content"></div>
   </div>
 
   <!-- ════ TAX ════ -->
@@ -2096,7 +2093,7 @@ function getCat(id,type){ const l=type==='income'?INC_CATS:EXP_CATS; return l.fi
 // ══════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════
-const PAGE_TITLE = {dashboard:'แดชบอร์ด',transactions:'รายรับ-รายจ่าย',savings:'เงินออม',banks:'บัญชีธนาคาร',debts:'หนี้สิน',investments:'พอร์ตลงทุน',news:'ข่าวสารหุ้น',tax:'ภาษีเงินได้',balance:'งบดุล & แผนการเงิน',retire:'แผนเกษียณ',profile:'ประวัติส่วนตัว',settings:'ตั้งค่า'};
+const PAGE_TITLE = {dashboard:'แดชบอร์ด',transactions:'รายรับ-รายจ่าย',savings:'เงินออม',banks:'บัญชีธนาคาร',debts:'หนี้สิน',investments:'พอร์ตลงทุน',tax:'ภาษีเงินได้',balance:'งบดุล & แผนการเงิน',retire:'แผนเกษียณ',profile:'ประวัติส่วนตัว',settings:'ตั้งค่า'};
 let curPage='dashboard', txFilter='all';
 
 function nav(page){
@@ -2120,7 +2117,6 @@ function renderPage(p){
   else if(p==='banks') renderBanks();
   else if(p==='debts') renderDebts();
   else if(p==='investments') renderInv();
-  else if(p==='news') renderNews();
   else if(p==='tax') renderTax();
   else if(p==='balance') renderBalance();
   else if(p==='retire') renderRetire();
@@ -2181,6 +2177,7 @@ function renderDash(){
   renderDashNetWorth();
   renderCatChart();
   renderTrendChart();
+  renderDashBanks();
   renderRecentTx();
   renderDebtSummary();
 }
@@ -4208,13 +4205,13 @@ function saveBank(){
   const banks=getBanks();
   if(id){ const i=banks.findIndex(b=>b.id===id); if(i>=0) banks[i]={...banks[i],...obj}; toast('แก้ไขแล้ว','success'); }
   else { banks.push({id:uid(),...obj}); toast('เพิ่มบัญชีแล้ว','success'); }
-  saveDB(); closeM('m-bank'); renderBanks();
+  saveDB(); closeM('m-bank'); renderBanks(); renderDashBanks();
 }
 
 function deleteBank(id){
   if(!confirm('ลบบัญชีนี้?')) return;
   DB.banks=getBanks().filter(b=>b.id!==id);
-  saveDB(); renderBanks(); toast('ลบแล้ว','info');
+  saveDB(); renderBanks(); renderDashBanks(); toast('ลบแล้ว','info');
 }
 
 function openUpdateBalanceModal(id){
@@ -4225,193 +4222,58 @@ function openUpdateBalanceModal(id){
   if(isNaN(val)){ toast('ยอดเงินไม่ถูกต้อง','error'); return; }
   bank.balance=val;
   bank.updatedAt=new Date().toLocaleDateString('th-TH');
-  saveDB(); renderBanks(); toast(`อัปเดตยอด ${bank.name} แล้ว`,'success');
+  saveDB(); renderBanks(); renderDashBanks(); toast(`อัปเดตยอด ${bank.name} แล้ว`,'success');
 }
 
-// ══════════════════════════════════════════
-//  NEWS
-// ══════════════════════════════════════════
-let _newsState={};
+function renderDashBanks(){
+  const el=document.getElementById('dash-banks-section'); if(!el) return;
+  const banks=getBanks();
+  if(!banks.length){ el.innerHTML=''; return; }
+  const total=banks.reduce((s,b)=>s+b.balance,0);
 
-function renderNews(){
-  const el=document.getElementById('news-content'); if(!el) return;
-  const invs=DB.investments||[];
-
-  let html=`<div class="sec-hd" style="margin-bottom:20px">
-    <div>
-      <div class="sec-title">ข่าวสารหุ้น</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:3px">คลิก "ดูข่าว" เพื่อโหลดข่าวล่าสุด</div>
-    </div>
-    <button class="btn btn-ghost" onclick="_newsState={};renderNews()"><i class="fas fa-arrows-rotate"></i> รีเฟรช</button>
-  </div>`;
-
-  if(!invs.length){
-    html+=`<div class="empty"><i class="fas fa-newspaper" style="font-size:40px;display:block;margin-bottom:12px;color:var(--muted)"></i>
-      <p>ยังไม่มีหุ้นในพอร์ต<br><span style="font-size:13px">เพิ่มการลงทุนก่อนเพื่อดูข่าว</span></p></div>`;
-    el.innerHTML=html; return;
-  }
-
-  // deduplicate by name
-  const seen=new Set();
-  const unique=invs.filter(i=>{ if(seen.has(i.name)) return false; seen.add(i.name); return true; });
-
-  html+=`<div style="display:flex;flex-direction:column;gap:14px">`;
-  unique.forEach(inv=>{
-    const st=_newsState[inv.id]||{};
-    const ico=inv.type==='หุ้น'?'📈':inv.type==='กองทุน'?'💼':inv.type==='คริปโต'?'🪙':inv.type==='ทองคำ'?'🥇':'📦';
-
-    let body='';
-    if(st.loading){
-      body=`<div style="text-align:center;padding:20px;color:var(--muted)"><i class="fas fa-spinner fa-spin"></i> กำลังโหลดข่าว...</div>`;
-    } else if(st.error){
-      body=`<div style="color:#ef4444;font-size:13px;padding:10px 0">${st.error}</div>`;
-    } else if(st.articles&&st.articles.length){
-      body=`<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">`;
-      st.articles.slice(0,8).forEach(a=>{
-        body+=`<div style="padding:7px 0;border-bottom:1px solid var(--border)">
-          <a href="${a.link}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none;font-size:13px;line-height:1.5">${a.title}</a>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">${a.date}</div>
-        </div>`;
-      });
-      body+=`</div>`;
-      if(st.summaryLoading){
-        body+=`<div style="margin-top:10px;text-align:center;color:var(--muted);font-size:13px"><i class="fas fa-spinner fa-spin"></i> AI กำลังวิเคราะห์...</div>`;
-      } else if(st.summary){
-        body+=`<div style="margin-top:12px;background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(6,182,212,.1));border:1px solid rgba(124,58,237,.25);border-radius:12px;padding:14px">
-          <div style="font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:8px"><i class="fas fa-robot"></i> สรุปโดย AI</div>
-          <div style="font-size:13px;line-height:1.8;color:var(--text)">${st.summary.replace(/\n/g,'<br>')}</div>
-        </div>`;
-      } else {
-        body+=`<button class="btn btn-ghost" style="margin-top:10px;font-size:12px" onclick="summarizeNews('${inv.id}')"><i class="fas fa-robot"></i> สรุปด้วย AI</button>`;
-      }
-    }
-
-    html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="font-size:26px">${ico}</div>
+  let rows='';
+  banks.forEach(b=>{
+    const m=BANK_META[b.name]||BANK_META['อื่นๆ'];
+    const pct=total>0?((b.balance/total)*100):0;
+    rows+=`<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+      <div style="width:40px;height:40px;border-radius:11px;background:${m.color}22;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${m.color};flex-shrink:0">${m.abbr}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
           <div>
-            <div style="font-weight:700;font-size:15px">${inv.name}</div>
-            <div style="font-size:12px;color:var(--muted)">${inv.type}${inv.value?` · ${fmt(inv.value)} บาท`:''}</div>
+            <span style="font-size:13px;font-weight:600">${b.name}</span>
+            <span style="font-size:11px;color:var(--muted);margin-left:6px">${b.type||''}</span>
           </div>
+          <span style="font-size:14px;font-weight:700;color:#06b6d4;white-space:nowrap;margin-left:8px">${fmt(b.balance)}</span>
         </div>
-        <button class="btn btn-ghost" style="font-size:12px" onclick="fetchNewsForStock('${inv.id}')" ${st.loading?'disabled':''}>
-          <i class="fas fa-newspaper"></i> ${st.articles?'โหลดใหม่':'ดูข่าว'}
-        </button>
+        <div style="height:4px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden">
+          <div style="height:100%;width:${pct.toFixed(1)}%;background:${m.color};border-radius:99px;transition:width .4s"></div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">${pct.toFixed(1)}% ของยอดรวม</div>
       </div>
-      ${body}
     </div>`;
   });
-  html+=`</div>`;
-  el.innerHTML=html;
-}
 
-function _newsQuery(inv){
-  const name=inv.name.replace(/\.BK$/i,'').replace(/-USD$/i,'');
-  if(inv.type==='หุ้น') return name+' หุ้น ตลาดหลักทรัพย์';
-  if(inv.type==='กองทุน') return name+' กองทุน';
-  if(inv.type==='คริปโต') return name+' crypto';
-  if(inv.type==='ทองคำ') return name+' ทองคำ';
-  return name;
-}
-
-function _fmtNewsDate(s){
-  try{ return s?new Date(s).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''; }catch{ return ''; }
-}
-
-async function _timedFetch(url, ms=12000){
-  const ctrl=new AbortController();
-  const t=setTimeout(()=>ctrl.abort(),ms);
-  try{ const r=await fetch(url,{signal:ctrl.signal}); clearTimeout(t); return r; }
-  finally{ clearTimeout(t); }
-}
-
-async function fetchNewsForStock(invId){
-  const inv=(DB.investments||[]).find(i=>i.id===invId); if(!inv) return;
-  _newsState[invId]={loading:true,articles:null,error:null};
-  renderNews();
-
-  const q=_newsQuery(inv);
-  const rssUrl='https://news.google.com/rss/search?q='+encodeURIComponent(q)+'&hl=th&gl=TH&ceid=TH:th';
-  let articles=[];
-  let lastErr='';
-
-  // 1️⃣ rss2json.com — fast JSON conversion, no XML parsing needed
-  try{
-    const r=await _timedFetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(rssUrl),12000);
-    if(r.ok){
-      const d=await r.json();
-      if(d.status==='ok'&&d.items?.length){
-        articles=d.items.slice(0,10).map(it=>({
-          title:(it.title||'').replace(/<[^>]*>/g,'').trim(),
-          link:it.link||'#',
-          date:_fmtNewsDate(it.pubDate)
-        })).filter(a=>a.title);
-      }
-    }
-  }catch(e){ lastErr=e.message; }
-
-  // 2️⃣ allorigins.win JSON wrapper → parse XML
-  if(!articles.length){
-    try{
-      const r=await _timedFetch('https://api.allorigins.win/get?url='+encodeURIComponent(rssUrl),15000);
-      if(r.ok){
-        const d=await r.json();
-        const xml=d.contents||'';
-        if(xml){
-          const doc=new DOMParser().parseFromString(xml,'text/xml');
-          const raw=el=>el?.textContent?.replace(/<!\[CDATA\[|\]\]>/g,'').trim()||'';
-          articles=Array.from(doc.querySelectorAll('item')).slice(0,10).map(item=>({
-            title:raw(item.querySelector('title')),
-            link:raw(item.querySelector('link'))||raw(item.querySelector('guid'))||'#',
-            date:_fmtNewsDate(raw(item.querySelector('pubDate')))
-          })).filter(a=>a.title);
-        }
-      }
-    }catch(e){ lastErr=e.message; }
-  }
-
-  // 3️⃣ corsproxy.io raw → parse XML
-  if(!articles.length){
-    try{
-      const r=await _timedFetch('https://corsproxy.io/?'+encodeURIComponent(rssUrl),15000);
-      if(r.ok){
-        const xml=await r.text();
-        if(xml&&xml.includes('<item')){
-          const doc=new DOMParser().parseFromString(xml,'text/xml');
-          const raw=el=>el?.textContent?.replace(/<!\[CDATA\[|\]\]>/g,'').trim()||'';
-          articles=Array.from(doc.querySelectorAll('item')).slice(0,10).map(item=>({
-            title:raw(item.querySelector('title')),
-            link:raw(item.querySelector('link'))||raw(item.querySelector('guid'))||'#',
-            date:_fmtNewsDate(raw(item.querySelector('pubDate')))
-          })).filter(a=>a.title);
-        }
-      }
-    }catch(e){ lastErr=e.message; }
-  }
-
-  if(articles.length){
-    _newsState[invId]={loading:false,articles,error:null};
-  } else {
-    _newsState[invId]={loading:false,articles:null,error:'โหลดข่าวไม่ได้: '+lastErr};
-  }
-  renderNews();
-}
-
-async function summarizeNews(invId){
-  const inv=(DB.investments||[]).find(i=>i.id===invId); if(!inv) return;
-  const st=_newsState[invId]; if(!st?.articles?.length) return;
-  _newsState[invId]={...st,summaryLoading:true,summary:null};
-  renderNews();
-  try{
-    const lines=st.articles.slice(0,8).map((a,i)=>`${i+1}. ${a.title}`).join('\n');
-    const {data}=await callGemini([{role:'user',parts:[{text:`คุณเป็นนักวิเคราะห์การเงินชาวไทย\nวิเคราะห์ข่าวต่อไปนี้เกี่ยวกับ "${inv.name}" (${inv.type}) แล้วสรุปเป็นภาษาไทย 3-5 ประโยค\nบอกว่าข่าวโดยรวมบวกหรือลบต่อราคา และประเด็นสำคัญที่นักลงทุนควรรู้:\n\n${lines}`}]}],{temperature:0.5,maxOutputTokens:600});
-    const text=data?.candidates?.[0]?.content?.parts?.[0]?.text||'ไม่สามารถสรุปได้';
-    _newsState[invId]={...(_newsState[invId]||{}),summaryLoading:false,summary:text,articles:st.articles};
-  }catch(e){
-    _newsState[invId]={...(_newsState[invId]||{}),summaryLoading:false,summary:'เกิดข้อผิดพลาด: '+e.message,articles:st.articles};
-  }
-  renderNews();
+  el.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(6,182,212,.06)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;border-radius:9px;background:rgba(6,182,212,.15);display:flex;align-items:center;justify-content:center">
+          <i class="fas fa-university" style="color:#06b6d4;font-size:14px"></i>
+        </div>
+        <div>
+          <div style="font-size:15px;font-weight:700">บัญชีธนาคาร</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:1px">${banks.length} บัญชี</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="text-align:right">
+          <div style="font-size:11px;color:var(--muted)">ยอดรวม</div>
+          <div style="font-size:20px;font-weight:800;color:#06b6d4">${fmt(total)}</div>
+        </div>
+        <button class="btn btn-ghost" style="padding:4px 12px;font-size:12px" onclick="nav('banks')"><i class="fas fa-arrow-right" style="margin-right:4px"></i>ดูทั้งหมด</button>
+      </div>
+    </div>
+    <div style="padding:4px 18px 8px">${rows}</div>
+  </div>`;
 }
 
 // ══════════════════════════════════════════
