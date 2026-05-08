@@ -4306,19 +4306,6 @@ function renderNews(){
   el.innerHTML=html;
 }
 
-async function _fetchRssText(url){
-  const proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
-  const ctrl=new AbortController();
-  const t=setTimeout(()=>ctrl.abort(),10000);
-  try{
-    const r=await fetch(proxy,{signal:ctrl.signal});
-    clearTimeout(t);
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const d=await r.json();
-    return d.contents||'';
-  }finally{ clearTimeout(t); }
-}
-
 function _newsQuery(inv){
   const name=inv.name.replace(/\.BK$/i,'').replace(/-USD$/i,'');
   if(inv.type==='หุ้น') return name+' หุ้น ตลาดหลักทรัพย์';
@@ -4328,31 +4315,85 @@ function _newsQuery(inv){
   return name;
 }
 
+function _fmtNewsDate(s){
+  try{ return s?new Date(s).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''; }catch{ return ''; }
+}
+
+async function _timedFetch(url, ms=12000){
+  const ctrl=new AbortController();
+  const t=setTimeout(()=>ctrl.abort(),ms);
+  try{ const r=await fetch(url,{signal:ctrl.signal}); clearTimeout(t); return r; }
+  finally{ clearTimeout(t); }
+}
+
 async function fetchNewsForStock(invId){
   const inv=(DB.investments||[]).find(i=>i.id===invId); if(!inv) return;
   _newsState[invId]={loading:true,articles:null,error:null};
   renderNews();
+
+  const q=_newsQuery(inv);
+  const rssUrl='https://news.google.com/rss/search?q='+encodeURIComponent(q)+'&hl=th&gl=TH&ceid=TH:th';
+  let articles=[];
+  let lastErr='';
+
+  // 1️⃣ rss2json.com — fast JSON conversion, no XML parsing needed
   try{
-    const q=_newsQuery(inv);
-    const rssUrl='https://news.google.com/rss/search?q='+encodeURIComponent(q)+'&hl=th&gl=TH&ceid=TH:th';
-    const xml=await _fetchRssText(rssUrl);
-    if(!xml) throw new Error('ไม่ได้รับข้อมูล');
-    const doc=new DOMParser().parseFromString(xml,'text/xml');
-    const items=Array.from(doc.querySelectorAll('item'));
-    if(!items.length) throw new Error('ไม่พบข่าวสำหรับ '+inv.name);
-    const articles=items.slice(0,10).map(item=>{
-      const raw=t=>t?.textContent?.replace(/<!\[CDATA\[|\]\]>/g,'').trim()||'';
-      const title=raw(item.querySelector('title'));
-      const link=raw(item.querySelector('link'))||raw(item.querySelector('guid'));
-      const pubDate=raw(item.querySelector('pubDate'));
-      let date='';
-      try{ if(pubDate) date=new Date(pubDate).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); }catch{}
-      return {title,link:link||'#',date};
-    }).filter(a=>a.title);
-    if(!articles.length) throw new Error('ไม่พบหัวข่าวใน RSS');
+    const r=await _timedFetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(rssUrl),12000);
+    if(r.ok){
+      const d=await r.json();
+      if(d.status==='ok'&&d.items?.length){
+        articles=d.items.slice(0,10).map(it=>({
+          title:(it.title||'').replace(/<[^>]*>/g,'').trim(),
+          link:it.link||'#',
+          date:_fmtNewsDate(it.pubDate)
+        })).filter(a=>a.title);
+      }
+    }
+  }catch(e){ lastErr=e.message; }
+
+  // 2️⃣ allorigins.win JSON wrapper → parse XML
+  if(!articles.length){
+    try{
+      const r=await _timedFetch('https://api.allorigins.win/get?url='+encodeURIComponent(rssUrl),15000);
+      if(r.ok){
+        const d=await r.json();
+        const xml=d.contents||'';
+        if(xml){
+          const doc=new DOMParser().parseFromString(xml,'text/xml');
+          const raw=el=>el?.textContent?.replace(/<!\[CDATA\[|\]\]>/g,'').trim()||'';
+          articles=Array.from(doc.querySelectorAll('item')).slice(0,10).map(item=>({
+            title:raw(item.querySelector('title')),
+            link:raw(item.querySelector('link'))||raw(item.querySelector('guid'))||'#',
+            date:_fmtNewsDate(raw(item.querySelector('pubDate')))
+          })).filter(a=>a.title);
+        }
+      }
+    }catch(e){ lastErr=e.message; }
+  }
+
+  // 3️⃣ corsproxy.io raw → parse XML
+  if(!articles.length){
+    try{
+      const r=await _timedFetch('https://corsproxy.io/?'+encodeURIComponent(rssUrl),15000);
+      if(r.ok){
+        const xml=await r.text();
+        if(xml&&xml.includes('<item')){
+          const doc=new DOMParser().parseFromString(xml,'text/xml');
+          const raw=el=>el?.textContent?.replace(/<!\[CDATA\[|\]\]>/g,'').trim()||'';
+          articles=Array.from(doc.querySelectorAll('item')).slice(0,10).map(item=>({
+            title:raw(item.querySelector('title')),
+            link:raw(item.querySelector('link'))||raw(item.querySelector('guid'))||'#',
+            date:_fmtNewsDate(raw(item.querySelector('pubDate')))
+          })).filter(a=>a.title);
+        }
+      }
+    }catch(e){ lastErr=e.message; }
+  }
+
+  if(articles.length){
     _newsState[invId]={loading:false,articles,error:null};
-  }catch(e){
-    _newsState[invId]={loading:false,articles:null,error:'โหลดข่าวไม่ได้: '+e.message};
+  } else {
+    _newsState[invId]={loading:false,articles:null,error:'โหลดข่าวไม่ได้: '+lastErr};
   }
   renderNews();
 }
