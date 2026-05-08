@@ -1083,6 +1083,12 @@
       <div class="fg"><label class="flabel">วันที่</label><input type="date" id="tx-date" class="finput"></div>
     </div>
     <div class="fg"><label class="flabel">รายละเอียด</label><input type="text" id="tx-desc" class="finput" placeholder="เช่น ค่าอาหารกลางวัน, เงินเดือน"></div>
+    <div class="fg" id="tx-bank-row">
+      <label class="flabel">ธนาคาร (ไม่บังคับ — จะอัปเดตยอดอัตโนมัติ)</label>
+      <select id="tx-bank" class="finput">
+        <option value="">— ไม่ระบุ —</option>
+      </select>
+    </div>
     <div id="carryover-row" style="display:none;margin-bottom:4px">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:10px">
         <input type="checkbox" id="tx-carryover" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer">
@@ -1381,6 +1387,7 @@
         <option value="ทหารไทยธนชาต">🟠 ทหารไทยธนชาต (TTB)</option>
         <option value="ยูโอบี">🔷 ยูโอบี (UOB)</option>
         <option value="ซีไอเอ็มบี">🔴 ซีไอเอ็มบี (CIMB)</option>
+        <option value="เกียรตินาคินภัทร">🔵 เกียรตินาคินภัทร (KKP)</option>
         <option value="ทรูมันนี่ วอลเล็ท">🟠 ทรูมันนี่ วอลเล็ท</option>
         <option value="อื่นๆ">⚪ อื่นๆ</option>
       </select>
@@ -2483,6 +2490,16 @@ function setFilter(f,el){ txFilter=f; document.querySelectorAll('.ftab').forEach
 // ── Add / Edit Transaction ──
 let editTxId=null;
 
+function _populateTxBankDropdown(selectedId=''){
+  const sel=document.getElementById('tx-bank'); if(!sel) return;
+  const banks=getBanks();
+  sel.innerHTML='<option value="">— ไม่ระบุ —</option>'+banks.map(b=>{
+    const m=BANK_META[b.name]||BANK_META['อื่นๆ'];
+    const last4=b.accountNo?` ····${b.accountNo}`:'';
+    return `<option value="${b.id}"${b.id===selectedId?' selected':''}>[${m.abbr}] ${b.name}${last4} (${fmt(b.balance)})</option>`;
+  }).join('');
+}
+
 function openTxModal(pre=null){
   editTxId=null;
   document.getElementById('tx-eid').value='';
@@ -2490,6 +2507,7 @@ function openTxModal(pre=null){
   document.getElementById('tx-amt').value='';
   document.getElementById('tx-desc').value='';
   document.getElementById('tx-date').value=new Date().toISOString().split('T')[0];
+  _populateTxBankDropdown();
   setTxType(pre?.type||'income');
   if(pre){ document.getElementById('tx-amt').value=pre.amount||''; document.getElementById('tx-desc').value=pre.desc||''; document.getElementById('tx-date').value=pre.date||new Date().toISOString().split('T')[0]; if(pre.cat) setTimeout(()=>document.getElementById('tx-cat').value=pre.cat,10); }
   openM('m-tx');
@@ -2504,6 +2522,7 @@ function editTx(id){
   document.getElementById('tx-amt').value=tx.amount;
   document.getElementById('tx-desc').value=tx.description;
   document.getElementById('tx-date').value=tx.date;
+  _populateTxBankDropdown(tx.bankId||'');
   setTxType(tx.type);
   setTimeout(()=>{
     document.getElementById('tx-cat').value=tx.category;
@@ -2524,6 +2543,14 @@ function setTxType(type,btn){
   if(type!=='income') document.getElementById('tx-carryover').checked=false;
 }
 
+function _adjustBankBalance(bankId, type, amount, reverse=false){
+  if(!bankId) return;
+  const bank=getBanks().find(b=>b.id===bankId); if(!bank) return;
+  const delta = (type==='income'?amount:-amount) * (reverse?-1:1);
+  bank.balance=Math.max(0, bank.balance+delta);
+  bank.updatedAt=new Date().toLocaleDateString('th-TH');
+}
+
 function saveTx(){
   const amt=parseFloat(document.getElementById('tx-amt').value);
   const cat=document.getElementById('tx-cat').value;
@@ -2531,22 +2558,31 @@ function saveTx(){
   const desc=document.getElementById('tx-desc').value.trim();
   const type=document.getElementById('tx-type').value;
   const carryover=type==='income'&&document.getElementById('tx-carryover').checked;
+  const bankId=document.getElementById('tx-bank')?.value||'';
   if(!amt||amt<=0){ toast('กรุณาใส่จำนวนเงิน','error'); return; }
   if(!date){ toast('กรุณาเลือกวันที่','error'); return; }
-  const obj={amount:amt,category:cat,date,description:desc||getCat(cat,type).label,type,carryover};
+  const obj={amount:amt,category:cat,date,description:desc||getCat(cat,type).label,type,carryover,bankId:bankId||null};
   if(editTxId){
     const i=DB.transactions.findIndex(t=>t.id===editTxId);
-    if(i>=0) DB.transactions[i]={...DB.transactions[i],...obj};
+    if(i>=0){
+      const old=DB.transactions[i];
+      // ย้อนยอดเก่า แล้วใส่ยอดใหม่
+      if(old.bankId) _adjustBankBalance(old.bankId, old.type, old.amount, true);
+      DB.transactions[i]={...old,...obj};
+    }
     toast('แก้ไขแล้ว','success');
   } else {
     DB.transactions.push({id:uid(),...obj});
     toast(carryover?'เพิ่มรายการและตั้งเป็นงบเดือนหน้าแล้ว':'เพิ่มรายการแล้ว','success');
   }
+  if(bankId) _adjustBankBalance(bankId, type, amt);
   saveDB(); closeM('m-tx'); renderPage(curPage);
 }
 
 function delTx(id){
   if(!confirm('ต้องการลบรายการนี้?')) return;
+  const tx=DB.transactions.find(t=>t.id===id);
+  if(tx?.bankId) _adjustBankBalance(tx.bankId, tx.type, tx.amount, true); // ย้อนยอดธนาคาร
   DB.transactions=DB.transactions.filter(t=>t.id!==id);
   saveDB(); renderPage(curPage); toast('ลบแล้ว','info');
 }
@@ -3978,6 +4014,7 @@ const BANK_META={
   'ทหารไทยธนชาต':{color:'#f47920',abbr:'TTB'},
   'ยูโอบี':      {color:'#0066b2',abbr:'UOB'},
   'ซีไอเอ็มบี':  {color:'#d71c2e',abbr:'CIMB'},
+  'เกียรตินาคินภัทร':{color:'#003f87',abbr:'KKP'},
   'ทรูมันนี่ วอลเล็ท':{color:'#f47920',abbr:'TRUE'},
   'อื่นๆ':       {color:'#64748b',abbr:'???'},
 };
@@ -4056,7 +4093,7 @@ function renderBanks(){
   el.innerHTML=html;
 }
 
-const BANK_COLORS={'กสิกรไทย':'#00b140','ไทยพาณิชย์':'#4e2d8c','กรุงเทพ':'#1d3c8c','กรุงไทย':'#00adef','กรุงศรี':'#d4a500','ออมสิน':'#d81b8c','ธ.ก.ส.':'#006633','ทหารไทยธนชาต':'#f47920','ยูโอบี':'#0066b2','ซีไอเอ็มบี':'#d71c2e','ทรูมันนี่ วอลเล็ท':'#f47920','อื่นๆ':'#64748b'};
+const BANK_COLORS={'กสิกรไทย':'#00b140','ไทยพาณิชย์':'#4e2d8c','กรุงเทพ':'#1d3c8c','กรุงไทย':'#00adef','กรุงศรี':'#d4a500','ออมสิน':'#d81b8c','ธ.ก.ส.':'#006633','ทหารไทยธนชาต':'#f47920','ยูโอบี':'#0066b2','ซีไอเอ็มบี':'#d71c2e','เกียรตินาคินภัทร':'#003f87','ทรูมันนี่ วอลเล็ท':'#f47920','อื่นๆ':'#64748b'};
 function onBankNameChange(){ /* placeholder for future auto-color */ }
 
 function openBankModal(id){
