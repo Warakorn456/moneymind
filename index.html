@@ -1482,8 +1482,9 @@ function saveLocalOnly(){
 }
 function saveDB(){
   if(!currentUser) return;
+  DB._savedAt=Date.now(); // version stamp — ใช้เปรียบเทียบกับ Firestore
   localStorage.setItem(userDataKey(currentUser),JSON.stringify(DB));
-  _lastSaveTs=Date.now();
+  _lastSaveTs=DB._savedAt;
   clearTimeout(_saveTimer);
   _saveTimer=setTimeout(()=>{ setSyncStatus('syncing'); fsSave(); },1500);
 }
@@ -1556,8 +1557,16 @@ async function fsLoad(){
     ]);
     if(doc.exists&&doc.data()&&doc.data().db){
       const remote=JSON.parse(doc.data().db);
-      DB={...DB,...remote};
-      saveLocalOnly();
+      const localTs=DB._savedAt||0;
+      const remoteTs=remote._savedAt||0;
+      if(remoteTs>=localTs){
+        // cloud ใหม่กว่าหรือเท่ากัน → ใช้ cloud
+        DB={...DB,...remote};
+        saveLocalOnly();
+      } else {
+        // local ใหม่กว่า (เช่น ปิด tab ก่อน Firestore write เสร็จ) → push local ขึ้น cloud
+        setTimeout(()=>fsSave(),2000);
+      }
       setSyncStatus('ok');
       return true;
     }
@@ -1579,14 +1588,19 @@ function fsListen(){
     const data=snap.data();
     if(!data||!data.db) return;
     try{
-      // snapshot ที่ bounce กลับจาก write ของเราเอง — ไม่ต้อง merge ทับ
-      if(Date.now()-_lastSaveTs<4000){ setSyncStatus('ok'); return; }
+      // guard เร็ว: ถ้าเพิ่ง save ไปไม่ถึง 2 วินาที ข้ามได้เลย
+      if(Date.now()-_lastSaveTs<2000){ setSyncStatus('ok'); return; }
       const remote=JSON.parse(data.db);
+      const localTs=DB._savedAt||0;
+      const remoteTs=remote._savedAt||0;
+      // remote ไม่ใหม่กว่า local → เป็น bounce-back จาก write เรา หรือ device อื่นช้ากว่า
+      if(remoteTs<=localTs){ setSyncStatus('ok'); return; }
+      // remote ใหม่กว่า → อุปกรณ์อื่น sync มา
       DB={...DB,...remote};
       saveLocalOnly();
       setSyncStatus('ok');
-      // ถ้ามี modal เปิดอยู่หรือ user กำลังพิมพ์ → อย่า re-render ทับ
-      const modalOpen=document.querySelector('.overlay.active,.plan-modal-bg.active,.modal-bg.active,[class*="modal"][style*="flex"],[class*="modal"][style*="block"]');
+      // ถ้ามี input focused หรือ modal เปิดอยู่ → defer re-render
+      const modalOpen=document.querySelector('.overlay.show,.plan-modal-bg.active,.modal-bg.active');
       const inputFocused=document.activeElement&&['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName);
       if(modalOpen||inputFocused){
         toast('มีข้อมูลใหม่จากอุปกรณ์อื่น ☁️ (จะโหลดหลังปิดฟอร์ม)','info');
