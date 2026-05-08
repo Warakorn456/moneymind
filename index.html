@@ -1401,6 +1401,7 @@
         <option value="ซีไอเอ็มบี">🔴 ซีไอเอ็มบี (CIMB)</option>
         <option value="เกียรตินาคินภัทร">🔵 เกียรตินาคินภัทร (KKP)</option>
         <option value="ทรูมันนี่ วอลเล็ท">🟠 ทรูมันนี่ วอลเล็ท</option>
+        <option value="กระเป๋าตังค์เงินสด">💵 กระเป๋าตังค์เงินสด</option>
         <option value="อื่นๆ">⚪ อื่นๆ</option>
       </select>
     </div>
@@ -1411,6 +1412,7 @@
           <option value="กระแสรายวัน">กระแสรายวัน</option>
           <option value="ฝากประจำ">ฝากประจำ</option>
           <option value="กระเป๋าเงิน">กระเป๋าเงิน</option>
+          <option value="เงินสด">เงินสด</option>
         </select>
       </div>
       <div class="fg"><label class="flabel">เลขบัญชี (4 หลักสุดท้าย)</label>
@@ -4105,6 +4107,7 @@ const BANK_META={
   'ซีไอเอ็มบี':  {color:'#d71c2e',abbr:'CIMB'},
   'เกียรตินาคินภัทร':{color:'#003f87',abbr:'KKP'},
   'ทรูมันนี่ วอลเล็ท':{color:'#f47920',abbr:'TRUE'},
+  'กระเป๋าตังค์เงินสด':{color:'#22c55e',abbr:'CASH'},
   'อื่นๆ':       {color:'#64748b',abbr:'???'},
 };
 
@@ -4183,7 +4186,10 @@ function renderBanks(){
 }
 
 const BANK_COLORS={'กสิกรไทย':'#00b140','ไทยพาณิชย์':'#4e2d8c','กรุงเทพ':'#1d3c8c','กรุงไทย':'#00adef','กรุงศรี':'#d4a500','ออมสิน':'#d81b8c','ธ.ก.ส.':'#006633','ทหารไทยธนชาต':'#f47920','ยูโอบี':'#0066b2','ซีไอเอ็มบี':'#d71c2e','เกียรตินาคินภัทร':'#003f87','ทรูมันนี่ วอลเล็ท':'#f47920','อื่นๆ':'#64748b'};
-function onBankNameChange(){ /* placeholder for future auto-color */ }
+function onBankNameChange(){
+  const name=document.getElementById('bank-name').value;
+  if(name==='กระเป๋าตังค์เงินสด') document.getElementById('bank-type').value='เงินสด';
+}
 
 function openBankModal(id){
   const bank=id?getBanks().find(b=>b.id===id):null;
