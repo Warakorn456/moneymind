@@ -4746,6 +4746,24 @@ function renderTax(){
 // ══════════════════════════════════════════
 //  BALANCE SHEET & FINANCIAL PLAN
 // ══════════════════════════════════════════
+function getPlanEndYear(){
+  const now=new Date().getFullYear();
+  let endY=now+20;
+  // extend to cover plan items
+  (getPlan().items||[]).forEach(item=>{
+    if(item.to) endY=Math.max(endY,parseInt(item.to.split('-')[0]));
+    if(item.from) endY=Math.max(endY,parseInt(item.from.split('-')[0]));
+  });
+  // extend to retire life expectancy (if DOB is set)
+  const r=DB.retire;
+  if(r&&r.lifeAge&&DB.profile&&DB.profile.dob){
+    const dobY=new Date(DB.profile.dob).getFullYear();
+    const curAge=now-dobY;
+    endY=Math.max(endY,now+(r.lifeAge-curAge));
+  }
+  return endY;
+}
+
 function getPlan(){
   if(!DB.plan) DB.plan={monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]};
   if(!DB.plan.extraAssets) DB.plan.extraAssets=[];
@@ -4821,13 +4839,15 @@ function renderPlanChart(year){
   };
 
   if(year==null){
-    // ── Yearly view (20 ปี) ──
-    if(titleEl) titleEl.innerHTML='<i class="fas fa-chart-bar" style="color:var(--primary-l)"></i> ภาพรวมรายปี (20 ปีข้างหน้า)';
+    // ── Yearly view ──
+    const sy=new Date().getFullYear();
+    const endY=getPlanEndYear();
+    const numYears=Math.max(20,endY-sy+1);
+    if(titleEl) titleEl.innerHTML=`<i class="fas fa-chart-bar" style="color:var(--primary-l)"></i> ภาพรวมรายปี (ถึงปี ${endY} / พ.ศ. ${endY+543})`;
     if(backBtn) backBtn.style.display='none';
     const nw0=calcNetWorth(); let cumNW=nw0.netWorth;
     const labels=[],inc=[],exp=[],nwArr=[];
-    const sy=new Date().getFullYear();
-    for(let i=0;i<20;i++){
+    for(let i=0;i<numYears;i++){
       const yr=sy+i; const ys=getYearSummary(yr);
       cumNW+=ys.balance;
       labels.push(String(yr));
@@ -5294,8 +5314,10 @@ function renderBalance(){
   const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   let cumNW=nw.netWorth;
   let planRows='';
+  const endYear=getPlanEndYear();
+  const numPlanYears=Math.max(20,endYear-startYear+1);
 
-  for(let yi=0;yi<80;yi++){
+  for(let yi=0;yi<numPlanYears;yi++){
     const yr=startYear+yi;
     const ys=getYearSummary(yr);
     cumNW+=ys.balance;
@@ -5418,7 +5440,7 @@ function renderBalance(){
   <!-- Plan Chart -->
   <div class="bs-card" style="margin-bottom:16px;padding:18px 20px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-      <div id="plan-chart-title" style="font-size:15px;font-weight:700"><i class="fas fa-chart-bar" style="color:var(--primary-l)"></i> ภาพรวมรายปี (20 ปีข้างหน้า)</div>
+      <div id="plan-chart-title" style="font-size:15px;font-weight:700"><i class="fas fa-chart-bar" style="color:var(--primary-l)"></i> ภาพรวมรายปี</div>
       <button id="plan-chart-back" onclick="renderPlanChart(null)" style="display:none;background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);color:#a78bfa;border-radius:8px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:Sarabun,sans-serif"><i class="fas fa-arrow-left"></i> กลับภาพรวม</button>
     </div>
     <div style="position:relative;height:280px"><canvas id="plan-chart"></canvas></div>
@@ -5427,7 +5449,7 @@ function renderBalance(){
 
   <!-- Plan Accordion -->
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
-    <div style="font-size:15px;font-weight:700"><i class="fas fa-chart-line" style="color:var(--primary-l)"></i> แผนการเงิน 80 ปี</div>
+    <div style="font-size:15px;font-weight:700"><i class="fas fa-chart-line" style="color:var(--primary-l)"></i> แผนการเงิน (ถึงปี ${endYear} / พ.ศ. ${endYear+543})</div>
     <button class="btn btn-primary" onclick="openPlanModal()"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
   </div>
   <div style="font-size:12px;color:var(--muted);margin-bottom:10px"><i class="fas fa-hand-pointer"></i> คลิกที่แถวปีเพื่อขยาย/ย่อดูรายเดือน — กด <b style="color:#a78bfa">+ เพิ่ม</b> ในเดือนนั้นเพื่อใส่รายรับ/รายจ่าย</div>
