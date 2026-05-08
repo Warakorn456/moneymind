@@ -590,6 +590,7 @@
     <div class="nav-item" onclick="nav('banks')"><i class="fas fa-university"></i> ธนาคาร</div>
     <div class="nav-item" onclick="nav('debts')"><i class="fas fa-credit-card"></i> หนี้สิน</div>
     <div class="nav-item" onclick="nav('investments')"><i class="fas fa-chart-line"></i> พอร์ตลงทุน</div>
+    <div class="nav-item" onclick="nav('news')"><i class="fas fa-newspaper"></i> ข่าวสาร</div>
     <div class="nav-item" onclick="nav('tax')"><i class="fas fa-file-invoice"></i> ภาษีเงินได้</div>
     <div class="nav-item" onclick="nav('balance')"><i class="fas fa-balance-scale"></i> งบดุล & แผน</div>
     <div class="nav-item" onclick="nav('retire')"><i class="fas fa-umbrella-beach"></i> แผนเกษียณ</div>
@@ -823,6 +824,11 @@
       </div>
     </div>
     <div id="inv-content"></div>
+  </div>
+
+  <!-- ════ NEWS ════ -->
+  <div id="pg-news" class="page">
+    <div id="news-content"></div>
   </div>
 
   <!-- ════ TAX ════ -->
@@ -2090,7 +2096,7 @@ function getCat(id,type){ const l=type==='income'?INC_CATS:EXP_CATS; return l.fi
 // ══════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════
-const PAGE_TITLE = {dashboard:'แดชบอร์ด',transactions:'รายรับ-รายจ่าย',savings:'เงินออม',banks:'บัญชีธนาคาร',debts:'หนี้สิน',investments:'พอร์ตลงทุน',tax:'ภาษีเงินได้',balance:'งบดุล & แผนการเงิน',retire:'แผนเกษียณ',profile:'ประวัติส่วนตัว',settings:'ตั้งค่า'};
+const PAGE_TITLE = {dashboard:'แดชบอร์ด',transactions:'รายรับ-รายจ่าย',savings:'เงินออม',banks:'บัญชีธนาคาร',debts:'หนี้สิน',investments:'พอร์ตลงทุน',news:'ข่าวสารหุ้น',tax:'ภาษีเงินได้',balance:'งบดุล & แผนการเงิน',retire:'แผนเกษียณ',profile:'ประวัติส่วนตัว',settings:'ตั้งค่า'};
 let curPage='dashboard', txFilter='all';
 
 function nav(page){
@@ -2114,6 +2120,7 @@ function renderPage(p){
   else if(p==='banks') renderBanks();
   else if(p==='debts') renderDebts();
   else if(p==='investments') renderInv();
+  else if(p==='news') renderNews();
   else if(p==='tax') renderTax();
   else if(p==='balance') renderBalance();
   else if(p==='retire') renderRetire();
@@ -4219,6 +4226,151 @@ function openUpdateBalanceModal(id){
   bank.balance=val;
   bank.updatedAt=new Date().toLocaleDateString('th-TH');
   saveDB(); renderBanks(); toast(`อัปเดตยอด ${bank.name} แล้ว`,'success');
+}
+
+// ══════════════════════════════════════════
+//  NEWS
+// ══════════════════════════════════════════
+let _newsState={};
+
+function renderNews(){
+  const el=document.getElementById('news-content'); if(!el) return;
+  const invs=DB.investments||[];
+
+  let html=`<div class="sec-hd" style="margin-bottom:20px">
+    <div>
+      <div class="sec-title">ข่าวสารหุ้น</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px">คลิก "ดูข่าว" เพื่อโหลดข่าวล่าสุด</div>
+    </div>
+    <button class="btn btn-ghost" onclick="_newsState={};renderNews()"><i class="fas fa-arrows-rotate"></i> รีเฟรช</button>
+  </div>`;
+
+  if(!invs.length){
+    html+=`<div class="empty"><i class="fas fa-newspaper" style="font-size:40px;display:block;margin-bottom:12px;color:var(--muted)"></i>
+      <p>ยังไม่มีหุ้นในพอร์ต<br><span style="font-size:13px">เพิ่มการลงทุนก่อนเพื่อดูข่าว</span></p></div>`;
+    el.innerHTML=html; return;
+  }
+
+  // deduplicate by name
+  const seen=new Set();
+  const unique=invs.filter(i=>{ if(seen.has(i.name)) return false; seen.add(i.name); return true; });
+
+  html+=`<div style="display:flex;flex-direction:column;gap:14px">`;
+  unique.forEach(inv=>{
+    const st=_newsState[inv.id]||{};
+    const ico=inv.type==='หุ้น'?'📈':inv.type==='กองทุน'?'💼':inv.type==='คริปโต'?'🪙':inv.type==='ทองคำ'?'🥇':'📦';
+
+    let body='';
+    if(st.loading){
+      body=`<div style="text-align:center;padding:20px;color:var(--muted)"><i class="fas fa-spinner fa-spin"></i> กำลังโหลดข่าว...</div>`;
+    } else if(st.error){
+      body=`<div style="color:#ef4444;font-size:13px;padding:10px 0">${st.error}</div>`;
+    } else if(st.articles&&st.articles.length){
+      body=`<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">`;
+      st.articles.slice(0,8).forEach(a=>{
+        body+=`<div style="padding:7px 0;border-bottom:1px solid var(--border)">
+          <a href="${a.link}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none;font-size:13px;line-height:1.5">${a.title}</a>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${a.date}</div>
+        </div>`;
+      });
+      body+=`</div>`;
+      if(st.summaryLoading){
+        body+=`<div style="margin-top:10px;text-align:center;color:var(--muted);font-size:13px"><i class="fas fa-spinner fa-spin"></i> AI กำลังวิเคราะห์...</div>`;
+      } else if(st.summary){
+        body+=`<div style="margin-top:12px;background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(6,182,212,.1));border:1px solid rgba(124,58,237,.25);border-radius:12px;padding:14px">
+          <div style="font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:8px"><i class="fas fa-robot"></i> สรุปโดย AI</div>
+          <div style="font-size:13px;line-height:1.8;color:var(--text)">${st.summary.replace(/\n/g,'<br>')}</div>
+        </div>`;
+      } else {
+        body+=`<button class="btn btn-ghost" style="margin-top:10px;font-size:12px" onclick="summarizeNews('${inv.id}')"><i class="fas fa-robot"></i> สรุปด้วย AI</button>`;
+      }
+    }
+
+    html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:26px">${ico}</div>
+          <div>
+            <div style="font-weight:700;font-size:15px">${inv.name}</div>
+            <div style="font-size:12px;color:var(--muted)">${inv.type}${inv.value?` · ${fmt(inv.value)} บาท`:''}</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost" style="font-size:12px" onclick="fetchNewsForStock('${inv.id}')" ${st.loading?'disabled':''}>
+          <i class="fas fa-newspaper"></i> ${st.articles?'โหลดใหม่':'ดูข่าว'}
+        </button>
+      </div>
+      ${body}
+    </div>`;
+  });
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+
+async function _fetchRssText(url){
+  const proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
+  const ctrl=new AbortController();
+  const t=setTimeout(()=>ctrl.abort(),10000);
+  try{
+    const r=await fetch(proxy,{signal:ctrl.signal});
+    clearTimeout(t);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    return d.contents||'';
+  }finally{ clearTimeout(t); }
+}
+
+function _newsQuery(inv){
+  const name=inv.name.replace(/\.BK$/i,'').replace(/-USD$/i,'');
+  if(inv.type==='หุ้น') return name+' หุ้น ตลาดหลักทรัพย์';
+  if(inv.type==='กองทุน') return name+' กองทุน';
+  if(inv.type==='คริปโต') return name+' crypto';
+  if(inv.type==='ทองคำ') return name+' ทองคำ';
+  return name;
+}
+
+async function fetchNewsForStock(invId){
+  const inv=(DB.investments||[]).find(i=>i.id===invId); if(!inv) return;
+  _newsState[invId]={loading:true,articles:null,error:null};
+  renderNews();
+  try{
+    const q=_newsQuery(inv);
+    const rssUrl='https://news.google.com/rss/search?q='+encodeURIComponent(q)+'&hl=th&gl=TH&ceid=TH:th';
+    const xml=await _fetchRssText(rssUrl);
+    if(!xml) throw new Error('ไม่ได้รับข้อมูล');
+    const doc=new DOMParser().parseFromString(xml,'text/xml');
+    const items=Array.from(doc.querySelectorAll('item'));
+    if(!items.length) throw new Error('ไม่พบข่าวสำหรับ '+inv.name);
+    const articles=items.slice(0,10).map(item=>{
+      const raw=t=>t?.textContent?.replace(/<!\[CDATA\[|\]\]>/g,'').trim()||'';
+      const title=raw(item.querySelector('title'));
+      const link=raw(item.querySelector('link'))||raw(item.querySelector('guid'));
+      const pubDate=raw(item.querySelector('pubDate'));
+      let date='';
+      try{ if(pubDate) date=new Date(pubDate).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); }catch{}
+      return {title,link:link||'#',date};
+    }).filter(a=>a.title);
+    if(!articles.length) throw new Error('ไม่พบหัวข่าวใน RSS');
+    _newsState[invId]={loading:false,articles,error:null};
+  }catch(e){
+    _newsState[invId]={loading:false,articles:null,error:'โหลดข่าวไม่ได้: '+e.message};
+  }
+  renderNews();
+}
+
+async function summarizeNews(invId){
+  const inv=(DB.investments||[]).find(i=>i.id===invId); if(!inv) return;
+  const st=_newsState[invId]; if(!st?.articles?.length) return;
+  _newsState[invId]={...st,summaryLoading:true,summary:null};
+  renderNews();
+  try{
+    const lines=st.articles.slice(0,8).map((a,i)=>`${i+1}. ${a.title}`).join('\n');
+    const {data}=await callGemini([{role:'user',parts:[{text:`คุณเป็นนักวิเคราะห์การเงินชาวไทย\nวิเคราะห์ข่าวต่อไปนี้เกี่ยวกับ "${inv.name}" (${inv.type}) แล้วสรุปเป็นภาษาไทย 3-5 ประโยค\nบอกว่าข่าวโดยรวมบวกหรือลบต่อราคา และประเด็นสำคัญที่นักลงทุนควรรู้:\n\n${lines}`}]}],{temperature:0.5,maxOutputTokens:600});
+    const text=data?.candidates?.[0]?.content?.parts?.[0]?.text||'ไม่สามารถสรุปได้';
+    _newsState[invId]={...(_newsState[invId]||{}),summaryLoading:false,summary:text,articles:st.articles};
+  }catch(e){
+    _newsState[invId]={...(_newsState[invId]||{}),summaryLoading:false,summary:'เกิดข้อผิดพลาด: '+e.message,articles:st.articles};
+  }
+  renderNews();
 }
 
 // ══════════════════════════════════════════
