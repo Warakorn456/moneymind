@@ -1298,11 +1298,35 @@
     </div>
     <div class="fg"><label class="flabel">พอร์ต (ไม่บังคับ)</label>
       <select id="dca-plan-portid" class="finput"><option value="">— ไม่ระบุ —</option></select></div>
-    <div class="fg"><label class="flabel">ราคาปัจจุบัน / หน่วย (ไม่บังคับ — ใช้คำนวณ P&amp;L)</label>
-      <input type="number" id="dca-plan-curprice" class="finput" placeholder="0" min="0" step="any"></div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">ราคาปัจจุบัน / หน่วย (ไม่บังคับ)</label>
+        <input type="number" id="dca-plan-curprice" class="finput" placeholder="0" min="0" step="any"></div>
+      <div class="fg"><label class="flabel">วันที่ DCA (วันที่ของเดือน)</label>
+        <input type="number" id="dca-plan-day" class="finput" placeholder="เช่น 1, 15, 25" min="1" max="28"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px">
+      <input type="checkbox" id="dca-plan-auto" style="width:18px;height:18px;accent-color:var(--primary);cursor:pointer">
+      <div>
+        <div style="font-size:13px;font-weight:600">เพิ่มพอร์ตอัตโนมัติ</div>
+        <div style="font-size:11px;color:var(--muted)">เมื่อถึงวันที่ตั้งไว้ ระบบจะดึงราคาและเพิ่มหุ้นในพอร์ตให้เอง</div>
+      </div>
+    </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeM('m-dca-plan')">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveDcaPlan()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- DCA Pending (auto-execute) Modal -->
+<div id="m-dca-pending" class="overlay">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title"><i class="fas fa-calendar-check" style="color:#10b981"></i> DCA ถึงกำหนด</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">แผน DCA ต่อไปนี้ถึงกำหนดดำเนินการแล้ว ระบบจะดึงราคาปัจจุบันและเพิ่มหุ้นในพอร์ตให้อัตโนมัติ</div>
+    <div id="dca-pending-list"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-dca-pending')">ปิด</button>
+      <button class="btn btn-primary" id="dca-exec-all-btn" onclick="executeAllPendingDca()"><i class="fas fa-play"></i> ดำเนินการทั้งหมด</button>
     </div>
   </div>
 </div>
@@ -1662,6 +1686,7 @@ function enterApp(){
   localStorage.setItem(SESS_KEY,JSON.stringify({username:currentUser,ts:Date.now()}));
   resetLockTimer();
   initDate(); setTxType('income'); renderDash();
+  setTimeout(checkDcaSchedule,2000); // ตรวจ DCA ถึงกำหนดหลัง login
 }
 
 // ── Login ──
@@ -3714,6 +3739,8 @@ function openDcaPlanModal(id){
   document.getElementById('dca-plan-amount').value=plan?.amount||'';
   document.getElementById('dca-plan-start').value=plan?.startDate||new Date().toISOString().slice(0,10);
   document.getElementById('dca-plan-curprice').value=plan?.curPrice||'';
+  document.getElementById('dca-plan-day').value=plan?.dayOfMonth||'';
+  document.getElementById('dca-plan-auto').checked=plan?.autoInvest!==false;
   const sel=document.getElementById('dca-plan-portid');
   sel.innerHTML='<option value="">— ไม่ระบุ —</option>'+getPortfolios().map(p=>`<option value="${p.id}"${p.id===plan?.portId?' selected':''}>${p.name}</option>`).join('');
   openM('m-dca-plan');
@@ -3726,7 +3753,7 @@ function saveDcaPlan(){
   const amount=parseFloat(document.getElementById('dca-plan-amount').value)||0;
   if(!amount){ toast('กรุณาใส่จำนวนเงินต่อครั้ง','error'); return; }
   const plans=getDcaPlans();
-  const obj={name,type:document.getElementById('dca-plan-type').value,freq:document.getElementById('dca-plan-freq').value,amount,startDate:document.getElementById('dca-plan-start').value,portId:document.getElementById('dca-plan-portid').value||null,curPrice:parseFloat(document.getElementById('dca-plan-curprice').value)||0};
+  const obj={name,type:document.getElementById('dca-plan-type').value,freq:document.getElementById('dca-plan-freq').value,amount,startDate:document.getElementById('dca-plan-start').value,portId:document.getElementById('dca-plan-portid').value||null,curPrice:parseFloat(document.getElementById('dca-plan-curprice').value)||0,dayOfMonth:parseInt(document.getElementById('dca-plan-day').value)||null,autoInvest:document.getElementById('dca-plan-auto').checked};
   if(id){
     const i=plans.findIndex(p=>p.id===id);
     if(i>=0) plans[i]={...plans[i],...obj};
@@ -3782,6 +3809,105 @@ function deleteDcaBuy(planId,recordId){
   const plan=getDcaPlans().find(p=>p.id===planId); if(!plan) return;
   plan.records=(plan.records||[]).filter(r=>r.id!==recordId);
   saveDB(); renderDcaView(); toast('ลบรายการแล้ว','info');
+}
+
+// ── DCA Auto-Execute ──
+let _pendingDcaPlans=[];
+
+function _isDcaDue(plan){
+  if(plan.autoInvest===false) return false;
+  const today=new Date();
+  const todayStr=today.toISOString().slice(0,10);
+  const start=new Date(plan.startDate||todayStr);
+  if(today<start) return false;
+  const recs=plan.records||[];
+  // มีรายการวันนี้แล้ว (execute หรือข้าม) → ไม่ due
+  if(recs.some(r=>r.date===todayStr)) return false;
+  // ยังไม่เคย execute → due ถ้าถึง startDate แล้ว
+  if(!recs.filter(r=>r.amount>0).length) return true;
+  const lastExec=recs.filter(r=>r.amount>0).reduce((a,b)=>a.date>b.date?a:b);
+  const last=new Date(lastExec.date);
+  if(plan.freq==='weekly') return (today-last)>=7*24*60*60*1000;
+  if(plan.freq==='monthly'){
+    // ถ้าตั้ง dayOfMonth ต้องถึงวันนั้นก่อนด้วย
+    if(plan.dayOfMonth&&today.getDate()<plan.dayOfMonth) return false;
+    return today.getFullYear()>last.getFullYear()||today.getMonth()>last.getMonth();
+  }
+  if(plan.freq==='quarterly'){
+    const mDiff=(today.getFullYear()-last.getFullYear())*12+(today.getMonth()-last.getMonth());
+    return mDiff>=3;
+  }
+  return false;
+}
+
+function checkDcaSchedule(){
+  _pendingDcaPlans=getDcaPlans().filter(p=>_isDcaDue(p));
+  if(!_pendingDcaPlans.length) return;
+  const freqLabel={weekly:'ทุกสัปดาห์',monthly:'ทุกเดือน',quarterly:'ทุกไตรมาส'};
+  const listEl=document.getElementById('dca-pending-list'); if(!listEl) return;
+  listEl.innerHTML=_pendingDcaPlans.map(p=>{
+    const lastExec=(p.records||[]).filter(r=>r.amount>0);
+    const lastDate=lastExec.length?lastExec.reduce((a,b)=>a.date>b.date?a:b).date:'ยังไม่เคย';
+    const port=getPortById(p.portId);
+    return `<div id="dca-pend-row-${p.id}" style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700">${p.name} <span style="font-size:11px;color:var(--muted)">${p.type}</span></div>
+        <div style="font-size:12px;color:var(--muted)">${freqLabel[p.freq]||p.freq} · <b style="color:var(--text)">฿${(p.amount||0).toLocaleString()}</b>${port?` · ${port.name}`:''}</div>
+        <div style="font-size:11px;color:var(--muted)">ซื้อล่าสุด: ${lastDate}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-ghost btn-sm" onclick="skipDcaPlan('${p.id}')">ข้าม</button>
+        <button class="btn btn-primary btn-sm" id="dca-exec-btn-${p.id}" onclick="executeDcaPlan('${p.id}')"><i class="fas fa-play"></i> ดำเนินการ</button>
+      </div>
+    </div>`;
+  }).join('');
+  openM('m-dca-pending');
+}
+
+function skipDcaPlan(id){
+  const plan=getDcaPlans().find(p=>p.id===id); if(!plan) return;
+  if(!plan.records) plan.records=[];
+  plan.records.push({id:uid(),date:new Date().toISOString().slice(0,10),amount:0,units:0,price:0,note:'ข้าม'});
+  saveDB();
+  _pendingDcaPlans=_pendingDcaPlans.filter(p=>p.id!==id);
+  document.getElementById('dca-pend-row-'+id)?.remove();
+  if(!_pendingDcaPlans.length) closeM('m-dca-pending');
+}
+
+async function executeDcaPlan(id){
+  const plan=getDcaPlans().find(p=>p.id===id); if(!plan) return;
+  const btn=document.getElementById('dca-exec-btn-'+id);
+  if(btn){ btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>'; btn.disabled=true; }
+  document.getElementById('dca-exec-all-btn')?.setAttribute('disabled','');
+  const today=new Date().toISOString().slice(0,10);
+  let price=0, units=0;
+  try{
+    if(!['เงินสดบาท','เงินสดUS','อื่นๆ'].includes(plan.type)){
+      price=await getPriceFor(plan.name,plan.type);
+    }
+  }catch(e){ console.warn('[DCA] price fetch failed:',e.message); }
+  units=price>0?plan.amount/price:0;
+  // เพิ่มในพอร์ตลงทุน
+  if(!DB.investments) DB.investments=[];
+  const invId=uid();
+  DB.investments.push({id:invId,name:plan.name,type:plan.type,qty:units,buyPrice:price,curPrice:price,cost:plan.amount,value:price>0?plan.amount:0,currency:'THB',fxRate:1,updatedAt:today,portId:plan.portId||null});
+  // บันทึกใน DCA history
+  if(!plan.records) plan.records=[];
+  plan.records.push({id:uid(),date:today,amount:plan.amount,units,price,note:'DCA อัตโนมัติ',invId});
+  saveDB();
+  toast(`✅ DCA ${plan.name} ฿${plan.amount.toLocaleString()} เพิ่มในพอร์ตแล้ว${price?'':' (ราคา 0 — กรุณาอัปเดตราคา)'}`, 'success');
+  _pendingDcaPlans=_pendingDcaPlans.filter(p=>p.id!==id);
+  document.getElementById('dca-pend-row-'+id)?.remove();
+  document.getElementById('dca-exec-all-btn')?.removeAttribute('disabled');
+  if(!_pendingDcaPlans.length){ closeM('m-dca-pending'); renderInv(); }
+}
+
+async function executeAllPendingDca(){
+  const allIds=[..._pendingDcaPlans].map(p=>p.id);
+  for(const id of allIds){
+    await executeDcaPlan(id);
+    await new Promise(r=>setTimeout(r,400));
+  }
 }
 
 // ══════════════════════════════════════════
@@ -5472,6 +5598,7 @@ async function processTawi50(file){
 checkLogin();
 if(currentUser){
   initDate(); setTxType('income'); renderDash();
+  setTimeout(checkDcaSchedule,2000);
 }
 
 // ══════════════════════════════════════════
