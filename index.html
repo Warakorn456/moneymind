@@ -587,6 +587,7 @@
     <div class="nav-item active" onclick="nav('dashboard')"><i class="fas fa-home"></i> แดชบอร์ด</div>
     <div class="nav-item" onclick="nav('transactions')"><i class="fas fa-exchange-alt"></i> รายรับ-รายจ่าย</div>
     <div class="nav-item" onclick="nav('savings')"><i class="fas fa-piggy-bank"></i> เงินออม</div>
+    <div class="nav-item" onclick="nav('banks')"><i class="fas fa-university"></i> ธนาคาร</div>
     <div class="nav-item" onclick="nav('debts')"><i class="fas fa-credit-card"></i> หนี้สิน</div>
     <div class="nav-item" onclick="nav('investments')"><i class="fas fa-chart-line"></i> พอร์ตลงทุน</div>
     <div class="nav-item" onclick="nav('tax')"><i class="fas fa-file-invoice"></i> ภาษีเงินได้</div>
@@ -785,6 +786,11 @@
       <button class="btn btn-primary" onclick="openSavModal()"><i class="fas fa-plus"></i> เพิ่มเป้าหมาย</button>
     </div>
     <div id="savings-grid" class="savings-grid"></div>
+  </div>
+
+  <!-- ════ BANKS ════ -->
+  <div id="pg-banks" class="page">
+    <div id="banks-content"></div>
   </div>
 
   <!-- ════ DEBTS ════ -->
@@ -1354,6 +1360,53 @@
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeM('m-dca-buy')">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveDcaBuy()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bank Account Modal -->
+<div id="m-bank" class="overlay">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-title"><i class="fas fa-university" style="color:#06b6d4"></i><span id="bank-m-title">เพิ่มบัญชีธนาคาร</span></div>
+    <input type="hidden" id="bank-eid">
+    <div class="fg"><label class="flabel">ธนาคาร</label>
+      <select id="bank-name" class="finput" onchange="onBankNameChange()">
+        <option value="กสิกรไทย">🟢 กสิกรไทย (KBank)</option>
+        <option value="ไทยพาณิชย์">🟣 ไทยพาณิชย์ (SCB)</option>
+        <option value="กรุงเทพ">🔵 กรุงเทพ (BBL)</option>
+        <option value="กรุงไทย">🩵 กรุงไทย (KTB)</option>
+        <option value="กรุงศรี">🟡 กรุงศรี (BAY)</option>
+        <option value="ออมสิน">🩷 ออมสิน (GSB)</option>
+        <option value="ธ.ก.ส.">🌿 ธ.ก.ส. (BAAC)</option>
+        <option value="ทหารไทยธนชาต">🟠 ทหารไทยธนชาต (TTB)</option>
+        <option value="ยูโอบี">🔷 ยูโอบี (UOB)</option>
+        <option value="ซีไอเอ็มบี">🔴 ซีไอเอ็มบี (CIMB)</option>
+        <option value="ทรูมันนี่ วอลเล็ท">🟠 ทรูมันนี่ วอลเล็ท</option>
+        <option value="อื่นๆ">⚪ อื่นๆ</option>
+      </select>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">ประเภทบัญชี</label>
+        <select id="bank-type" class="fselect">
+          <option value="ออมทรัพย์">ออมทรัพย์</option>
+          <option value="กระแสรายวัน">กระแสรายวัน</option>
+          <option value="ฝากประจำ">ฝากประจำ</option>
+          <option value="กระเป๋าเงิน">กระเป๋าเงิน</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flabel">เลขบัญชี (4 หลักสุดท้าย)</label>
+        <input type="text" id="bank-accno" class="finput" placeholder="xxxx" maxlength="4" pattern="[0-9]{4}">
+      </div>
+    </div>
+    <div class="fg"><label class="flabel">ยอดเงินคงเหลือ (฿)</label>
+      <input type="number" id="bank-balance" class="finput" placeholder="0" min="0" step="0.01">
+    </div>
+    <div class="fg"><label class="flabel">หมายเหตุ (ไม่บังคับ)</label>
+      <input type="text" id="bank-note" class="finput" placeholder="เช่น บัญชีเงินเดือน, ค่าใช้จ่ายประจำ">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-bank')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveBank()">บันทึก</button>
     </div>
   </div>
 </div>
@@ -2021,7 +2074,7 @@ function getCat(id,type){ const l=type==='income'?INC_CATS:EXP_CATS; return l.fi
 // ══════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════
-const PAGE_TITLE = {dashboard:'แดชบอร์ด',transactions:'รายรับ-รายจ่าย',savings:'เงินออม',debts:'หนี้สิน',investments:'พอร์ตลงทุน',tax:'ภาษีเงินได้',balance:'งบดุล & แผนการเงิน',retire:'แผนเกษียณ',profile:'ประวัติส่วนตัว',settings:'ตั้งค่า'};
+const PAGE_TITLE = {dashboard:'แดชบอร์ด',transactions:'รายรับ-รายจ่าย',savings:'เงินออม',banks:'บัญชีธนาคาร',debts:'หนี้สิน',investments:'พอร์ตลงทุน',tax:'ภาษีเงินได้',balance:'งบดุล & แผนการเงิน',retire:'แผนเกษียณ',profile:'ประวัติส่วนตัว',settings:'ตั้งค่า'};
 let curPage='dashboard', txFilter='all';
 
 function nav(page){
@@ -2042,6 +2095,7 @@ function renderPage(p){
   if(p==='dashboard') renderDash();
   else if(p==='transactions') renderTx();
   else if(p==='savings') renderSavings();
+  else if(p==='banks') renderBanks();
   else if(p==='debts') renderDebts();
   else if(p==='investments') renderInv();
   else if(p==='tax') renderTax();
@@ -3908,6 +3962,141 @@ async function executeAllPendingDca(){
     await executeDcaPlan(id);
     await new Promise(r=>setTimeout(r,400));
   }
+}
+
+// ══════════════════════════════════════════
+//  BANKS
+// ══════════════════════════════════════════
+const BANK_META={
+  'กสิกรไทย':    {color:'#00b140',abbr:'KBANK'},
+  'ไทยพาณิชย์':  {color:'#4e2d8c',abbr:'SCB'},
+  'กรุงเทพ':     {color:'#1d3c8c',abbr:'BBL'},
+  'กรุงไทย':     {color:'#00adef',abbr:'KTB'},
+  'กรุงศรี':     {color:'#d4a500',abbr:'BAY'},
+  'ออมสิน':      {color:'#d81b8c',abbr:'GSB'},
+  'ธ.ก.ส.':      {color:'#006633',abbr:'BAAC'},
+  'ทหารไทยธนชาต':{color:'#f47920',abbr:'TTB'},
+  'ยูโอบี':      {color:'#0066b2',abbr:'UOB'},
+  'ซีไอเอ็มบี':  {color:'#d71c2e',abbr:'CIMB'},
+  'ทรูมันนี่ วอลเล็ท':{color:'#f47920',abbr:'TRUE'},
+  'อื่นๆ':       {color:'#64748b',abbr:'???'},
+};
+
+function getBanks(){ if(!DB.banks) DB.banks=[]; return DB.banks; }
+
+function renderBanks(){
+  const el=document.getElementById('banks-content'); if(!el) return;
+  const banks=getBanks();
+  const total=banks.reduce((s,b)=>s+b.balance,0);
+
+  let html=`<div class="sec-hd" style="margin-bottom:20px">
+    <div>
+      <div class="sec-title">บัญชีธนาคาร</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px">${banks.length} บัญชี</div>
+    </div>
+    <button class="btn btn-primary" onclick="openBankModal()"><i class="fas fa-plus"></i> เพิ่มบัญชี</button>
+  </div>`;
+
+  if(banks.length){
+    html+=`<div style="background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:16px;padding:20px 24px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:4px">ยอดเงินรวมทุกบัญชี</div>
+        <div style="font-size:28px;font-weight:800;color:#fff">${fmt(total)}</div>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        ${banks.map(b=>{
+          const m=BANK_META[b.name]||BANK_META['อื่นๆ'];
+          return `<div style="text-align:center">
+            <div style="width:36px;height:36px;border-radius:50%;background:${m.color};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;margin:0 auto 4px">${m.abbr}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.7)">${fmt(b.balance)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  if(!banks.length){
+    html+=`<div class="empty"><i class="fas fa-university" style="font-size:40px;display:block;margin-bottom:12px;color:var(--muted)"></i>
+      <p>ยังไม่มีบัญชีธนาคาร<br><span style="font-size:13px">กด "+ เพิ่มบัญชี" เพื่อเริ่มต้น</span></p></div>`;
+    el.innerHTML=html; return;
+  }
+
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px">`;
+  banks.forEach(b=>{
+    const m=BANK_META[b.name]||BANK_META['อื่นๆ'];
+    const upd=b.updatedAt?`อัปเดต ${b.updatedAt}`:'ยังไม่อัปเดต';
+    html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:${m.color};border-radius:16px 0 0 16px"></div>
+      <div style="padding-left:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:40px;height:40px;border-radius:12px;background:${m.color}22;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${m.color}">${m.abbr}</div>
+            <div>
+              <div style="font-size:14px;font-weight:700">${b.name}</div>
+              <div style="font-size:11px;color:var(--muted)">${b.type}${b.accountNo?' · xxxxxx'+b.accountNo:''}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px">
+            <button class="btn btn-ghost btn-sm" style="padding:4px 8px" onclick="openBankModal('${b.id}')"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-ghost btn-sm" style="padding:4px 8px;color:var(--red)" onclick="deleteBank('${b.id}')"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:2px">ยอดเงินคงเหลือ</div>
+          <div style="font-size:24px;font-weight:800;color:${m.color}">${fmt(b.balance)}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:11px;color:var(--muted)">${upd}${b.note?` · ${b.note}`:''}</div>
+          <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 10px" onclick="openUpdateBalanceModal('${b.id}')"><i class="fas fa-sync-alt"></i> อัปเดตยอด</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+
+const BANK_COLORS={'กสิกรไทย':'#00b140','ไทยพาณิชย์':'#4e2d8c','กรุงเทพ':'#1d3c8c','กรุงไทย':'#00adef','กรุงศรี':'#d4a500','ออมสิน':'#d81b8c','ธ.ก.ส.':'#006633','ทหารไทยธนชาต':'#f47920','ยูโอบี':'#0066b2','ซีไอเอ็มบี':'#d71c2e','ทรูมันนี่ วอลเล็ท':'#f47920','อื่นๆ':'#64748b'};
+function onBankNameChange(){ /* placeholder for future auto-color */ }
+
+function openBankModal(id){
+  const bank=id?getBanks().find(b=>b.id===id):null;
+  document.getElementById('bank-eid').value=id||'';
+  document.getElementById('bank-m-title').textContent=id?'แก้ไขบัญชีธนาคาร':'เพิ่มบัญชีธนาคาร';
+  document.getElementById('bank-name').value=bank?.name||'กสิกรไทย';
+  document.getElementById('bank-type').value=bank?.type||'ออมทรัพย์';
+  document.getElementById('bank-accno').value=bank?.accountNo||'';
+  document.getElementById('bank-balance').value=bank?.balance||'';
+  document.getElementById('bank-note').value=bank?.note||'';
+  openM('m-bank');
+}
+
+function saveBank(){
+  const id=document.getElementById('bank-eid').value;
+  const name=document.getElementById('bank-name').value;
+  const balance=parseFloat(document.getElementById('bank-balance').value)||0;
+  const obj={name,type:document.getElementById('bank-type').value,accountNo:document.getElementById('bank-accno').value.trim(),balance,note:document.getElementById('bank-note').value.trim(),updatedAt:new Date().toLocaleDateString('th-TH')};
+  const banks=getBanks();
+  if(id){ const i=banks.findIndex(b=>b.id===id); if(i>=0) banks[i]={...banks[i],...obj}; toast('แก้ไขแล้ว','success'); }
+  else { banks.push({id:uid(),...obj}); toast('เพิ่มบัญชีแล้ว','success'); }
+  saveDB(); closeM('m-bank'); renderBanks();
+}
+
+function deleteBank(id){
+  if(!confirm('ลบบัญชีนี้?')) return;
+  DB.banks=getBanks().filter(b=>b.id!==id);
+  saveDB(); renderBanks(); toast('ลบแล้ว','info');
+}
+
+function openUpdateBalanceModal(id){
+  const bank=getBanks().find(b=>b.id===id); if(!bank) return;
+  const newBal=prompt(`อัปเดตยอดเงิน — ${bank.name} (${bank.type})\n\nยอดปัจจุบัน: ${fmt(bank.balance)}\n\nใส่ยอดใหม่:`, bank.balance);
+  if(newBal===null) return;
+  const val=parseFloat(newBal);
+  if(isNaN(val)){ toast('ยอดเงินไม่ถูกต้อง','error'); return; }
+  bank.balance=val;
+  bank.updatedAt=new Date().toLocaleDateString('th-TH');
+  saveDB(); renderBanks(); toast(`อัปเดตยอด ${bank.name} แล้ว`,'success');
 }
 
 // ══════════════════════════════════════════
