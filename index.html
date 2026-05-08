@@ -807,9 +807,13 @@
           <span id="inv-countdown" style="color:var(--muted)"></span>
         </div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-ghost" onclick="openPortModal()"><i class="fas fa-layer-group"></i> จัดการพอร์ต</button>
-        <button class="btn btn-primary" onclick="openInvModal()"><i class="fas fa-plus"></i> เพิ่มการลงทุน</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <div style="display:flex;gap:3px;background:var(--surface2);padding:3px;border-radius:9px">
+          <button id="inv-tab-port" class="ftab active" onclick="switchInvTab('portfolio')"><i class="fas fa-chart-pie"></i> พอร์ต</button>
+          <button id="inv-tab-dca" class="ftab" onclick="switchInvTab('dca')"><i class="fas fa-arrows-rotate"></i> DCA</button>
+        </div>
+        <button class="btn btn-ghost" id="inv-btn-port" onclick="openPortModal()"><i class="fas fa-layer-group"></i> จัดการพอร์ต</button>
+        <button class="btn btn-primary" id="inv-btn-add" onclick="openInvModal()"><i class="fas fa-plus"></i> เพิ่มการลงทุน</button>
       </div>
     </div>
     <div id="inv-content"></div>
@@ -1266,6 +1270,70 @@
   </div>
 </div>
 
+<!-- DCA Plan Modal -->
+<div id="m-dca-plan" class="overlay">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title"><i class="fas fa-arrows-rotate" style="color:#a78bfa"></i><span id="dca-plan-title">สร้างแผน DCA</span></div>
+    <input type="hidden" id="dca-plan-eid">
+    <div class="fg"><label class="flabel">ชื่อสินทรัพย์</label>
+      <input type="text" id="dca-plan-name" class="finput" placeholder="เช่น SCB-SET50, AAPL, BTC"></div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">ประเภท</label>
+        <select id="dca-plan-type" class="fselect">
+          <option value="หุ้น">📈 หุ้น</option><option value="กองทุน">💼 กองทุน</option>
+          <option value="คริปโต">🪙 คริปโต</option><option value="ทองคำ">🥇 ทองคำ</option><option value="อื่นๆ">📦 อื่นๆ</option>
+        </select></div>
+      <div class="fg"><label class="flabel">ความถี่</label>
+        <select id="dca-plan-freq" class="fselect">
+          <option value="weekly">ทุกสัปดาห์</option>
+          <option value="monthly" selected>ทุกเดือน</option>
+          <option value="quarterly">ทุกไตรมาส</option>
+        </select></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">จำนวนเงินต่อครั้ง (฿)</label>
+        <input type="number" id="dca-plan-amount" class="finput" placeholder="3000" min="1" step="100"></div>
+      <div class="fg"><label class="flabel">วันที่เริ่มต้น</label>
+        <input type="date" id="dca-plan-start" class="finput"></div>
+    </div>
+    <div class="fg"><label class="flabel">พอร์ต (ไม่บังคับ)</label>
+      <select id="dca-plan-portid" class="finput"><option value="">— ไม่ระบุ —</option></select></div>
+    <div class="fg"><label class="flabel">ราคาปัจจุบัน / หน่วย (ไม่บังคับ — ใช้คำนวณ P&amp;L)</label>
+      <input type="number" id="dca-plan-curprice" class="finput" placeholder="0" min="0" step="any"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-dca-plan')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveDcaPlan()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- DCA Buy Log Modal -->
+<div id="m-dca-buy" class="overlay">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title"><i class="fas fa-cart-plus" style="color:#10b981"></i><span id="dca-buy-plan-name">บันทึกซื้อ</span></div>
+    <input type="hidden" id="dca-buy-plan-id">
+    <input type="hidden" id="dca-buy-record-id">
+    <div class="fg"><label class="flabel">วันที่ซื้อ</label>
+      <input type="date" id="dca-buy-date" class="finput"></div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">จำนวนเงิน (฿)</label>
+        <input type="number" id="dca-buy-amount" class="finput" placeholder="3000" min="0" step="any" oninput="calcDcaBuyPrice()"></div>
+      <div class="fg"><label class="flabel">จำนวนหน่วย / หุ้น</label>
+        <input type="number" id="dca-buy-units" class="finput" placeholder="0" min="0" step="any" oninput="calcDcaBuyPrice()"></div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:12px;color:var(--muted)">ราคาเฉลี่ย / หน่วย</div>
+      <div id="dca-buy-price-display" style="font-size:18px;font-weight:700;color:var(--cyan)">฿-</div>
+    </div>
+    <div class="fg"><label class="flabel">หมายเหตุ (ไม่บังคับ)</label>
+      <input type="text" id="dca-buy-note" class="finput" placeholder=""></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-dca-buy')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveDcaBuy()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
 <!-- Bank Statement Modal -->
 <div id="m-stmt" class="overlay">
   <div class="modal" style="max-width:860px;width:95%">
@@ -1415,8 +1483,9 @@ function saveLocalOnly(){
 function saveDB(){
   if(!currentUser) return;
   localStorage.setItem(userDataKey(currentUser),JSON.stringify(DB));
-  setSyncStatus('syncing');
-  fsSave();
+  _lastSaveTs=Date.now();
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(()=>{ setSyncStatus('syncing'); fsSave(); },1500);
 }
 
 // ══════════════════════════════════════════
@@ -1430,7 +1499,7 @@ const _fbConfig={
   messagingSenderId:'668138190451',
   appId:'1:668138190451:web:d181da0bf022bcc0c09c06'
 };
-let _fs=null, _fsUnsub=null, _pendingRemoteSync=false;
+let _fs=null, _fsUnsub=null, _pendingRemoteSync=false, _lastSaveTs=0, _saveTimer=null;
 function _flushPendingSync(){ if(!_pendingRemoteSync) return; _pendingRemoteSync=false; setTimeout(()=>{ renderPage(curPage); toast('โหลดข้อมูลใหม่จากอุปกรณ์อื่นแล้ว ☁️','success'); },120); }
 (function initFirebase(){
   try{
@@ -1510,6 +1579,8 @@ function fsListen(){
     const data=snap.data();
     if(!data||!data.db) return;
     try{
+      // snapshot ที่ bounce กลับจาก write ของเราเอง — ไม่ต้อง merge ทับ
+      if(Date.now()-_lastSaveTs<4000){ setSyncStatus('ok'); return; }
       const remote=JSON.parse(data.db);
       DB={...DB,...remote};
       saveLocalOnly();
@@ -3164,9 +3235,27 @@ function _portSection(port, invList, colorDot){
   </div>`;
 }
 
+let _invTab='portfolio';
+function switchInvTab(tab){
+  _invTab=tab;
+  const tabPort=document.getElementById('inv-tab-port');
+  const tabDca=document.getElementById('inv-tab-dca');
+  const btnPort=document.getElementById('inv-btn-port');
+  const btnAdd=document.getElementById('inv-btn-add');
+  if(tabPort) tabPort.classList.toggle('active',tab==='portfolio');
+  if(tabDca) tabDca.classList.toggle('active',tab==='dca');
+  if(btnPort) btnPort.style.display=tab==='portfolio'?'':'none';
+  if(btnAdd){
+    if(tab==='dca'){ btnAdd.textContent=''; btnAdd.innerHTML='<i class="fas fa-plus"></i> เพิ่มแผน DCA'; btnAdd.onclick=()=>openDcaPlanModal(); }
+    else { btnAdd.innerHTML='<i class="fas fa-plus"></i> เพิ่มการลงทุน'; btnAdd.onclick=()=>openInvModal(); }
+  }
+  renderInv();
+}
+
 function renderInv(){
   const el=document.getElementById('inv-content');
   if(!el) return;
+  if(_invTab==='dca'){ renderDcaView(); return; }
   const allInv=DB.investments||[];
   const ports=getPortfolios();
   const totVal=allInv.reduce((s,i)=>s+i.value,0);
@@ -3507,6 +3596,181 @@ function delInv(id){
 }
 
 // ══════════════════════════════════════════
+//  DCA — Dollar Cost Averaging
+// ══════════════════════════════════════════
+function getDcaPlans(){ if(!DB.dcaPlans) DB.dcaPlans=[]; return DB.dcaPlans; }
+
+function renderDcaView(){
+  const el=document.getElementById('inv-content'); if(!el) return;
+  const plans=getDcaPlans();
+  const freqLabel={weekly:'ทุกสัปดาห์',monthly:'ทุกเดือน',quarterly:'ทุกไตรมาส'};
+
+  if(!plans.length){
+    el.innerHTML=`<div class="empty"><i class="fas fa-arrows-rotate" style="font-size:40px;display:block;margin-bottom:12px;color:var(--muted)"></i>
+      <p>ยังไม่มีแผน DCA<br><span style="font-size:13px">กด "+ เพิ่มแผน DCA" เพื่อเริ่มต้น</span></p></div>`;
+    return;
+  }
+
+  let html='';
+  plans.forEach(plan=>{
+    const recs=plan.records||[];
+    const totalInvested=recs.reduce((s,r)=>s+r.amount,0);
+    const totalUnits=recs.reduce((s,r)=>s+r.units,0);
+    const avgCost=totalUnits>0?totalInvested/totalUnits:0;
+    const curPrice=plan.curPrice||0;
+    const curVal=totalUnits>0&&curPrice>0?totalUnits*curPrice:0;
+    const pnl=curVal-totalInvested;
+    const pnlPct=totalInvested>0?((pnl/totalInvested)*100).toFixed(2):'0.00';
+    const port=getPortById(plan.portId);
+
+    html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:10px">
+        <div>
+          <div style="font-size:15px;font-weight:700">${plan.name} <span style="font-size:11px;color:var(--muted);font-weight:400">${plan.type}</span></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">
+            ${freqLabel[plan.freq]||plan.freq} · ฿${(plan.amount||0).toLocaleString()}/ครั้ง
+            ${port?` · <span style="color:${port.color}">${port.name}</span>`:''}
+            · เริ่ม ${plan.startDate||'-'}
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-primary btn-sm" onclick="openDcaBuyModal('${plan.id}')"><i class="fas fa-cart-plus"></i> ซื้อ</button>
+          <button class="btn btn-ghost btn-sm" onclick="openDcaPlanModal('${plan.id}')"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteDcaPlan('${plan.id}')"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:${recs.length?'12px':'0'}">
+        <div style="background:var(--surface2);border-radius:10px;padding:10px 12px">
+          <div style="font-size:11px;color:var(--muted)">ลงทุนรวม</div>
+          <div style="font-size:15px;font-weight:700">${fmt(totalInvested)}</div>
+          <div style="font-size:11px;color:var(--muted)">${recs.length} ครั้ง</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:10px 12px">
+          <div style="font-size:11px;color:var(--muted)">ราคาเฉลี่ย/หน่วย</div>
+          <div style="font-size:15px;font-weight:700">${avgCost>0?fmt(avgCost):'-'}</div>
+          <div style="font-size:11px;color:var(--muted)">${totalUnits>0?totalUnits.toLocaleString(undefined,{maximumFractionDigits:4})+' หน่วย':'-'}</div>
+        </div>
+        ${curPrice>0?`<div style="background:var(--surface2);border-radius:10px;padding:10px 12px">
+          <div style="font-size:11px;color:var(--muted)">มูลค่าปัจจุบัน</div>
+          <div style="font-size:15px;font-weight:700">${fmt(curVal)}</div>
+          <div style="font-size:11px;font-weight:700;color:${pnl>=0?'var(--green)':'var(--red)'}">${pnl>=0?'+':''}${fmt(pnl)} (${pnl>=0?'+':''}${pnlPct}%)</div>
+        </div>`:''}
+      </div>
+
+      ${recs.length?`<details>
+        <summary style="font-size:12px;color:var(--muted);cursor:pointer;padding:8px 0;user-select:none">
+          <i class="fas fa-history" style="margin-right:4px"></i>ประวัติการซื้อ (${recs.length} รายการ)
+        </summary>
+        <div style="margin-top:8px;overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="color:var(--muted);border-bottom:1px solid var(--border)">
+              <th style="text-align:left;padding:6px 8px;font-weight:600">วันที่</th>
+              <th style="text-align:right;padding:6px 8px;font-weight:600">เงิน (฿)</th>
+              <th style="text-align:right;padding:6px 8px;font-weight:600">หน่วย</th>
+              <th style="text-align:right;padding:6px 8px;font-weight:600">ราคา/หน่วย</th>
+              <th style="text-align:left;padding:6px 8px;font-weight:600">หมายเหตุ</th>
+              <th style="padding:4px"></th>
+            </tr></thead>
+            <tbody>
+              ${[...recs].sort((a,b)=>b.date.localeCompare(a.date)).map(r=>`<tr style="border-bottom:1px solid rgba(255,255,255,.04)">
+                <td style="padding:6px 8px">${r.date}</td>
+                <td style="text-align:right;padding:6px 8px">${fmt(r.amount)}</td>
+                <td style="text-align:right;padding:6px 8px">${r.units>0?r.units.toLocaleString(undefined,{maximumFractionDigits:4}):'-'}</td>
+                <td style="text-align:right;padding:6px 8px;color:var(--cyan)">${r.price>0?fmt(r.price):'-'}</td>
+                <td style="padding:6px 8px;color:var(--muted)">${r.note||''}</td>
+                <td style="padding:4px"><button class="btn btn-ghost btn-sm" style="padding:2px 7px;color:var(--red)" onclick="deleteDcaBuy('${plan.id}','${r.id}')"><i class="fas fa-times"></i></button></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </details>`:'<div style="font-size:12px;color:var(--muted);text-align:center;padding:6px 0">ยังไม่มีประวัติการซื้อ</div>'}
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+function openDcaPlanModal(id){
+  const plan=id?getDcaPlans().find(p=>p.id===id):null;
+  document.getElementById('dca-plan-eid').value=id||'';
+  document.getElementById('dca-plan-title').textContent=id?'แก้ไขแผน DCA':'สร้างแผน DCA';
+  document.getElementById('dca-plan-name').value=plan?.name||'';
+  document.getElementById('dca-plan-type').value=plan?.type||'กองทุน';
+  document.getElementById('dca-plan-freq').value=plan?.freq||'monthly';
+  document.getElementById('dca-plan-amount').value=plan?.amount||'';
+  document.getElementById('dca-plan-start').value=plan?.startDate||new Date().toISOString().slice(0,10);
+  document.getElementById('dca-plan-curprice').value=plan?.curPrice||'';
+  const sel=document.getElementById('dca-plan-portid');
+  sel.innerHTML='<option value="">— ไม่ระบุ —</option>'+getPortfolios().map(p=>`<option value="${p.id}"${p.id===plan?.portId?' selected':''}>${p.name}</option>`).join('');
+  openM('m-dca-plan');
+}
+
+function saveDcaPlan(){
+  const id=document.getElementById('dca-plan-eid').value;
+  const name=document.getElementById('dca-plan-name').value.trim();
+  if(!name){ toast('กรุณาใส่ชื่อสินทรัพย์','error'); return; }
+  const amount=parseFloat(document.getElementById('dca-plan-amount').value)||0;
+  if(!amount){ toast('กรุณาใส่จำนวนเงินต่อครั้ง','error'); return; }
+  const plans=getDcaPlans();
+  const obj={name,type:document.getElementById('dca-plan-type').value,freq:document.getElementById('dca-plan-freq').value,amount,startDate:document.getElementById('dca-plan-start').value,portId:document.getElementById('dca-plan-portid').value||null,curPrice:parseFloat(document.getElementById('dca-plan-curprice').value)||0};
+  if(id){
+    const i=plans.findIndex(p=>p.id===id);
+    if(i>=0) plans[i]={...plans[i],...obj};
+    toast('แก้ไขแผนแล้ว','success');
+  } else {
+    plans.push({id:uid(),...obj,records:[]});
+    toast('สร้างแผน DCA แล้ว','success');
+  }
+  saveDB(); closeM('m-dca-plan'); renderDcaView();
+}
+
+function deleteDcaPlan(id){
+  if(!confirm('ลบแผน DCA นี้? ประวัติการซื้อทั้งหมดจะหายไป')) return;
+  DB.dcaPlans=getDcaPlans().filter(p=>p.id!==id);
+  saveDB(); renderDcaView(); toast('ลบแผนแล้ว','info');
+}
+
+function openDcaBuyModal(planId){
+  const plan=getDcaPlans().find(p=>p.id===planId); if(!plan) return;
+  document.getElementById('dca-buy-plan-id').value=planId;
+  document.getElementById('dca-buy-record-id').value='';
+  document.getElementById('dca-buy-plan-name').textContent='บันทึกซื้อ — '+plan.name;
+  document.getElementById('dca-buy-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('dca-buy-amount').value=plan.amount||'';
+  document.getElementById('dca-buy-units').value='';
+  document.getElementById('dca-buy-note').value='';
+  document.getElementById('dca-buy-price-display').textContent='฿-';
+  openM('m-dca-buy');
+}
+
+function calcDcaBuyPrice(){
+  const amount=parseFloat(document.getElementById('dca-buy-amount').value)||0;
+  const units=parseFloat(document.getElementById('dca-buy-units').value)||0;
+  const price=units>0?amount/units:0;
+  document.getElementById('dca-buy-price-display').textContent=price>0?fmt(price):'฿-';
+}
+
+function saveDcaBuy(){
+  const planId=document.getElementById('dca-buy-plan-id').value;
+  const date=document.getElementById('dca-buy-date').value;
+  const amount=parseFloat(document.getElementById('dca-buy-amount').value)||0;
+  const units=parseFloat(document.getElementById('dca-buy-units').value)||0;
+  const note=document.getElementById('dca-buy-note').value.trim();
+  if(!date){ toast('กรุณาเลือกวันที่','error'); return; }
+  if(!amount){ toast('กรุณาใส่จำนวนเงิน','error'); return; }
+  const plan=getDcaPlans().find(p=>p.id===planId); if(!plan) return;
+  if(!plan.records) plan.records=[];
+  plan.records.push({id:uid(),date,amount,units,price:units>0?amount/units:0,note});
+  saveDB(); closeM('m-dca-buy'); toast('บันทึกการซื้อแล้ว','success'); renderDcaView();
+}
+
+function deleteDcaBuy(planId,recordId){
+  const plan=getDcaPlans().find(p=>p.id===planId); if(!plan) return;
+  plan.records=(plan.records||[]).filter(r=>r.id!==recordId);
+  saveDB(); renderDcaView(); toast('ลบรายการแล้ว','info');
+}
+
+// ══════════════════════════════════════════
 //  SETTINGS
 // ══════════════════════════════════════════
 function renderSettings(){
@@ -3677,8 +3941,11 @@ function getTaxDefaults(year){
 
 function getTax(){
   const year=new Date().getFullYear();
-  if(!DB.tax) DB.tax={};
-  if(!DB.tax.year) DB.tax=getTaxDefaults(year);
+  if(!DB.tax||typeof DB.tax!=='object') DB.tax={};
+  // เติมเฉพาะ field ที่ขาดหาย ไม่ reset ทั้งหมด
+  if(!DB.tax.year) DB.tax.year=year;
+  const defs=getTaxDefaults(year);
+  Object.keys(defs).forEach(k=>{ if(!(k in DB.tax)) DB.tax[k]=defs[k]; });
   return DB.tax;
 }
 
@@ -3698,7 +3965,13 @@ function autoFillTax(){
 
 function onTaxYearChange(){
   const y=parseInt(document.getElementById('tax-year').value);
-  if(!DB.tax||DB.tax.year!==y){ DB.tax=getTaxDefaults(y); saveDB(); }
+  if(!DB.taxHistory) DB.taxHistory={};
+  // บันทึกข้อมูลปีเดิมไว้ก่อน
+  if(DB.tax&&DB.tax.year) DB.taxHistory[DB.tax.year]={...DB.tax};
+  // โหลดปีใหม่จาก history หรือ defaults
+  DB.tax=DB.taxHistory[y]?{...DB.taxHistory[y]}:getTaxDefaults(y);
+  DB.tax.year=y;
+  saveDB();
   renderTax();
 }
 
@@ -3713,6 +3986,9 @@ function updateTax(key,val){
   const t=getTax();
   if(key==='spouse'||key==='noSpouseIncome') t[key]=(val==='true'||val===true);
   else t[key]=parseFloat(val)||0;
+  // sync ค่าล่าสุดเข้า history ทันที ป้องกันหาย
+  if(!DB.taxHistory) DB.taxHistory={};
+  if(t.year) DB.taxHistory[t.year]={...t};
   saveDB(); calcTaxLive();
 }
 
