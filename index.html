@@ -1408,20 +1408,43 @@
     </div>
     <div class="frow">
       <div class="fg"><label class="flabel">ประเภทบัญชี</label>
-        <select id="bank-type" class="fselect">
+        <select id="bank-type" class="fselect" onchange="onBankTypeChange()">
           <option value="ออมทรัพย์">ออมทรัพย์</option>
           <option value="กระแสรายวัน">กระแสรายวัน</option>
           <option value="ฝากประจำ">ฝากประจำ</option>
           <option value="กระเป๋าเงิน">กระเป๋าเงิน</option>
           <option value="เงินสด">เงินสด</option>
+          <option value="บัตรเครดิต">💳 บัตรเครดิต</option>
         </select>
       </div>
-      <div class="fg"><label class="flabel">เลขบัญชี (4 หลักสุดท้าย)</label>
+      <div class="fg"><label class="flabel">เลขบัญชี / เลขบัตร (4 หลักสุดท้าย)</label>
         <input type="text" id="bank-accno" class="finput" placeholder="xxxx" maxlength="4" pattern="[0-9]{4}">
       </div>
     </div>
-    <div class="fg"><label class="flabel">ยอดเงินคงเหลือ (฿)</label>
-      <input type="number" id="bank-balance" class="finput" placeholder="0" min="0" step="0.01">
+    <!-- ฟิลด์บัตรเครดิต -->
+    <div id="cc-fields" style="display:none">
+      <div class="frow">
+        <div class="fg"><label class="flabel">วงเงินบัตร (฿)</label>
+          <input type="number" id="bank-cc-limit" class="finput" placeholder="0" min="0" step="0.01">
+        </div>
+        <div class="fg"><label class="flabel">ยอดค้างชำระปัจจุบัน (฿)</label>
+          <input type="number" id="bank-balance" class="finput" placeholder="0" min="0" step="0.01">
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">วันตัดรอบบัญชี</label>
+          <input type="number" id="bank-cc-billing" class="finput" placeholder="เช่น 15" min="1" max="31">
+        </div>
+        <div class="fg"><label class="flabel">วันครบกำหนดชำระ</label>
+          <input type="number" id="bank-cc-due" class="finput" placeholder="เช่น 5" min="1" max="31">
+        </div>
+      </div>
+    </div>
+    <!-- ฟิลด์บัญชีปกติ -->
+    <div id="normal-balance-field">
+      <div class="fg"><label class="flabel">ยอดเงินคงเหลือ (฿)</label>
+        <input type="number" id="bank-balance-normal" class="finput" placeholder="0" min="0" step="0.01">
+      </div>
     </div>
     <div class="fg"><label class="flabel">หมายเหตุ (ไม่บังคับ)</label>
       <input type="text" id="bank-note" class="finput" placeholder="เช่น บัญชีเงินเดือน, ค่าใช้จ่ายประจำ">
