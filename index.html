@@ -4226,7 +4226,10 @@ function renderBanks(){
       <div class="sec-title">บัญชีธนาคาร</div>
       <div style="font-size:12px;color:var(--muted);margin-top:3px">${banks.length} บัญชี</div>
     </div>
-    <button class="btn btn-primary" onclick="openBankModal()"><i class="fas fa-plus"></i> เพิ่มบัญชี</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="openBankModal()"><i class="fas fa-plus"></i> เพิ่มบัญชี</button>
+      <button class="btn btn-ghost" onclick="openBankModal(null,true)" style="border:1px solid rgba(239,68,68,.4);color:#ef4444"><i class="fas fa-credit-card"></i> เพิ่มบัตรเครดิต</button>
+    </div>
   </div>`;
 
   if(!banks.length){
