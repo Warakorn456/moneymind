@@ -4330,23 +4330,51 @@ function onBankNameChange(){
   if(name==='กระเป๋าตังค์เงินสด') document.getElementById('bank-type').value='เงินสด';
 }
 
+function onBankTypeChange(){
+  const isCC=document.getElementById('bank-type').value==='บัตรเครดิต';
+  document.getElementById('cc-fields').style.display=isCC?'':'none';
+  document.getElementById('normal-balance-field').style.display=isCC?'none':'';
+}
+
 function openBankModal(id){
   const bank=id?getBanks().find(b=>b.id===id):null;
+  const isCC=bank?.type==='บัตรเครดิต';
   document.getElementById('bank-eid').value=id||'';
   document.getElementById('bank-m-title').textContent=id?'แก้ไขบัญชีธนาคาร':'เพิ่มบัญชีธนาคาร';
   document.getElementById('bank-name').value=bank?.name||'กสิกรไทย';
   document.getElementById('bank-type').value=bank?.type||'ออมทรัพย์';
   document.getElementById('bank-accno').value=bank?.accountNo||'';
-  document.getElementById('bank-balance').value=bank?.balance||'';
   document.getElementById('bank-note').value=bank?.note||'';
+  if(isCC){
+    document.getElementById('bank-balance').value=bank?.balance||'';
+    document.getElementById('bank-cc-limit').value=bank?.creditLimit||'';
+    document.getElementById('bank-cc-billing').value=bank?.billingDate||'';
+    document.getElementById('bank-cc-due').value=bank?.dueDate||'';
+    document.getElementById('bank-balance-normal').value='';
+  } else {
+    document.getElementById('bank-balance-normal').value=bank?.balance||'';
+    document.getElementById('bank-balance').value='';
+    document.getElementById('bank-cc-limit').value='';
+    document.getElementById('bank-cc-billing').value='';
+    document.getElementById('bank-cc-due').value='';
+  }
+  document.getElementById('cc-fields').style.display=isCC?'':'none';
+  document.getElementById('normal-balance-field').style.display=isCC?'none':'';
   openM('m-bank');
 }
 
 function saveBank(){
   const id=document.getElementById('bank-eid').value;
   const name=document.getElementById('bank-name').value;
-  const balance=parseFloat(document.getElementById('bank-balance').value)||0;
-  const obj={name,type:document.getElementById('bank-type').value,accountNo:document.getElementById('bank-accno').value.trim(),balance,note:document.getElementById('bank-note').value.trim(),updatedAt:new Date().toLocaleDateString('th-TH')};
+  const type=document.getElementById('bank-type').value;
+  const isCC=type==='บัตรเครดิต';
+  const balance=parseFloat(isCC?document.getElementById('bank-balance').value:document.getElementById('bank-balance-normal').value)||0;
+  const obj={name,type,accountNo:document.getElementById('bank-accno').value.trim(),balance,note:document.getElementById('bank-note').value.trim(),updatedAt:new Date().toLocaleDateString('th-TH')};
+  if(isCC){
+    obj.creditLimit=parseFloat(document.getElementById('bank-cc-limit').value)||0;
+    obj.billingDate=parseInt(document.getElementById('bank-cc-billing').value)||0;
+    obj.dueDate=parseInt(document.getElementById('bank-cc-due').value)||0;
+  }
   const banks=getBanks();
   if(id){ const i=banks.findIndex(b=>b.id===id); if(i>=0) banks[i]={...banks[i],...obj}; toast('แก้ไขแล้ว','success'); }
   else { banks.push({id:uid(),...obj}); toast('เพิ่มบัญชีแล้ว','success'); }
