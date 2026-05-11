@@ -1029,6 +1029,7 @@
         <button class="btn btn-primary" onclick="fsTest()"><i class="fas fa-plug"></i> ทดสอบการเชื่อมต่อ</button>
         <button class="btn btn-ghost" onclick="fsSave().then(()=>toast('อัปโหลดแล้ว','success'))"><i class="fas fa-upload"></i> อัปโหลดขึ้น Cloud</button>
         <button class="btn btn-ghost" onclick="fsLoad().then(s=>{ if(s){renderPage(curPage);toast('โหลดจาก Cloud แล้ว','success');} else toast('ไม่มีข้อมูลใน Cloud','info'); })"><i class="fas fa-download"></i> โหลดจาก Cloud</button>
+        <button class="btn btn-ghost" style="border-color:#f59e0b;color:#f59e0b" onclick="recoverData().then(r=>{ if(!r) toast('ไม่พบข้อมูลที่กู้คืนได้','info'); })"><i class="fas fa-life-ring"></i> กู้คืนข้อมูล</button>
       </div>
     </div>
     <div class="set-card">
@@ -1750,6 +1751,29 @@ function randB64(n){ const a=new Uint8Array(n); crypto.getRandomValues(a); retur
 function getUsers(){ try{ return JSON.parse(localStorage.getItem(USERS_KEY)||'[]'); }catch{ return []; } }
 function saveUsers(u){ localStorage.setItem(USERS_KEY,JSON.stringify(u)); }
 
+async function recoverData(){
+  const isEmpty = v => !v?.transactions?.length && !v?.savings?.length && !v?.debts?.length && !v?.investments?.length;
+  if(!isEmpty(DB)) return false; // DB มีข้อมูลแล้ว ไม่ต้องกู้
+  let best=null, bestTs=0;
+  // 1. ลอง localStorage
+  try{
+    const raw=localStorage.getItem(userDataKey(currentUser));
+    if(raw){ const d=JSON.parse(raw); if(!isEmpty(d)&&(d._savedAt||0)>=bestTs){ best=d; bestTs=d._savedAt||0; } }
+  }catch(e){}
+  // 2. ลอง Firestore
+  if(_fs && _auth && _auth.currentUser){
+    try{
+      const doc=await _fs.collection('userdata').doc(currentUser).get();
+      if(doc.exists&&doc.data()?.db){
+        const d=JSON.parse(doc.data().db);
+        if(!isEmpty(d)&&(d._savedAt||0)>=bestTs){ best=d; bestTs=d._savedAt||0; }
+      }
+    }catch(e){}
+  }
+  if(best){ DB={...DB,...best}; saveLocalOnly(); renderPage(curPage); toast('กู้คืนข้อมูลสำเร็จ ✓','success'); return true; }
+  return false;
+}
+
 function enterApp(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-root').style.display='flex';
@@ -1761,6 +1785,7 @@ function enterApp(){
   resetLockTimer();
   initDate(); setTxType('income'); renderDash();
   setTimeout(checkDcaSchedule,2000); // ตรวจ DCA ถึงกำหนดหลัง login
+  setTimeout(recoverData,800); // auto-recover หากข้อมูลว่างหลัง login
 }
 
 // ── Login ──
@@ -1785,7 +1810,8 @@ async function tryLogin(){
       const data=JSON.parse(new TextDecoder().decode(plain));
       currentUser=_ENC.user;
       DB={...DB,...data};
-      if(!localStorage.getItem(userDataKey(currentUser))) saveLocalOnly();
+      if(localStorage.getItem(userDataKey(currentUser))) loadDB();
+      else saveLocalOnly();
       const _synced=await fsLoad();
       enterApp();
       if(!_synced) fsSave();
@@ -1981,7 +2007,6 @@ function checkLogin(){
         const un=document.getElementById('sidebar-username');
         if(ui&&un){ un.textContent=currentUser; ui.style.display='flex'; }
         resetLockTimer();
-        // sync from Firestore in background (show local data immediately)
         fsLoad().then(synced=>{ if(synced) renderPage(curPage); else fsSave(); fsListen(); });
         return;
       }
