@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "defaultMode": "dontAsk",
+    "allow": [
+      "Bash(cd /d \"D:\\\\wabbest\")",
+      "Bash(start \"\" \"http://localhost:8080\")",
+      "Bash(python -m http.server 8080)",
+      "Bash(python *)",
+      "Bash(git --version)",
+      "Bash(gh --version)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "command": "$data = $input | Out-String | ConvertFrom-Json; $f = $data.tool_input.file_path; if ($f) { git -C 'D:\\wabbest' add $f; if ($?) { $name = Split-Path $f -Leaf; git -C 'D:\\wabbest' commit -m \"Auto-update: $name\"; git -C 'D:\\wabbest' push } }",
+            "timeout": 30,
+            "statusMessage": "Pushing to GitHub..."
+          }
+        ]
+      }
+    ]
+  }
+}
