@@ -2553,14 +2553,33 @@ function setFilter(f,el){ txFilter=f; document.querySelectorAll('.ftab').forEach
 // ── Add / Edit Transaction ──
 let editTxId=null;
 
-function _populateTxBankDropdown(selectedId=''){
+function _populateTxBankDropdown(selectedId='', ccOnly=false){
   const sel=document.getElementById('tx-bank'); if(!sel) return;
-  const banks=getBanks();
-  sel.innerHTML='<option value="">— ไม่ระบุ —</option>'+banks.map(b=>{
-    const m=BANK_META[b.name]||BANK_META['อื่นๆ'];
-    const last4=b.accountNo?` ····${b.accountNo}`:'';
-    return `<option value="${b.id}"${b.id===selectedId?' selected':''}>[${m.abbr}] ${b.name}${last4} (${fmt(b.balance)})</option>`;
-  }).join('');
+  const banks=getBanks().filter(b=> ccOnly ? b.type==='บัตรเครดิต' : b.type!=='บัตรเครดิต');
+  const ccBanks=getBanks().filter(b=>b.type==='บัตรเครดิต');
+  const regularBanks=getBanks().filter(b=>b.type!=='บัตรเครดิต');
+  let opts='<option value="">— ไม่ระบุ —</option>';
+  if(!ccOnly){
+    regularBanks.forEach(b=>{
+      const m=BANK_META[b.name]||BANK_META['อื่นๆ'];
+      const last4=b.accountNo?` ····${b.accountNo}`:'';
+      opts+=`<option value="${b.id}"${b.id===selectedId?' selected':''}>[${m.abbr}] ${b.name}${last4} (${fmt(b.balance)})</option>`;
+    });
+    if(ccBanks.length){
+      opts+=`<optgroup label="💳 บัตรเครดิต">`;
+      ccBanks.forEach(b=>{
+        const last4=b.accountNo?` ····${b.accountNo}`:'';
+        opts+=`<option value="${b.id}"${b.id===selectedId?' selected':''}>💳 ${b.name}${last4} (ค้าง:${fmt(b.balance)})</option>`;
+      });
+      opts+=`</optgroup>`;
+    }
+  } else {
+    ccBanks.forEach(b=>{
+      const last4=b.accountNo?` ····${b.accountNo}`:'';
+      opts+=`<option value="${b.id}"${b.id===selectedId?' selected':''}>💳 ${b.name}${last4} (ค้าง:${fmt(b.balance)})</option>`;
+    });
+  }
+  sel.innerHTML=opts;
 }
 
 function openTxModal(pre=null){
