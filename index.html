@@ -2614,8 +2614,14 @@ function editTx(id){
   document.getElementById('tx-amt').value=tx.amount;
   document.getElementById('tx-desc').value=tx.description;
   document.getElementById('tx-date').value=tx.date;
-  _populateTxBankDropdown(tx.bankId||'');
+  const linkedBank=tx.bankId?getBanks().find(b=>b.id===tx.bankId):null;
+  const isCCTx=linkedBank?.type==='บัตรเครดิต';
+  document.getElementById('tx-paybycard').checked=isCCTx;
   setTxType(tx.type);
+  _populateTxBankDropdown(tx.bankId||'', isCCTx);
+  if(isCCTx){
+    document.getElementById('tx-bank-label').textContent='บัตรเครดิต (เลือกบัตรที่ใช้จ่าย)';
+  }
   setTimeout(()=>{
     document.getElementById('tx-cat').value=tx.category;
     if(tx.type==='income') document.getElementById('tx-carryover').checked=!!tx.carryover;
