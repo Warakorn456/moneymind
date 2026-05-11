@@ -2628,7 +2628,11 @@ function setTxType(type,btn){
 function _adjustBankBalance(bankId, type, amount, reverse=false){
   if(!bankId) return;
   const bank=getBanks().find(b=>b.id===bankId); if(!bank) return;
-  const delta = (type==='income'?amount:-amount) * (reverse?-1:1);
+  const isCC = bank.type==='บัตรเครดิต';
+  // CC: expense=+debt, income/payment=-debt; regular: income=+balance, expense=-balance
+  const delta = isCC
+    ? (type==='income'?-amount:amount) * (reverse?-1:1)
+    : (type==='income'?amount:-amount) * (reverse?-1:1);
   bank.balance=Math.max(0, bank.balance+delta);
   bank.updatedAt=new Date().toLocaleDateString('th-TH');
 }
