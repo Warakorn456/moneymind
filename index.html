@@ -4368,13 +4368,13 @@ function onBankTypeChange(){
   document.getElementById('normal-balance-field').style.display=isCC?'none':'';
 }
 
-function openBankModal(id){
+function openBankModal(id, presetCC=false){
   const bank=id?getBanks().find(b=>b.id===id):null;
-  const isCC=bank?.type==='บัตรเครดิต';
+  const isCC=bank?.type==='บัตรเครดิต'||(!id&&presetCC);
   document.getElementById('bank-eid').value=id||'';
-  document.getElementById('bank-m-title').textContent=id?'แก้ไขบัญชีธนาคาร':'เพิ่มบัญชีธนาคาร';
+  document.getElementById('bank-m-title').textContent=id?(isCC?'แก้ไขบัตรเครดิต':'แก้ไขบัญชีธนาคาร'):(isCC?'เพิ่มบัตรเครดิต':'เพิ่มบัญชีธนาคาร');
   document.getElementById('bank-name').value=bank?.name||'กสิกรไทย';
-  document.getElementById('bank-type').value=bank?.type||'ออมทรัพย์';
+  document.getElementById('bank-type').value=bank?.type||(presetCC?'บัตรเครดิต':'ออมทรัพย์');
   document.getElementById('bank-accno').value=bank?.accountNo||'';
   document.getElementById('bank-note').value=bank?.note||'';
   if(isCC){
