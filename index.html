@@ -2564,7 +2564,6 @@ let editTxId=null;
 
 function _populateTxBankDropdown(selectedId='', ccOnly=false){
   const sel=document.getElementById('tx-bank'); if(!sel) return;
-  const banks=getBanks().filter(b=> ccOnly ? b.type==='บัตรเครดิต' : b.type!=='บัตรเครดิต');
   const ccBanks=getBanks().filter(b=>b.type==='บัตรเครดิต');
   const regularBanks=getBanks().filter(b=>b.type!=='บัตรเครดิต');
   let opts='<option value="">— ไม่ระบุ —</option>';
