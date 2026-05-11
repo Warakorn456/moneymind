@@ -2598,8 +2598,9 @@ function openTxModal(pre=null){
   document.getElementById('tx-amt').value='';
   document.getElementById('tx-desc').value='';
   document.getElementById('tx-date').value=new Date().toISOString().split('T')[0];
-  _populateTxBankDropdown();
+  document.getElementById('tx-paybycard').checked=false;
   setTxType(pre?.type||'income');
+  _populateTxBankDropdown();
   if(pre){ document.getElementById('tx-amt').value=pre.amount||''; document.getElementById('tx-desc').value=pre.desc||''; document.getElementById('tx-date').value=pre.date||new Date().toISOString().split('T')[0]; if(pre.cat) setTimeout(()=>document.getElementById('tx-cat').value=pre.cat,10); }
   openM('m-tx');
   setTimeout(()=>document.getElementById('tx-amt').focus(),200);
