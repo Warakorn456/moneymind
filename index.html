@@ -2629,9 +2629,23 @@ function setTxType(type,btn){
   else document.querySelector('.type-btn.'+( type==='income'?'inc':'exp'))?.classList.add('active');
   const cats=type==='income'?INC_CATS:EXP_CATS;
   document.getElementById('tx-cat').innerHTML=cats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
-  // แสดง checkbox "ยกไปเดือนหน้า" เฉพาะรายรับ
   document.getElementById('carryover-row').style.display=type==='income'?'block':'none';
   if(type!=='income') document.getElementById('tx-carryover').checked=false;
+  const hasCC=getBanks().some(b=>b.type==='บัตรเครดิต');
+  document.getElementById('paybycard-row').style.display=(type==='expense'&&hasCC)?'block':'none';
+  if(type!=='expense'){ document.getElementById('tx-paybycard').checked=false; onPayByCCChange(); }
+}
+
+function onPayByCCChange(){
+  const checked=document.getElementById('tx-paybycard').checked;
+  const lbl=document.getElementById('tx-bank-label');
+  if(checked){
+    lbl.textContent='บัตรเครดิต (เลือกบัตรที่ใช้จ่าย)';
+    _populateTxBankDropdown('',true);
+  } else {
+    lbl.textContent='ธนาคาร (ไม่บังคับ — จะอัปเดตยอดอัตโนมัติ)';
+    _populateTxBankDropdown('',false);
+  }
 }
 
 function _adjustBankBalance(bankId, type, amount, reverse=false){
