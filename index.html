@@ -4263,7 +4263,7 @@ function renderBanks(){
     regular.forEach(b=>{
       const m=BANK_META[b.name]||BANK_META['อื่นๆ'];
       const upd=b.updatedAt?`อัปเดต ${b.updatedAt}`:'ยังไม่อัปเดต';
-      html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;position:relative;overflow:hidden">
+      html+=`<div draggable="true" data-id="${b.id}" ondragstart="bankDragStart(event,'${b.id}')" ondragover="bankDragOver(event)" ondragleave="bankDragLeave(event)" ondrop="bankDrop(event,'${b.id}')" ondragend="bankDragEnd(event)" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;position:relative;overflow:hidden;cursor:grab;transition:opacity .2s,outline .15s">
         <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:${m.color};border-radius:16px 0 0 16px"></div>
         <div style="padding-left:8px">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
