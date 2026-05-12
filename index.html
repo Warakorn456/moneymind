@@ -4356,6 +4356,13 @@ function renderBanks(){
   el.innerHTML=html;
 }
 
+let _bankDragId=null;
+function bankDragStart(e,id){_bankDragId=id;e.currentTarget.style.opacity='0.35';e.dataTransfer.effectAllowed='move';}
+function bankDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';e.currentTarget.style.outline='2px dashed var(--primary)';e.currentTarget.style.outlineOffset='4px';e.currentTarget.style.background='rgba(124,58,237,.08)';}
+function bankDragLeave(e){e.currentTarget.style.outline='';e.currentTarget.style.outlineOffset='';e.currentTarget.style.background='';}
+function bankDrop(e,targetId){e.preventDefault();bankDragLeave(e);if(!_bankDragId||_bankDragId===targetId)return;const banks=getBanks();const fi=banks.findIndex(b=>b.id===_bankDragId);const ti=banks.findIndex(b=>b.id===targetId);if(fi<0||ti<0)return;const[moved]=banks.splice(fi,1);banks.splice(ti,0,moved);saveDB();renderBanks();renderDashBanks();}
+function bankDragEnd(e){_bankDragId=null;e.currentTarget.style.opacity='';e.currentTarget.style.outline='';e.currentTarget.style.outlineOffset='';e.currentTarget.style.background='';}
+
 const BANK_COLORS={'กสิกรไทย':'#00b140','ไทยพาณิชย์':'#4e2d8c','กรุงเทพ':'#1d3c8c','กรุงไทย':'#00adef','กรุงศรี':'#d4a500','ออมสิน':'#d81b8c','ธ.ก.ส.':'#006633','ทหารไทยธนชาต':'#f47920','ยูโอบี':'#0066b2','ซีไอเอ็มบี':'#d71c2e','เกียรตินาคินภัทร':'#003f87','ทรูมันนี่ วอลเล็ท':'#f47920','อื่นๆ':'#64748b'};
 function onBankNameChange(){
   const name=document.getElementById('bank-name').value;
