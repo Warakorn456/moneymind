@@ -4309,7 +4309,7 @@ function renderBanks(){
       const pct=limit>0?Math.min(100,(used/limit)*100):0;
       const barColor=pct>=90?'#ef4444':pct>=70?'#f97316':'#22c55e';
       const upd=b.updatedAt?`อัปเดต ${b.updatedAt}`:'';
-      html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;position:relative;overflow:hidden">
+      html+=`<div draggable="true" data-id="${b.id}" ondragstart="bankDragStart(event,'${b.id}')" ondragover="bankDragOver(event)" ondragleave="bankDragLeave(event)" ondrop="bankDrop(event,'${b.id}')" ondragend="bankDragEnd(event)" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;position:relative;overflow:hidden;cursor:grab;transition:opacity .2s,outline .15s">
         <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:${barColor};border-radius:16px 0 0 16px"></div>
         <div style="padding-left:8px">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
