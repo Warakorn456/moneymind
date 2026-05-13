@@ -1712,6 +1712,118 @@
   </div>
 </div>
 
+<!-- Recurring Modal -->
+<div id="m-recur" class="overlay">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title"><i class="fas fa-redo-alt" style="color:var(--cyan)"></i><span id="recur-m-title">เพิ่มรายการซ้ำ</span></div>
+    <input type="hidden" id="recur-eid">
+    <div class="type-toggle">
+      <button class="type-btn inc active" onclick="setRecurType('income',this)"><i class="fas fa-arrow-down"></i> รายรับ</button>
+      <button class="type-btn exp" onclick="setRecurType('expense',this)"><i class="fas fa-arrow-up"></i> รายจ่าย</button>
+    </div>
+    <input type="hidden" id="recur-type" value="income">
+    <div class="fg"><label class="flabel">ชื่อรายการ</label><input type="text" id="recur-name" class="finput" placeholder="เช่น เงินเดือน, ค่าเช่า, Netflix"></div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">จำนวนเงิน (บาท)</label><input type="number" id="recur-amt" class="finput" placeholder="0" min="0" step="any"></div>
+      <div class="fg"><label class="flabel">หมวดหมู่</label><select id="recur-cat" class="fselect"></select></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">ความถี่</label>
+        <select id="recur-freq" class="fselect" onchange="onRecurFreqChange()">
+          <option value="monthly">ทุกเดือน</option>
+          <option value="weekly">ทุกสัปดาห์</option>
+          <option value="yearly">ปีละครั้ง</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flabel" id="recur-day-label">วันที่ (ของเดือน)</label>
+        <input type="number" id="recur-day" class="finput" placeholder="1-28" min="1" max="28" value="1">
+      </div>
+    </div>
+    <div class="fg"><label class="flabel">ธนาคาร (ไม่บังคับ)</label>
+      <select id="recur-bank" class="finput"><option value="">— ไม่ระบุ —</option></select>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border-radius:10px;margin-bottom:4px">
+      <input type="checkbox" id="recur-active" checked style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer">
+      <label for="recur-active" style="font-size:13px;cursor:pointer">เปิดใช้งาน</label>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-recur')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveRecur()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Category Modal -->
+<div id="m-customcat" class="overlay">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title"><i class="fas fa-tags" style="color:var(--amber)"></i><span id="customcat-m-title">เพิ่มหมวดหมู่</span></div>
+    <input type="hidden" id="customcat-eid">
+    <div class="type-toggle">
+      <button class="type-btn inc active" id="customcat-inc-btn" onclick="setCustomCatType('income',this)"><i class="fas fa-arrow-down"></i> รายรับ</button>
+      <button class="type-btn exp" id="customcat-exp-btn" onclick="setCustomCatType('expense',this)"><i class="fas fa-arrow-up"></i> รายจ่าย</button>
+    </div>
+    <input type="hidden" id="customcat-type" value="income">
+    <div class="fg"><label class="flabel">ชื่อหมวดหมู่</label><input type="text" id="customcat-label" class="finput" placeholder="เช่น ค่าเลี้ยงสัตว์, รายรับจากยูทูป"></div>
+    <div class="fg"><label class="flabel">สี</label>
+      <div id="customcat-color-picker" style="display:flex;gap:8px;flex-wrap:wrap;padding:6px 0">
+        <div onclick="selectCustomCatColor('#ef4444')" data-color="#ef4444" style="width:26px;height:26px;border-radius:50%;background:#ef4444;cursor:pointer;border:2px solid white"></div>
+        <div onclick="selectCustomCatColor('#f97316')" data-color="#f97316" style="width:26px;height:26px;border-radius:50%;background:#f97316;cursor:pointer;border:2px solid transparent"></div>
+        <div onclick="selectCustomCatColor('#f59e0b')" data-color="#f59e0b" style="width:26px;height:26px;border-radius:50%;background:#f59e0b;cursor:pointer;border:2px solid transparent"></div>
+        <div onclick="selectCustomCatColor('#10b981')" data-color="#10b981" style="width:26px;height:26px;border-radius:50%;background:#10b981;cursor:pointer;border:2px solid transparent"></div>
+        <div onclick="selectCustomCatColor('#06b6d4')" data-color="#06b6d4" style="width:26px;height:26px;border-radius:50%;background:#06b6d4;cursor:pointer;border:2px solid transparent"></div>
+        <div onclick="selectCustomCatColor('#3b82f6')" data-color="#3b82f6" style="width:26px;height:26px;border-radius:50%;background:#3b82f6;cursor:pointer;border:2px solid transparent"></div>
+        <div onclick="selectCustomCatColor('#8b5cf6')" data-color="#8b5cf6" style="width:26px;height:26px;border-radius:50%;background:#8b5cf6;cursor:pointer;border:2px solid transparent"></div>
+        <div onclick="selectCustomCatColor('#ec4899')" data-color="#ec4899" style="width:26px;height:26px;border-radius:50%;background:#ec4899;cursor:pointer;border:2px solid transparent"></div>
+        <div onclick="selectCustomCatColor('#84cc16')" data-color="#84cc16" style="width:26px;height:26px;border-radius:50%;background:#84cc16;cursor:pointer;border:2px solid transparent"></div>
+      </div>
+      <input type="hidden" id="customcat-color" value="#ef4444">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-customcat')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveCustomCat()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Shareable Widget Modal -->
+<div id="m-share" class="overlay">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title"><i class="fas fa-share-alt" style="color:var(--cyan)"></i> สรุปการเงินแบบแชร์ได้</div>
+    <div id="share-canvas-wrap">
+      <div class="share-card" id="share-card-content">
+        <div class="share-card-logo">💰 MoneyMind</div>
+        <div class="share-card-title" id="share-period"></div>
+        <div style="font-size:28px;font-weight:800;margin:8px 0 4px" id="share-networth"></div>
+        <div style="font-size:12px;opacity:.5;margin-bottom:4px">ความมั่งคั่งสุทธิ (Net Worth)</div>
+        <div class="share-stats">
+          <div class="share-stat">
+            <div class="share-stat-l">รายรับเดือนนี้</div>
+            <div class="share-stat-v" id="share-inc" style="color:#34d399"></div>
+          </div>
+          <div class="share-stat">
+            <div class="share-stat-l">รายจ่ายเดือนนี้</div>
+            <div class="share-stat-v" id="share-exp" style="color:#f87171"></div>
+          </div>
+          <div class="share-stat">
+            <div class="share-stat-l">คงเหลือ</div>
+            <div class="share-stat-v" id="share-bal" style="color:#60a5fa"></div>
+          </div>
+          <div class="share-stat">
+            <div class="share-stat-l">พอร์ตลงทุน</div>
+            <div class="share-stat-v" id="share-port" style="color:#fbbf24"></div>
+          </div>
+        </div>
+        <div style="font-size:10px;opacity:.3;margin-top:14px;text-align:right">สร้างด้วย MoneyMind</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" style="flex:1" onclick="downloadShareImage()"><i class="fas fa-download"></i> ดาวน์โหลดรูป</button>
+      <button class="btn btn-ghost" onclick="closeM('m-share')">ปิด</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">ต้องการ html2canvas library — ต้องเชื่อมต่ออินเทอร์เน็ต</div>
+  </div>
+</div>
+
 <!-- Toast container -->
 <div class="toast-wrap" id="toasts"></div>
 
