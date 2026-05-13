@@ -7044,15 +7044,6 @@ function renderCustomCatList(){
 // ══════════════════════════════════════════
 //  FEATURE 3 — RECURRING TRANSACTIONS
 // ══════════════════════════════════════════
-const PAGE_TITLE_ORIG=PAGE_TITLE;
-PAGE_TITLE['recurring']='รายการซ้ำประจำ';
-
-const _origRenderPage=renderPage;
-window.renderPage=function(p){
-  if(p==='recurring') renderRecurring();
-  else _origRenderPage(p);
-};
-
 function openRecurModal(id){
   const entry=id?(DB.recurringTx||[]).find(r=>r.id===id):null;
   document.getElementById('recur-eid').value=id||'';
