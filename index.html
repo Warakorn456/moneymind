@@ -1317,6 +1317,18 @@
       </div>
     </div>
     <div class="set-card">
+      <div class="set-title"><i class="fas fa-keypad" style="color:#a78bfa"></i> ตั้ง PIN สำหรับปลดล็อก</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px">ตั้ง PIN 4 หลักเพื่อใช้แทนรหัสผ่านเมื่อปลดล็อกแอป</div>
+      <div id="pin-setup-wrap">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="openPinSetup('set')"><i class="fas fa-key"></i> <span id="pin-setup-label">ตั้ง PIN</span></button>
+          <button class="btn btn-ghost" id="pin-clear-btn" onclick="clearPin()" style="display:none"><i class="fas fa-trash"></i> ลบ PIN</button>
+        </div>
+        <div id="pin-status" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+      </div>
+    </div>
+
+    <div class="set-card">
       <div class="set-title"><i class="fas fa-shield-alt" style="color:#10b981"></i> ความปลอดภัย</div>
       <div class="fg">
         <label class="flabel">ล็อกแอปอัตโนมัติหลังไม่ใช้งาน</label>
