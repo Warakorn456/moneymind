@@ -2952,6 +2952,13 @@ function _adjustBankBalance(bankId, type, amount, reverse=false){
 }
 
 function saveTx(){
+  // Multi-currency: convert to THB before saving
+  const curSel=document.getElementById('tx-currency')?.value||'THB';
+  const fxRates={THB:1,USD:36.5,EUR:39.5,JPY:0.24,SGD:27.5,CNY:5.1,GBP:46.5};
+  const rawAmt=parseFloat(document.getElementById('tx-amt').value);
+  const origAmount=rawAmt;
+  const convertedAmt=(curSel!=='THB'&&rawAmt)?(rawAmt*(fxRates[curSel]||1)):rawAmt;
+  if(curSel!=='THB'&&rawAmt) document.getElementById('tx-amt').value=convertedAmt.toFixed(2);
   const amt=parseFloat(document.getElementById('tx-amt').value);
   const cat=document.getElementById('tx-cat').value;
   const date=document.getElementById('tx-date').value;
@@ -2961,7 +2968,8 @@ function saveTx(){
   const bankId=document.getElementById('tx-bank')?.value||'';
   if(!amt||amt<=0){ toast('กรุณาใส่จำนวนเงิน','error'); return; }
   if(!date){ toast('กรุณาเลือกวันที่','error'); return; }
-  const obj={amount:amt,category:cat,date,description:desc||getCat(cat,type).label,type,carryover,bankId:bankId||null};
+  const currencyInfo=curSel!=='THB'?{currency:curSel,origAmount}:{};
+  const obj={amount:amt,category:cat,date,description:desc||getCat(cat,type).label,type,carryover,bankId:bankId||null,...currencyInfo};
   if(editTxId){
     const i=DB.transactions.findIndex(t=>t.id===editTxId);
     if(i>=0){
