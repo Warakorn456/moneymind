@@ -7200,28 +7200,6 @@ function calcTxConvert(){
   display.innerHTML=`<i class="fas fa-exchange-alt"></i> ${amt.toLocaleString()} ${cur} ≈ <strong>${fmt(thb)}</strong> (อัตรา: 1 ${cur} = ${rate} THB)`;
 }
 
-// Patch saveTx to handle currency
-const _origSaveTx=saveTx;
-window.saveTx=function(){
-  const cur=document.getElementById('tx-currency')?.value||'THB';
-  const rate=FX_RATES[cur]||1;
-  if(cur!=='THB'){
-    const origAmt=parseFloat(document.getElementById('tx-amt').value)||0;
-    document.getElementById('tx-amt').value=(origAmt*rate).toFixed(2);
-    // Will call original, then restore doesn't matter since modal closes
-  }
-  _origSaveTx();
-};
-
-// Patch openTxModal to reset currency
-const _origOpenTxModal=openTxModal;
-window.openTxModal=function(pre){
-  _origOpenTxModal(pre);
-  const sel=document.getElementById('tx-currency');
-  if(sel) sel.value='THB';
-  const display=document.getElementById('tx-convert-display');
-  if(display) display.style.display='none';
-};
 
 // ══════════════════════════════════════════
 //  FEATURE 6 — SPENDING INSIGHTS
