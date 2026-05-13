@@ -7398,33 +7398,12 @@ function renderCatBudgetProgress(){
 }
 
 // ══════════════════════════════════════════
-//  PATCH renderDash + renderSettings
+//  INIT HOOKS — called after original fns load
 // ══════════════════════════════════════════
-const _origRenderDash=renderDash;
-window.renderDash=function(){
-  _origRenderDash();
-  renderSpendingInsights();
-  renderCatBudgetProgress();
-  checkNotifications();
-};
-
-const _origRenderSettings=renderSettings;
-window.renderSettings=function(){
-  _origRenderSettings();
-  renderCustomCatList();
-  renderCatBudgetSettings();
-};
-
-// ══════════════════════════════════════════
-//  PATCH enterApp to apply theme + recurring
-// ══════════════════════════════════════════
-const _origEnterApp=enterApp;
-window.enterApp=function(){
-  _origEnterApp();
+document.addEventListener('DOMContentLoaded',()=>{
+  // Apply saved theme on page load
   applyTheme();
-  setTimeout(()=>applyRecurringTx(),1500);
-  setTimeout(()=>checkNotifications(),2000);
-};
+});
 </script>
 
 <!-- AI Chat FAB + Panel -->
