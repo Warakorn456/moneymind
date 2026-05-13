@@ -8831,31 +8831,8 @@ function checkNWMilestones(){
   });
 }
 
-// Wire: wishlist renderPage
+// Wire: PAGE_TITLE for wishlist (renderPage already handles it directly)
 PAGE_TITLE['wishlist']='Wishlist';
-const _origRenderPageFinal=renderPage;
-renderPage=function(p){
-  if(p==='wishlist') renderWishlist();
-  else _origRenderPageFinal(p);
-};
-
-// Wire: dashboard sections + milestone check
-const _origRenderDashFinal=renderDash;
-renderDash=function(){
-  _origRenderDashFinal();
-  if(typeof renderSavingsRate==='function') renderSavingsRate();
-  if(typeof renderTopMerchants==='function') renderTopMerchants();
-  if(typeof renderNWMilestoneSettings==='function') renderNWMilestoneSettings();
-  checkNWMilestones();
-};
-
-// Wire: settings PIN render
-const _origRenderSettingsFinal=renderSettings;
-renderSettings=function(){
-  _origRenderSettingsFinal();
-  if(typeof renderPinSettings==='function') renderPinSettings();
-  if(typeof renderNWMilestoneSettings==='function') renderNWMilestoneSettings();
-};
 
 // ══════════════════════════════════════════
 //  FEATURE A — SPENDING HEATMAP CALENDAR
