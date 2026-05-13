@@ -1920,6 +1920,60 @@
   </div>
 </div>
 
+<!-- PIN Setup Modal -->
+<div id="m-pin-setup" class="overlay">
+  <div class="modal" style="max-width:360px;text-align:center">
+    <div class="modal-title" style="justify-content:center"><i class="fas fa-key" style="color:var(--primary-l)"></i><span id="pin-setup-modal-title">ตั้ง PIN ใหม่</span></div>
+    <div id="pin-setup-step1">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px">กรอก PIN 4 หลักที่ต้องการ</div>
+      <div class="pin-display" id="pin-setup-display1">
+        <div class="pin-dot" id="sp0"></div><div class="pin-dot" id="sp1"></div>
+        <div class="pin-dot" id="sp2"></div><div class="pin-dot" id="sp3"></div>
+      </div>
+      <div class="login-err" id="pin-setup-err" style="min-height:18px;margin-bottom:10px"></div>
+      <div class="pin-pad">
+        <button class="pin-btn" onclick="setupPinPress('1')">1</button>
+        <button class="pin-btn" onclick="setupPinPress('2')">2</button>
+        <button class="pin-btn" onclick="setupPinPress('3')">3</button>
+        <button class="pin-btn" onclick="setupPinPress('4')">4</button>
+        <button class="pin-btn" onclick="setupPinPress('5')">5</button>
+        <button class="pin-btn" onclick="setupPinPress('6')">6</button>
+        <button class="pin-btn" onclick="setupPinPress('7')">7</button>
+        <button class="pin-btn" onclick="setupPinPress('8')">8</button>
+        <button class="pin-btn" onclick="setupPinPress('9')">9</button>
+        <button class="pin-btn empty"></button>
+        <button class="pin-btn" onclick="setupPinPress('0')">0</button>
+        <button class="pin-btn del" onclick="setupPinDelete()"><i class="fas fa-backspace"></i></button>
+      </div>
+    </div>
+    <div id="pin-setup-step2" style="display:none">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px">ยืนยัน PIN อีกครั้ง</div>
+      <div class="pin-display" id="pin-setup-display2">
+        <div class="pin-dot" id="sp20"></div><div class="pin-dot" id="sp21"></div>
+        <div class="pin-dot" id="sp22"></div><div class="pin-dot" id="sp23"></div>
+      </div>
+      <div class="login-err" id="pin-setup-err2" style="min-height:18px;margin-bottom:10px"></div>
+      <div class="pin-pad">
+        <button class="pin-btn" onclick="confirmPinPress('1')">1</button>
+        <button class="pin-btn" onclick="confirmPinPress('2')">2</button>
+        <button class="pin-btn" onclick="confirmPinPress('3')">3</button>
+        <button class="pin-btn" onclick="confirmPinPress('4')">4</button>
+        <button class="pin-btn" onclick="confirmPinPress('5')">5</button>
+        <button class="pin-btn" onclick="confirmPinPress('6')">6</button>
+        <button class="pin-btn" onclick="confirmPinPress('7')">7</button>
+        <button class="pin-btn" onclick="confirmPinPress('8')">8</button>
+        <button class="pin-btn" onclick="confirmPinPress('9')">9</button>
+        <button class="pin-btn empty"></button>
+        <button class="pin-btn" onclick="confirmPinPress('0')">0</button>
+        <button class="pin-btn del" onclick="confirmPinDelete()"><i class="fas fa-backspace"></i></button>
+      </div>
+    </div>
+    <div class="modal-foot" style="justify-content:center;margin-top:14px">
+      <button class="btn btn-ghost" onclick="closeM('m-pin-setup')">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
 <!-- Recurring Modal -->
 <div id="m-recur" class="overlay">
   <div class="modal" style="max-width:480px">
