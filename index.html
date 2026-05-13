@@ -7711,14 +7711,31 @@ function clearPin(){
   delete DB.settings.pinHash; saveDB(); renderSettings();
   toast('ลบ PIN แล้ว','info');
 }
+function saveInlinePin(){
+  const p1=(document.getElementById('pin-new-inp')?.value||'').trim();
+  const p2=(document.getElementById('pin-confirm-inp')?.value||'').trim();
+  const errEl=document.getElementById('pin-inline-err');
+  if(!errEl) return;
+  if(!/^\d{4}$/.test(p1)){ errEl.textContent='PIN ต้องเป็นตัวเลข 4 หลัก'; return; }
+  if(p1!==p2){ errEl.textContent='PIN ไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง'; return; }
+  errEl.textContent='';
+  if(!DB.settings) DB.settings={};
+  DB.settings.pinHash=_hashPin(p1);
+  saveDB();
+  document.getElementById('pin-new-inp').value='';
+  document.getElementById('pin-confirm-inp').value='';
+  renderPinSettings();
+  toast('ตั้ง PIN เรียบร้อยแล้ว','success');
+}
+
 function renderPinSettings(){
   const hasPin=!!(DB.settings?.pinHash);
-  const lbl=document.getElementById('pin-setup-label');
   const clearBtn=document.getElementById('pin-clear-btn');
   const status=document.getElementById('pin-status');
-  if(lbl) lbl.textContent=hasPin?'เปลี่ยน PIN':'ตั้ง PIN';
+  const form=document.getElementById('pin-inline-form');
   if(clearBtn) clearBtn.style.display=hasPin?'inline-flex':'none';
-  if(status) status.textContent=hasPin?'✓ ตั้ง PIN แล้ว — ใช้ปลดล็อกแทนรหัสผ่านได้':'ยังไม่ได้ตั้ง PIN';
+  if(status) status.textContent=hasPin?'✅ ตั้ง PIN แล้ว — ใช้ปลดล็อกแทนรหัสผ่านได้':'ยังไม่ได้ตั้ง PIN';
+  if(form) form.style.display=hasPin?'none':'block';
 }
 
 // ══════════════════════════════════════════
