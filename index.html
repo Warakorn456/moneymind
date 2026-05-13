@@ -6876,6 +6876,563 @@ document.addEventListener('DOMContentLoaded',()=>{
     inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}});
   }
 });
+
+// ══════════════════════════════════════════
+//  FEATURE 1 — NOTIFICATIONS
+// ══════════════════════════════════════════
+let _notifs=[];
+function checkNotifications(){
+  _notifs=[];
+  const mn=selMonth, yr=selYear;
+  const txs=monthTx(mn,yr);
+  const inc=txs.filter(t=>t.type==='income'&&!t.carryover).reduce((s,t)=>s+t.amount,0);
+  const exp=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const budget=inc;
+  if(budget>0){
+    const pct=(exp/budget)*100;
+    if(pct>=100) _notifs.push({type:'danger',icon:'fa-exclamation-triangle',color:'#ef4444',bg:'rgba(239,68,68,.12)',text:'เกินงบประมาณแล้ว!',sub:`ใช้ไป ${fmt(exp)} จากงบ ${fmt(budget)} (${pct.toFixed(0)}%)`});
+    else if(pct>=80) _notifs.push({type:'warn',icon:'fa-exclamation-circle',color:'#f59e0b',bg:'rgba(245,158,11,.12)',text:'งบประมาณเหลือน้อย',sub:`ใช้ไปแล้ว ${pct.toFixed(0)}% ของงบเดือนนี้ (${fmt(exp)}/${fmt(budget)})`});
+  }
+  // Category budget alerts
+  const catBudgets=DB.settings.catBudgets||{};
+  EXP_CATS.concat(getCustomExpCats()).forEach(c=>{
+    const budAmt=catBudgets[c.id];
+    if(!budAmt||budAmt<=0) return;
+    const spent=txs.filter(t=>t.type==='expense'&&t.category===c.id).reduce((s,t)=>s+t.amount,0);
+    const p=(spent/budAmt)*100;
+    if(p>=90) _notifs.push({type:'warn',icon:'fa-tag',color:c.color,bg:c.color+'22',text:`งบ "${c.label}" ใกล้เต็ม`,sub:`ใช้ ${p.toFixed(0)}% (${fmt(spent)}/${fmt(budAmt)})`});
+  });
+  // Debt due within 7 days
+  (DB.debts||[]).forEach(d=>{
+    if(!d.due) return;
+    const days=Math.ceil((new Date(d.due)-new Date())/(1000*60*60*24));
+    if(days>=0&&days<=7) _notifs.push({type:'warn',icon:'fa-credit-card',color:'#ef4444',bg:'rgba(239,68,68,.12)',text:`หนี้ "${d.name}" ครบกำหนด${days===0?' วันนี้':'ใน '+days+' วัน'}`,sub:`ยอดคงเหลือ ${fmt(d.remaining||d.total)}`});
+  });
+  // Savings near goal
+  (DB.savings||[]).forEach(s=>{
+    if(!s.target||!s.current) return;
+    const p=(s.current/s.target)*100;
+    if(p>=90&&p<100) _notifs.push({type:'success',icon:'fa-piggy-bank',color:'#10b981',bg:'rgba(16,185,129,.12)',text:`ใกล้ถึงเป้า "${s.name}" แล้ว!`,sub:`ออมแล้ว ${p.toFixed(0)}% (${fmt(s.current)}/${fmt(s.target)})`});
+    else if(p>=100) _notifs.push({type:'success',icon:'fa-check-circle',color:'#10b981',bg:'rgba(16,185,129,.12)',text:`บรรลุเป้าหมาย "${s.name}"!`,sub:`ออมครบ ${fmt(s.target)} แล้ว`});
+  });
+  renderNotifPanel();
+}
+
+function renderNotifPanel(){
+  const dot=document.getElementById('notif-dot');
+  const list=document.getElementById('notif-list');
+  if(!list) return;
+  if(!_notifs.length){
+    if(dot) dot.style.display='none';
+    list.innerHTML='<div class="notif-empty"><i class="fas fa-check-circle" style="color:var(--green);font-size:22px;display:block;margin-bottom:8px"></i>ไม่มีการแจ้งเตือน</div>';
+    return;
+  }
+  if(dot) dot.style.display='block';
+  list.innerHTML=_notifs.map((n,i)=>`
+    <div class="notif-item" onclick="">
+      <div class="notif-icon" style="background:${n.bg};color:${n.color}"><i class="fas ${n.icon}"></i></div>
+      <div><div class="notif-text">${n.text}</div><div class="notif-sub">${n.sub}</div></div>
+    </div>`).join('');
+}
+
+function toggleNotifPanel(){
+  const p=document.getElementById('notif-panel');
+  if(!p) return;
+  const open=p.classList.contains('open');
+  document.querySelectorAll('.notif-panel.open').forEach(el=>el.classList.remove('open'));
+  if(!open){ checkNotifications(); p.classList.add('open'); }
+}
+
+function clearNotifs(){
+  _notifs=[];
+  renderNotifPanel();
+}
+
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.notif-wrap')) document.querySelectorAll('.notif-panel.open').forEach(el=>el.classList.remove('open'));
+});
+
+// ══════════════════════════════════════════
+//  FEATURE 2 — CUSTOM CATEGORIES
+// ══════════════════════════════════════════
+function getCustomIncCats(){ return DB.settings.customIncCats||[]; }
+function getCustomExpCats(){ return DB.settings.customExpCats||[]; }
+
+function getAllIncCats(){ return [...INC_CATS,...getCustomIncCats()]; }
+function getAllExpCats(){ return [...EXP_CATS,...getCustomExpCats()]; }
+
+// Patch getCat to include custom
+const _origGetCat=getCat;
+window.getCat=function(id,type){
+  const l=type==='income'?getAllIncCats():getAllExpCats();
+  return l.find(c=>c.id===id)||{label:id,icon:'fa-circle',color:'#94a3b8'};
+};
+
+// Patch setTxType to include custom cats
+const _origSetTxType=setTxType;
+window.setTxType=function(type,btn){
+  _origSetTxType(type,btn);
+  const custom=type==='income'?getCustomIncCats():getCustomExpCats();
+  if(custom.length){
+    const sel=document.getElementById('tx-cat');
+    if(sel) sel.innerHTML+='<optgroup label="— หมวดหมู่ของฉัน —">'+custom.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')+'</optgroup>';
+  }
+};
+
+function openCustomCatModal(id){
+  const all=[...getCustomIncCats(),...getCustomExpCats()];
+  const entry=id?all.find(c=>c.id===id):null;
+  document.getElementById('customcat-eid').value=id||'';
+  document.getElementById('customcat-m-title').textContent=id?'แก้ไขหมวดหมู่':'เพิ่มหมวดหมู่';
+  document.getElementById('customcat-label').value=entry?.label||'';
+  if(entry){ setCustomCatType(entry.catType||'expense'); selectCustomCatColor(entry.color||'#ef4444'); }
+  else { setCustomCatType('expense'); selectCustomCatColor('#ef4444'); }
+  openM('m-customcat');
+}
+
+function setCustomCatType(type,btn){
+  document.getElementById('customcat-type').value=type;
+  document.querySelectorAll('#m-customcat .type-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  else document.getElementById(type==='income'?'customcat-inc-btn':'customcat-exp-btn')?.classList.add('active');
+}
+
+function selectCustomCatColor(color){
+  document.getElementById('customcat-color').value=color;
+  document.querySelectorAll('#customcat-color-picker [data-color]').forEach(el=>{
+    el.style.border=el.dataset.color===color?'2px solid white':'2px solid transparent';
+  });
+}
+
+function saveCustomCat(){
+  const id=document.getElementById('customcat-eid').value||('custom_'+uid());
+  const label=document.getElementById('customcat-label').value.trim();
+  const type=document.getElementById('customcat-type').value;
+  const color=document.getElementById('customcat-color').value||'#ef4444';
+  if(!label){ toast('กรุณาใส่ชื่อหมวดหมู่','error'); return; }
+  if(!DB.settings.customIncCats) DB.settings.customIncCats=[];
+  if(!DB.settings.customExpCats) DB.settings.customExpCats=[];
+  const entry={id,label,icon:'fa-tag',color,catType:type};
+  const list=type==='income'?DB.settings.customIncCats:DB.settings.customExpCats;
+  const idx=list.findIndex(c=>c.id===id);
+  if(idx>=0) list[idx]=entry; else list.push(entry);
+  saveDB(); closeM('m-customcat'); renderSettings(); toast('บันทึกหมวดหมู่แล้ว','success');
+}
+
+function deleteCustomCat(id){
+  if(!confirm('ลบหมวดหมู่นี้?')) return;
+  DB.settings.customIncCats=(DB.settings.customIncCats||[]).filter(c=>c.id!==id);
+  DB.settings.customExpCats=(DB.settings.customExpCats||[]).filter(c=>c.id!==id);
+  saveDB(); renderSettings(); toast('ลบแล้ว','info');
+}
+
+function renderCustomCatList(){
+  const el=document.getElementById('custom-cat-list'); if(!el) return;
+  const all=[...getCustomIncCats().map(c=>({...c,catType:'income'})),...getCustomExpCats().map(c=>({...c,catType:'expense'}))];
+  if(!all.length){ el.innerHTML='<div style="font-size:13px;color:var(--muted)">ยังไม่มีหมวดหมู่ที่กำหนดเอง</div>'; return; }
+  el.innerHTML=all.map(c=>`
+    <div class="custom-cat-item">
+      <div class="custom-cat-color" style="background:${c.color}"></div>
+      <div class="custom-cat-label">${c.label}</div>
+      <div class="custom-cat-type">${c.catType==='income'?'รายรับ':'รายจ่าย'}</div>
+      <button onclick="openCustomCatModal('${c.id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px"><i class="fas fa-edit"></i></button>
+      <button onclick="deleteCustomCat('${c.id}')" style="background:none;border:none;color:var(--red);cursor:pointer;padding:4px"><i class="fas fa-times"></i></button>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════
+//  FEATURE 3 — RECURRING TRANSACTIONS
+// ══════════════════════════════════════════
+const PAGE_TITLE_ORIG=PAGE_TITLE;
+PAGE_TITLE['recurring']='รายการซ้ำประจำ';
+
+const _origRenderPage=renderPage;
+window.renderPage=function(p){
+  if(p==='recurring') renderRecurring();
+  else _origRenderPage(p);
+};
+
+function openRecurModal(id){
+  const entry=id?(DB.recurringTx||[]).find(r=>r.id===id):null;
+  document.getElementById('recur-eid').value=id||'';
+  document.getElementById('recur-m-title').textContent=id?'แก้ไขรายการซ้ำ':'เพิ่มรายการซ้ำ';
+  document.getElementById('recur-name').value=entry?.name||'';
+  document.getElementById('recur-amt').value=entry?.amount||'';
+  document.getElementById('recur-freq').value=entry?.freq||'monthly';
+  document.getElementById('recur-day').value=entry?.day||1;
+  document.getElementById('recur-active').checked=entry?.active!==false;
+  setRecurType(entry?.type||'income');
+  // Bank dropdown
+  const sel=document.getElementById('recur-bank'); if(sel){
+    sel.innerHTML='<option value="">— ไม่ระบุ —</option>';
+    getBanks().forEach(b=>{
+      const m=BANK_META[b.name]||BANK_META['อื่นๆ'];
+      sel.innerHTML+=`<option value="${b.id}"${entry?.bankId===b.id?' selected':''}>[${m.abbr}] ${b.name} (${fmt(b.balance)})</option>`;
+    });
+  }
+  if(entry){ setTimeout(()=>document.getElementById('recur-cat').value=entry.category,10); }
+  onRecurFreqChange();
+  openM('m-recur');
+}
+
+function setRecurType(type,btn){
+  document.getElementById('recur-type').value=type;
+  document.querySelectorAll('#m-recur .type-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  else document.querySelector('#m-recur .type-btn.'+(type==='income'?'inc':'exp'))?.classList.add('active');
+  const cats=type==='income'?getAllIncCats():getAllExpCats();
+  document.getElementById('recur-cat').innerHTML=cats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+}
+
+function onRecurFreqChange(){
+  const freq=document.getElementById('recur-freq').value;
+  const lbl=document.getElementById('recur-day-label');
+  if(lbl) lbl.textContent=freq==='weekly'?'วันในสัปดาห์ (0=อา, 1=จ, ...)':'วันที่ (ของเดือน)';
+}
+
+function saveRecur(){
+  const id=document.getElementById('recur-eid').value||uid();
+  const name=document.getElementById('recur-name').value.trim();
+  const amount=parseFloat(document.getElementById('recur-amt').value)||0;
+  const type=document.getElementById('recur-type').value;
+  const category=document.getElementById('recur-cat').value;
+  const freq=document.getElementById('recur-freq').value;
+  const day=parseInt(document.getElementById('recur-day').value)||1;
+  const active=document.getElementById('recur-active').checked;
+  const bankId=document.getElementById('recur-bank').value||null;
+  if(!name){ toast('กรุณาใส่ชื่อรายการ','error'); return; }
+  if(!amount||amount<=0){ toast('กรุณาใส่จำนวนเงิน','error'); return; }
+  if(!DB.recurringTx) DB.recurringTx=[];
+  const obj={id,name,amount,type,category,freq,day,active,bankId};
+  const idx=DB.recurringTx.findIndex(r=>r.id===id);
+  if(idx>=0) DB.recurringTx[idx]=obj; else DB.recurringTx.push(obj);
+  saveDB(); closeM('m-recur'); renderPage('recurring'); toast(idx>=0?'แก้ไขแล้ว':'เพิ่มรายการซ้ำแล้ว','success');
+}
+
+function deleteRecur(id){
+  if(!confirm('ลบรายการซ้ำนี้?')) return;
+  DB.recurringTx=(DB.recurringTx||[]).filter(r=>r.id!==id);
+  saveDB(); renderRecurring(); toast('ลบแล้ว','info');
+}
+
+function toggleRecurActive(id){
+  const r=(DB.recurringTx||[]).find(x=>x.id===id); if(!r) return;
+  r.active=!r.active; saveDB(); renderRecurring();
+}
+
+function renderRecurring(){
+  const el=document.getElementById('recur-list'); if(!el) return;
+  const list=DB.recurringTx||[];
+  if(!list.length){ el.innerHTML='<div class="empty"><i class="fas fa-redo-alt"></i><p>ยังไม่มีรายการซ้ำ</p></div>'; return; }
+  const freqLabel={monthly:'ทุกเดือน',weekly:'ทุกสัปดาห์',yearly:'ปีละครั้ง'};
+  el.innerHTML=list.map(r=>{
+    const cat=getCat(r.category,r.type);
+    return `<div class="recur-card" style="opacity:${r.active?1:.5}">
+      <div class="recur-icon" style="background:${cat.color}22;color:${cat.color}"><i class="fas ${cat.icon||'fa-redo'}"></i></div>
+      <div class="recur-info">
+        <div class="recur-name">${r.name}</div>
+        <div class="recur-meta">${cat.label} · ${freqLabel[r.freq]||r.freq} · วันที่ ${r.day}</div>
+      </div>
+      <div class="recur-amt" style="color:${r.type==='income'?'var(--green)':'var(--red)'}">
+        ${r.type==='income'?'+':'−'}${fmt(r.amount)}
+      </div>
+      <div class="recur-actions">
+        <button onclick="toggleRecurActive('${r.id}')" style="background:none;border:none;color:${r.active?'var(--green)':'var(--muted)'};cursor:pointer;font-size:16px" title="${r.active?'ปิดใช้งาน':'เปิดใช้งาน'}">
+          <i class="fas fa-${r.active?'toggle-on':'toggle-off'}"></i>
+        </button>
+        <button onclick="openRecurModal('${r.id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px"><i class="fas fa-edit"></i></button>
+        <button onclick="deleteRecur('${r.id}')" style="background:none;border:none;color:var(--red);cursor:pointer;padding:4px"><i class="fas fa-times"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function applyRecurringTx(){
+  if(!DB.recurringTx?.length) return;
+  const today=new Date(); const yr=today.getFullYear(); const mn=today.getMonth()+1; const day=today.getDate();
+  const ym=`${yr}-${String(mn).padStart(2,'0')}`;
+  let added=0;
+  DB.recurringTx.filter(r=>r.active&&r.freq==='monthly').forEach(r=>{
+    if(day<r.day) return; // ยังไม่ถึงวัน
+    const key=`recur_${r.id}_${ym}`;
+    if(DB.transactions.some(t=>t.recurKey===key)) return; // เพิ่มแล้ว
+    const txDate=`${yr}-${String(mn).padStart(2,'0')}-${String(r.day).padStart(2,'0')}`;
+    DB.transactions.push({id:uid(),amount:r.amount,category:r.category,date:txDate,description:r.name,type:r.type,bankId:r.bankId||null,recurKey:key,isRecurring:true});
+    if(r.bankId) _adjustBankBalance(r.bankId,r.type,r.amount);
+    added++;
+  });
+  if(added>0){ saveDB(); toast(`เพิ่มรายการซ้ำ ${added} รายการอัตโนมัติ`,'success'); }
+}
+
+// ══════════════════════════════════════════
+//  FEATURE 4 — EXPORT CSV
+// ══════════════════════════════════════════
+function exportCSV(){
+  const rows=[['วันที่','ประเภท','หมวดหมู่','รายละเอียด','จำนวนเงิน (บาท)','สกุลเงินเดิม','จำนวนเดิม','ธนาคาร']];
+  const banks=getBanks();
+  DB.transactions.sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(t=>{
+    const cat=getCat(t.category,t.type);
+    const bank=t.bankId?banks.find(b=>b.id===t.bankId):null;
+    rows.push([
+      t.date,
+      t.type==='income'?'รายรับ':'รายจ่าย',
+      cat.label,
+      t.description||'',
+      t.amount.toString(),
+      t.currency||'THB',
+      t.origAmount||t.amount,
+      bank?bank.name:''
+    ]);
+  });
+  const bom='﻿';
+  const csv=bom+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`moneymind_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+  toast('ส่งออก CSV แล้ว','success');
+}
+
+// ══════════════════════════════════════════
+//  FEATURE 5 — MULTI-CURRENCY TRANSACTIONS
+// ══════════════════════════════════════════
+const FX_RATES={THB:1,USD:36.5,EUR:39.5,JPY:0.24,SGD:27.5,CNY:5.1,GBP:46.5};
+
+function calcTxConvert(){
+  const amt=parseFloat(document.getElementById('tx-amt').value)||0;
+  const cur=document.getElementById('tx-currency').value||'THB';
+  const display=document.getElementById('tx-convert-display');
+  if(!display) return;
+  if(cur==='THB'||!amt){ display.style.display='none'; return; }
+  const rate=FX_RATES[cur]||1;
+  const thb=amt*rate;
+  display.style.display='block';
+  display.innerHTML=`<i class="fas fa-exchange-alt"></i> ${amt.toLocaleString()} ${cur} ≈ <strong>${fmt(thb)}</strong> (อัตรา: 1 ${cur} = ${rate} THB)`;
+}
+
+// Patch saveTx to handle currency
+const _origSaveTx=saveTx;
+window.saveTx=function(){
+  const cur=document.getElementById('tx-currency')?.value||'THB';
+  const rate=FX_RATES[cur]||1;
+  if(cur!=='THB'){
+    const origAmt=parseFloat(document.getElementById('tx-amt').value)||0;
+    document.getElementById('tx-amt').value=(origAmt*rate).toFixed(2);
+    // Will call original, then restore doesn't matter since modal closes
+  }
+  _origSaveTx();
+};
+
+// Patch openTxModal to reset currency
+const _origOpenTxModal=openTxModal;
+window.openTxModal=function(pre){
+  _origOpenTxModal(pre);
+  const sel=document.getElementById('tx-currency');
+  if(sel) sel.value='THB';
+  const display=document.getElementById('tx-convert-display');
+  if(display) display.style.display='none';
+};
+
+// ══════════════════════════════════════════
+//  FEATURE 6 — SPENDING INSIGHTS
+// ══════════════════════════════════════════
+function renderSpendingInsights(){
+  const el=document.getElementById('dash-insights-section'); if(!el) return;
+  const cur=monthTx(selMonth,selYear).filter(t=>t.type==='expense');
+  let prevM=selMonth-1, prevY=selYear;
+  if(prevM<0){prevM=11;prevY--;}
+  const prev=monthTx(prevM,prevY).filter(t=>t.type==='expense');
+  if(!cur.length&&!prev.length){ el.innerHTML=''; return; }
+
+  const curByCat={}, prevByCat={};
+  cur.forEach(t=>curByCat[t.category]=(curByCat[t.category]||0)+t.amount);
+  prev.forEach(t=>prevByCat[t.category]=(prevByCat[t.category]||0)+t.amount);
+
+  const allCatIds=[...new Set([...Object.keys(curByCat),...Object.keys(prevByCat)])];
+  const sorted=allCatIds.map(id=>({id,cur:curByCat[id]||0,prev:prevByCat[id]||0}))
+    .filter(x=>x.cur>0).sort((a,b)=>b.cur-a.cur).slice(0,5);
+
+  if(!sorted.length){ el.innerHTML=''; return; }
+  const maxVal=Math.max(...sorted.map(x=>Math.max(x.cur,x.prev)),1);
+  const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+  el.innerHTML=`
+    <div class="insights-card">
+      <div class="sec-hd" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:30px;height:30px;border-radius:8px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-lightbulb" style="color:var(--amber);font-size:12px"></i></div>
+          <div class="sec-title">Spending Insights</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted)">เทียบกับ ${MN[prevM]}</div>
+      </div>
+      ${sorted.map(x=>{
+        const cat=getCat(x.id,'expense');
+        const diff=x.cur-x.prev;
+        const diffSign=diff>0?'↑':'↓';
+        const diffColor=diff>0?'var(--red)':'var(--green)';
+        return `<div class="insights-row">
+          <div style="width:22px;height:22px;border-radius:6px;background:${cat.color}22;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas ${cat.icon||'fa-tag'}" style="color:${cat.color};font-size:10px"></i></div>
+          <div style="width:90px;font-size:12px;font-weight:500;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cat.label}</div>
+          <div class="ins-bar-bg">
+            <div class="ins-bar-fill" style="width:${(x.cur/maxVal*100).toFixed(1)}%;background:${cat.color}"></div>
+          </div>
+          <div style="width:80px;font-size:12px;text-align:right;flex-shrink:0">${fmt(x.cur)}</div>
+          ${x.prev?`<div style="width:60px;font-size:11px;color:${diffColor};text-align:right;flex-shrink:0">${diffSign}${fmt(Math.abs(diff))}</div>`:'<div style="width:60px"></div>'}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+// ══════════════════════════════════════════
+//  FEATURE 7 — DARK/LIGHT MODE TOGGLE
+// ══════════════════════════════════════════
+function toggleTheme(){
+  const isLight=document.body.classList.toggle('light-mode');
+  DB.settings.theme=isLight?'light':'dark';
+  saveDB();
+  const icon=document.getElementById('theme-icon');
+  if(icon) icon.className=isLight?'fas fa-moon':'fas fa-sun';
+}
+
+function applyTheme(){
+  const theme=DB.settings.theme||'dark';
+  const isLight=theme==='light';
+  document.body.classList.toggle('light-mode',isLight);
+  const icon=document.getElementById('theme-icon');
+  if(icon) icon.className=isLight?'fas fa-moon':'fas fa-sun';
+}
+
+// ══════════════════════════════════════════
+//  FEATURE 8 — SHAREABLE WIDGET
+// ══════════════════════════════════════════
+function openShareModal(){
+  const txs=monthTx(selMonth,selYear);
+  const inc=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const exp=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const bal=inc-exp;
+  const port=DB.investments.reduce((s,i)=>s+i.value,0);
+  const banks=getBanks().reduce((s,b)=>s+b.balance,0);
+  const debts=(DB.debts||[]).reduce((s,d)=>s+(d.remaining||d.total||0),0);
+  const networth=banks+port-debts;
+  const MN=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  document.getElementById('share-period').textContent=`${MN[selMonth]} ${selYear+543}`;
+  document.getElementById('share-networth').textContent=fmt(networth);
+  document.getElementById('share-inc').textContent=fmt(inc);
+  document.getElementById('share-exp').textContent=fmt(exp);
+  document.getElementById('share-bal').textContent=fmt(bal);
+  document.getElementById('share-port').textContent=fmt(port);
+  openM('m-share');
+}
+
+function downloadShareImage(){
+  const card=document.getElementById('share-card-content');
+  if(typeof html2canvas==='undefined'){
+    // Load html2canvas dynamically
+    const s=document.createElement('script');
+    s.src='https://html2canvas.hertzen.com/dist/html2canvas.min.js';
+    s.onload=()=>_captureShareCard(card);
+    document.head.appendChild(s);
+  } else {
+    _captureShareCard(card);
+  }
+}
+
+function _captureShareCard(card){
+  html2canvas(card,{backgroundColor:'#0d0d1a',scale:2,useCORS:true}).then(canvas=>{
+    const a=document.createElement('a');
+    a.href=canvas.toDataURL('image/png');
+    a.download=`moneymind_${new Date().toISOString().split('T')[0]}.png`;
+    a.click();
+    toast('บันทึกรูปแล้ว','success');
+  }).catch(()=>toast('ไม่สามารถสร้างรูปได้ ต้องเชื่อมต่ออินเทอร์เน็ต','error'));
+}
+
+// ══════════════════════════════════════════
+//  FEATURE 9 — CATEGORY BUDGET
+// ══════════════════════════════════════════
+function renderCatBudgetSettings(){
+  const el=document.getElementById('cat-budget-settings'); if(!el) return;
+  if(!DB.settings.catBudgets) DB.settings.catBudgets={};
+  const cats=getAllExpCats().filter(c=>c.id!=='other_exp');
+  el.innerHTML=cats.map(c=>{
+    const budgeted=DB.settings.catBudgets[c.id]||0;
+    return `<div class="catbud-row">
+      <div class="catbud-label" title="${c.label}"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${c.color};margin-right:6px"></span>${c.label}</div>
+      <input type="number" class="catbud-inp" value="${budgeted||''}" placeholder="0" min="0" step="100"
+        onchange="saveCatBudget('${c.id}',this.value)" title="งบ/เดือน">
+      <div style="font-size:11px;color:var(--muted);margin-left:4px">฿/เดือน</div>
+    </div>`;
+  }).join('');
+}
+
+function saveCatBudget(catId,val){
+  if(!DB.settings.catBudgets) DB.settings.catBudgets={};
+  DB.settings.catBudgets[catId]=parseFloat(val)||0;
+  saveDB();
+  renderCatBudgetProgress();
+  checkNotifications();
+}
+
+function renderCatBudgetProgress(){
+  const el=document.getElementById('dash-catbud-section'); if(!el) return;
+  const budgets=DB.settings.catBudgets||{};
+  const activeCats=Object.entries(budgets).filter(([,v])=>v>0);
+  if(!activeCats.length){ el.innerHTML=''; return; }
+  const txs=monthTx(selMonth,selYear).filter(t=>t.type==='expense');
+  const rows=activeCats.map(([catId,bud])=>{
+    const cat=getCat(catId,'expense');
+    const spent=txs.filter(t=>t.category===catId).reduce((s,t)=>s+t.amount,0);
+    const pct=Math.min(100,(spent/bud)*100);
+    const barColor=pct>=100?'var(--red)':pct>=80?'var(--amber)':cat.color;
+    return {cat,bud,spent,pct,barColor};
+  }).filter(r=>r.spent>0||r.bud>0).sort((a,b)=>b.pct-a.pct);
+  if(!rows.length){ el.innerHTML=''; return; }
+  el.innerHTML=`
+    <div class="card" style="border-top:2px solid rgba(6,182,212,.4)">
+      <div class="sec-hd" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:30px;height:30px;border-radius:8px;background:rgba(6,182,212,.1);display:flex;align-items:center;justify-content:center"><i class="fas fa-sliders-h" style="color:var(--cyan);font-size:12px"></i></div>
+          <div class="sec-title">งบประมาณแยกหมวด</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="nav('settings')">ตั้งค่า →</button>
+      </div>
+      ${rows.map(r=>`
+        <div class="catbud-row">
+          <div class="catbud-label"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${r.cat.color};margin-right:6px"></span>${r.cat.label}</div>
+          <div class="catbud-bar-bg"><div class="catbud-bar" style="width:${r.pct.toFixed(1)}%;background:${r.barColor}"></div></div>
+          <div class="catbud-nums">${fmt(r.spent)}/${fmt(r.bud)}</div>
+          ${r.pct>=100?`<span style="font-size:11px;color:var(--red);flex-shrink:0">เกิน!</span>`:r.pct>=80?`<span style="font-size:11px;color:var(--amber);flex-shrink:0">${r.pct.toFixed(0)}%</span>`:`<span style="font-size:11px;color:var(--muted);flex-shrink:0">${r.pct.toFixed(0)}%</span>`}
+        </div>`).join('')}
+    </div>`;
+}
+
+// ══════════════════════════════════════════
+//  PATCH renderDash + renderSettings
+// ══════════════════════════════════════════
+const _origRenderDash=renderDash;
+window.renderDash=function(){
+  _origRenderDash();
+  renderSpendingInsights();
+  renderCatBudgetProgress();
+  checkNotifications();
+};
+
+const _origRenderSettings=renderSettings;
+window.renderSettings=function(){
+  _origRenderSettings();
+  renderCustomCatList();
+  renderCatBudgetSettings();
+};
+
+// ══════════════════════════════════════════
+//  PATCH enterApp to apply theme + recurring
+// ══════════════════════════════════════════
+const _origEnterApp=enterApp;
+window.enterApp=function(){
+  _origEnterApp();
+  applyTheme();
+  setTimeout(()=>applyRecurringTx(),1500);
+  setTimeout(()=>checkNotifications(),2000);
+};
 </script>
 
 <!-- AI Chat FAB + Panel -->
