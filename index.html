@@ -1439,6 +1439,16 @@
     </div>
 
     <div class="set-card">
+      <div class="set-title"><i class="fas fa-trophy" style="color:var(--amber)"></i> Net Worth Milestone</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px">ตั้งเป้า net worth — ระบบจะแจ้งเตือนเมื่อถึงเป้า</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input id="nw-milestone-inp" type="number" class="finput" style="width:160px" placeholder="เช่น 1000000">
+        <button class="btn btn-primary" onclick="addNWMilestone()"><i class="fas fa-plus"></i> เพิ่มเป้า</button>
+      </div>
+      <div id="nw-milestone-list" style="margin-top:10px"></div>
+    </div>
+
+    <div class="set-card">
       <div class="set-title"><i class="fas fa-database" style="color:var(--amber)"></i> จัดการข้อมูล</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-ghost" onclick="exportData()"><i class="fas fa-download"></i> ส่งออก JSON</button>
