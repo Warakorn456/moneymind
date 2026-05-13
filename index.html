@@ -2427,7 +2427,7 @@ const EXP_CATS = [
   {id:'other_exp',label:'รายจ่ายอื่นๆ',icon:'fa-ellipsis-h',color:'#94a3b8'},
 ];
 
-function getCat(id,type){ const l=type==='income'?INC_CATS:EXP_CATS; return l.find(c=>c.id===id)||{label:id,icon:'fa-circle',color:'#94a3b8'}; }
+function getCat(id,type){ const custom=(type==='income'?(DB.settings?.customIncCats||[]):(DB.settings?.customExpCats||[])); const l=type==='income'?[...INC_CATS,...custom]:[...EXP_CATS,...custom]; return l.find(c=>c.id===id)||{label:id,icon:'fa-circle',color:'#94a3b8'}; }
 
 // ══════════════════════════════════════════
 //  NAVIGATION
