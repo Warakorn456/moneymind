@@ -2045,6 +2045,44 @@
   </div>
 </div>
 
+<!-- Wishlist Modal -->
+<div id="m-wish" class="overlay">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title"><i class="fas fa-star" style="color:var(--amber)"></i><span id="wish-m-title">เพิ่มรายการ Wishlist</span></div>
+    <input type="hidden" id="wish-eid">
+    <div class="fgroup"><label class="flabel">ชื่อสินค้า / เป้าหมาย</label><input id="wish-name" class="finput" placeholder="เช่น MacBook Pro, เที่ยวญี่ปุ่น"></div>
+    <div class="fgroup"><label class="flabel">ราคา (บาท)</label><input id="wish-price" type="number" class="finput" placeholder="0"></div>
+    <div class="fgroup"><label class="flabel">ลำดับความสำคัญ</label>
+      <select id="wish-priority" class="fselect">
+        <option value="high">🔴 สูง — อยากได้มาก</option>
+        <option value="mid" selected>🟡 กลาง — อยากได้</option>
+        <option value="low">🟢 ต่ำ — ถ้ามีก็ดี</option>
+      </select>
+    </div>
+    <div class="fgroup"><label class="flabel">หมายเหตุ (ไม่บังคับ)</label><input id="wish-note" class="finput" placeholder="เพิ่มโน้ต..."></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-wish')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveWish()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Transfer Modal -->
+<div id="m-transfer" class="overlay">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title"><i class="fas fa-exchange-alt" style="color:var(--cyan)"></i> โอนเงินระหว่างบัญชี</div>
+    <div class="fgroup"><label class="flabel">จากบัญชี</label><select id="transfer-from" class="fselect"></select></div>
+    <div class="fgroup"><label class="flabel">ไปยังบัญชี</label><select id="transfer-to" class="fselect"></select></div>
+    <div class="fgroup"><label class="flabel">จำนวนเงิน (บาท)</label><input id="transfer-amt" type="number" class="finput" placeholder="0"></div>
+    <div class="fgroup"><label class="flabel">วันที่</label><input id="transfer-date" type="date" class="finput"></div>
+    <div class="fgroup"><label class="flabel">หมายเหตุ</label><input id="transfer-note" class="finput" placeholder="ไม่บังคับ"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-transfer')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveTransfer()">โอน</button>
+    </div>
+  </div>
+</div>
+
 <!-- Recurring Modal -->
 <div id="m-recur" class="overlay">
   <div class="modal" style="max-width:480px">
