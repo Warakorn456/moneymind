@@ -2918,7 +2918,8 @@ function setTxType(type,btn){
   if(btn) btn.classList.add('active');
   else document.querySelector('.type-btn.'+( type==='income'?'inc':'exp'))?.classList.add('active');
   const cats=type==='income'?INC_CATS:EXP_CATS;
-  document.getElementById('tx-cat').innerHTML=cats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  const customCats=type==='income'?(DB.settings?.customIncCats||[]):(DB.settings?.customExpCats||[]);
+  document.getElementById('tx-cat').innerHTML=cats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')+(customCats.length?'<optgroup label="— หมวดหมู่ของฉัน —">'+customCats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')+'</optgroup>':'');
   document.getElementById('carryover-row').style.display=type==='income'?'block':'none';
   if(type!=='income') document.getElementById('tx-carryover').checked=false;
   const hasCC=getBanks().some(b=>b.type==='บัตรเครดิต');
