@@ -7708,7 +7708,7 @@ function _finishPinSetup(){
 }
 function clearPin(){
   if(!confirm('ต้องการลบ PIN?')) return;
-  delete DB.settings.pinHash; saveDB(); renderSettings();
+  delete DB.settings.pinHash; saveDB(); renderPinSettings();
   toast('ลบ PIN แล้ว','info');
 }
 function saveInlinePin(){
