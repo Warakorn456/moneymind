@@ -8427,6 +8427,155 @@ enterApp=function(){
   setTimeout(()=>{ if(typeof snapshotNetWorth==='function') snapshotNetWorth(); },3000);
 };
 
+// ══════════════════════════════════════════
+//  FEATURE A — SPENDING HEATMAP CALENDAR
+// ══════════════════════════════════════════
+var _heatSelectedDay=null;
+
+function renderHeatmap(){
+  var wrap=document.getElementById('tx-heatmap-wrap');
+  if(!wrap) return;
+  var m=selMonth, y=selYear;
+  var txs=monthTx(m,y);
+  // รวมค่าใช้จ่ายรายวัน
+  var dailySpend={};
+  var maxSpend=0;
+  txs.filter(function(t){return t.type==='expense';}).forEach(function(t){
+    var d=new Date(t.date).getDate();
+    dailySpend[d]=(dailySpend[d]||0)+t.amount;
+    if(dailySpend[d]>maxSpend) maxSpend=dailySpend[d];
+  });
+  var firstDay=new Date(y,m,1).getDay(); // 0=Sun
+  var daysInMonth=new Date(y,m+1,0).getDate();
+  var todayD=new Date(); var isThisMonth=(todayD.getMonth()===m&&todayD.getFullYear()===y);
+  var todayDate=todayD.getDate();
+
+  function heatColor(amt){
+    if(!amt||!maxSpend) return 'rgba(255,255,255,.04)';
+    var ratio=amt/maxSpend;
+    if(ratio<0.25) return 'rgba(234,179,8,.25)';
+    if(ratio<0.5)  return 'rgba(234,179,8,.5)';
+    if(ratio<0.75) return 'rgba(239,100,68,.65)';
+    return 'rgba(239,68,68,.85)';
+  }
+
+  var dowHtml='';
+  ['อา','จ','อ','พ','พฤ','ศ','ส'].forEach(function(d){ dowHtml+='<div class="heatmap-dow">'+d+'</div>'; });
+
+  var cellsHtml='';
+  for(var i=0;i<firstDay;i++) cellsHtml+='<div class="heatmap-day empty"></div>';
+  for(var d=1;d<=daysInMonth;d++){
+    var spend=dailySpend[d]||0;
+    var bg=heatColor(spend);
+    var isToday=isThisMonth&&d===todayDate;
+    var isSel=_heatSelectedDay===d;
+    var cls='heatmap-day'+(isToday?' today':'')+(isSel?' selected':'');
+    var title=spend?'฿'+Number(spend).toLocaleString('th-TH',{maximumFractionDigits:0}):'';
+    cellsHtml+='<div class="'+cls+'" style="background:'+bg+'" onclick="heatDayClick('+d+')" title="'+d+' — '+title+'">'+d+'</div>';
+  }
+
+  wrap.innerHTML='<div class="heatmap-wrap">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+    +'<div style="font-size:13px;font-weight:700"><i class="fas fa-fire" style="color:#f59e0b;margin-right:6px"></i>Spending Heatmap</div>'
+    +(_heatSelectedDay?'<button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick="heatDayClick(null)"><i class="fas fa-times"></i> ล้าง filter วันที่ '+_heatSelectedDay+'</button>':'')
+    +'<div class="heatmap-legend"><span>น้อย</span><div class="heatmap-legend-bar">'
+    +'<div class="heatmap-legend-swatch" style="background:rgba(255,255,255,.04)"></div>'
+    +'<div class="heatmap-legend-swatch" style="background:rgba(234,179,8,.25)"></div>'
+    +'<div class="heatmap-legend-swatch" style="background:rgba(234,179,8,.5)"></div>'
+    +'<div class="heatmap-legend-swatch" style="background:rgba(239,100,68,.65)"></div>'
+    +'<div class="heatmap-legend-swatch" style="background:rgba(239,68,68,.85)"></div>'
+    +'</div><span>มาก</span></div>'
+    +'</div>'
+    +'<div class="heatmap-grid">'+dowHtml+cellsHtml+'</div>'
+    +'</div>';
+}
+
+function heatDayClick(day){
+  _heatSelectedDay=(day===_heatSelectedDay||day===null)?null:day;
+  renderHeatmap();
+  // filter tx list by day
+  var el=document.getElementById('tx-list'); if(!el) return;
+  var m=selMonth, y=selYear;
+  if(!_heatSelectedDay){
+    renderTx(); return;
+  }
+  var dateStr=y+'-'+String(m+1).padStart(2,'0')+'-'+String(_heatSelectedDay).padStart(2,'0');
+  var txs=DB.transactions.filter(function(t){ return t.date===dateStr; }).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+  if(!txs.length){ el.innerHTML='<div class="empty"><i class="fas fa-calendar-day"></i><p>ไม่มีรายการวันที่ '+_heatSelectedDay+'</p></div>'; return; }
+  el.innerHTML=txs.map(function(t){ return txHTML(t); }).join('');
+}
+
+// ══════════════════════════════════════════
+//  FEATURE B — MONTHLY COMPARISON CHART
+// ══════════════════════════════════════════
+var _compChart=null;
+
+function renderMonthComparison(){
+  var el=document.getElementById('dash-comparison-section');
+  if(!el) return;
+  var now=new Date();
+  var labels=[], incData=[], expData=[], netData=[];
+  for(var i=5;i>=0;i--){
+    var mo=now.getMonth()-i, yr=now.getFullYear();
+    if(mo<0){mo+=12;yr--;}
+    var txs=monthTx(mo,yr);
+    var inc=txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+    var exp=txs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+    var thMonth=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][mo];
+    labels.push(thMonth+' '+String(yr+543).slice(2));
+    incData.push(Math.round(inc));
+    expData.push(Math.round(exp));
+    netData.push(Math.round(inc-exp));
+  }
+
+  el.innerHTML='<div class="comparison-card">'
+    +'<div class="sec-hd" style="margin-bottom:14px">'
+    +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(6,182,212,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-chart-bar" style="color:var(--cyan);font-size:12px"></i></div><div class="sec-title">เปรียบเทียบ 6 เดือน</div></div>'
+    +'</div>'
+    +'<canvas id="comp-chart" height="160"></canvas>'
+    +'</div>';
+
+  var ctx=document.getElementById('comp-chart');
+  if(!ctx) return;
+  if(_compChart){_compChart.destroy();_compChart=null;}
+  _compChart=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[
+        {label:'รายรับ',data:incData,backgroundColor:'rgba(16,185,129,.7)',borderRadius:4,borderSkipped:false},
+        {label:'รายจ่าย',data:expData,backgroundColor:'rgba(239,68,68,.7)',borderRadius:4,borderSkipped:false},
+        {label:'คงเหลือสุทธิ',data:netData,type:'line',borderColor:'rgba(6,182,212,1)',backgroundColor:'rgba(6,182,212,.1)',fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:'rgba(6,182,212,1)',borderWidth:2,yAxisID:'y'}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{labels:{color:'rgba(255,255,255,.7)',font:{family:'Sarabun',size:12},boxWidth:14,padding:16}},
+        tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': ฿'+Number(ctx.raw).toLocaleString('th-TH');}}}
+      },
+      scales:{
+        x:{ticks:{color:'rgba(255,255,255,.6)',font:{family:'Sarabun',size:11}},grid:{color:'rgba(255,255,255,.04)'}},
+        y:{ticks:{color:'rgba(255,255,255,.6)',font:{family:'Sarabun',size:11},callback:function(v){return v>=1000?(v/1000).toFixed(0)+'k':v;}},grid:{color:'rgba(255,255,255,.06)'}}
+      }
+    }
+  });
+}
+
+// Wire up: call renderHeatmap from renderTx, renderMonthComparison from renderDash
+const _origRenderTxForHeat=renderTx;
+renderTx=function(appendMore){
+  _origRenderTxForHeat(appendMore);
+  if(typeof renderHeatmap==='function') renderHeatmap();
+};
+
+const _origRenderDashForComp=renderDash;
+renderDash=function(){
+  _origRenderDashForComp();
+  if(typeof renderMonthComparison==='function') renderMonthComparison();
+};
+
 </script>
 
 <!-- AI Chat FAB + Panel -->
