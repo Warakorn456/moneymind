@@ -8452,11 +8452,12 @@ renderDash=function(){
   if(typeof checkNWMilestones==='function') checkNWMilestones();
 };
 
-// Patch renderSettings for PIN
-const _origRenderSettingsV2=renderSettings;
+// Patch renderSettings — consolidated
+const _origRenderSettingsBase=renderSettings;
 renderSettings=function(){
-  _origRenderSettingsV2();
+  _origRenderSettingsBase();
   if(typeof renderPinSettings==='function') renderPinSettings();
+  if(typeof renderNWMilestoneSettings==='function') renderNWMilestoneSettings();
 };
 
 // Patch saveTx to save tags
