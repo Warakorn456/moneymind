@@ -8440,14 +8440,16 @@ function printMonthlyReport(){
 //  PATCHES — inject into existing renders
 // ══════════════════════════════════════════
 
-// Patch renderDash to add new sections
-const _r2Dash=window.renderDash||renderDash;
-// Already patched in Phase 1 via direct modification, just add new ones
-const _origRenderDashV2=renderDash;
+// Patch renderDash — single consolidated patch for all extra sections
+const _origRenderDashBase=renderDash;
 renderDash=function(){
-  _origRenderDashV2();
+  _origRenderDashBase();
   if(typeof renderHealthScore==='function') renderHealthScore();
   if(typeof renderNWHistory==='function') renderNWHistory();
+  if(typeof renderMonthComparison==='function') renderMonthComparison();
+  if(typeof renderSavingsRate==='function') renderSavingsRate();
+  if(typeof renderTopMerchants==='function') renderTopMerchants();
+  if(typeof checkNWMilestones==='function') checkNWMilestones();
 };
 
 // Patch renderSettings for PIN
