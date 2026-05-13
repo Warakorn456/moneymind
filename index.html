@@ -712,16 +712,52 @@
 </head>
 <body>
 
-<!-- Lock Screen -->
+<!-- Lock Screen (PIN + Password fallback) -->
 <div id="lock-screen" style="display:none;position:fixed;inset:0;background:rgba(13,13,26,.97);backdrop-filter:blur(12px);z-index:99998;align-items:center;justify-content:center;font-family:'Sarabun',sans-serif">
   <div class="login-box" style="max-width:340px">
-    <div style="font-size:40px;margin-bottom:12px">🔒</div>
+    <div style="font-size:40px;margin-bottom:10px">🔒</div>
     <div class="login-logo">แอปถูกล็อก</div>
-    <div id="lock-user-label" class="login-sub" style="margin-bottom:24px"></div>
-    <input class="login-inp" id="lock-pass" type="password" placeholder="ใส่รหัสผ่านเพื่อปลดล็อก" autocomplete="current-password" onkeydown="if(event.key==='Enter')tryUnlock()">
-    <div class="login-err" id="lock-err"></div>
-    <button class="login-btn" onclick="tryUnlock()" style="margin-top:8px">ปลดล็อก</button>
-    <div style="margin-top:16px"><span onclick="lockLogout()" style="font-size:13px;color:#64748b;cursor:pointer;text-decoration:underline">ออกจากระบบ</span></div>
+    <div id="lock-user-label" class="login-sub" style="margin-bottom:12px"></div>
+
+    <!-- PIN mode -->
+    <div id="lock-pin-mode">
+      <div class="pin-display" id="pin-display">
+        <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+      </div>
+      <div class="login-err" id="pin-lock-err" style="min-height:18px;margin-bottom:10px"></div>
+      <div class="pin-pad">
+        <button class="pin-btn" onclick="pinPress('1')">1</button>
+        <button class="pin-btn" onclick="pinPress('2')">2</button>
+        <button class="pin-btn" onclick="pinPress('3')">3</button>
+        <button class="pin-btn" onclick="pinPress('4')">4</button>
+        <button class="pin-btn" onclick="pinPress('5')">5</button>
+        <button class="pin-btn" onclick="pinPress('6')">6</button>
+        <button class="pin-btn" onclick="pinPress('7')">7</button>
+        <button class="pin-btn" onclick="pinPress('8')">8</button>
+        <button class="pin-btn" onclick="pinPress('9')">9</button>
+        <button class="pin-btn empty"></button>
+        <button class="pin-btn" onclick="pinPress('0')">0</button>
+        <button class="pin-btn del" onclick="pinDelete()"><i class="fas fa-backspace"></i></button>
+      </div>
+      <div style="margin-top:16px;text-align:center">
+        <span onclick="switchToPassword()" style="font-size:12px;color:#64748b;cursor:pointer;text-decoration:underline">ใช้รหัสผ่านแทน</span>
+        &nbsp;·&nbsp;
+        <span onclick="lockLogout()" style="font-size:12px;color:#64748b;cursor:pointer;text-decoration:underline">ออกจากระบบ</span>
+      </div>
+    </div>
+
+    <!-- Password fallback mode -->
+    <div id="lock-pass-mode" style="display:none">
+      <input class="login-inp" id="lock-pass" type="password" placeholder="ใส่รหัสผ่านเพื่อปลดล็อก" autocomplete="current-password" onkeydown="if(event.key==='Enter')tryUnlock()">
+      <div class="login-err" id="lock-err"></div>
+      <button class="login-btn" onclick="tryUnlock()" style="margin-top:8px">ปลดล็อก</button>
+      <div style="margin-top:12px;text-align:center">
+        <span onclick="switchToPin()" style="font-size:12px;color:#64748b;cursor:pointer;text-decoration:underline">ใช้ PIN แทน</span>
+        &nbsp;·&nbsp;
+        <span onclick="lockLogout()" style="font-size:12px;color:#64748b;cursor:pointer;text-decoration:underline">ออกจากระบบ</span>
+      </div>
+    </div>
   </div>
 </div>
 
