@@ -8522,6 +8522,341 @@ enterApp=function(){
 };
 
 // ══════════════════════════════════════════
+//  FEATURE 1 — QUICK ADD
+// ══════════════════════════════════════════
+var _INCOME_KW=['เงินเดือน','salary','รายได้','โบนัส','bonus','ค่าจ้าง','ขาย','รับ','income','ปันผล','ดอกเบี้ย','เงินคืน','refund','โอนเข้า'];
+function quickAdd(){
+  var inp=document.getElementById('quick-add-inp');
+  if(!inp) return;
+  var raw=inp.value.trim();
+  if(!raw) return;
+  // ตรวจ prefix + = income
+  var forceIncome=raw.startsWith('+');
+  if(forceIncome) raw=raw.slice(1).trim();
+  // หาตัวเลขสุดท้าย
+  var m=raw.match(/^(.*?)\s+([\d,]+(?:\.\d+)?)\s*$/);
+  if(!m){ toast('รูปแบบไม่ถูกต้อง เช่น "กาแฟ 60" หรือ "+เงินเดือน 25000"','error'); return; }
+  var desc=m[1].trim();
+  var amount=parseFloat(m[2].replace(/,/g,''));
+  if(!desc||isNaN(amount)||amount<=0){ toast('กรุณาระบุชื่อและจำนวนเงิน','error'); return; }
+  var type=forceIncome?'income':'expense';
+  if(!forceIncome){ var low=desc.toLowerCase(); for(var i=0;i<_INCOME_KW.length;i++){ if(low.includes(_INCOME_KW[i].toLowerCase())){ type='income'; break; } } }
+  var today=new Date().toISOString().slice(0,10);
+  var cats=type==='income'?(DB.settings.customIncCats||[]):(DB.settings.customExpCats||[]);
+  var defaultCat=type==='income'?'salary':'food';
+  var tx={id:'tx_'+Date.now(),date:today,type:type,amount:amount,description:desc,category:defaultCat,tags:[]};
+  if(!DB.transactions) DB.transactions=[];
+  DB.transactions.push(tx);
+  _lastAddedTx=tx;
+  saveDB();
+  inp.value='';
+  if(curPage==='transactions') renderTx();
+  if(curPage==='dashboard') renderDash();
+  toast((type==='income'?'💰 รายรับ ':'💸 รายจ่าย ')+desc+' '+fmt(amount)+' — <u style="cursor:pointer" onclick="undoLastTx()">ยกเลิก</u>','success',6000);
+}
+
+// ══════════════════════════════════════════
+//  FEATURE 3 — UNDO LAST TRANSACTION
+// ══════════════════════════════════════════
+var _lastAddedTx=null;
+function undoLastTx(){
+  if(!_lastAddedTx){ toast('ไม่มีรายการที่ยกเลิกได้','info'); return; }
+  DB.transactions=DB.transactions.filter(function(t){ return t.id!==_lastAddedTx.id; });
+  _lastAddedTx=null;
+  saveDB();
+  if(curPage==='transactions') renderTx();
+  if(curPage==='dashboard') renderDash();
+  toast('ยกเลิกรายการแล้ว','info');
+}
+
+// ══════════════════════════════════════════
+//  FEATURE 2 — BANK TRANSFER
+// ══════════════════════════════════════════
+function openTransferModal(){
+  var banks=getBanks().filter(function(b){ return b.type!=='บัตรเครดิต'; });
+  if(banks.length<2){ toast('ต้องมีบัญชีอย่างน้อย 2 บัญชี','error'); return; }
+  var fromSel=document.getElementById('transfer-from');
+  var toSel=document.getElementById('transfer-to');
+  fromSel.innerHTML=banks.map(function(b){ return '<option value="'+b.id+'">'+b.name+' ('+fmt(b.balance)+')</option>'; }).join('');
+  toSel.innerHTML=banks.map(function(b){ return '<option value="'+b.id+'">'+b.name+' ('+fmt(b.balance)+')</option>'; }).join('');
+  if(banks.length>=2) toSel.selectedIndex=1;
+  document.getElementById('transfer-amt').value='';
+  document.getElementById('transfer-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('transfer-note').value='';
+  openM('m-transfer');
+}
+function saveTransfer(){
+  var fromId=document.getElementById('transfer-from').value;
+  var toId=document.getElementById('transfer-to').value;
+  var amt=parseFloat(document.getElementById('transfer-amt').value);
+  var date=document.getElementById('transfer-date').value;
+  var note=document.getElementById('transfer-note').value.trim();
+  if(fromId===toId){ toast('บัญชีต้นทางและปลายทางต้องไม่ใช่บัญชีเดียวกัน','error'); return; }
+  if(isNaN(amt)||amt<=0){ toast('กรุณาระบุจำนวนเงิน','error'); return; }
+  var banks=getBanks();
+  var from=banks.find(function(b){ return b.id===fromId; });
+  var to=banks.find(function(b){ return b.id===toId; });
+  if(!from||!to) return;
+  if(from.balance<amt){ toast('ยอดเงินในบัญชีต้นทางไม่เพียงพอ','error'); return; }
+  from.balance=Math.round((from.balance-amt)*100)/100;
+  to.balance=Math.round((to.balance+amt)*100)/100;
+  // บันทึกเป็น transfer transaction (ไม่นับใน income/expense)
+  if(!DB.transactions) DB.transactions=[];
+  DB.transactions.push({id:'tx_'+Date.now(),date:date,type:'transfer',amount:amt,description:(note||'โอนเงิน')+' '+from.name+' → '+to.name,category:'transfer',fromBankId:fromId,toBankId:toId,tags:[]});
+  saveDB(); closeM('m-transfer'); renderPage(curPage);
+  toast('โอนเงิน '+fmt(amt)+' จาก '+from.name+' → '+to.name+' เรียบร้อย','success');
+}
+
+// ══════════════════════════════════════════
+//  FEATURE 4 — SAVINGS RATE TRACKER
+// ══════════════════════════════════════════
+var _srChart=null;
+function renderSavingsRate(){
+  var el=document.getElementById('dash-sr-section');
+  if(!el) return;
+  var now=new Date();
+  var labels=[],srData=[],target=parseFloat(DB.settings.srTarget||20);
+  for(var i=5;i>=0;i--){
+    var mo=now.getMonth()-i, yr=now.getFullYear();
+    if(mo<0){mo+=12;yr--;}
+    var txs=monthTx(mo,yr);
+    var inc=txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+    var exp=txs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+    var sr=inc>0?Math.round(((inc-exp)/inc)*100):0;
+    var thM=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][mo];
+    labels.push(thM); srData.push(sr);
+  }
+  var curSR=srData[srData.length-1];
+  var srColor=curSR>=target?'#10b981':curSR>=target*0.7?'#f59e0b':'#ef4444';
+  el.innerHTML='<div class="sr-card">'
+    +'<div class="sec-hd" style="margin-bottom:10px">'
+    +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-percentage" style="color:#10b981;font-size:12px"></i></div><div class="sec-title">อัตราการออม</div></div>'
+    +'<div style="display:flex;align-items:center;gap:8px">'
+    +'<span style="font-size:12px;color:var(--muted)">เป้า:</span>'
+    +'<input type="number" value="'+target+'" style="width:50px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:2px 6px;color:var(--text);font-size:13px;font-family:Sarabun,sans-serif;text-align:center" onchange="DB.settings.srTarget=this.value;saveDB();renderSavingsRate()" min="1" max="100">%'
+    +'<span style="font-size:22px;font-weight:800;color:'+srColor+'">'+curSR+'%</span>'
+    +'</div></div>'
+    +'<canvas id="sr-chart" height="120"></canvas>'
+    +'</div>';
+  var ctx=document.getElementById('sr-chart');
+  if(!ctx) return;
+  if(_srChart){_srChart.destroy();_srChart=null;}
+  var targetArr=labels.map(function(){return target;});
+  _srChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels:labels,datasets:[
+      {label:'อัตราออม %',data:srData,backgroundColor:srData.map(function(v){return v>=target?'rgba(16,185,129,.7)':v>=target*0.7?'rgba(245,158,11,.7)':'rgba(239,68,68,.7)';}),borderRadius:5,borderSkipped:false},
+      {label:'เป้าหมาย',data:targetArr,type:'line',borderColor:'rgba(255,255,255,.4)',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'rgba(255,255,255,.6)',font:{family:'Sarabun',size:11},boxWidth:12}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.raw+'%';}}}},scales:{x:{ticks:{color:'rgba(255,255,255,.6)',font:{family:'Sarabun',size:11}},grid:{display:false}},y:{ticks:{color:'rgba(255,255,255,.6)',font:{family:'Sarabun',size:11},callback:function(v){return v+'%';}},grid:{color:'rgba(255,255,255,.05)'}}}}
+  });
+}
+
+// ══════════════════════════════════════════
+//  FEATURE 5 — TOP MERCHANTS
+// ══════════════════════════════════════════
+function renderTopMerchants(){
+  var el=document.getElementById('dash-merchants-section');
+  if(!el) return;
+  var now=new Date();
+  var mo=now.getMonth(), yr=now.getFullYear();
+  var txsCur=monthTx(mo,yr).filter(function(t){return t.type==='expense';});
+  var preMo=mo-1<0?11:mo-1, preYr=mo-1<0?yr-1:yr;
+  var txsPre=monthTx(preMo,preYr).filter(function(t){return t.type==='expense';});
+  var map={}, mapPre={};
+  txsCur.forEach(function(t){ var k=t.description||t.category||'อื่นๆ'; map[k]=(map[k]||0)+t.amount; });
+  txsPre.forEach(function(t){ var k=t.description||t.category||'อื่นๆ'; mapPre[k]=(mapPre[k]||0)+t.amount; });
+  var sorted=Object.entries(map).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+  if(!sorted.length){ el.innerHTML=''; return; }
+  var maxVal=sorted[0][1];
+  var rows='';
+  sorted.forEach(function(entry,i){
+    var name=entry[0], val=entry[1];
+    var prev=mapPre[name]||0;
+    var trend=prev>0?(val>prev?'<span style="color:var(--red);font-size:10px">▲</span>':'<span style="color:var(--green);font-size:10px">▼</span>'):'';
+    var pct=maxVal>0?Math.round((val/maxVal)*100):0;
+    rows+='<div class="merchant-row">'
+      +'<div style="width:18px;font-size:11px;color:var(--muted);text-align:center">'+(i+1)+'</div>'
+      +'<div style="flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+name+'</div>'
+      +'<div class="merchant-bar-bg"><div class="merchant-bar-fill" style="width:'+pct+'%"></div></div>'
+      +'<div style="font-size:12px;font-weight:600;min-width:70px;text-align:right">'+fmt(val)+trend+'</div>'
+      +'</div>';
+  });
+  el.innerHTML='<div class="comparison-card">'
+    +'<div class="sec-hd" style="margin-bottom:12px">'
+    +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-store" style="color:var(--amber);font-size:12px"></i></div><div class="sec-title">Top 5 รายจ่ายเดือนนี้</div></div>'
+    +'</div>'+rows+'</div>';
+}
+
+// ══════════════════════════════════════════
+//  FEATURE 6 — WISHLIST
+// ══════════════════════════════════════════
+PAGE_TITLE['wishlist']='Wishlist';
+function getWishlist(){ if(!DB.wishlist) DB.wishlist=[]; return DB.wishlist; }
+function openWishModal(id){
+  document.getElementById('wish-eid').value=id||'';
+  var item=id?getWishlist().find(function(w){return w.id===id;}):null;
+  document.getElementById('wish-m-title').textContent=id?'แก้ไข Wishlist':'เพิ่มรายการ Wishlist';
+  document.getElementById('wish-name').value=item?item.name:'';
+  document.getElementById('wish-price').value=item?item.price:'';
+  document.getElementById('wish-priority').value=item?item.priority:'mid';
+  document.getElementById('wish-note').value=item?item.note:'';
+  openM('m-wish');
+}
+function saveWish(){
+  var id=document.getElementById('wish-eid').value;
+  var name=document.getElementById('wish-name').value.trim();
+  var price=parseFloat(document.getElementById('wish-price').value);
+  var priority=document.getElementById('wish-priority').value;
+  var note=document.getElementById('wish-note').value.trim();
+  if(!name||isNaN(price)||price<=0){ toast('กรุณากรอกชื่อและราคา','error'); return; }
+  var list=getWishlist();
+  if(id){ var w=list.find(function(x){return x.id===id;}); if(w){w.name=name;w.price=price;w.priority=priority;w.note=note;} }
+  else { list.push({id:'w_'+Date.now(),name:name,price:price,priority:priority,note:note,saved:0}); }
+  saveDB(); closeM('m-wish'); renderWishlist();
+}
+function deleteWish(id){ if(!confirm('ลบออกจาก Wishlist?')) return; DB.wishlist=getWishlist().filter(function(w){return w.id!==id;}); saveDB(); renderWishlist(); }
+function addWishSaving(id){
+  var w=getWishlist().find(function(x){return x.id===id;}); if(!w) return;
+  var amt=parseFloat(prompt('เพิ่มยอดสะสม (บาท)',''));
+  if(isNaN(amt)||amt<=0) return;
+  w.saved=(w.saved||0)+amt; saveDB(); renderWishlist();
+}
+function renderWishlist(){
+  var el=document.getElementById('wishlist-content'); if(!el) return;
+  var list=getWishlist();
+  // คำนวณ avg monthly savings สำหรับ ETA
+  var now=new Date(); var totalSav=0, months=0;
+  for(var i=1;i<=3;i++){
+    var mo=now.getMonth()-i, yr=now.getFullYear();
+    if(mo<0){mo+=12;yr--;}
+    var txs=monthTx(mo,yr);
+    var inc=txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+    var exp=txs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+    if(inc>0){totalSav+=(inc-exp);months++;}
+  }
+  var avgMonthlySav=months>0?totalSav/months:0;
+  var prioColors={high:'#ef4444',mid:'#f59e0b',low:'#10b981'};
+  var prioLabels={high:'สูง',mid:'กลาง',low:'ต่ำ'};
+  var cards='';
+  if(!list.length){
+    cards='<div class="empty"><i class="fas fa-star"></i><p>ยังไม่มีรายการใน Wishlist</p></div>';
+  } else {
+    var sorted=[...list].sort(function(a,b){var o={high:0,mid:1,low:2}; return o[a.priority]-o[b.priority];});
+    sorted.forEach(function(w){
+      var saved=w.saved||0;
+      var remaining=Math.max(0,w.price-saved);
+      var pct=w.price>0?Math.min(100,Math.round((saved/w.price)*100)):0;
+      var eta='';
+      if(remaining>0&&avgMonthlySav>0){ var moLeft=Math.ceil(remaining/avgMonthlySav); eta=moLeft<=1?'เดือนหน้า':moLeft+' เดือน'; }
+      else if(remaining<=0){ eta='พร้อมซื้อแล้ว! 🎉'; }
+      else { eta='ยังไม่มีข้อมูลการออม'; }
+      cards+='<div class="wish-card">'
+        +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'
+        +'<div style="flex:1">'
+        +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+        +'<span style="font-size:15px;font-weight:700">'+w.name+'</span>'
+        +'<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:'+prioColors[w.priority]+'22;color:'+prioColors[w.priority]+'">'+prioLabels[w.priority]+'</span>'
+        +'</div>'
+        +(w.note?'<div style="font-size:12px;color:var(--muted);margin-top:3px">'+w.note+'</div>':'')
+        +'<div style="margin-top:8px;display:flex;gap:16px;flex-wrap:wrap">'
+        +'<div><div style="font-size:10px;color:var(--muted)">ราคา</div><div style="font-size:14px;font-weight:700">'+fmt(w.price)+'</div></div>'
+        +'<div><div style="font-size:10px;color:var(--muted)">สะสมแล้ว</div><div style="font-size:14px;font-weight:700;color:var(--green)">'+fmt(saved)+'</div></div>'
+        +'<div><div style="font-size:10px;color:var(--muted)">ยังขาด</div><div style="font-size:14px;font-weight:700;color:var(--red)">'+fmt(remaining)+'</div></div>'
+        +'<div><div style="font-size:10px;color:var(--muted)">คาดว่าซื้อได้</div><div style="font-size:13px;font-weight:600;color:var(--cyan)">'+eta+'</div></div>'
+        +'</div>'
+        +'<div class="wish-progress"><div class="wish-progress-fill" style="width:'+pct+'%"></div></div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:4px">'+pct+'% ของเป้าหมาย</div>'
+        +'</div>'
+        +'<div style="display:flex;flex-direction:column;gap:6px">'
+        +'<button class="btn btn-ghost" style="font-size:11px;padding:4px 8px" onclick="addWishSaving(\''+w.id+'\')"><i class="fas fa-plus"></i> สะสม</button>'
+        +'<button class="btn btn-ghost" style="font-size:11px;padding:4px 8px" onclick="openWishModal(\''+w.id+'\')"><i class="fas fa-edit"></i></button>'
+        +'<button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;color:var(--red)" onclick="deleteWish(\''+w.id+'\')"><i class="fas fa-trash"></i></button>'
+        +'</div></div></div>';
+    });
+  }
+  el.innerHTML='<div class="sec-hd" style="margin-bottom:16px">'
+    +'<div><div class="sec-title">Wishlist</div><div style="font-size:12px;color:var(--muted);margin-top:3px">สิ่งที่อยากได้ + คำนวณวันที่ซื้อได้</div></div>'
+    +'<button class="btn btn-primary" onclick="openWishModal()"><i class="fas fa-plus"></i> เพิ่มรายการ</button>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px">'+cards+'</div>';
+}
+
+// ══════════════════════════════════════════
+//  FEATURE 7 — NET WORTH MILESTONE
+// ══════════════════════════════════════════
+function getMilestones(){ if(!DB.settings.nwMilestones) DB.settings.nwMilestones=[]; return DB.settings.nwMilestones; }
+function addNWMilestone(){
+  var inp=document.getElementById('nw-milestone-inp');
+  var val=parseFloat(inp.value);
+  if(isNaN(val)||val<=0){ toast('กรุณาระบุจำนวนเงิน','error'); return; }
+  var list=getMilestones();
+  if(list.find(function(m){return m.target===val;})){ toast('มีเป้านี้อยู่แล้ว','info'); return; }
+  list.push({target:val,reached:false});
+  list.sort(function(a,b){return a.target-b.target;});
+  inp.value=''; saveDB(); renderNWMilestoneSettings();
+}
+function deleteNWMilestone(target){
+  DB.settings.nwMilestones=getMilestones().filter(function(m){return m.target!==target;});
+  saveDB(); renderNWMilestoneSettings();
+}
+function renderNWMilestoneSettings(){
+  var el=document.getElementById('nw-milestone-list'); if(!el) return;
+  var list=getMilestones();
+  var nw=0; try{ nw=calcNetWorth(); }catch(e){}
+  if(!list.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted)">ยังไม่มีเป้า — เพิ่มได้เลย เช่น 500000, 1000000</div>'; return; }
+  el.innerHTML=list.map(function(m){
+    var pct=m.target>0?Math.min(100,Math.round((nw/m.target)*100)):0;
+    var done=nw>=m.target;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">'
+      +'<div style="font-size:18px">'+(done?'🏆':'🎯')+'</div>'
+      +'<div style="flex:1">'
+      +'<div style="font-size:13px;font-weight:600">'+(done?'<s style="color:var(--muted)">':'')+fmt(m.target)+(done?'</s>':'')+' '+(done?'<span style="color:var(--green);font-size:11px">✓ ถึงแล้ว!</span>':'')+'</div>'
+      +'<div style="height:4px;background:var(--surface2);border-radius:2px;margin-top:4px"><div style="height:100%;width:'+pct+'%;background:'+(done?'var(--green)':'var(--primary-l)')+';border-radius:2px"></div></div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-top:2px">'+pct+'% — ปัจจุบัน '+fmt(nw)+'</div>'
+      +'</div>'
+      +'<button onclick="deleteNWMilestone('+m.target+')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px"><i class="fas fa-times"></i></button>'
+      +'</div>';
+  }).join('');
+}
+function checkNWMilestones(){
+  var list=getMilestones(); if(!list.length) return;
+  var nw=0; try{ nw=calcNetWorth(); }catch(e){ return; }
+  list.forEach(function(m){
+    if(!m.reached&&nw>=m.target){
+      m.reached=true; saveDB();
+      toast('🏆 ยินดีด้วย! Net Worth ถึง '+fmt(m.target)+' แล้ว!','success',8000);
+    }
+  });
+}
+
+// Wire: wishlist renderPage
+PAGE_TITLE['wishlist']='Wishlist';
+const _origRenderPageFinal=renderPage;
+renderPage=function(p){
+  if(p==='wishlist') renderWishlist();
+  else _origRenderPageFinal(p);
+};
+
+// Wire: dashboard sections + milestone check
+const _origRenderDashFinal=renderDash;
+renderDash=function(){
+  _origRenderDashFinal();
+  if(typeof renderSavingsRate==='function') renderSavingsRate();
+  if(typeof renderTopMerchants==='function') renderTopMerchants();
+  if(typeof renderNWMilestoneSettings==='function') renderNWMilestoneSettings();
+  checkNWMilestones();
+};
+
+// Wire: settings PIN render
+const _origRenderSettingsFinal=renderSettings;
+renderSettings=function(){
+  _origRenderSettingsFinal();
+  if(typeof renderPinSettings==='function') renderPinSettings();
+  if(typeof renderNWMilestoneSettings==='function') renderNWMilestoneSettings();
+};
+
+// ══════════════════════════════════════════
 //  FEATURE A — SPENDING HEATMAP CALENDAR
 // ══════════════════════════════════════════
 var _heatSelectedDay=null;
