@@ -7858,67 +7858,224 @@ PAGE_TITLE['forecast']='พยากรณ์กระแสเงินสด';
 function renderForecast(){
   const el=document.getElementById('forecast-content'); if(!el) return;
   const today=new Date();
-  const banks=getBanks().filter(b=>b.type!=='บัตรเครดิต').reduce((s,b)=>s+b.balance,0);
-  const recur=(DB.recurringTx||[]).filter(r=>r.active&&r.freq==='monthly');
+  const allBanks=getBanks().filter(b=>b.type!=='บัตรเครดิต');
+  const totalBal=allBanks.reduce((s,b)=>s+b.balance,0);
+
+  // Load saved config
+  if(!DB.forecastCfg) DB.forecastCfg={startBal:null,dailyExp:null,scenario:'normal',customEvents:[]};
+  const cfg=DB.forecastCfg;
+
+  // Auto-calc avg daily expense
   const avgExp6=[];
   for(let i=1;i<=6;i++){ let m=today.getMonth()+1-i,y=today.getFullYear(); if(m<=0){m+=12;y--;} const txs=monthTx(m-1,y); avgExp6.push(txs.filter(t=>t.type==='expense'&&!t.isRecurring).reduce((s,t)=>s+t.amount,0)); }
-  const avgDailyExp=(avgExp6.reduce((s,v)=>s+v,0)/6)/30;
+  const autoAvgDaily=Math.round((avgExp6.reduce((s,v)=>s+v,0)/6)/30);
+
+  const startBal = cfg.startBal!=null ? cfg.startBal : totalBal;
+  const baseDailyExp = cfg.dailyExp!=null ? cfg.dailyExp : autoAvgDaily;
+  const scenarioMult = {frugal:0.7, normal:1.0, lavish:1.4}[cfg.scenario||'normal'];
+  const dailyExp = Math.round(baseDailyExp * scenarioMult);
+
+  const recur=(DB.recurringTx||[]).filter(r=>r.active&&r.freq==='monthly');
   const days=[30,60,90];
   const scenarios=days.map(d=>{
-    let bal=banks;
+    let bal=startBal;
     const events=[];
     for(let i=1;i<=d;i++){
       const dt=new Date(today); dt.setDate(today.getDate()+i);
       const dom=dt.getDate();
+      const dateStr=dt.toLocaleDateString('th-TH',{day:'numeric',month:'short'});
+      const isoStr=dt.toISOString().slice(0,10);
       recur.forEach(r=>{
         if(r.day===dom){
           const delta=r.type==='income'?r.amount:-r.amount;
           bal+=delta;
-          if(i<=30) events.push({day:i,name:r.name,amount:r.amount,type:r.type,date:dt.toLocaleDateString('th-TH',{day:'numeric',month:'short'})});
+          events.push({day:i,name:r.name,amount:r.amount,type:r.type,date:dateStr,src:'recur'});
         }
       });
-      bal-=avgDailyExp;
+      (cfg.customEvents||[]).forEach(ev=>{
+        if(ev.date===isoStr){
+          const delta=ev.type==='income'?ev.amount:-ev.amount;
+          bal+=delta;
+          events.push({day:i,name:ev.name,amount:ev.amount,type:ev.type,date:dateStr,src:'custom'});
+        }
+      });
+      bal-=dailyExp;
     }
-    return {days:d,balance:Math.round(bal),events:events.slice(0,10)};
+    return {days:d,balance:Math.round(bal),events:events.slice(0,15),dailyExp};
   });
+
+  const bankOptions=allBanks.map(b=>`<option value="${b.balance}" ${cfg.startBal===b.balance?'selected':''}>${b.name} (${fmt(b.balance)})</option>`).join('');
+  const custEvHtml=(cfg.customEvents||[]).map((ev,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;font-size:13px">${ev.name}</div>
+      <div style="font-size:12px;color:var(--muted)">${ev.date}</div>
+      <div style="font-size:13px;font-weight:600;color:${ev.type==='income'?'var(--green)':'var(--red)'};min-width:80px;text-align:right">${ev.type==='income'?'+':'−'}${fmt(ev.amount)}</div>
+      <button onclick="deleteForecastEvent(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;padding:2px 6px;font-size:14px"><i class="fas fa-times"></i></button>
+    </div>`).join('');
+
   const tabsHtml=`<div class="forecast-tabs">
     ${days.map((d,i)=>`<button class="forecast-tab${i===0?' active':''}" onclick="showForecastTab(${d},this)">${d} วัน</button>`).join('')}
   </div>`;
+
   el.innerHTML=`
-    <div class="forecast-card">
-      <div class="sec-hd" style="margin-bottom:14px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:30px;height:30px;border-radius:8px;background:rgba(124,58,237,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-chart-area" style="color:var(--primary-l);font-size:12px"></i></div>
-          <div class="sec-title">พยากรณ์กระแสเงินสด</div>
-        </div>
-        <div style="font-size:12px;color:var(--muted)">ยอดบัญชีปัจจุบัน: <strong style="color:var(--cyan)">${fmt(banks)}</strong></div>
+  <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start">
+
+    <!-- Settings Panel -->
+    <div class="forecast-card" style="padding:18px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px">
+        <i class="fas fa-sliders-h" style="color:var(--primary-l)"></i> ตั้งค่าพยากรณ์
       </div>
-      ${tabsHtml}
-      <div id="forecast-tab-content">
-        ${renderForecastTab(scenarios[0])}
+
+      <div class="fgroup">
+        <label class="flabel">ยอดเงินเริ่มต้น</label>
+        <input type="number" id="fc-start-bal" class="finput" value="${startBal}" step="1000" onchange="applyForecastCfg()">
+        ${allBanks.length?`<select class="fselect" style="margin-top:6px" onchange="document.getElementById('fc-start-bal').value=this.value;applyForecastCfg()">
+          <option value="">— เลือกจากบัญชี —</option>
+          <option value="${totalBal}">ทุกบัญชีรวม (${fmt(totalBal)})</option>
+          ${bankOptions}
+        </select>`:''}
+      </div>
+
+      <div class="fgroup">
+        <label class="flabel">ค่าใช้จ่ายเฉลี่ย/วัน (บาท)</label>
+        <input type="number" id="fc-daily-exp" class="finput" value="${cfg.dailyExp!=null?cfg.dailyExp:autoAvgDaily}" step="100" onchange="applyForecastCfg()">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">คำนวณอัตโนมัติ: ${fmt(autoAvgDaily)} บาท/วัน</div>
+        <button class="btn btn-ghost" style="font-size:11px;margin-top:4px;padding:4px 10px" onclick="resetForecastDailyExp()">รีเซ็ตเป็นอัตโนมัติ</button>
+      </div>
+
+      <div class="fgroup">
+        <label class="flabel">สถานการณ์</label>
+        <div style="display:flex;gap:6px">
+          ${['frugal:ประหยัด:0.7','normal:ปกติ:1.0','lavish:ฟุ่มเฟือย:1.4'].map(s=>{
+            const [val,lbl,mult]=s.split(':');
+            const active=cfg.scenario===val;
+            return `<button onclick="setForecastScenario('${val}')" style="flex:1;padding:6px;border-radius:8px;border:1px solid ${active?'var(--primary)':'var(--border)'};background:${active?'rgba(124,58,237,.15)':'var(--surface2)'};color:${active?'var(--primary-l)':'var(--fg)'};font-size:11px;cursor:pointer;transition:.2s">${lbl}<br><span style="font-size:10px;color:var(--muted)">×${mult}</span></button>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <div class="fgroup">
+        <label class="flabel">รายการพิเศษ (one-time)</label>
+        <div id="fc-custom-events">${custEvHtml||'<div style="font-size:12px;color:var(--muted)">ยังไม่มีรายการ</div>'}</div>
+        <button class="btn btn-ghost" style="margin-top:8px;width:100%;font-size:12px" onclick="openAddForecastEvent()"><i class="fas fa-plus"></i> เพิ่มรายการพิเศษ</button>
       </div>
     </div>
-    <div style="font-size:12px;color:var(--muted);padding:8px 0">* พยากรณ์จากรายการซ้ำที่ตั้งไว้ + ค่าใช้จ่ายเฉลี่ยย้อนหลัง 6 เดือน ไม่รวมเหตุการณ์ไม่คาดฝัน</div>`;
+
+    <!-- Result Panel -->
+    <div>
+      <div class="forecast-card">
+        <div class="sec-hd" style="margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:30px;height:30px;border-radius:8px;background:rgba(124,58,237,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-chart-area" style="color:var(--primary-l);font-size:12px"></i></div>
+            <div class="sec-title">ผลพยากรณ์กระแสเงินสด</div>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">ค่าใช้จ่าย/วัน: <strong style="color:var(--cyan)">${fmt(dailyExp)} บาท</strong></div>
+        </div>
+        ${tabsHtml}
+        <div id="forecast-tab-content">
+          ${renderForecastTab(scenarios[0])}
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);padding:6px 0">* พยากรณ์จากรายการซ้ำ + รายการพิเศษ + ค่าใช้จ่ายเฉลี่ยปรับตามสถานการณ์</div>
+    </div>
+  </div>
+
+  <!-- Modal เพิ่มรายการพิเศษ -->
+  <div id="fc-event-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center">
+    <div class="modal-box" style="max-width:360px">
+      <div class="modal-hd"><span>เพิ่มรายการพิเศษ</span><button class="modal-close" onclick="closeForecastEventModal()"><i class="fas fa-times"></i></button></div>
+      <div class="modal-body">
+        <div class="fgroup"><label class="flabel">ชื่อรายการ</label><input id="fce-name" class="finput" placeholder="เช่น ซื้อโน้ตบุ๊ค"></div>
+        <div class="fgroup"><label class="flabel">วันที่</label><input id="fce-date" type="date" class="finput"></div>
+        <div class="fgroup"><label class="flabel">ประเภท</label>
+          <select id="fce-type" class="fselect">
+            <option value="expense">รายจ่าย</option>
+            <option value="income">รายรับ</option>
+          </select>
+        </div>
+        <div class="fgroup"><label class="flabel">จำนวน (บาท)</label><input id="fce-amount" type="number" class="finput" placeholder="0"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeForecastEventModal()">ยกเลิก</button>
+        <button class="btn btn-primary" onclick="saveForecastEvent()">เพิ่ม</button>
+      </div>
+    </div>
+  </div>`;
+
   window._forecastScenarios=scenarios;
+}
+
+function applyForecastCfg(){
+  if(!DB.forecastCfg) DB.forecastCfg={startBal:null,dailyExp:null,scenario:'normal',customEvents:[]};
+  const sb=parseFloat(document.getElementById('fc-start-bal')?.value);
+  const de=parseFloat(document.getElementById('fc-daily-exp')?.value);
+  if(!isNaN(sb)) DB.forecastCfg.startBal=sb;
+  if(!isNaN(de)) DB.forecastCfg.dailyExp=de;
+  saveDB(); renderForecast();
+}
+
+function resetForecastDailyExp(){
+  if(!DB.forecastCfg) DB.forecastCfg={startBal:null,dailyExp:null,scenario:'normal',customEvents:[]};
+  DB.forecastCfg.dailyExp=null;
+  saveDB(); renderForecast();
+}
+
+function setForecastScenario(s){
+  if(!DB.forecastCfg) DB.forecastCfg={startBal:null,dailyExp:null,scenario:'normal',customEvents:[]};
+  DB.forecastCfg.scenario=s;
+  saveDB(); renderForecast();
+}
+
+function openAddForecastEvent(){
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('fce-name').value='';
+  document.getElementById('fce-date').value=today;
+  document.getElementById('fce-type').value='expense';
+  document.getElementById('fce-amount').value='';
+  const m=document.getElementById('fc-event-modal');
+  m.style.display='flex';
+}
+
+function closeForecastEventModal(){
+  document.getElementById('fc-event-modal').style.display='none';
+}
+
+function saveForecastEvent(){
+  const name=document.getElementById('fce-name').value.trim();
+  const date=document.getElementById('fce-date').value;
+  const type=document.getElementById('fce-type').value;
+  const amount=parseFloat(document.getElementById('fce-amount').value);
+  if(!name||!date||isNaN(amount)||amount<=0){alert('กรุณากรอกข้อมูลให้ครบ');return;}
+  if(!DB.forecastCfg) DB.forecastCfg={startBal:null,dailyExp:null,scenario:'normal',customEvents:[]};
+  if(!DB.forecastCfg.customEvents) DB.forecastCfg.customEvents=[];
+  DB.forecastCfg.customEvents.push({name,date,type,amount});
+  DB.forecastCfg.customEvents.sort((a,b)=>a.date.localeCompare(b.date));
+  saveDB(); closeForecastEventModal(); renderForecast();
+}
+
+function deleteForecastEvent(idx){
+  if(!DB.forecastCfg?.customEvents) return;
+  DB.forecastCfg.customEvents.splice(idx,1);
+  saveDB(); renderForecast();
 }
 
 function renderForecastTab(s){
   const color=s.balance>=0?'var(--green)':'var(--red)';
   return `
-    <div style="display:flex;gap:20px;align-items:center;margin-bottom:18px;flex-wrap:wrap">
-      <div style="text-align:center;padding:16px 24px;background:var(--surface2);border-radius:12px">
+    <div style="display:flex;gap:20px;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap">
+      <div style="text-align:center;padding:16px 24px;background:var(--surface2);border-radius:12px;min-width:140px">
         <div style="font-size:11px;color:var(--muted);margin-bottom:4px">คาดการณ์ยอดคงเหลือ</div>
         <div style="font-size:24px;font-weight:800;color:${color}">${fmt(s.balance)}</div>
         <div style="font-size:11px;color:var(--muted)">ใน ${s.days} วัน</div>
       </div>
       <div style="flex:1;min-width:200px">
-        <div style="font-size:13px;font-weight:600;margin-bottom:10px">รายการที่จะเกิดขึ้น (30 วันแรก)</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">รายการที่จะเกิดขึ้น</div>
         ${s.events.length?s.events.map(ev=>`
           <div class="forecast-day-row">
-            <div style="width:50px;font-size:11px;color:var(--muted)">${ev.date}</div>
-            <div style="flex:1">${ev.name}</div>
+            <div style="width:60px;font-size:11px;color:var(--muted)">${ev.date}</div>
+            <div style="flex:1;font-size:13px">${ev.name}${ev.src==='custom'?' <span style="font-size:10px;background:rgba(124,58,237,.12);color:var(--primary-l);padding:1px 5px;border-radius:4px">พิเศษ</span>':''}</div>
             <div style="font-weight:600;color:${ev.type==='income'?'var(--green)':'var(--red)'}">${ev.type==='income'?'+':'−'}${fmt(ev.amount)}</div>
-          </div>`).join(''):'<div style="font-size:13px;color:var(--muted)">ไม่มีรายการซ้ำในช่วงนี้</div>'}
+          </div>`).join(''):'<div style="font-size:13px;color:var(--muted)">ไม่มีรายการที่คาดการณ์</div>'}
       </div>
     </div>`;
 }
