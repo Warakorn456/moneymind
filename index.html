@@ -8979,11 +8979,7 @@ renderTx=function(appendMore){
   if(typeof renderHeatmap==='function') renderHeatmap();
 };
 
-const _origRenderDashForComp=renderDash;
-renderDash=function(){
-  _origRenderDashForComp();
-  if(typeof renderMonthComparison==='function') renderMonthComparison();
-};
+// renderDash already patched above (consolidated)
 
 </script>
 
