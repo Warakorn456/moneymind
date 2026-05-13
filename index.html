@@ -1398,6 +1398,13 @@
       <div class="fg"><label class="flabel">วันที่</label><input type="date" id="tx-date" class="finput"></div>
     </div>
     <div class="fg"><label class="flabel">รายละเอียด</label><input type="text" id="tx-desc" class="finput" placeholder="เช่น ค่าอาหารกลางวัน, เงินเดือน"></div>
+    <div class="fg">
+      <label class="flabel">แท็ก (กด Enter หรือ , เพื่อเพิ่ม)</label>
+      <div class="tag-input-wrap" id="tx-tag-wrap" onclick="document.getElementById('tx-tag-inp').focus()">
+        <input id="tx-tag-inp" class="tag-input-inp" placeholder="เช่น work, ครอบครัว, เที่ยว..." onkeydown="txTagKey(event)" oninput="txTagInput(event)">
+      </div>
+      <input type="hidden" id="tx-tags-val" value="">
+    </div>
     <div id="paybycard-row" style="display:none;margin-bottom:8px">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px">
         <input type="checkbox" id="tx-paybycard" style="width:16px;height:16px;accent-color:#ef4444;cursor:pointer" onchange="onPayByCCChange()">
