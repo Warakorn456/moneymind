@@ -7980,7 +7980,7 @@ function renderForecast(){
       tabBtns+='<button class="forecast-tab'+(ti===0?' active':'')+'" onclick="showForecastTab('+daysList[ti]+',this)">'+daysList[ti]+' วัน</button>';
     }
 
-    var resultPanel='<div>'
+    var resultPanel='<div style="flex:1;min-width:280px">'
       +'<div class="forecast-card">'
       +'<div class="sec-hd" style="margin-bottom:14px">'
       +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(124,58,237,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-chart-area" style="color:var(--primary-l);font-size:12px"></i></div><div class="sec-title">ผลพยากรณ์</div></div>'
