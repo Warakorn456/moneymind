@@ -6970,24 +6970,6 @@ function getCustomExpCats(){ return DB.settings.customExpCats||[]; }
 function getAllIncCats(){ return [...INC_CATS,...getCustomIncCats()]; }
 function getAllExpCats(){ return [...EXP_CATS,...getCustomExpCats()]; }
 
-// Patch getCat to include custom
-const _origGetCat=getCat;
-window.getCat=function(id,type){
-  const l=type==='income'?getAllIncCats():getAllExpCats();
-  return l.find(c=>c.id===id)||{label:id,icon:'fa-circle',color:'#94a3b8'};
-};
-
-// Patch setTxType to include custom cats
-const _origSetTxType=setTxType;
-window.setTxType=function(type,btn){
-  _origSetTxType(type,btn);
-  const custom=type==='income'?getCustomIncCats():getCustomExpCats();
-  if(custom.length){
-    const sel=document.getElementById('tx-cat');
-    if(sel) sel.innerHTML+='<optgroup label="— หมวดหมู่ของฉัน —">'+custom.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')+'</optgroup>';
-  }
-};
-
 function openCustomCatModal(id){
   const all=[...getCustomIncCats(),...getCustomExpCats()];
   const entry=id?all.find(c=>c.id===id):null;
