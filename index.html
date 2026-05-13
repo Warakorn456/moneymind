@@ -2517,6 +2517,9 @@ function renderDash(){
   renderDashBanks();
   renderRecentTx();
   renderDebtSummary();
+  if(typeof renderSpendingInsights==='function') renderSpendingInsights();
+  if(typeof renderCatBudgetProgress==='function') renderCatBudgetProgress();
+  if(typeof checkNotifications==='function') checkNotifications();
 }
 
 function renderBudgetCard(){
