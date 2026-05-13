@@ -714,6 +714,22 @@
         <select id="sel-month" onchange="onDateChange()"></select>
         <select id="sel-year" onchange="onDateChange()"></select>
       </div>
+      <!-- Theme toggle -->
+      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="สลับ Dark/Light Mode"><i class="fas fa-sun" id="theme-icon"></i></button>
+      <!-- Notification bell -->
+      <div class="notif-wrap">
+        <button class="notif-btn" onclick="toggleNotifPanel()" title="การแจ้งเตือน">
+          <i class="fas fa-bell"></i>
+          <span class="notif-dot" id="notif-dot"></span>
+        </button>
+        <div class="notif-panel" id="notif-panel">
+          <div class="notif-head">
+            <span><i class="fas fa-bell" style="color:var(--amber);margin-right:6px"></i>การแจ้งเตือน</span>
+            <button onclick="clearNotifs()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;font-family:Sarabun,sans-serif">ล้างทั้งหมด</button>
+          </div>
+          <div id="notif-list"><div class="notif-empty"><i class="fas fa-check-circle" style="color:var(--green);font-size:22px;display:block;margin-bottom:8px"></i>ไม่มีการแจ้งเตือน</div></div>
+        </div>
+      </div>
       <button class="btn btn-primary" onclick="openTxModal()"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
     </div>
   </div>
