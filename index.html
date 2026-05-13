@@ -8308,13 +8308,6 @@ renderDash=function(){
   if(typeof renderNWHistory==='function') renderNWHistory();
 };
 
-// Patch renderPage for forecast
-const _origRenderPageV2=renderPage;
-renderPage=function(p){
-  if(p==='forecast') renderForecast();
-  else _origRenderPageV2(p);
-};
-
 // Patch renderSettings for PIN
 const _origRenderSettingsV2=renderSettings;
 renderSettings=function(){
