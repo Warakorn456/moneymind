@@ -1228,7 +1228,25 @@
     </div>
     <input type="hidden" id="tx-eid">
     <input type="hidden" id="tx-type" value="income">
-    <div class="fg"><label class="flabel">จำนวนเงิน (บาท)</label><input type="number" id="tx-amt" class="finput" placeholder="0.00" min="0" step="0.01"></div>
+    <div class="frow" style="align-items:flex-end">
+      <div class="fg" style="flex:2">
+        <label class="flabel">จำนวนเงิน</label>
+        <input type="number" id="tx-amt" class="finput" placeholder="0.00" min="0" step="0.01" oninput="calcTxConvert()">
+      </div>
+      <div class="fg" style="flex:1">
+        <label class="flabel">สกุลเงิน</label>
+        <select id="tx-currency" class="fselect" onchange="calcTxConvert()">
+          <option value="THB">🇹🇭 THB</option>
+          <option value="USD">🇺🇸 USD</option>
+          <option value="EUR">🇪🇺 EUR</option>
+          <option value="JPY">🇯🇵 JPY</option>
+          <option value="SGD">🇸🇬 SGD</option>
+          <option value="CNY">🇨🇳 CNY</option>
+          <option value="GBP">🇬🇧 GBP</option>
+        </select>
+      </div>
+    </div>
+    <div id="tx-convert-display" style="display:none;font-size:12px;color:var(--cyan);margin-top:-6px;margin-bottom:8px;padding:6px 10px;background:rgba(6,182,212,.08);border-radius:8px"></div>
     <div class="frow">
       <div class="fg"><label class="flabel">หมวดหมู่</label><select id="tx-cat" class="fselect"></select></div>
       <div class="fg"><label class="flabel">วันที่</label><input type="date" id="tx-date" class="finput"></div>
