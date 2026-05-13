@@ -4808,6 +4808,8 @@ function renderSettings(){
   document.getElementById('model-status').textContent='model ที่ใช้งาน: '+active;
   const lt=document.getElementById('lock-timeout-sel');
   if(lt) lt.value=String(DB.settings.lockTimeout??15);
+  if(typeof renderCustomCatList==='function') renderCustomCatList();
+  if(typeof renderCatBudgetSettings==='function') renderCatBudgetSettings();
 }
 
 function saveLockTimeout(val){
