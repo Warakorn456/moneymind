@@ -7603,6 +7603,626 @@ function renderCatBudgetProgress(){
     </div>`;
 }
 
+// ══════════════════════════════════════════
+//  NEW FEATURE A — PIN LOCK
+// ══════════════════════════════════════════
+let _pinBuffer='', _setupPin1='', _setupPin2='', _pinLockMode=true;
+
+function _hashPin(pin){ let h=0; for(let i=0;i<pin.length;i++) h=(Math.imul(31,h)+pin.charCodeAt(i))|0; return h.toString(16); }
+
+function switchToPin(){
+  document.getElementById('lock-pin-mode').style.display='block';
+  document.getElementById('lock-pass-mode').style.display='none';
+  _pinBuffer=''; _updatePinDots();
+}
+function switchToPassword(){
+  document.getElementById('lock-pin-mode').style.display='none';
+  document.getElementById('lock-pass-mode').style.display='block';
+  setTimeout(()=>{ const p=document.getElementById('lock-pass'); if(p) p.focus(); },100);
+}
+
+function lockApp(){
+  if(!currentUser||_appLocked) return;
+  _appLocked=true; clearTimeout(_lockTimer);
+  const el=document.getElementById('lock-screen');
+  const lbl=document.getElementById('lock-user-label');
+  if(lbl) lbl.textContent=`บัญชี: ${currentUser}`;
+  _pinBuffer=''; _updatePinDots();
+  const hasPin=!!(DB.settings?.pinHash);
+  if(hasPin){ switchToPin(); }
+  else { switchToPassword(); const p=document.getElementById('lock-pass'); if(p){ p.value=''; document.getElementById('lock-err').textContent=''; setTimeout(()=>p.focus(),100); } }
+  if(el) el.style.display='flex';
+}
+
+function _updatePinDots(){
+  for(let i=0;i<4;i++){ const d=document.getElementById('pd'+i); if(d) d.className='pin-dot'+(i<_pinBuffer.length?' filled':''); }
+}
+function pinPress(d){
+  if(_pinBuffer.length>=4) return;
+  _pinBuffer+=d; _updatePinDots();
+  if(_pinBuffer.length===4) setTimeout(_checkPin,120);
+}
+function pinDelete(){ if(_pinBuffer.length) { _pinBuffer=_pinBuffer.slice(0,-1); _updatePinDots(); } }
+async function _checkPin(){
+  const stored=DB.settings?.pinHash;
+  if(stored&&_hashPin(_pinBuffer)===stored){
+    _appLocked=false;
+    document.getElementById('lock-screen').style.display='none';
+    _pinBuffer=''; _updatePinDots();
+    document.getElementById('pin-lock-err').textContent='';
+    resetLockTimer();
+  } else {
+    document.getElementById('pin-lock-err').textContent='PIN ไม่ถูกต้อง';
+    setTimeout(()=>{ _pinBuffer=''; _updatePinDots(); document.getElementById('pin-lock-err').textContent=''; },800);
+  }
+}
+
+// PIN Setup
+let _setupBuffer1='', _setupBuffer2='';
+function openPinSetup(){
+  _setupBuffer1=''; _setupBuffer2='';
+  document.getElementById('pin-setup-step1').style.display='block';
+  document.getElementById('pin-setup-step2').style.display='none';
+  document.getElementById('pin-setup-modal-title').textContent='ตั้ง PIN ใหม่';
+  document.getElementById('pin-setup-err').textContent='';
+  document.getElementById('pin-setup-err2').textContent='';
+  _updateSetupDots(1); _updateSetupDots(2);
+  openM('m-pin-setup');
+}
+function _updateSetupDots(step){
+  const buf=step===1?_setupBuffer1:_setupBuffer2;
+  const prefix=step===1?'sp':'sp2';
+  for(let i=0;i<4;i++){ const d=document.getElementById(prefix+i); if(d) d.className='pin-dot'+(i<buf.length?' filled':''); }
+}
+function setupPinPress(d){
+  if(_setupBuffer1.length>=4) return;
+  _setupBuffer1+=d; _updateSetupDots(1);
+  if(_setupBuffer1.length===4){ setTimeout(()=>{ document.getElementById('pin-setup-step1').style.display='none'; document.getElementById('pin-setup-step2').style.display='block'; },120); }
+}
+function setupPinDelete(){ if(_setupBuffer1.length){ _setupBuffer1=_setupBuffer1.slice(0,-1); _updateSetupDots(1); } }
+function confirmPinPress(d){
+  if(_setupBuffer2.length>=4) return;
+  _setupBuffer2+=d; _updateSetupDots(2);
+  if(_setupBuffer2.length===4){ setTimeout(_finishPinSetup,120); }
+}
+function confirmPinDelete(){ if(_setupBuffer2.length){ _setupBuffer2=_setupBuffer2.slice(0,-1); _updateSetupDots(2); } }
+function _finishPinSetup(){
+  if(_setupBuffer1!==_setupBuffer2){
+    document.getElementById('pin-setup-err2').textContent='PIN ไม่ตรงกัน กรุณาลองใหม่';
+    _setupBuffer2=''; _updateSetupDots(2); return;
+  }
+  DB.settings.pinHash=_hashPin(_setupBuffer1);
+  saveDB(); closeM('m-pin-setup'); renderSettings();
+  toast('ตั้ง PIN เรียบร้อยแล้ว','success');
+}
+function clearPin(){
+  if(!confirm('ต้องการลบ PIN?')) return;
+  delete DB.settings.pinHash; saveDB(); renderSettings();
+  toast('ลบ PIN แล้ว','info');
+}
+function renderPinSettings(){
+  const hasPin=!!(DB.settings?.pinHash);
+  const lbl=document.getElementById('pin-setup-label');
+  const clearBtn=document.getElementById('pin-clear-btn');
+  const status=document.getElementById('pin-status');
+  if(lbl) lbl.textContent=hasPin?'เปลี่ยน PIN':'ตั้ง PIN';
+  if(clearBtn) clearBtn.style.display=hasPin?'inline-flex':'none';
+  if(status) status.textContent=hasPin?'✓ ตั้ง PIN แล้ว — ใช้ปลดล็อกแทนรหัสผ่านได้':'ยังไม่ได้ตั้ง PIN';
+}
+
+// ══════════════════════════════════════════
+//  NEW FEATURE B — FINANCIAL HEALTH SCORE
+// ══════════════════════════════════════════
+function calcHealthScore(){
+  const txs6=[]; for(let i=0;i<6;i++){ let m=selMonth-i,y=selYear; if(m<0){m+=12;y--;} txs6.push(...monthTx(m,y)); }
+  const avgInc=txs6.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)/6;
+  const avgExp=txs6.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)/6;
+  const savingsRate=avgInc>0?Math.min(100,((avgInc-avgExp)/avgInc)*100):0;
+  const totalDebt=(DB.debts||[]).reduce((s,d)=>s+(d.remaining||d.total||0),0);
+  const dti=avgInc>0?Math.min(100,(totalDebt/(avgInc*12))*10):100;
+  const banks=getBanks().reduce((s,b)=>b.type!=='บัตรเครดิต'?s+b.balance:s,0);
+  const emergencyFund=avgExp>0?Math.min(100,(banks/avgExp)*100/6):100;
+  const port=DB.investments.reduce((s,i)=>s+i.value,0);
+  const invScore=avgInc>0?Math.min(100,(port/(avgInc*12))*100):0;
+  const metrics=[
+    {label:'อัตราการออม',val:Math.max(0,savingsRate),desc:`${savingsRate.toFixed(1)}% ของรายรับ`,icon:'fa-piggy-bank',color:'#10b981',weight:30},
+    {label:'ภาระหนี้',val:Math.max(0,100-dti),desc:totalDebt>0?`หนี้ ${fmt(totalDebt)}`:'ไม่มีหนี้',icon:'fa-credit-card',color:'#06b6d4',weight:25},
+    {label:'เงินสำรองฉุกเฉิน',val:Math.min(100,emergencyFund),desc:`${(banks/Math.max(avgExp,1)).toFixed(1)} เดือน`,icon:'fa-shield-alt',color:'#a78bfa',weight:25},
+    {label:'การลงทุน',val:Math.min(100,invScore),desc:`พอร์ต ${fmt(port)}`,icon:'fa-chart-line',color:'#f59e0b',weight:20},
+  ];
+  const score=Math.round(metrics.reduce((s,m)=>s+(m.val*m.weight/100),0));
+  return {score,metrics};
+}
+
+function renderHealthScore(){
+  const el=document.getElementById('dash-health-section'); if(!el) return;
+  const {score,metrics}=calcHealthScore();
+  const grade=score>=80?{label:'ดีเยี่ยม',color:'#10b981'}:score>=60?{label:'ดี',color:'#06b6d4'}:score>=40?{label:'พอใช้',color:'#f59e0b'}:{label:'ต้องปรับปรุง',color:'#ef4444'};
+  const circ=2*Math.PI*36; const dash=(score/100)*circ;
+  el.innerHTML=`
+    <div class="health-card">
+      <div class="sec-hd" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-heartbeat" style="color:#10b981;font-size:12px"></i></div>
+          <div class="sec-title">Financial Health Score</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="toast('คำนวณจากค่าเฉลี่ย 6 เดือนย้อนหลัง','info')"><i class="fas fa-info-circle"></i></button>
+      </div>
+      <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+        <div class="health-score-ring" style="background:conic-gradient(${grade.color} ${score*3.6}deg, rgba(255,255,255,.08) 0deg)">
+          <div class="health-score-inner">
+            <div style="font-size:22px;font-weight:800;color:${grade.color}">${score}</div>
+            <div style="font-size:10px;color:var(--muted)">/100</div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:16px;font-weight:700;color:${grade.color};margin-bottom:10px">${grade.label}</div>
+          ${metrics.map(m=>`
+            <div class="health-metric">
+              <i class="fas ${m.icon}" style="color:${m.color};width:16px;font-size:12px"></i>
+              <div style="width:100px;font-size:12px;flex-shrink:0">${m.label}</div>
+              <div class="health-bar-bg"><div class="health-bar" style="width:${m.val.toFixed(1)}%;background:${m.color}"></div></div>
+              <div style="font-size:11px;color:var(--muted);text-align:right;min-width:80px">${m.desc}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════
+//  NEW FEATURE C — NET WORTH HISTORY
+// ══════════════════════════════════════════
+function snapshotNetWorth(){
+  const ym=`${selYear}-${String(selMonth+1).padStart(2,'0')}`;
+  if(!DB.nwHistory) DB.nwHistory={};
+  const banks=getBanks().reduce((s,b)=>b.type!=='บัตรเครดิต'?s+b.balance:s,0);
+  const port=DB.investments.reduce((s,i)=>s+i.value,0);
+  const debts=(DB.debts||[]).reduce((s,d)=>s+(d.remaining||d.total||0),0);
+  DB.nwHistory[ym]=Math.round(banks+port-debts);
+}
+
+function renderNWHistory(){
+  const el=document.getElementById('dash-nw-history-section'); if(!el) return;
+  if(!DB.nwHistory||Object.keys(DB.nwHistory).length<2){ el.innerHTML=''; return; }
+  const sorted=Object.entries(DB.nwHistory).sort(([a],[b])=>a.localeCompare(b)).slice(-12);
+  const labels=sorted.map(([k])=>{ const [y,m]=k.split('-'); const mn=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']; return mn[parseInt(m)-1]+'\''+String(parseInt(y)-2500+43).slice(-2); });
+  const vals=sorted.map(([,v])=>v);
+  const first=vals[0], last=vals[vals.length-1];
+  const diff=last-first, diffPct=first!==0?((diff/Math.abs(first))*100).toFixed(1):0;
+  el.innerHTML=`
+    <div class="nw-history-card">
+      <div class="sec-hd" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:30px;height:30px;border-radius:8px;background:rgba(6,182,212,.1);display:flex;align-items:center;justify-content:center"><i class="fas fa-chart-area" style="color:var(--cyan);font-size:12px"></i></div>
+          <div class="sec-title">Net Worth ตามเวลา</div>
+        </div>
+        <div style="font-size:13px;color:${diff>=0?'var(--green)':'var(--red)'};font-weight:700">${diff>=0?'↑':'↓'}${fmt(Math.abs(diff))} (${diffPct}%)</div>
+      </div>
+      <div style="height:120px"><canvas id="ch-nw-history"></canvas></div>
+    </div>`;
+  requestAnimationFrame(()=>{
+    const ctx=document.getElementById('ch-nw-history')?.getContext('2d'); if(!ctx) return;
+    new Chart(ctx,{type:'line',data:{labels,datasets:[{data:vals,borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.1)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#06b6d4',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b',font:{size:10}},grid:{display:false}},y:{ticks:{color:'#64748b',font:{size:10},callback:v=>v>=1000000?'฿'+(v/1000000).toFixed(1)+'M':v>=1000?'฿'+(v/1000).toFixed(0)+'K':'฿'+v},grid:{color:'rgba(255,255,255,.04)'}}}}});
+  });
+}
+
+// ══════════════════════════════════════════
+//  NEW FEATURE D — TRANSACTION SEARCH + TAGS
+// ══════════════════════════════════════════
+const TAG_COLORS=['#7c3aed','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899','#84cc16'];
+function tagColor(tag){ let h=0; for(const c of tag) h=(h*31+c.charCodeAt(0))%TAG_COLORS.length; return TAG_COLORS[Math.abs(h)]; }
+
+function txTagKey(e){
+  if(e.key==='Enter'||e.key===','){ e.preventDefault(); addTxTag(e.target.value.trim().replace(',','')); e.target.value=''; }
+  if(e.key==='Backspace'&&!e.target.value){ removeTxTagLast(); }
+}
+function txTagInput(e){ if(e.target.value.endsWith(',')){ addTxTag(e.target.value.slice(0,-1).trim()); e.target.value=''; } }
+
+function _getTxTags(){ try{ return JSON.parse(document.getElementById('tx-tags-val').value||'[]'); }catch{ return []; } }
+function _setTxTags(tags){ document.getElementById('tx-tags-val').value=JSON.stringify(tags); renderTxTagWrap(tags); }
+
+function addTxTag(tag){ if(!tag) return; const tags=_getTxTags(); if(!tags.includes(tag)) tags.push(tag); _setTxTags(tags); }
+function removeTxTag(tag){ _setTxTags(_getTxTags().filter(t=>t!==tag)); }
+function removeTxTagLast(){ const tags=_getTxTags(); if(tags.length){ tags.pop(); _setTxTags(tags); } }
+
+function renderTxTagWrap(tags){
+  const wrap=document.getElementById('tx-tag-wrap'); if(!wrap) return;
+  const chips=tags.map(t=>`<span class="tag-chip" style="background:${tagColor(t)}22;color:${tagColor(t)};border-color:${tagColor(t)}33" onclick="removeTxTag('${t}')">${t} ×</span>`).join('');
+  const inp=wrap.querySelector('#tx-tag-inp');
+  wrap.innerHTML=chips;
+  const newInp=document.createElement('input');
+  newInp.id='tx-tag-inp'; newInp.className='tag-input-inp'; newInp.placeholder=tags.length?'':'เช่น work, ครอบครัว...';
+  newInp.setAttribute('onkeydown','txTagKey(event)'); newInp.setAttribute('oninput','txTagInput(event)');
+  wrap.appendChild(newInp);
+}
+
+function renderTxTagFilters(){
+  const el=document.getElementById('tx-tag-filters'); if(!el) return;
+  const allTags=[...new Set(DB.transactions.flatMap(t=>t.tags||[]))];
+  if(!allTags.length){ el.innerHTML=''; return; }
+  const active=el.dataset.active||'';
+  el.innerHTML='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+
+    allTags.slice(0,10).map(t=>`<span class="tag-chip" style="background:${t===active?tagColor(t):tagColor(t)+'22'};color:${t===active?'#fff':tagColor(t)};border-color:${tagColor(t)}44" onclick="filterByTag('${t}')">${t}</span>`).join('')+
+    (active?`<span class="tag-chip" style="background:rgba(255,255,255,.08);color:var(--muted);border-color:var(--border)" onclick="filterByTag('')">✕ ล้างแท็ก</span>`:'')+'</div>';
+}
+function filterByTag(tag){
+  const el=document.getElementById('tx-tag-filters'); if(!el) return;
+  el.dataset.active=tag; renderTx(); renderTxTagFilters();
+}
+
+// ══════════════════════════════════════════
+//  NEW FEATURE E — CASH FLOW FORECAST
+// ══════════════════════════════════════════
+PAGE_TITLE['forecast']='พยากรณ์กระแสเงินสด';
+
+function renderForecast(){
+  const el=document.getElementById('forecast-content'); if(!el) return;
+  const today=new Date();
+  const banks=getBanks().filter(b=>b.type!=='บัตรเครดิต').reduce((s,b)=>s+b.balance,0);
+  const recur=(DB.recurringTx||[]).filter(r=>r.active&&r.freq==='monthly');
+  const avgExp6=[];
+  for(let i=1;i<=6;i++){ let m=today.getMonth()+1-i,y=today.getFullYear(); if(m<=0){m+=12;y--;} const txs=monthTx(m-1,y); avgExp6.push(txs.filter(t=>t.type==='expense'&&!t.isRecurring).reduce((s,t)=>s+t.amount,0)); }
+  const avgDailyExp=(avgExp6.reduce((s,v)=>s+v,0)/6)/30;
+  const days=[30,60,90];
+  const scenarios=days.map(d=>{
+    let bal=banks;
+    const events=[];
+    for(let i=1;i<=d;i++){
+      const dt=new Date(today); dt.setDate(today.getDate()+i);
+      const dom=dt.getDate();
+      recur.forEach(r=>{
+        if(r.day===dom){
+          const delta=r.type==='income'?r.amount:-r.amount;
+          bal+=delta;
+          if(i<=30) events.push({day:i,name:r.name,amount:r.amount,type:r.type,date:dt.toLocaleDateString('th-TH',{day:'numeric',month:'short'})});
+        }
+      });
+      bal-=avgDailyExp;
+    }
+    return {days:d,balance:Math.round(bal),events:events.slice(0,10)};
+  });
+  const tabsHtml=`<div class="forecast-tabs">
+    ${days.map((d,i)=>`<button class="forecast-tab${i===0?' active':''}" onclick="showForecastTab(${d},this)">${d} วัน</button>`).join('')}
+  </div>`;
+  el.innerHTML=`
+    <div class="forecast-card">
+      <div class="sec-hd" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:30px;height:30px;border-radius:8px;background:rgba(124,58,237,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-chart-area" style="color:var(--primary-l);font-size:12px"></i></div>
+          <div class="sec-title">พยากรณ์กระแสเงินสด</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted)">ยอดบัญชีปัจจุบัน: <strong style="color:var(--cyan)">${fmt(banks)}</strong></div>
+      </div>
+      ${tabsHtml}
+      <div id="forecast-tab-content">
+        ${renderForecastTab(scenarios[0])}
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);padding:8px 0">* พยากรณ์จากรายการซ้ำที่ตั้งไว้ + ค่าใช้จ่ายเฉลี่ยย้อนหลัง 6 เดือน ไม่รวมเหตุการณ์ไม่คาดฝัน</div>`;
+  window._forecastScenarios=scenarios;
+}
+
+function renderForecastTab(s){
+  const color=s.balance>=0?'var(--green)':'var(--red)';
+  return `
+    <div style="display:flex;gap:20px;align-items:center;margin-bottom:18px;flex-wrap:wrap">
+      <div style="text-align:center;padding:16px 24px;background:var(--surface2);border-radius:12px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">คาดการณ์ยอดคงเหลือ</div>
+        <div style="font-size:24px;font-weight:800;color:${color}">${fmt(s.balance)}</div>
+        <div style="font-size:11px;color:var(--muted)">ใน ${s.days} วัน</div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">รายการที่จะเกิดขึ้น (30 วันแรก)</div>
+        ${s.events.length?s.events.map(ev=>`
+          <div class="forecast-day-row">
+            <div style="width:50px;font-size:11px;color:var(--muted)">${ev.date}</div>
+            <div style="flex:1">${ev.name}</div>
+            <div style="font-weight:600;color:${ev.type==='income'?'var(--green)':'var(--red)'}">${ev.type==='income'?'+':'−'}${fmt(ev.amount)}</div>
+          </div>`).join(''):'<div style="font-size:13px;color:var(--muted)">ไม่มีรายการซ้ำในช่วงนี้</div>'}
+      </div>
+    </div>`;
+}
+
+function showForecastTab(days,btn){
+  document.querySelectorAll('.forecast-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const s=window._forecastScenarios?.find(x=>x.days===days);
+  if(s) document.getElementById('forecast-tab-content').innerHTML=renderForecastTab(s);
+}
+
+// ══════════════════════════════════════════
+//  NEW FEATURE F — DEBT PAYOFF PLANNER
+// ══════════════════════════════════════════
+let _payoffStrategy='avalanche';
+
+function toggleDebtPlanner(btn){
+  const panel=document.getElementById('debt-planner-panel');
+  const open=panel.style.display!=='none';
+  panel.style.display=open?'none':'block';
+  btn.style.background=open?'':' rgba(124,58,237,.15)';
+  btn.style.color=open?'':'var(--primary-l)';
+  if(!open) renderDebtPlanner();
+}
+
+function renderDebtPlanner(){
+  const el=document.getElementById('debt-planner-panel'); if(!el) return;
+  const debts=(DB.debts||[]).filter(d=>d.remaining>0||d.total>0).map(d=>({...d,bal:d.remaining||d.total||0}));
+  if(!debts.length){ el.innerHTML='<div class="card" style="padding:16px;font-size:13px;color:var(--muted)">ยังไม่มีหนี้ที่ต้องชำระ</div>'; return; }
+  const totalPay=debts.reduce((s,d)=>s+(d.monthlyPayment||0),0);
+  const avalanche=calcPayoff([...debts].sort((a,b)=>parseFloat(b.rate||0)-parseFloat(a.rate||0)),totalPay);
+  const snowball=calcPayoff([...debts].sort((a,b)=>a.bal-b.bal),totalPay);
+  const strat=_payoffStrategy==='avalanche'?avalanche:snowball;
+  el.innerHTML=`
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:14px"><i class="fas fa-calculator" style="color:var(--primary-l);margin-right:8px"></i>Debt Payoff Planner</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <div class="payoff-strategy-card ${_payoffStrategy==='avalanche'?'selected':''}" onclick="_payoffStrategy='avalanche';renderDebtPlanner()">
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px">⚡ Avalanche</div>
+          <div style="font-size:12px;color:var(--muted)">ปิดดอกเบี้ยสูงสุดก่อน</div>
+          <div style="font-size:13px;font-weight:600;color:var(--cyan);margin-top:6px">${avalanche.months} เดือน · ดอก ${fmt(avalanche.totalInterest)}</div>
+        </div>
+        <div class="payoff-strategy-card ${_payoffStrategy==='snowball'?'selected':''}" onclick="_payoffStrategy='snowball';renderDebtPlanner()">
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px">❄️ Snowball</div>
+          <div style="font-size:12px;color:var(--muted)">ปิดยอดน้อยที่สุดก่อน</div>
+          <div style="font-size:13px;font-weight:600;color:var(--cyan);margin-top:6px">${snowball.months} เดือน · ดอก ${fmt(snowball.totalInterest)}</div>
+        </div>
+      </div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">ลำดับการปิดหนี้ (${_payoffStrategy==='avalanche'?'Avalanche':'Snowball'})</div>
+      ${strat.order.map((d,i)=>`
+        <div class="payoff-debt-row">
+          <div style="width:22px;height:22px;border-radius:50%;background:rgba(124,58,237,.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--primary-l);flex-shrink:0">${i+1}</div>
+          <div style="flex:1;font-weight:500">${d.name}</div>
+          <div style="font-size:12px;color:var(--muted)">${fmt(d.bal)}</div>
+          <div style="font-size:12px;color:var(--amber)">${parseFloat(d.rate||0).toFixed(1)}%/ปี</div>
+          <span class="payoff-month-badge">~${d.payoffMonth} เดือน</span>
+        </div>`).join('')}
+      <div style="margin-top:14px;padding:12px;background:var(--surface2);border-radius:10px;font-size:13px">
+        ประหยัดดอกเบี้ยได้ <strong style="color:var(--green)">${fmt(Math.max(0,snowball.totalInterest-avalanche.totalInterest))}</strong> โดยใช้ Avalanche แทน Snowball
+      </div>
+    </div>`;
+}
+
+function calcPayoff(debts,extraPay){
+  let months=0, totalInterest=0;
+  const dCopy=debts.map(d=>({...d,bal:d.remaining||d.total||0,pay:d.monthlyPayment||500}));
+  const order=dCopy.map(d=>({...d,payoffMonth:0}));
+  let maxM=120;
+  for(let m=1;m<=maxM&&dCopy.some(d=>d.bal>0);m++){
+    months=m;
+    let extra=extraPay-(dCopy.reduce((s,d)=>s+d.pay,0));
+    if(extra<0) extra=0;
+    let applied=false;
+    for(const d of dCopy){
+      if(d.bal<=0) continue;
+      const rate=parseFloat(d.rate||0)/100/12;
+      const interest=d.bal*rate; totalInterest+=interest;
+      d.bal+=interest; d.bal-=d.pay;
+      if(!applied&&extra>0){ d.bal-=extra; applied=true; }
+      if(d.bal<=0){ const oi=order.find(x=>x.id===d.id); if(oi) oi.payoffMonth=m; d.bal=0; }
+    }
+  }
+  return {months,totalInterest:Math.round(totalInterest),order};
+}
+
+// ══════════════════════════════════════════
+//  NEW FEATURE G — INVESTMENT REBALANCING
+// ══════════════════════════════════════════
+function toggleRebalPanel(btn){
+  const panel=document.getElementById('rebal-panel');
+  const open=panel.style.display!=='none';
+  panel.style.display=open?'none':'block';
+  if(!open) renderRebalPanel();
+}
+
+function renderRebalPanel(){
+  const el=document.getElementById('rebal-panel'); if(!el) return;
+  if(!DB.settings.rebalTargets) DB.settings.rebalTargets={};
+  const totalVal=DB.investments.reduce((s,i)=>s+i.value,0);
+  if(!totalVal){ el.innerHTML='<div class="card" style="padding:16px;font-size:13px;color:var(--muted)">ยังไม่มีการลงทุน</div>'; return; }
+  const types=[...new Set(DB.investments.map(i=>i.type))];
+  const typeSums={};
+  types.forEach(t=>{ typeSums[t]=DB.investments.filter(i=>i.type===t).reduce((s,i)=>s+i.value,0); });
+  let totalTarget=Object.values(DB.settings.rebalTargets).reduce((s,v)=>s+(parseFloat(v)||0),0);
+  const rows=types.map(t=>{
+    const actual=(typeSums[t]/totalVal)*100;
+    const target=parseFloat(DB.settings.rebalTargets[t]||0);
+    const dev=actual-target;
+    const devClass=Math.abs(dev)<2?'ok':dev>0?'over':'under';
+    const action=Math.abs(dev)>=2?`${dev>0?'ขาย':'ซื้อ'} ${fmt(Math.abs(dev/100)*totalVal)}`:'สมดุล';
+    return `<div class="rebal-row">
+      <div style="flex:1;font-size:13px;font-weight:500">${t}</div>
+      <div style="font-size:12px;color:var(--muted);width:70px;text-align:right">${fmt(typeSums[t])}</div>
+      <div style="font-size:12px;color:var(--cyan);width:50px;text-align:center">${actual.toFixed(1)}%</div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <input class="rebal-inp" type="number" value="${target||''}" placeholder="0" min="0" max="100"
+          onchange="saveRebalTarget('${t}',this.value)" title="เป้าหมาย %">
+        <span style="font-size:11px;color:var(--muted)">%</span>
+      </div>
+      <span class="rebal-deviation ${devClass}">${dev>0?'+':''}${dev.toFixed(1)}%</span>
+      <div style="font-size:11px;color:var(--muted);min-width:80px;text-align:right">${action}</div>
+    </div>`;
+  });
+  const totalOk=Math.abs(totalTarget-100)<1;
+  el.innerHTML=`
+    <div class="card">
+      <div class="sec-hd" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(124,58,237,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-balance-scale" style="color:var(--primary-l);font-size:12px"></i></div><div class="sec-title">Asset Allocation Rebalancing</div></div>
+        <div style="font-size:12px;color:${totalOk?'var(--green)':'var(--amber)'}">เป้ารวม: ${totalTarget.toFixed(0)}%${totalOk?'':' (ควรรวมเป็น 100%)'}</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;display:flex;gap:16px">
+        <span>ปัจจุบัน: <strong style="color:var(--cyan)">${fmt(totalVal)}</strong></span>
+        <span><span class="rebal-deviation ok" style="font-size:11px">±0-2%</span> สมดุล &nbsp;<span class="rebal-deviation over" style="font-size:11px">+</span> เกิน &nbsp;<span class="rebal-deviation under" style="font-size:11px">−</span> ขาด</span>
+      </div>
+      ${rows.join('')}
+    </div>`;
+}
+
+function saveRebalTarget(type,val){
+  if(!DB.settings.rebalTargets) DB.settings.rebalTargets={};
+  DB.settings.rebalTargets[type]=parseFloat(val)||0;
+  saveDB();
+  // Check if any over threshold
+  const totalVal=DB.investments.reduce((s,i)=>s+i.value,0);
+  if(totalVal>0){
+    Object.entries(DB.settings.rebalTargets).forEach(([t,target])=>{
+      if(!target) return;
+      const actual=(DB.investments.filter(i=>i.type===t).reduce((s,i)=>s+i.value,0)/totalVal)*100;
+      const dev=Math.abs(actual-target);
+      if(dev>=5) toast(`⚠️ ${t} เบี่ยงจากเป้า ${dev.toFixed(1)}%`,'warn');
+    });
+  }
+}
+
+function checkRebalAlerts(){
+  const totalVal=DB.investments.reduce((s,i)=>s+i.value,0);
+  if(!totalVal||!DB.settings.rebalTargets) return;
+  const types=[...new Set(DB.investments.map(i=>i.type))];
+  types.forEach(t=>{
+    const target=parseFloat(DB.settings.rebalTargets[t]||0); if(!target) return;
+    const actual=(DB.investments.filter(i=>i.type===t).reduce((s,i)=>s+i.value,0)/totalVal)*100;
+    const dev=Math.abs(actual-target);
+    if(dev>=5) _notifs.push({type:'warn',icon:'fa-balance-scale',color:'#f59e0b',bg:'rgba(245,158,11,.12)',text:`Rebalancing: ${t} เบี่ยงเป้า!`,sub:`ปัจจุบัน ${actual.toFixed(1)}% เป้า ${target}% (เบี่ยง ${dev.toFixed(1)}%)`});
+  });
+}
+
+// ══════════════════════════════════════════
+//  NEW FEATURE H — PDF PRINT REPORT
+// ══════════════════════════════════════════
+function printMonthlyReport(){
+  const MN=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const txs=monthTx(selMonth,selYear);
+  const inc=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const exp=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const bal=inc-exp;
+  const catMap={};
+  txs.filter(t=>t.type==='expense').forEach(t=>{
+    const c=getCat(t.category,'expense');
+    catMap[c.label]=(catMap[c.label]||0)+t.amount;
+  });
+  const catRows=Object.entries(catMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${k}</td><td style="text-align:right">${fmt(v)}</td></tr>`).join('');
+  const txRows=txs.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(t=>`<tr><td>${t.date}</td><td>${t.description}</td><td style="color:${t.type==='income'?'green':'red'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</td><td>${getCat(t.category,t.type).label}</td></tr>`).join('');
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>MoneyMind รายงาน ${MN[selMonth]} ${selYear+543}</title><style>
+    body{font-family:Sarabun,sans-serif;padding:24px;color:#000;font-size:14px}
+    h1{color:#7c3aed;margin-bottom:4px}h2{color:#333;margin:20px 0 10px}
+    .sum{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+    .sum-box{border:1px solid #ddd;border-radius:8px;padding:14px;text-align:center}
+    .sum-box .val{font-size:22px;font-weight:800;margin:4px 0}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{background:#f1f5f9;padding:8px;text-align:left;border:1px solid #ddd}
+    td{padding:7px 8px;border:1px solid #eee}tr:nth-child(even){background:#f9f9f9}
+    @media print{button{display:none}}
+  </style></head><body>
+    <h1>💰 MoneyMind</h1>
+    <p>รายงานการเงิน ${MN[selMonth]} ${selYear+543} &nbsp;|&nbsp; ผู้ใช้: ${currentUser}</p>
+    <div class="sum">
+      <div class="sum-box"><div style="font-size:11px;color:#666">รายรับ</div><div class="val" style="color:green">${fmt(inc)}</div></div>
+      <div class="sum-box"><div style="font-size:11px;color:#666">รายจ่าย</div><div class="val" style="color:red">${fmt(exp)}</div></div>
+      <div class="sum-box"><div style="font-size:11px;color:#666">คงเหลือ</div><div class="val" style="color:${bal>=0?'green':'red'}">${fmt(bal)}</div></div>
+    </div>
+    <h2>รายจ่ายแยกหมวด</h2>
+    <table><thead><tr><th>หมวดหมู่</th><th style="text-align:right">จำนวน</th></tr></thead><tbody>${catRows||'<tr><td colspan="2" style="text-align:center;color:#999">ไม่มีข้อมูล</td></tr>'}</tbody></table>
+    <h2>รายการทั้งหมด (${txs.length} รายการ)</h2>
+    <table><thead><tr><th>วันที่</th><th>รายละเอียด</th><th>จำนวน</th><th>หมวด</th></tr></thead><tbody>${txRows||'<tr><td colspan="4" style="text-align:center;color:#999">ไม่มีข้อมูล</td></tr>'}</tbody></table>
+    <p style="margin-top:20px;font-size:11px;color:#999">สร้างโดย MoneyMind · ${new Date().toLocaleString('th-TH')}</p>
+    <script>window.onload=()=>window.print()<\/script>
+  </body></html>`;
+  const w=window.open('','_blank'); if(w){ w.document.write(html); w.document.close(); }
+  else toast('กรุณาอนุญาต popup เพื่อพิมพ์รายงาน','info');
+}
+
+// ══════════════════════════════════════════
+//  PATCHES — inject into existing renders
+// ══════════════════════════════════════════
+
+// Patch renderDash to add new sections
+const _r2Dash=window.renderDash||renderDash;
+// Already patched in Phase 1 via direct modification, just add new ones
+const _origRenderDashV2=renderDash;
+renderDash=function(){
+  _origRenderDashV2();
+  if(typeof renderHealthScore==='function') renderHealthScore();
+  if(typeof renderNWHistory==='function') renderNWHistory();
+};
+
+// Patch renderPage for forecast
+const _origRenderPageV2=renderPage;
+renderPage=function(p){
+  if(p==='forecast') renderForecast();
+  else _origRenderPageV2(p);
+};
+
+// Patch renderSettings for PIN
+const _origRenderSettingsV2=renderSettings;
+renderSettings=function(){
+  _origRenderSettingsV2();
+  if(typeof renderPinSettings==='function') renderPinSettings();
+};
+
+// Patch saveTx to save tags
+const _origSaveTxV2=saveTx;
+saveTx=function(){
+  // Tags are already in tx-tags-val; we need to include in obj
+  // After calling original, the last pushed tx won't have tags yet
+  // So we hook before and after
+  const tags=_getTxTags();
+  _origSaveTxV2();
+  // Add tags to last pushed tx if not edit
+  if(!document.getElementById('tx-eid').value&&tags.length){
+    const last=DB.transactions[DB.transactions.length-1];
+    if(last) last.tags=tags;
+    saveDB();
+  }
+};
+
+// Patch openTxModal to reset tags
+const _origOpenTxModalV2=openTxModal;
+openTxModal=function(pre){
+  _origOpenTxModalV2(pre);
+  _setTxTags(pre?.tags||[]);
+};
+
+// Patch renderTx to filter by search+tags
+const _origRenderTxV2=renderTx;
+renderTx=function(appendMore){
+  // renderTxTagFilters first
+  if(typeof renderTxTagFilters==='function') renderTxTagFilters();
+  _origRenderTxV2(appendMore);
+};
+
+// Patch filterTx to include search
+const _origMonthTxForTx=window.monthTx;
+
+// Override renderTx to include search
+const __renderTxFinal=renderTx;
+renderTx=function(appendMore=false){
+  const search=(document.getElementById('tx-search')?.value||'').toLowerCase();
+  const tagFilter=document.getElementById('tx-tag-filters')?.dataset?.active||'';
+  if(!search&&!tagFilter){ __renderTxFinal(appendMore); return; }
+  // Filter transactions
+  const el=document.getElementById('tx-list'); if(!el) return;
+  let txs=[...DB.transactions].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(txFilter!=='all') txs=txs.filter(t=>t.type===txFilter);
+  if(search) txs=txs.filter(t=>(t.description||'').toLowerCase().includes(search)||(t.category||'').toLowerCase().includes(search)||(t.tags||[]).some(g=>g.toLowerCase().includes(search)));
+  if(tagFilter) txs=txs.filter(t=>(t.tags||[]).includes(tagFilter));
+  if(!txs.length){ el.innerHTML='<div class="empty"><i class="fas fa-search"></i><p>ไม่พบรายการที่ค้นหา</p></div>'; return; }
+  el.innerHTML=txs.slice(0,50).map(t=>txHTML(t)).join('');
+  if(typeof renderTxTagFilters==='function') renderTxTagFilters();
+};
+
+// Patch checkNotifications for rebalancing
+const _origCheckNotif=checkNotifications;
+checkNotifications=function(){
+  _origCheckNotif();
+  if(typeof checkRebalAlerts==='function') checkRebalAlerts();
+};
+
+// Patch enterApp for NW snapshot
+const _origEnterAppV2=enterApp;
+enterApp=function(){
+  _origEnterAppV2();
+  setTimeout(()=>{ if(typeof snapshotNetWorth==='function') snapshotNetWorth(); },3000);
+};
+
 </script>
 
 <!-- AI Chat FAB + Panel -->
