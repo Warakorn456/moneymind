@@ -2095,6 +2095,9 @@ function enterApp(){
   initDate(); setTxType('income'); renderDash();
   setTimeout(checkDcaSchedule,2000); // ตรวจ DCA ถึงกำหนดหลัง login
   setTimeout(recoverData,800); // auto-recover หากข้อมูลว่างหลัง login
+  if(typeof applyTheme==='function') applyTheme();
+  setTimeout(()=>{ if(typeof applyRecurringTx==='function') applyRecurringTx(); },1500);
+  setTimeout(()=>{ if(typeof checkNotifications==='function') checkNotifications(); },2000);
 }
 
 // ── Login ──
