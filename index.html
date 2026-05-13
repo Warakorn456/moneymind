@@ -695,6 +695,33 @@
     .pin-btn.empty{background:none;border:none;cursor:default}
 
     /* ═══════════════════════════════════════
+       QUICK ADD BAR
+    ═══════════════════════════════════════ */
+    .quick-add-bar{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:6px 12px;min-width:220px;max-width:320px;transition:border-color .2s}
+    .quick-add-bar:focus-within{border-color:var(--primary)}
+    .quick-add-bar input{background:none;border:none;outline:none;color:var(--text);font-family:Sarabun,sans-serif;font-size:13px;flex:1;min-width:0}
+    .quick-add-bar input::placeholder{color:var(--muted)}
+    .quick-add-bar button{background:none;border:none;color:var(--muted);cursor:pointer;padding:0 2px;font-size:14px;transition:color .2s}
+    .quick-add-bar button:hover{color:var(--text)}
+    /* ═══════════════════════════════════════
+       WISHLIST PAGE
+    ═══════════════════════════════════════ */
+    .wish-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;position:relative;transition:all .2s}
+    .wish-card:hover{border-color:var(--primary-l)}
+    .wish-progress{height:6px;background:var(--surface2);border-radius:3px;margin-top:8px;overflow:hidden}
+    .wish-progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--primary-l),var(--cyan));transition:width .4s}
+    /* ═══════════════════════════════════════
+       SAVINGS RATE TRACKER
+    ═══════════════════════════════════════ */
+    .sr-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-bottom:18px}
+    /* ═══════════════════════════════════════
+       TOP MERCHANTS
+    ═══════════════════════════════════════ */
+    .merchant-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+    .merchant-row:last-child{border-bottom:none}
+    .merchant-bar-bg{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+    .merchant-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--primary-l),var(--cyan))}
+    /* ═══════════════════════════════════════
        HEATMAP CALENDAR
     ═══════════════════════════════════════ */
     .heatmap-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-bottom:16px}
