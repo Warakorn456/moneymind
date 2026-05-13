@@ -2882,6 +2882,8 @@ function openTxModal(pre=null){
   document.getElementById('tx-desc').value='';
   document.getElementById('tx-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('tx-paybycard').checked=false;
+  const curSel=document.getElementById('tx-currency'); if(curSel) curSel.value='THB';
+  const cvtDisplay=document.getElementById('tx-convert-display'); if(cvtDisplay) cvtDisplay.style.display='none';
   setTxType(pre?.type||'income');
   _populateTxBankDropdown();
   if(pre){ document.getElementById('tx-amt').value=pre.amount||''; document.getElementById('tx-desc').value=pre.desc||''; document.getElementById('tx-date').value=pre.date||new Date().toISOString().split('T')[0]; if(pre.cat) setTimeout(()=>document.getElementById('tx-cat').value=pre.cat,10); }
