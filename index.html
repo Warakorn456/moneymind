@@ -7959,7 +7959,7 @@ function renderForecast(){
       }
     }
 
-    var settingsPanel='<div class="forecast-card" style="padding:18px">'
+    var settingsPanel='<div class="forecast-card" style="padding:18px;flex:0 0 300px;min-width:280px">'
       +'<div style="font-size:14px;font-weight:700;margin-bottom:14px"><i class="fas fa-sliders-h" style="color:var(--primary-l);margin-right:6px"></i>ตั้งค่าพยากรณ์</div>'
       +'<div class="fgroup"><label class="flabel">ยอดเงินเริ่มต้น</label>'
       +'<input type="number" id="fc-start-bal" class="finput" value="'+startBal+'" step="1000" onchange="applyForecastCfg()">'
