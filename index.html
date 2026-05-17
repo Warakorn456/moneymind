@@ -7225,7 +7225,8 @@ async function sendChat(){
     contents.push({role:'user',parts:[{text:msg}]});
 
     const {data}=await callGemini(contents,{temperature:0.7,maxOutputTokens:8192});
-    const reply=data.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'ไม่ได้รับคำตอบ';
+    const _cp=data.candidates?.[0]?.content?.parts||[];
+    const reply=_cp.filter(p=>!p.thought).map(p=>p.text||'').join('')||_cp.map(p=>p.text||'').join('')||'ไม่ได้รับคำตอบ';
     hideTyping();
     addChatMsg('ai', reply);
   }catch(e){
