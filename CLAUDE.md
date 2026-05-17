@@ -4,7 +4,7 @@
 
 ## สถาปัตยกรรม
 
-**ไฟล์เดียว:** `index.html` (~736KB) — HTML + CSS + Vanilla JavaScript ทั้งหมดอยู่ในไฟล์เดียว
+**ไฟล์เดียว:** `index.html` (~740KB, ~9,028 บรรทัด) — HTML + CSS + Vanilla JavaScript ทั้งหมดอยู่ในไฟล์เดียว
 
 ```
 index.html
