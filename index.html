@@ -6777,7 +6777,8 @@ async function processPaySlip(file){
 - month = เดือน 1-12, year = ปี ค.ศ. (ถ้าเห็น พ.ศ. ให้ลบ 543)
 ถ้าไม่พบข้อมูลใส่ 0`;
     const {data}=await callGemini([{parts:[{inline_data:{mime_type:mime,data:b64}},{text:prompt}]}],{temperature:0.1,maxOutputTokens:512});
-    const text=data.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
+    const _sp=data.candidates?.[0]?.content?.parts||[];
+    const text=_sp.filter(p=>!p.thought).map(p=>p.text||'').join('')||_sp.map(p=>p.text||'').join('')||'';
     const m=text.match(/\{[\s\S]*\}/);
     if(!m) throw new Error('ไม่พบข้อมูล — ลองใช้รูปที่ชัดขึ้น');
     const r=JSON.parse(m[0]);
