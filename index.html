@@ -8891,12 +8891,6 @@ function renderMonthComparison(){
   });
 }
 
-// Wire up: call renderHeatmap from renderTx, renderMonthComparison from renderDash
-const _origRenderTxForHeat=renderTx;
-renderTx=function(appendMore){
-  _origRenderTxForHeat(appendMore);
-  if(typeof renderHeatmap==='function') renderHeatmap();
-};
 
 // renderDash already patched above (consolidated)
 
