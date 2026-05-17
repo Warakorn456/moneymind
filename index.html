@@ -3412,7 +3412,8 @@ async function aiReadReceipt(dataURL){
       ? 'อ่านข้อมูลจากสลิปเงินเดือนหรือเอกสารรายรับนี้ ตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น รูปแบบ: {"amount":number,"gross":number,"deductions":number,"date":"YYYY-MM-DD","description":"string","category":"salary|freelance|invest_return|bonus|rental|other_inc"} โดย amount = ยอดสุทธิที่ได้รับ, gross = รายได้ก่อนหัก, deductions = ยอดหักทั้งหมด ถ้าไม่รู้วันที่ใช้: '+new Date().toISOString().split('T')[0]
       : 'อ่านข้อมูลจากใบเสร็จนี้ ตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น รูปแบบ: {"amount":number,"date":"YYYY-MM-DD","description":"string","category":"food|transport|fuel|housing|utility|health|entertainment|shopping|education|insurance|debt_pay|other_exp"} fuel=ใบเสร็จปั๊มน้ำมัน/เติมน้ำมัน/น้ำมันเชื้อเพลิง ถ้าไม่รู้วันที่ใช้: '+new Date().toISOString().split('T')[0];
     const {data,model:preferred}=await callGemini([{parts:[{inline_data:{mime_type:mime,data:b64}},{text:prompt}]}],{temperature:0.1,maxOutputTokens:2048});
-    const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    const _rp=data.candidates?.[0]?.content?.parts||[];
+    const text=_rp.filter(p=>!p.thought).map(p=>p.text||'').join('')||_rp.map(p=>p.text||'').join('');
     const m=text.match(/\{[\s\S]*\}/);
     if(!m) throw new Error('ไม่พบ JSON ในคำตอบ');
     const p=JSON.parse(m[0]);
