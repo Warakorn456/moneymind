@@ -6874,6 +6874,18 @@ async function processTawi50(file){
 }
 
 // ══════════════════════════════════════════
+//  AI CHAT (vars declared early to avoid TDZ)
+// ══════════════════════════════════════════
+let chatHistory=[];
+let chatOpen=false;
+let chatBusy=false;
+
+// ══════════════════════════════════════════
+//  FEATURE 1 — NOTIFICATIONS (var declared early)
+// ══════════════════════════════════════════
+let _notifs=[];
+
+// ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
 checkLogin();
@@ -6881,13 +6893,6 @@ if(currentUser){
   initDate(); setTxType('income'); renderDash();
   setTimeout(checkDcaSchedule,2000);
 }
-
-// ══════════════════════════════════════════
-//  AI CHAT
-// ══════════════════════════════════════════
-let chatHistory=[];
-let chatOpen=false;
-let chatBusy=false;
 
 function buildFinanceContext(){
   const now=new Date();
