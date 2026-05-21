@@ -3493,21 +3493,32 @@ function showManualForm(){
 }
 
 function saveFromReceipt(){
-  const amt=parseFloat(document.getElementById('ai-amt').value);
   const date=document.getElementById('ai-date').value;
-  const desc=document.getElementById('ai-desc').value.trim();
-  const cat=document.getElementById('ai-cat').value;
   const type=document.getElementById('scan-type').value;
-  if(!amt||amt<=0){ toast('กรุณาใส่จำนวนเงิน','error'); return; }
   if(!date){ toast('กรุณาเลือกวันที่','error'); return; }
-  DB.transactions.push({id:uid(),type,amount:amt,category:cat,date,description:desc||getCat(cat,type).label});
-  // ถ้าเป็นสลิปเงินเดือน บันทึกรายการหักแยกด้วย (ถ้ากรอก)
-  const deduct=parseFloat(document.getElementById('ai-deduct')?.value)||0;
-  if(type==='income'&&deduct>0){
-    DB.transactions.push({id:uid(),type:'expense',amount:deduct,category:'other_exp',date,description:'รายการหัก (ภาษี/ประกัน) - '+desc});
+  const useItems=type==='expense'&&document.getElementById('ai-items-container').style.display!=='none';
+  if(useItems){
+    const valid=_rcptItems.filter(it=>parseFloat(it.amount)>0);
+    if(!valid.length){ toast('กรุณาใส่จำนวนเงินอย่างน้อย 1 รายการ','error'); return; }
+    valid.forEach(it=>{
+      const cat=it.category||'other_exp';
+      DB.transactions.push({id:uid(),type:'expense',amount:parseFloat(it.amount),category:cat,date,description:it.description||getCat(cat,'expense').label});
+    });
+    saveDB(); closeM('m-img'); renderPage(curPage);
+    toast(`บันทึก ${valid.length} รายการจากใบเสร็จแล้ว`,'success');
+  } else {
+    const amt=parseFloat(document.getElementById('ai-amt').value);
+    const desc=document.getElementById('ai-desc').value.trim();
+    const cat=document.getElementById('ai-cat').value;
+    if(!amt||amt<=0){ toast('กรุณาใส่จำนวนเงิน','error'); return; }
+    DB.transactions.push({id:uid(),type,amount:amt,category:cat,date,description:desc||getCat(cat,type).label});
+    const deduct=parseFloat(document.getElementById('ai-deduct')?.value)||0;
+    if(type==='income'&&deduct>0){
+      DB.transactions.push({id:uid(),type:'expense',amount:deduct,category:'other_exp',date,description:'รายการหัก (ภาษี/ประกัน) - '+desc});
+    }
+    saveDB(); closeM('m-img'); renderPage(curPage);
+    toast(type==='income'?'บันทึกสลิปเงินเดือนแล้ว':'บันทึกจากใบเสร็จแล้ว','success');
   }
-  saveDB(); closeM('m-img'); renderPage(curPage);
-  toast(type==='income'?'บันทึกสลิปเงินเดือนแล้ว':'บันทึกจากใบเสร็จแล้ว','success');
 }
 
 function dOver(e){ e.preventDefault(); document.getElementById('ua').classList.add('drag-over'); }
