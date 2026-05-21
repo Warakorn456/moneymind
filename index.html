@@ -8982,6 +8982,377 @@ function renderMonthComparison(){
 
 // renderDash already patched above (consolidated)
 
+// ══════════════════════════════════════════
+//  FEATURE: SPLIT TRANSACTION
+// ══════════════════════════════════════════
+var _splitRows=[];
+
+function toggleTxSplit(){
+  var panel=document.getElementById('tx-split-panel');
+  if(!panel) return;
+  var isOpen=panel.style.display!=='none';
+  if(isOpen){
+    panel.style.display='none';
+    _splitRows=[];
+  } else {
+    panel.style.display='block';
+    _splitRows=[];
+    addSplitRow();
+    addSplitRow();
+    _renderSplitRows();
+  }
+}
+
+function addSplitRow(){
+  var type=document.getElementById('tx-type').value;
+  var cats=type==='income'?[...INC_CATS,...(DB.settings?.customIncCats||[])]:[ ...EXP_CATS,...(DB.settings?.customExpCats||[])];
+  _splitRows.push({amount:'',category:cats[0].id,description:''});
+  _renderSplitRows();
+}
+
+function removeSplitRow(i){
+  _splitRows.splice(i,1);
+  _renderSplitRows();
+}
+
+function _renderSplitRows(){
+  var type=document.getElementById('tx-type').value;
+  var allCats=type==='income'?[...INC_CATS,...(DB.settings?.customIncCats||[])]:[ ...EXP_CATS,...(DB.settings?.customExpCats||[])];
+  var c=document.getElementById('tx-split-rows');
+  if(!c) return;
+  c.innerHTML=_splitRows.map(function(row,i){
+    return '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap">'
+      +'<input type="number" class="finput" style="width:95px;flex-shrink:0" value="'+(row.amount||'')+'" placeholder="฿" oninput="updateSplitRow('+i+',\'amount\',this.value)">'
+      +'<select class="fselect" style="flex:1;min-width:110px" onchange="updateSplitRow('+i+',\'category\',this.value)">'
+        +allCats.map(function(cat){ return '<option value="'+cat.id+'"'+(cat.id===row.category?' selected':'')+'>'+cat.label+'</option>'; }).join('')
+      +'</select>'
+      +'<input type="text" class="finput" style="flex:1;min-width:90px" value="'+(row.description||'')+'" placeholder="รายละเอียด" oninput="updateSplitRow('+i+',\'description\',this.value)">'
+      +(_splitRows.length>1?'<button class="btn btn-ghost" style="padding:4px 8px;color:var(--red);flex-shrink:0" onclick="removeSplitRow('+i+')"><i class="fas fa-times"></i></button>':'')
+    +'</div>';
+  }).join('');
+  _updateSplitRemain();
+}
+
+function updateSplitRow(i,key,val){
+  _splitRows[i][key]=key==='amount'?(parseFloat(val)||0):val;
+  if(key==='amount') _updateSplitRemain();
+}
+
+function _updateSplitRemain(){
+  var total=parseFloat(document.getElementById('tx-amt').value)||0;
+  var splitTotal=_splitRows.reduce(function(s,r){ return s+(parseFloat(r.amount)||0); },0);
+  var remain=Math.round((total-splitTotal)*100)/100;
+  var el=document.getElementById('tx-split-remain');
+  if(!el) return;
+  if(remain===0){
+    el.innerHTML='<span style="color:#10b981"><i class="fas fa-check-circle"></i> ยอดครบ '+fmt(total)+'</span>';
+  } else if(remain>0){
+    el.innerHTML='<span style="color:#f59e0b">ยังเหลือ '+fmt(remain)+' ที่ยังไม่แยก</span>';
+  } else {
+    el.innerHTML='<span style="color:#ef4444">เกินยอดรวม '+fmt(Math.abs(remain))+'</span>';
+  }
+}
+
+// Patch openTxModal — reset split
+var _origOpenTxSplit=openTxModal;
+openTxModal=function(pre){
+  _origOpenTxSplit(pre);
+  var panel=document.getElementById('tx-split-panel');
+  if(panel){ panel.style.display='none'; }
+  _splitRows=[];
+  var btn=document.getElementById('tx-split-btn');
+  if(btn) btn.style.display='inline-flex';
+};
+
+// Patch saveTx — handle split
+var _origSaveTxSplit=saveTx;
+saveTx=function(){
+  var panel=document.getElementById('tx-split-panel');
+  var isSplit=panel&&panel.style.display!=='none'&&_splitRows.length>0;
+  if(!isSplit){ _origSaveTxSplit(); return; }
+  var total=parseFloat(document.getElementById('tx-amt').value)||0;
+  var splitTotal=_splitRows.reduce(function(s,r){ return s+(parseFloat(r.amount)||0); },0);
+  if(Math.abs(total-splitTotal)>0.5){ toast('ยอดรวมไม่ตรงกัน กรุณาตรวจสอบ','error'); return; }
+  var date=document.getElementById('tx-date').value;
+  var type=document.getElementById('tx-type').value;
+  var bankId=document.getElementById('tx-bank')?.value||'';
+  var tags=typeof _getTxTags==='function'?_getTxTags():[];
+  if(!total||total<=0){ toast('กรุณาใส่จำนวนเงิน','error'); return; }
+  if(!date){ toast('กรุณาเลือกวันที่','error'); return; }
+  if(bankId) _adjustBankBalance(bankId,type,total);
+  var count=0;
+  _splitRows.forEach(function(row){
+    var amt=parseFloat(row.amount)||0;
+    if(amt<=0) return;
+    var cat=row.category;
+    DB.transactions.push({id:uid(),type,amount:amt,category:cat,date,
+      description:row.description||getCat(cat,type).label,bankId:bankId||null,tags});
+    count++;
+  });
+  saveDB(); closeM('m-tx'); renderPage(curPage);
+  _splitRows=[];
+  toast('แยก '+count+' หมวดหมู่แล้ว','success');
+};
+
+// ══════════════════════════════════════════
+//  FEATURE: SPENDING ANOMALY ALERT
+// ══════════════════════════════════════════
+function renderSpendingAnomaly(){
+  var el=document.getElementById('dash-anomaly-section');
+  if(!el) return;
+  var now=new Date();
+  var curM=now.getMonth(), curY=now.getFullYear();
+  var curTxs=monthTx(curM,curY).filter(function(t){ return t.type==='expense'; });
+  if(!curTxs.length){ el.innerHTML=''; return; }
+  var avgByCat={};
+  for(var i=1;i<=3;i++){
+    var m=curM-i, y=curY;
+    if(m<0){ m+=12; y--; }
+    monthTx(m,y).filter(function(t){ return t.type==='expense'; }).forEach(function(t){
+      avgByCat[t.category]=(avgByCat[t.category]||0)+t.amount;
+    });
+  }
+  Object.keys(avgByCat).forEach(function(k){ avgByCat[k]/=3; });
+  var curByCat={};
+  curTxs.forEach(function(t){ curByCat[t.category]=(curByCat[t.category]||0)+t.amount; });
+  var anomalies=Object.keys(curByCat).filter(function(cat){
+    var avg=avgByCat[cat]||0;
+    return avg>300&&curByCat[cat]>avg*1.5;
+  }).map(function(cat){
+    return {cat,amt:curByCat[cat],avg:avgByCat[cat],pct:Math.round((curByCat[cat]/avgByCat[cat]-1)*100)};
+  }).sort(function(a,b){ return b.pct-a.pct; }).slice(0,5);
+  if(!anomalies.length){ el.innerHTML=''; return; }
+  var rows=anomalies.map(function(a){
+    var c=getCat(a.cat,'expense');
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'
+      +'<div style="width:32px;height:32px;border-radius:8px;background:rgba(239,68,68,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas '+(c.icon||'fa-circle')+'" style="color:#ef4444;font-size:12px"></i></div>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:600">'+c.label+'</div><div style="font-size:11px;color:var(--muted)">เฉลี่ย 3 เดือน: '+fmt(a.avg)+'</div></div>'
+      +'<div style="text-align:right"><div style="font-size:13px;font-weight:700;color:#ef4444">'+fmt(a.amt)+'</div><div style="font-size:11px;color:#f87171">+'+a.pct+'%</div></div>'
+    +'</div>';
+  }).join('');
+  el.innerHTML='<div class="comparison-card">'
+    +'<div class="sec-hd" style="margin-bottom:10px">'
+    +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(239,68,68,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-exclamation-triangle" style="color:#ef4444;font-size:12px"></i></div><div class="sec-title">แจ้งเตือนการใช้จ่าย</div></div>'
+    +'<div style="font-size:12px;color:var(--muted)">เทียบ 3 เดือนย้อนหลัง</div></div>'
+    +rows+'</div>';
+}
+
+// ══════════════════════════════════════════
+//  FEATURE: FINANCIAL CALENDAR
+// ══════════════════════════════════════════
+function renderFinancialCalendar(){
+  var el=document.getElementById('dash-calendar-section');
+  if(!el) return;
+  var now=new Date();
+  var in30=new Date(now); in30.setDate(in30.getDate()+30);
+  var events=[];
+  var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  // Recurring
+  (DB.recurringTx||[]).filter(function(r){ return r.active; }).forEach(function(r){
+    var d=_nextRecurDate(r,now);
+    if(d&&d>=now&&d<=in30){
+      events.push({date:d,label:r.name||(r.description||'รายการซ้ำ'),type:r.type,amount:r.amount,color:r.type==='income'?'#10b981':'#ef4444'});
+    }
+  });
+  // Debts
+  (DB.debts||[]).filter(function(d){ return d.remaining>0&&d.dueDate; }).forEach(function(d){
+    var due=new Date(d.dueDate);
+    if(!isNaN(due)&&due>=now&&due<=in30){
+      events.push({date:due,label:'ครบกำหนด: '+d.name,type:'expense',amount:d.pay||0,color:'#f59e0b'});
+    }
+  });
+  events.sort(function(a,b){ return a.date-b.date; });
+  if(!events.length){ el.innerHTML=''; return; }
+  var rows=events.slice(0,8).map(function(e){
+    var daysLeft=Math.ceil((e.date-now)/86400000);
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'
+      +'<div style="width:38px;height:38px;border-radius:8px;background:rgba(99,102,241,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">'
+        +'<div style="font-size:15px;font-weight:700;color:var(--primary-l);line-height:1">'+e.date.getDate()+'</div>'
+        +'<div style="font-size:9px;color:var(--muted)">'+TH_MON[e.date.getMonth()]+'</div>'
+      +'</div>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:600">'+e.label+'</div>'
+        +'<div style="font-size:11px;color:var(--muted)">'+(daysLeft===0?'วันนี้':'อีก '+daysLeft+' วัน')+'</div></div>'
+      +(e.amount?'<div style="font-size:13px;font-weight:600;color:'+e.color+'">'+(e.type==='income'?'+':'-')+fmt(e.amount)+'</div>':'')
+    +'</div>';
+  }).join('');
+  el.innerHTML='<div class="comparison-card">'
+    +'<div class="sec-hd" style="margin-bottom:10px">'
+    +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-calendar-alt" style="color:var(--primary-l);font-size:12px"></i></div><div class="sec-title">ปฏิทินการเงิน</div></div>'
+    +'<div style="font-size:12px;color:var(--muted)">30 วันข้างหน้า</div></div>'
+    +rows+'</div>';
+}
+
+function _nextRecurDate(r,now){
+  var m=now.getMonth(), y=now.getFullYear();
+  if(r.freq==='monthly'){
+    var day=parseInt(r.day)||1;
+    var d=new Date(y,m,day);
+    if(d<=now) d=new Date(y,m+1,day);
+    return d;
+  }
+  if(r.freq==='weekly'){
+    var target=parseInt(r.day)||1;
+    var d=new Date(now);
+    var diff=(target-d.getDay()+7)%7||7;
+    d.setDate(d.getDate()+diff);
+    return d;
+  }
+  return null;
+}
+
+// ══════════════════════════════════════════
+//  FEATURE: SUBSCRIPTION TRACKER
+// ══════════════════════════════════════════
+function renderSubscriptionTracker(){
+  var el=document.getElementById('dash-subscription-section');
+  if(!el) return;
+  var subs=(DB.recurringTx||[]).filter(function(r){ return r.active&&r.type==='expense'; });
+  if(!subs.length){ el.innerHTML=''; return; }
+  var totalMonthly=subs.reduce(function(s,r){ return s+r.amount; },0);
+  var rows=subs.map(function(r){
+    var c=getCat(r.category,'expense');
+    var yearly=r.amount*(r.freq==='monthly'?12:r.freq==='weekly'?52:1);
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'
+      +'<div style="width:32px;height:32px;border-radius:8px;background:rgba(239,68,68,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas '+(c.icon||'fa-circle')+'" style="color:#f87171;font-size:11px"></i></div>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:600">'+r.name+'</div><div style="font-size:11px;color:var(--muted)">'+c.label+' • '+(r.freq==='monthly'?'รายเดือน':r.freq==='weekly'?'รายสัปดาห์':'รายปี')+'</div></div>'
+      +'<div style="text-align:right"><div style="font-size:13px;font-weight:600;color:#f87171">'+fmt(r.amount)+'</div><div style="font-size:11px;color:var(--muted)">'+fmt(yearly)+'/ปี</div></div>'
+    +'</div>';
+  }).join('');
+  el.innerHTML='<div class="comparison-card">'
+    +'<div class="sec-hd" style="margin-bottom:10px">'
+    +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(239,68,68,.1);display:flex;align-items:center;justify-content:center"><i class="fas fa-sync-alt" style="color:#f87171;font-size:12px"></i></div><div class="sec-title">รายจ่ายประจำ</div></div>'
+    +'<div style="font-size:12px;color:#f87171;font-weight:600">'+fmt(totalMonthly)+'/เดือน</div></div>'
+    +rows
+    +'<div style="margin-top:10px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px;display:flex;justify-content:space-between">'
+      +'<span style="color:var(--muted)">รวมทั้งปี</span><strong style="color:#f87171">'+fmt(totalMonthly*12)+'</strong>'
+    +'</div>'
+  +'</div>';
+}
+
+// ══════════════════════════════════════════
+//  FEATURE: TAX DEDUCTION ADVISOR
+// ══════════════════════════════════════════
+function renderTaxAdvisor(){
+  var el=document.getElementById('dash-tax-advisor-section');
+  if(!el) return;
+  var t=DB.tax;
+  if(!t||!t.salary) { el.innerHTML=''; return; }
+  var totalInc=(t.salary||0)+(t.freelance||0)+(t.otherInc||0);
+  if(!totalInc){ el.innerHTML=''; return; }
+  var tips=[];
+  // SSF
+  var ssfMax=Math.min(totalInc*0.30,200000);
+  var ssfUsed=t.ssf||0;
+  if(ssfUsed<ssfMax) tips.push({label:'กองทุน SSF',used:ssfUsed,max:Math.round(ssfMax),icon:'fa-chart-line',color:'#a78bfa',hint:'ลดหย่อนได้อีก '+fmt(ssfMax-ssfUsed)});
+  // RMF
+  var rmfMax=Math.min(totalInc*0.30,500000);
+  var rmfUsed=t.rmf||0;
+  if(rmfUsed<rmfMax&&(ssfUsed+rmfUsed)<500000) tips.push({label:'กองทุน RMF',used:rmfUsed,max:Math.round(rmfMax),icon:'fa-piggy-bank',color:'#06b6d4',hint:'ลดหย่อนได้อีก '+fmt(Math.min(rmfMax-rmfUsed,500000-ssfUsed-rmfUsed))});
+  // Life Insurance
+  var lifeMax=100000, lifeUsed=t.lifeIns||0;
+  if(lifeUsed<lifeMax) tips.push({label:'ประกันชีวิต',used:lifeUsed,max:lifeMax,icon:'fa-shield-alt',color:'#10b981',hint:'ลดหย่อนได้อีก '+fmt(lifeMax-lifeUsed)});
+  // Health Insurance
+  var healthMax=25000, healthUsed=t.healthIns||0;
+  if(healthUsed<healthMax) tips.push({label:'ประกันสุขภาพ',used:healthUsed,max:healthMax,icon:'fa-heartbeat',color:'#f59e0b',hint:'ลดหย่อนได้อีก '+fmt(healthMax-healthUsed)});
+  // Thai ESG
+  var esgMax=Math.min(totalInc*0.30,300000);
+  var esgUsed=t.thaiEsg||0;
+  if(esgUsed<esgMax) tips.push({label:'Thai ESG',used:esgUsed,max:Math.round(esgMax),icon:'fa-leaf',color:'#34d399',hint:'ลดหย่อนได้อีก '+fmt(esgMax-esgUsed)});
+  // filter only meaningful (remain > 1000)
+  tips=tips.filter(function(x){ return x.max-x.used>1000; }).slice(0,4);
+  if(!tips.length){ el.innerHTML=''; return; }
+  var rows=tips.map(function(tip){
+    var pct=Math.min(100,Math.round((tip.used/tip.max)*100));
+    return '<div style="margin-bottom:12px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+        +'<div style="display:flex;align-items:center;gap:6px"><i class="fas '+tip.icon+'" style="color:'+tip.color+';font-size:12px"></i><span style="font-size:13px;font-weight:600">'+tip.label+'</span></div>'
+        +'<div style="font-size:12px;color:var(--muted)">'+fmt(tip.used)+' / '+fmt(tip.max)+'</div>'
+      +'</div>'
+      +'<div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">'
+        +'<div style="height:100%;width:'+pct+'%;background:'+tip.color+';border-radius:3px;transition:width .4s"></div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:3px">'+tip.hint+'</div>'
+    +'</div>';
+  }).join('');
+  el.innerHTML='<div class="comparison-card">'
+    +'<div class="sec-hd" style="margin-bottom:12px">'
+    +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(167,139,250,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-receipt" style="color:#a78bfa;font-size:12px"></i></div><div class="sec-title">ยังลดหย่อนภาษีได้อีก</div></div>'
+    +'<button class="btn btn-ghost btn-sm" onclick="nav(\'tax\')">ดูภาษี →</button></div>'
+    +rows+'</div>';
+}
+
+// ══════════════════════════════════════════
+//  FEATURE: PRINT MONTHLY REPORT
+// ══════════════════════════════════════════
+function printMonthlyReport(){
+  var now=new Date();
+  var m=now.getMonth(), y=now.getFullYear();
+  var TH_MON=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  var txs=monthTx(m,y);
+  var inc=txs.filter(function(t){ return t.type==='income'; }).reduce(function(s,t){ return s+t.amount; },0);
+  var exp=txs.filter(function(t){ return t.type==='expense'; }).reduce(function(s,t){ return s+t.amount; },0);
+  var net=inc-exp;
+  var nw=calcNetWorth();
+  // Group expenses by category
+  var byCat={};
+  txs.filter(function(t){ return t.type==='expense'; }).forEach(function(t){
+    byCat[t.category]=(byCat[t.category]||0)+t.amount;
+  });
+  var catRows=Object.entries(byCat).sort(function(a,b){ return b[1]-a[1]; }).map(function(e){
+    var c=getCat(e[0],'expense');
+    return '<tr><td>'+c.label+'</td><td style="text-align:right;color:#dc2626">'+fmt(e[1])+'</td><td style="text-align:right;color:#6b7280">'+(exp>0?Math.round(e[1]/exp*100):0)+'%</td></tr>';
+  }).join('');
+  // Transactions
+  var txRows=txs.slice(-30).reverse().map(function(t){
+    var c=getCat(t.category,t.type);
+    return '<tr><td>'+t.date+'</td><td>'+c.label+'</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(t.description||'')+'</td><td style="text-align:right;color:'+(t.type==='income'?'#059669':'#dc2626')+';">'+(t.type==='income'?'+':'-')+fmt(t.amount)+'</td></tr>';
+  }).join('');
+  var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>รายงาน '+TH_MON[m]+' '+(y+543)+'</title>'
+    +'<style>@import url(\'https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap\');'
+    +'*{box-sizing:border-box;margin:0;padding:0}body{font-family:Sarabun,sans-serif;font-size:13px;color:#1e293b;padding:32px;max-width:800px;margin:0 auto}'
+    +'h1{font-size:22px;font-weight:700;color:#3730a3;margin-bottom:4px}'
+    +'.sub{color:#6b7280;font-size:13px;margin-bottom:24px}'
+    +'.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}'
+    +'.scard{border:1px solid #e2e8f0;border-radius:10px;padding:16px}'
+    +'.scard-label{font-size:11px;color:#94a3b8;margin-bottom:4px}'
+    +'.scard-val{font-size:20px;font-weight:700}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:24px}'
+    +'th{background:#f8fafc;text-align:left;padding:8px 10px;font-size:12px;color:#64748b;border-bottom:1px solid #e2e8f0}'
+    +'td{padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:12px}'
+    +'h2{font-size:15px;font-weight:700;margin-bottom:10px;color:#1e293b}'
+    +'@media print{body{padding:16px}}'
+    +'</style></head><body>'
+    +'<h1>รายงานการเงิน — '+TH_MON[m]+' '+(y+543)+'</h1>'
+    +'<div class="sub">สร้างเมื่อ: '+now.toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})+' • Net Worth: '+fmt(nw)+'</div>'
+    +'<div class="summary">'
+      +'<div class="scard"><div class="scard-label">รายรับ</div><div class="scard-val" style="color:#059669">'+fmt(inc)+'</div></div>'
+      +'<div class="scard"><div class="scard-label">รายจ่าย</div><div class="scard-val" style="color:#dc2626">'+fmt(exp)+'</div></div>'
+      +'<div class="scard"><div class="scard-label">คงเหลือสุทธิ</div><div class="scard-val" style="color:'+(net>=0?'#059669':'#dc2626')+'">'+fmt(net)+'</div></div>'
+    +'</div>'
+    +'<h2>รายจ่ายแยกตามหมวด</h2>'
+    +'<table><tr><th>หมวด</th><th style="text-align:right">จำนวน</th><th style="text-align:right">สัดส่วน</th></tr>'+catRows+'</table>'
+    +'<h2>รายการล่าสุด (30 รายการ)</h2>'
+    +'<table><tr><th>วันที่</th><th>หมวด</th><th>รายละเอียด</th><th style="text-align:right">จำนวน</th></tr>'+txRows+'</table>'
+    +'<div style="font-size:11px;color:#94a3b8;text-align:center;margin-top:16px">MoneyMind — รายงานนี้สร้างอัตโนมัติ</div>'
+  +'</body></html>';
+  var w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function(){ w.print(); },600);
+}
+
+// ══════════════════════════════════════════
+//  PATCH renderDash — เพิ่มฟีเจอร์ใหม่
+// ══════════════════════════════════════════
+var _origRenderDashNew=renderDash;
+renderDash=function(){
+  _origRenderDashNew();
+  if(typeof renderSpendingAnomaly==='function') renderSpendingAnomaly();
+  if(typeof renderFinancialCalendar==='function') renderFinancialCalendar();
+  if(typeof renderSubscriptionTracker==='function') renderSubscriptionTracker();
+  if(typeof renderTaxAdvisor==='function') renderTaxAdvisor();
+};
+
 </script>
 
 <!-- AI Chat FAB + Panel -->
