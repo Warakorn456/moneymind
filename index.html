@@ -1524,8 +1524,18 @@
         </div>
       </label>
     </div>
+    <!-- Split Transaction Panel -->
+    <div id="tx-split-panel" style="display:none;margin-bottom:4px;padding:12px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:13px;font-weight:600;color:var(--primary-l)"><i class="fas fa-cut"></i> แยกหมวดหมู่</span>
+        <button class="btn btn-ghost" style="padding:3px 10px;font-size:12px" onclick="addSplitRow()"><i class="fas fa-plus"></i> เพิ่มแถว</button>
+      </div>
+      <div id="tx-split-rows"></div>
+      <div id="tx-split-remain" style="font-size:12px;padding:6px 10px;background:var(--surface2);border-radius:6px;margin-top:6px"></div>
+    </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeM('m-tx')">ยกเลิก</button>
+      <button class="btn btn-ghost" id="tx-split-btn" onclick="toggleTxSplit()" style="display:none"><i class="fas fa-cut"></i> แยกหมวด</button>
       <button class="btn btn-primary" onclick="saveTx()">บันทึก</button>
     </div>
   </div>
