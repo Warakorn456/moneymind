@@ -3407,23 +3407,32 @@ async function aiReadReceipt(dataURL){
     const mime=dataURL.split(';')[0].split(':')[1];
     const scanType=document.getElementById('scan-type').value;
     const isIncome=scanType==='income';
+    const today=new Date().toISOString().split('T')[0];
     const prompt=isIncome
-      ? 'อ่านข้อมูลจากสลิปเงินเดือนหรือเอกสารรายรับนี้ ตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น รูปแบบ: {"amount":number,"gross":number,"deductions":number,"date":"YYYY-MM-DD","description":"string","category":"salary|freelance|invest_return|bonus|rental|other_inc"} โดย amount = ยอดสุทธิที่ได้รับ, gross = รายได้ก่อนหัก, deductions = ยอดหักทั้งหมด ถ้าไม่รู้วันที่ใช้: '+new Date().toISOString().split('T')[0]
-      : 'อ่านข้อมูลจากใบเสร็จนี้ ตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น รูปแบบ: {"amount":number,"date":"YYYY-MM-DD","description":"string","category":"food|transport|fuel|housing|utility|health|entertainment|shopping|education|insurance|debt_pay|other_exp"} fuel=ใบเสร็จปั๊มน้ำมัน/เติมน้ำมัน/น้ำมันเชื้อเพลิง ถ้าไม่รู้วันที่ใช้: '+new Date().toISOString().split('T')[0];
+      ? 'อ่านข้อมูลจากสลิปเงินเดือนหรือเอกสารรายรับนี้ ตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น รูปแบบ: {"amount":number,"gross":number,"deductions":number,"date":"YYYY-MM-DD","description":"string","category":"salary|freelance|invest_return|bonus|rental|other_inc"} โดย amount = ยอดสุทธิที่ได้รับ, gross = รายได้ก่อนหัก, deductions = ยอดหักทั้งหมด ถ้าไม่รู้วันที่ใช้: '+today
+      : 'อ่านข้อมูลจากใบเสร็จนี้ แยกรายการสินค้า/บริการแต่ละรายการให้ครบ ตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น รูปแบบ: {"date":"YYYY-MM-DD","items":[{"amount":number,"description":"string","category":"food|transport|fuel|housing|utility|health|entertainment|shopping|education|insurance|debt_pay|other_exp"}]} fuel=ใบเสร็จปั๊มน้ำมัน/เติมน้ำมัน/น้ำมันเชื้อเพลิง ถ้าไม่รู้วันที่ใช้: '+today;
     const {data,model:preferred}=await callGemini([{parts:[{inline_data:{mime_type:mime,data:b64}},{text:prompt}]}],{temperature:0.1,maxOutputTokens:2048});
     const _rp=data.candidates?.[0]?.content?.parts||[];
     const text=_rp.filter(p=>!p.thought).map(p=>p.text||'').join('')||_rp.map(p=>p.text||'').join('');
     const m=text.match(/\{[\s\S]*\}/);
     if(!m) throw new Error('ไม่พบ JSON ในคำตอบ');
     const p=JSON.parse(m[0]);
-    document.getElementById('ai-amt').value=p.amount||'';
-    document.getElementById('ai-date').value=p.date||new Date().toISOString().split('T')[0];
-    document.getElementById('ai-desc').value=p.description||'';
-    const defCat=isIncome?'salary':'other_exp';
-    document.getElementById('ai-cat').value=p.category||defCat;
-    if(isIncome){
-      if(p.gross) document.getElementById('ai-gross').value=p.gross;
-      if(p.deductions) document.getElementById('ai-deduct').value=p.deductions;
+    document.getElementById('ai-date').value=p.date||today;
+    if(!isIncome&&p.items&&p.items.length){
+      document.getElementById('ai-items-container').style.display='block';
+      document.getElementById('ai-single-container').style.display='none';
+      renderReceiptItems(p.items);
+    } else {
+      document.getElementById('ai-items-container').style.display='none';
+      document.getElementById('ai-single-container').style.display='block';
+      document.getElementById('ai-amt').value=p.amount||'';
+      document.getElementById('ai-desc').value=p.description||'';
+      const defCat=isIncome?'salary':'other_exp';
+      document.getElementById('ai-cat').value=p.category||defCat;
+      if(isIncome){
+        if(p.gross) document.getElementById('ai-gross').value=p.gross;
+        if(p.deductions) document.getElementById('ai-deduct').value=p.deductions;
+      }
     }
     document.getElementById('ai-proc').style.display='none';
     document.getElementById('ai-result').style.display='block';
