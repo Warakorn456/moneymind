@@ -3448,6 +3448,31 @@ async function aiReadReceipt(dataURL){
 
 function showWarn(html){ const el=document.getElementById('ai-warn'); el.innerHTML=html; el.style.display='block'; }
 
+let _rcptItems=[];
+function renderReceiptItems(items){
+  _rcptItems=items.map(it=>({...it}));
+  _refreshRcptUI();
+}
+function _refreshRcptUI(){
+  const allCats=[...EXP_CATS,...(DB.settings?.customExpCats||[])];
+  document.getElementById('ai-items-list').innerHTML=_rcptItems.map((it,i)=>`
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;padding:8px;background:var(--surface2);border-radius:8px;flex-wrap:wrap">
+      <input type="number" class="finput" style="width:90px;flex-shrink:0;min-width:70px" value="${it.amount||''}" placeholder="฿" oninput="updateRcptAmt(${i},this.value)">
+      <input type="text" class="finput" style="flex:1;min-width:120px" value="${(it.description||'').replace(/"/g,'&quot;')}" placeholder="ชื่อสินค้า/บริการ" oninput="updateRcptDesc(${i},this.value)">
+      <select class="fselect" style="width:130px;flex-shrink:0;min-width:100px" onchange="updateRcptCat(${i},this.value)">
+        ${allCats.map(c=>`<option value="${c.id}"${c.id===it.category?' selected':''}>${c.label}</option>`).join('')}
+      </select>
+      <button class="btn btn-ghost" style="padding:4px 8px;color:var(--red);flex-shrink:0" onclick="removeRcptItem(${i})"><i class="fas fa-trash-alt"></i></button>
+    </div>`).join('');
+  const total=_rcptItems.reduce((s,it)=>s+(parseFloat(it.amount)||0),0);
+  document.getElementById('ai-items-total').textContent=fmt(total);
+}
+function updateRcptAmt(i,v){ _rcptItems[i].amount=parseFloat(v)||0; document.getElementById('ai-items-total').textContent=fmt(_rcptItems.reduce((s,it)=>s+(parseFloat(it.amount)||0),0)); }
+function updateRcptDesc(i,v){ _rcptItems[i].description=v; }
+function updateRcptCat(i,v){ _rcptItems[i].category=v; }
+function removeRcptItem(i){ _rcptItems.splice(i,1); _refreshRcptUI(); }
+function addReceiptItem(){ _rcptItems.push({amount:0,description:'',category:'other_exp'}); _refreshRcptUI(); }
+
 function showManualForm(){
   document.getElementById('ai-amt').value='';
   document.getElementById('ai-date').value=new Date().toISOString().split('T')[0];
