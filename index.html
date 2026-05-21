@@ -1559,17 +1559,28 @@
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
         <span class="ai-badge"><i class="fas fa-magic"></i> AI อ่านข้อมูลแล้ว — ตรวจสอบก่อนบันทึก</span>
       </div>
-      <div class="frow">
-        <div class="fg"><label class="flabel" id="ai-amt-label">จำนวนเงิน (บาท)</label><input type="number" id="ai-amt" class="finput"></div>
-        <div class="fg"><label class="flabel">วันที่</label><input type="date" id="ai-date" class="finput"></div>
+      <div class="fg" style="margin-bottom:12px"><label class="flabel">วันที่</label><input type="date" id="ai-date" class="finput"></div>
+      <!-- รายการย่อยใบเสร็จ (expense) -->
+      <div id="ai-items-container" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <label class="flabel" style="margin:0">รายการสินค้า/บริการ</label>
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="addReceiptItem()"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
+        </div>
+        <div id="ai-items-list"></div>
+        <div style="margin-top:8px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;text-align:right">
+          รวมทั้งสิ้น: <strong id="ai-items-total" style="color:var(--primary-l)">฿0</strong>
+        </div>
       </div>
-      <div class="fg"><label class="flabel">รายละเอียด</label><input type="text" id="ai-desc" class="finput"></div>
-      <div class="fg"><label class="flabel">หมวดหมู่</label><select id="ai-cat" class="fselect"></select></div>
-      <!-- เพิ่มเติมสำหรับสลิปเงินเดือน -->
-      <div id="salary-extra" style="display:none">
-        <div class="frow">
-          <div class="fg"><label class="flabel">เงินเดือนรวม (บาท)</label><input type="number" id="ai-gross" class="finput" placeholder="ก่อนหักภาษี/ประกัน"></div>
-          <div class="fg"><label class="flabel">หักทั้งหมด (บาท)</label><input type="number" id="ai-deduct" class="finput" placeholder="ภาษี + ประกันสังคม"></div>
+      <!-- single amount (income) -->
+      <div id="ai-single-container" style="display:none">
+        <div class="fg" style="margin-bottom:8px"><label class="flabel" id="ai-amt-label">จำนวนเงิน (บาท)</label><input type="number" id="ai-amt" class="finput"></div>
+        <div class="fg"><label class="flabel">รายละเอียด</label><input type="text" id="ai-desc" class="finput"></div>
+        <div class="fg"><label class="flabel">หมวดหมู่</label><select id="ai-cat" class="fselect"></select></div>
+        <div id="salary-extra" style="display:none">
+          <div class="frow">
+            <div class="fg"><label class="flabel">เงินเดือนรวม (บาท)</label><input type="number" id="ai-gross" class="finput" placeholder="ก่อนหักภาษี/ประกัน"></div>
+            <div class="fg"><label class="flabel">หักทั้งหมด (บาท)</label><input type="number" id="ai-deduct" class="finput" placeholder="ภาษี + ประกันสังคม"></div>
+          </div>
         </div>
       </div>
     </div>
