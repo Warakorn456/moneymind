@@ -8990,6 +8990,214 @@ function renderMonthComparison(){
 // renderDash already patched above (consolidated)
 
 // ══════════════════════════════════════════
+//  OT CALCULATOR
+// ══════════════════════════════════════════
+var _otMonth=-1, _otYear=-1;
+
+function renderOT(){
+  var el=document.getElementById('ot-content'); if(!el) return;
+  if(!DB.otSettings) DB.otSettings={salary:0,workDays:26,cutoffDay:25};
+  if(!DB.otLogs) DB.otLogs=[];
+  var s=DB.otSettings;
+  var now=new Date();
+  if(_otMonth<0){ _otMonth=now.getMonth(); _otYear=now.getFullYear(); }
+
+  // Period: (cutoffDay+1) of prev month → cutoffDay of selected month
+  var cut=parseInt(s.cutoffDay)||25;
+  var pStart, pEnd;
+  if(_otMonth===0){ pStart=new Date(_otYear-1,11,cut+1); }
+  else { pStart=new Date(_otYear,_otMonth-1,cut+1); }
+  pEnd=new Date(_otYear,_otMonth,cut);
+
+  var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  var TH_MON_FULL=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+  // Filter logs in this period
+  var logs=DB.otLogs.filter(function(l){
+    var d=new Date(l.date); return d>=pStart&&d<=pEnd;
+  }).sort(function(a,b){ return a.date.localeCompare(b.date); });
+
+  // Calc
+  var salary=parseFloat(s.salary)||0;
+  var workDays=parseInt(s.workDays)||26;
+  var hourlyRate=workDays>0&&salary>0?(salary/workDays/8):0;
+  var OT_MULT={weekday:1.5,weekend:3,holiday:3};
+  var OT_LABEL={weekday:'วันธรรมดา (×1.5)',weekend:'วันหยุด (×3)',holiday:'วันนักขัตฤกษ์ (×3)'};
+
+  var totalHours=0, totalOTPay=0;
+  logs.forEach(function(l){
+    var h=parseFloat(l.hours)||0;
+    totalHours+=h;
+    totalOTPay+=h*hourlyRate*(OT_MULT[l.type]||1.5);
+  });
+  var totalPay=salary+totalOTPay;
+
+  // Month/Year selectors options
+  var monthOpts='';
+  for(var mi=0;mi<12;mi++) monthOpts+='<option value="'+mi+'"'+(mi===_otMonth?' selected':'')+'>'+TH_MON_FULL[mi]+'</option>';
+  var yearOpts='';
+  for(var yi=now.getFullYear()-2;yi<=now.getFullYear()+1;yi++) yearOpts+='<option value="'+yi+'"'+(yi===_otYear?' selected':'')+'>'+(yi+543)+'</option>';
+
+  var periodStr=pStart.getDate()+' '+TH_MON[pStart.getMonth()]+' '+(pStart.getFullYear()+543)
+    +' — '+pEnd.getDate()+' '+TH_MON[pEnd.getMonth()]+' '+(pEnd.getFullYear()+543);
+
+  // Log rows
+  var logRows=logs.length?logs.map(function(l,i){
+    var idx=DB.otLogs.findIndex(function(x){ return x.id===l.id; });
+    var h=parseFloat(l.hours)||0;
+    var pay=h*hourlyRate*(OT_MULT[l.type]||1.5);
+    var d=new Date(l.date);
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">'
+      +'<div style="min-width:80px"><div style="font-size:13px;font-weight:600">'+d.getDate()+' '+TH_MON[d.getMonth()]+'</div>'
+        +'<div style="font-size:11px;color:var(--muted)">'+(OT_LABEL[l.type]||l.type)+'</div></div>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--primary-l)">'+h+' ชม.</div>'
+        +(l.note?'<div style="font-size:11px;color:var(--muted)">'+l.note+'</div>':'')+'</div>'
+      +'<div style="text-align:right;min-width:90px"><div style="font-size:13px;font-weight:700;color:#10b981">'+fmt(Math.round(pay))+'</div>'
+        +'<div style="font-size:11px;color:var(--muted)">'+fmt(Math.round(hourlyRate*(OT_MULT[l.type]||1.5)))+'/ชม.</div></div>'
+      +'<button class="btn btn-ghost" style="padding:4px 8px;color:var(--red);flex-shrink:0" onclick="deleteOTLog(\''+l.id+'\')"><i class="fas fa-trash-alt"></i></button>'
+    +'</div>';
+  }).join('')
+  :'<div class="empty" style="padding:24px 0"><i class="fas fa-clock"></i><p>ยังไม่มีรายการ OT ในรอบนี้</p></div>';
+
+  el.innerHTML=
+  // Settings card
+  '<div class="card" style="margin-bottom:16px;border-top:2px solid var(--primary)">'
+    +'<div class="sec-hd" style="margin-bottom:14px">'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<div style="width:30px;height:30px;border-radius:8px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-cog" style="color:var(--primary-l);font-size:13px"></i></div>'
+        +'<div class="sec-title">ตั้งค่า OT</div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="frow" style="flex-wrap:wrap;gap:10px">'
+      +'<div class="fg"><label class="flabel">เงินเดือน (บาท)</label>'
+        +'<input type="number" class="finput" value="'+(s.salary||'')+'" placeholder="0" min="0" oninput="saveOTSetting(\'salary\',this.value)"></div>'
+      +'<div class="fg"><label class="flabel">วันทำงาน/เดือน</label>'
+        +'<input type="number" class="finput" value="'+(s.workDays||26)+'" min="1" max="31" oninput="saveOTSetting(\'workDays\',this.value)"></div>'
+      +'<div class="fg"><label class="flabel">วันตัดรอบ (ของทุกเดือน)</label>'
+        +'<input type="number" class="finput" value="'+(s.cutoffDay||25)+'" min="1" max="31" oninput="saveOTSetting(\'cutoffDay\',this.value)"></div>'
+    +'</div>'
+    +(hourlyRate>0?'<div style="margin-top:10px;padding:8px 12px;background:rgba(99,102,241,.08);border-radius:8px;font-size:12px;color:var(--muted)">'
+      +'อัตรา OT: <strong style="color:var(--primary-l)">'+fmt(Math.round(hourlyRate*1.5))+'/ชม.</strong> (วันธรรมดา) &nbsp;•&nbsp; '
+      +'<strong style="color:var(--primary-l)">'+fmt(Math.round(hourlyRate*3))+'/ชม.</strong> (วันหยุด)'
+    +'</div>':'')
+  +'</div>'
+
+  // Period selector
+  +'<div class="card" style="margin-bottom:16px">'
+    +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      +'<div style="display:flex;align-items:center;gap:8px"><i class="fas fa-calendar-alt" style="color:var(--primary-l)"></i><span style="font-size:13px;font-weight:600">รอบเดือน:</span></div>'
+      +'<select class="fselect" style="flex:1;min-width:120px" onchange="_otMonth=parseInt(this.value);renderOT()">'+monthOpts+'</select>'
+      +'<select class="fselect" style="width:100px" onchange="_otYear=parseInt(this.value);renderOT()">'+yearOpts+'</select>'
+    +'</div>'
+    +'<div style="margin-top:8px;font-size:12px;color:var(--muted)"><i class="fas fa-cut" style="margin-right:4px"></i>รอบ: '+periodStr+'</div>'
+  +'</div>'
+
+  // Add OT form
+  +'<div class="card" style="margin-bottom:16px;border-top:2px solid rgba(16,185,129,.5)">'
+    +'<div class="sec-hd" style="margin-bottom:12px">'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-plus" style="color:#10b981;font-size:13px"></i></div>'
+        +'<div class="sec-title">เพิ่ม OT</div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="frow" style="flex-wrap:wrap;gap:10px;margin-bottom:10px">'
+      +'<div class="fg"><label class="flabel">วันที่ทำ OT</label>'
+        +'<input type="date" id="ot-inp-date" class="finput" value="'+now.toISOString().split(\'T\')[0]+'"></div>'
+      +'<div class="fg"><label class="flabel">ประเภท</label>'
+        +'<select id="ot-inp-type" class="fselect">'
+          +'<option value="weekday">วันธรรมดา (×1.5)</option>'
+          +'<option value="weekend">วันหยุดประจำสัปดาห์ (×3)</option>'
+          +'<option value="holiday">วันนักขัตฤกษ์ (×3)</option>'
+        +'</select></div>'
+    +'</div>'
+    +'<div class="frow" style="flex-wrap:wrap;gap:10px;align-items:flex-end">'
+      +'<div class="fg"><label class="flabel">จำนวนชั่วโมง</label>'
+        +'<input type="number" id="ot-inp-hours" class="finput" placeholder="เช่น 2.5" min="0.5" max="24" step="0.5"></div>'
+      +'<div class="fg"><label class="flabel">หมายเหตุ (ไม่บังคับ)</label>'
+        +'<input type="text" id="ot-inp-note" class="finput" placeholder="เช่น ปิดงาน, ส่งรายงาน"></div>'
+      +'<button class="btn btn-primary" style="flex-shrink:0;align-self:flex-end" onclick="addOTLog()"><i class="fas fa-plus"></i> เพิ่ม</button>'
+    +'</div>'
+  +'</div>'
+
+  // OT log list
+  +'<div class="card" style="margin-bottom:16px">'
+    +'<div class="sec-hd" style="margin-bottom:10px">'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<div style="width:30px;height:30px;border-radius:8px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-list" style="color:var(--amber);font-size:12px"></i></div>'
+        +'<div class="sec-title">รายการ OT รอบนี้</div>'
+      +'</div>'
+      +'<div style="font-size:13px;font-weight:600;color:var(--muted)">'+logs.length+' รายการ</div>'
+    +'</div>'
+    +logRows
+  +'</div>'
+
+  // Summary card
+  +'<div class="card" style="border-top:2px solid var(--primary)">'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">'
+      +'<div style="width:30px;height:30px;border-radius:8px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-calculator" style="color:var(--primary-l);font-size:13px"></i></div>'
+      +'<div class="sec-title">สรุปรอบ '+TH_MON_FULL[_otMonth]+' '+(pEnd.getFullYear()+543)+'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+      +'<div style="padding:12px;background:var(--surface2);border-radius:10px">'
+        +'<div style="font-size:11px;color:var(--muted);margin-bottom:4px">OT ทั้งหมด</div>'
+        +'<div style="font-size:20px;font-weight:700;color:var(--primary-l)">'+totalHours.toLocaleString('th-TH',{maximumFractionDigits:1})+' ชม.</div>'
+      +'</div>'
+      +'<div style="padding:12px;background:var(--surface2);border-radius:10px">'
+        +'<div style="font-size:11px;color:var(--muted);margin-bottom:4px">ค่า OT</div>'
+        +'<div style="font-size:20px;font-weight:700;color:#10b981">'+fmt(Math.round(totalOTPay))+'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.25);border-radius:12px;padding:14px">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px">'
+        +'<span style="color:var(--muted)">เงินเดือน</span><span>'+fmt(Math.round(salary))+'</span>'
+      +'</div>'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:13px">'
+        +'<span style="color:var(--muted)">ค่า OT</span><span style="color:#10b981">+ '+fmt(Math.round(totalOTPay))+'</span>'
+      +'</div>'
+      +'<div style="height:1px;background:rgba(99,102,241,.25);margin-bottom:10px"></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700">'
+        +'<span>รวมได้รับ</span><span style="color:var(--primary-l)">'+fmt(Math.round(totalPay))+'</span>'
+      +'</div>'
+    +'</div>'
+    +(salary<=0?'<div style="margin-top:10px;font-size:12px;color:var(--amber);text-align:center"><i class="fas fa-info-circle"></i> กรุณาตั้งค่าเงินเดือนด้านบนก่อน</div>':'')
+  +'</div>';
+}
+
+function saveOTSetting(key,val){
+  if(!DB.otSettings) DB.otSettings={salary:0,workDays:26,cutoffDay:25};
+  DB.otSettings[key]=parseFloat(val)||0;
+  saveLocalOnly();
+  // re-render stats only
+  var s=DB.otSettings;
+  var workDays=parseInt(s.workDays)||26;
+  var salary=parseFloat(s.salary)||0;
+  var hourlyRate=workDays>0&&salary>0?(salary/workDays/8):0;
+  // Just re-render the full page for simplicity (settings change is rare)
+  // Use debounce to avoid too many rerenders while typing
+  clearTimeout(window._otSettingTimer);
+  window._otSettingTimer=setTimeout(function(){ saveDB(); renderOT(); },600);
+}
+
+function addOTLog(){
+  var date=document.getElementById('ot-inp-date')?.value;
+  var type=document.getElementById('ot-inp-type')?.value||'weekday';
+  var hours=parseFloat(document.getElementById('ot-inp-hours')?.value||0);
+  var note=document.getElementById('ot-inp-note')?.value.trim()||'';
+  if(!date){ toast('กรุณาเลือกวันที่','error'); return; }
+  if(!hours||hours<=0){ toast('กรุณาใส่จำนวนชั่วโมง','error'); return; }
+  if(!DB.otLogs) DB.otLogs=[];
+  DB.otLogs.push({id:uid(),date,type,hours,note});
+  saveDB(); renderOT();
+  toast('เพิ่ม OT '+hours+' ชม. แล้ว','success');
+}
+
+function deleteOTLog(id){
+  if(!confirm('ลบรายการ OT นี้?')) return;
+  DB.otLogs=(DB.otLogs||[]).filter(function(l){ return l.id!==id; });
+  saveDB(); renderOT(); toast('ลบแล้ว','info');
+}
+
+// ══════════════════════════════════════════
 //  FEATURE: SPLIT TRANSACTION
 // ══════════════════════════════════════════
 var _splitRows=[];
