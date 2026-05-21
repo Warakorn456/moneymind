@@ -3474,11 +3474,20 @@ function removeRcptItem(i){ _rcptItems.splice(i,1); _refreshRcptUI(); }
 function addReceiptItem(){ _rcptItems.push({amount:0,description:'',category:'other_exp'}); _refreshRcptUI(); }
 
 function showManualForm(){
-  document.getElementById('ai-amt').value='';
+  const type=document.getElementById('scan-type').value;
   document.getElementById('ai-date').value=new Date().toISOString().split('T')[0];
-  document.getElementById('ai-desc').value='';
   document.getElementById('ai-warn').style.display='none';
   document.getElementById('ai-manual-btn').style.display='none';
+  if(type==='expense'){
+    document.getElementById('ai-items-container').style.display='block';
+    document.getElementById('ai-single-container').style.display='none';
+    renderReceiptItems([{amount:0,description:'',category:'other_exp'}]);
+  } else {
+    document.getElementById('ai-items-container').style.display='none';
+    document.getElementById('ai-single-container').style.display='block';
+    document.getElementById('ai-amt').value='';
+    document.getElementById('ai-desc').value='';
+  }
   document.getElementById('ai-result').style.display='block';
   document.getElementById('ai-save-btn').style.display='inline-flex';
 }
