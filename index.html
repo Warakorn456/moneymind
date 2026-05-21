@@ -9575,7 +9575,148 @@ renderDash=function(){
   if(typeof renderFinancialCalendar==='function') renderFinancialCalendar();
   if(typeof renderSubscriptionTracker==='function') renderSubscriptionTracker();
   if(typeof renderTaxAdvisor==='function') renderTaxAdvisor();
+  if(typeof renderEmergencyFund==='function') renderEmergencyFund();
+  if(typeof renderRule503020==='function') renderRule503020();
+  if(typeof renderPayYourselfFirst==='function') renderPayYourselfFirst();
 };
+
+// ══════════════════════════════════════════
+//  FEATURE: EMERGENCY FUND METER
+// ══════════════════════════════════════════
+function renderEmergencyFund(){
+  var el=document.getElementById('dash-emergency-section'); if(!el) return;
+  var liquidAssets=(DB.banks||[]).reduce(function(s,b){ return s+(b.balance||0); },0);
+  var now=new Date(), totalExp=0, cnt=0;
+  for(var i=1;i<=3;i++){
+    var m=now.getMonth()-i, y=now.getFullYear();
+    if(m<0){m+=12;y--;}
+    var txs=monthTx(m,y).filter(function(t){return t.type==='expense';});
+    if(txs.length){ totalExp+=txs.reduce(function(s,t){return s+t.amount;},0); cnt++; }
+  }
+  var avgExp=cnt>0?totalExp/cnt:0;
+  if(avgExp<=0&&liquidAssets<=0){el.innerHTML='';return;}
+  var target=parseFloat(DB.settings.efMonths)||6;
+  var covered=avgExp>0?liquidAssets/avgExp:0;
+  var pct=Math.min(100,(covered/target)*100);
+  var status,color;
+  if(covered<1){status='วิกฤต';color='#ef4444';}
+  else if(covered<3){status='ต่ำ';color='#f59e0b';}
+  else if(covered<target){status='กำลังดี';color='#06b6d4';}
+  else{status='ปลอดภัย';color='#10b981';}
+  var need=covered<target&&avgExp>0?'<div style="margin-top:10px;padding:8px 12px;background:rgba(16,185,129,.08);border-radius:8px;font-size:12px;color:#10b981">ต้องเก็บเพิ่ม: <strong>'+fmt(Math.round((target-covered)*avgExp))+'</strong> เพื่อให้ครบ '+target+' เดือน</div>':'';
+  el.innerHTML='<div class="comparison-card">'
+    +'<div class="sec-hd" style="margin-bottom:12px">'
+      +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-shield-alt" style="color:#10b981;font-size:12px"></i></div><div class="sec-title">กองทุนฉุกเฉิน</div></div>'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<span style="font-size:12px;font-weight:600;color:'+color+';padding:3px 10px;background:'+color+'22;border-radius:20px">'+status+'</span>'
+        +'<input type="number" title="เดือนเป้าหมาย" value="'+target+'" min="1" max="24" style="width:44px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:2px 6px;color:var(--text);font-size:12px;text-align:center;font-family:Sarabun,sans-serif" onchange="DB.settings.efMonths=parseFloat(this.value)||6;saveDB();renderEmergencyFund()" title="เดือนเป้าหมาย"> เดือน'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">'
+      +'<span style="font-size:28px;font-weight:800;color:'+color+'">'+covered.toFixed(1)+' <span style="font-size:14px;font-weight:400;color:var(--muted)">เดือน</span></span>'
+      +'<span style="font-size:12px;color:var(--muted)">เป้า '+target+' เดือน</span>'
+    +'</div>'
+    +'<div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-bottom:10px"><div style="height:100%;width:'+pct+'%;background:'+color+';border-radius:4px;transition:width .5s"></div></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)">'
+      +'<span>เงินในบัญชี: '+fmt(Math.round(liquidAssets))+'</span>'
+      +(avgExp>0?'<span>ค่าใช้จ่ายเฉลี่ย: '+fmt(Math.round(avgExp))+'/เดือน</span>':'')
+    +'</div>'
+    +need
+  +'</div>';
+}
+
+// ══════════════════════════════════════════
+//  FEATURE: 50/30/20 RULE TRACKER
+// ══════════════════════════════════════════
+var _NEEDS_CATS=['food','transport','fuel','housing','utility','health','insurance','debt_pay','tax_exp','sso'];
+var _INVEST_CATS=['invest_exp'];
+
+function renderRule503020(){
+  var el=document.getElementById('dash-503020-section'); if(!el) return;
+  var now=new Date(), m=now.getMonth(), y=now.getFullYear();
+  var txs=monthTx(m,y);
+  var income=txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+  if(!income){el.innerHTML='';return;}
+  var needsCats=_NEEDS_CATS;
+  var expTxs=txs.filter(function(t){return t.type==='expense';});
+  var needs=expTxs.filter(function(t){return needsCats.indexOf(t.category)>=0;}).reduce(function(s,t){return s+t.amount;},0);
+  var invest=expTxs.filter(function(t){return _INVEST_CATS.indexOf(t.category)>=0;}).reduce(function(s,t){return s+t.amount;},0);
+  var wants=expTxs.filter(function(t){return needsCats.indexOf(t.category)<0&&_INVEST_CATS.indexOf(t.category)<0;}).reduce(function(s,t){return s+t.amount;},0);
+  var surplus=Math.max(0,income-needs-wants-invest);
+  var savings=invest+surplus;
+  var needsPct=Math.round(needs/income*100);
+  var wantsPct=Math.round(wants/income*100);
+  var savePct=Math.round(savings/income*100);
+  var buckets=[
+    {label:'ความจำเป็น',icon:'fa-home',amt:needs,pct:needsPct,target:50,color:'#06b6d4',over:needsPct>50},
+    {label:'ต้องการ',icon:'fa-shopping-bag',amt:wants,pct:wantsPct,target:30,color:'#a78bfa',over:wantsPct>30},
+    {label:'ออม/ลงทุน',icon:'fa-piggy-bank',amt:savings,pct:savePct,target:20,color:'#10b981',over:false,under:savePct<20}
+  ];
+  var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  var rows=buckets.map(function(b){
+    var barW=Math.min(100,b.pct);
+    var statusColor=b.over?'#ef4444':(b.under?'#f59e0b':'#10b981');
+    var statusTxt=b.over?'เกินเป้า +'+fmt(Math.round(b.amt-income*b.target/100)):(b.under?'ขาดเป้า '+fmt(Math.round(income*b.target/100-b.amt)):'✓ ตามเป้า');
+    return '<div style="margin-bottom:14px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+        +'<div style="display:flex;align-items:center;gap:6px"><i class="fas '+b.icon+'" style="color:'+b.color+';font-size:12px"></i><span style="font-size:13px;font-weight:600">'+b.label+'</span><span style="font-size:11px;color:var(--muted)">เป้า '+b.target+'%</span></div>'
+        +'<div style="font-size:13px;font-weight:700">'+fmt(Math.round(b.amt))+' <span style="font-size:11px;color:var(--muted)">('+b.pct+'%)</span></div>'
+      +'</div>'
+      +'<div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;position:relative">'
+        +'<div style="height:100%;width:'+barW+'%;background:'+b.color+';border-radius:4px;opacity:.85;transition:width .4s"></div>'
+        +'<div style="position:absolute;top:0;height:100%;width:2px;background:rgba(255,255,255,.4);left:'+b.target+'%"></div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:'+statusColor+';margin-top:3px">'+statusTxt+'</div>'
+    +'</div>';
+  }).join('');
+  el.innerHTML='<div class="comparison-card">'
+    +'<div class="sec-hd" style="margin-bottom:14px">'
+      +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(6,182,212,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-chart-pie" style="color:var(--cyan);font-size:12px"></i></div><div class="sec-title">กฎ 50/30/20</div></div>'
+      +'<div style="font-size:12px;color:var(--muted)">'+TH_MON[m]+' รายรับ '+fmt(Math.round(income))+'</div>'
+    +'</div>'
+    +rows
+    +'<div style="font-size:11px;color:var(--muted);margin-top:4px;padding-top:10px;border-top:1px solid var(--border)">ความจำเป็น = ค่าอาหาร/เดินทาง/น้ำมัน/บ้าน/สุขภาพ/ประกัน/หนี้ • ออม = ลงทุน+เงินเหลือ</div>'
+  +'</div>';
+}
+
+// ══════════════════════════════════════════
+//  FEATURE: PAY YOURSELF FIRST
+// ══════════════════════════════════════════
+function renderPayYourselfFirst(){
+  var el=document.getElementById('dash-pyf-section'); if(!el) return;
+  var now=new Date(), m=now.getMonth(), y=now.getFullYear();
+  var txs=monthTx(m,y);
+  var income=txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+  if(!income){el.innerHTML='';return;}
+  var target=parseFloat(DB.settings.pyfTarget)||20;
+  var targetAmt=income*target/100;
+  var totalExp=txs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+  var saved=Math.max(0,income-totalExp);
+  var pct=targetAmt>0?Math.min(100,saved/targetAmt*100):0;
+  var achieved=saved>=targetAmt;
+  var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  el.innerHTML='<div class="comparison-card">'
+    +'<div class="sec-hd" style="margin-bottom:12px">'
+      +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-piggy-bank" style="color:#10b981;font-size:12px"></i></div><div class="sec-title">ออมก่อนใช้</div></div>'
+      +'<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">เป้า '
+        +'<input type="number" value="'+target+'" min="1" max="80" style="width:44px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:2px 6px;color:var(--text);font-size:12px;text-align:center;font-family:Sarabun,sans-serif" onchange="DB.settings.pyfTarget=parseFloat(this.value)||20;saveDB();renderPayYourselfFirst()">% ของรายรับ'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px">'
+      +'<div><div style="font-size:26px;font-weight:800;color:'+(achieved?'#10b981':'#f59e0b')+'">'+fmt(Math.round(saved))+'</div><div style="font-size:11px;color:var(--muted)">เก็บได้เดือน'+TH_MON[m]+'</div></div>'
+      +'<div style="text-align:right"><div style="font-size:15px;font-weight:700;color:var(--muted)">'+fmt(Math.round(targetAmt))+'</div><div style="font-size:11px;color:var(--muted)">เป้าหมาย</div></div>'
+    +'</div>'
+    +'<div style="height:10px;background:var(--surface2);border-radius:5px;overflow:hidden;margin-bottom:8px"><div style="height:100%;width:'+pct+'%;background:'+(achieved?'#10b981':'#f59e0b')+';border-radius:5px;transition:width .5s"></div></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px">'
+      +'<span style="color:var(--muted)">'+Math.round(pct)+'% ของเป้า</span>'
+      +'<span style="color:'+(achieved?'#10b981':'#f59e0b')+'">'+(achieved?'✓ บรรลุเป้าแล้ว!':'ต้องลดรายจ่าย '+fmt(Math.round(targetAmt-saved)))+'</span>'
+    +'</div>'
+    +'<div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--muted)">'
+      +fmt(Math.round(income))+' − '+fmt(Math.round(totalExp))+' = <strong style="color:'+(achieved?'#10b981':'#f59e0b')+'">'+fmt(Math.round(saved))+'</strong> ออมได้'
+    +'</div>'
+    +'<div style="margin-top:8px;font-size:11px;color:var(--muted)">💡 วิธีออมก่อน: โอนเงินเข้าบัญชีออมทรัพย์ทันทีที่ได้รับเงินเดือน ก่อนจ่ายอะไรทั้งนั้น</div>'
+  +'</div>';
+}
 
 </script>
 
