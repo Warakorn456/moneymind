@@ -830,10 +830,25 @@
 
     <!-- Forgot Password form -->
     <div id="form-forgot" style="display:none">
-      <div style="font-size:13px;color:#94a3b8;margin-bottom:16px;line-height:1.6">ระบบจะส่งลิงก์รีเซ็ตรหัสผ่านไปยัง <strong style="color:#a78bfa">Email</strong> ที่ลงทะเบียนไว้</div>
-      <input class="login-inp" id="forgot-email" type="email" placeholder="Email ที่ใช้สมัคร" autocomplete="email"
-        onkeydown="if(event.key==='Enter') doForgotEmail()">
-      <button class="login-btn" id="forgot-btn" onclick="doForgotEmail()" style="background:linear-gradient(135deg,#f59e0b,#d97706)">ส่งอีเมลรีเซ็ตรหัสผ่าน</button>
+      <!-- แท็บเลือกวิธี -->
+      <div style="display:flex;gap:6px;margin-bottom:16px">
+        <button id="ftab-email" onclick="switchForgotTab('email')" style="flex:1;padding:8px;border-radius:8px;font-size:12px;font-family:Sarabun,sans-serif;cursor:pointer;border:1px solid rgba(245,158,11,.6);background:rgba(245,158,11,.2);color:#f59e0b;font-weight:700"><i class="fas fa-envelope"></i> ส่งทาง Email</button>
+        <button id="ftab-direct" onclick="switchForgotTab('direct')" style="flex:1;padding:8px;border-radius:8px;font-size:12px;font-family:Sarabun,sans-serif;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#64748b"><i class="fas fa-key"></i> ตั้งรหัสใหม่โดยตรง</button>
+      </div>
+      <!-- แท็บ: Email reset -->
+      <div id="forgot-tab-email">
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:12px;line-height:1.6">Firebase จะส่งลิงก์รีเซ็ตรหัสผ่านไปยัง <strong style="color:#a78bfa">Email</strong> ที่ลงทะเบียนไว้</div>
+        <input class="login-inp" id="forgot-email" type="email" placeholder="Email ที่ใช้สมัคร" autocomplete="email" onkeydown="if(event.key==='Enter') doForgotEmail()">
+        <button class="login-btn" id="forgot-email-btn" onclick="doForgotEmail()" style="background:linear-gradient(135deg,#f59e0b,#d97706)"><i class="fas fa-paper-plane"></i> ส่งอีเมลรีเซ็ตรหัสผ่าน</button>
+      </div>
+      <!-- แท็บ: Direct reset -->
+      <div id="forgot-tab-direct" style="display:none">
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:12px;line-height:1.6">ตั้งรหัสผ่านใหม่บนอุปกรณ์นี้โดยตรง (ไม่ต้องใช้อีเมล)</div>
+        <input class="login-inp" id="forgot-user" type="text" placeholder="ชื่อผู้ใช้ของคุณ" autocomplete="username">
+        <input class="login-inp" id="forgot-pass" type="password" placeholder="รหัสผ่านใหม่ (อย่างน้อย 6 ตัว)" autocomplete="new-password">
+        <input class="login-inp" id="forgot-pass2" type="password" placeholder="ยืนยันรหัสผ่านใหม่" autocomplete="new-password" onkeydown="if(event.key==='Enter') doResetPassword()">
+        <button class="login-btn" id="forgot-direct-btn" onclick="doResetPassword()" style="background:linear-gradient(135deg,#f59e0b,#d97706)"><i class="fas fa-key"></i> ตั้งรหัสผ่านใหม่</button>
+      </div>
       <div class="login-err" id="forgot-err"></div>
       <div class="login-toggle">กลับไป <span onclick="switchToLogin()">เข้าสู่ระบบ</span></div>
     </div>
