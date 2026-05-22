@@ -2582,8 +2582,9 @@ async function tryRegister(){
     currentUser=user;
     DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
     saveLocalOnly();
+    const _syncedReg=await fsLoad();
     enterApp();
-    fsSave();
+    if(!_syncedReg) fsSave();
     fsListen();
   }catch{
     errEl.textContent='เกิดข้อผิดพลาด ลองใหม่';
