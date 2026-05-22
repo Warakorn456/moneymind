@@ -9718,6 +9718,66 @@ function renderPayYourselfFirst(){
   +'</div>';
 }
 
+// ══════════════════════════════════════════
+//  CHANGE PASSWORD — patch renderProfile
+// ══════════════════════════════════════════
+const _origRenderProfileCP = renderProfile;
+renderProfile = function(){
+  _origRenderProfileCP();
+  renderChangePasswordSection();
+};
+
+function renderChangePasswordSection(){
+  var el = document.getElementById('profile-content');
+  if(!el) return;
+  var isOwner = currentUser && _ENC && currentUser.toLowerCase() === (_ENC.user||'').toLowerCase();
+  var body = isOwner
+    ? '<div style="font-size:13px;color:var(--muted);padding:10px 0">บัญชีหลักไม่รองรับการเปลี่ยนรหัสผ่านจากหน้านี้</div>'
+    : '<div style="max-width:380px">'
+      +'<div class="flabel" style="margin-top:10px">รหัสผ่านปัจจุบัน</div>'
+      +'<div style="position:relative"><input type="password" id="cp-old" class="finput" placeholder="กรอกรหัสผ่านเดิม" style="padding-right:42px"><button type="button" onclick="cpToggleVis(\'cp-old\',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px"><i class="fas fa-eye"></i></button></div>'
+      +'<div class="flabel" style="margin-top:12px">รหัสผ่านใหม่ <span style="font-size:11px;color:var(--muted)">(อย่างน้อย 6 ตัวอักษร)</span></div>'
+      +'<div style="position:relative"><input type="password" id="cp-new" class="finput" placeholder="รหัสผ่านใหม่" style="padding-right:42px"><button type="button" onclick="cpToggleVis(\'cp-new\',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px"><i class="fas fa-eye"></i></button></div>'
+      +'<div class="flabel" style="margin-top:12px">ยืนยันรหัสผ่านใหม่</div>'
+      +'<div style="position:relative"><input type="password" id="cp-confirm" class="finput" placeholder="กรอกอีกครั้ง" style="padding-right:42px"><button type="button" onclick="cpToggleVis(\'cp-confirm\',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px"><i class="fas fa-eye"></i></button></div>'
+      +'<div id="cp-err" style="font-size:12px;color:var(--red);margin-top:8px;min-height:18px"></div>'
+      +'<button class="btn" onclick="doChangePassword()" style="margin-top:4px;background:linear-gradient(135deg,#f59e0b,#d97706)"><i class="fas fa-key" style="margin-right:6px"></i>เปลี่ยนรหัสผ่าน</button>'
+      +'</div>';
+  el.innerHTML += '<div class="prof-section" style="margin-top:16px"><div class="set-title"><i class="fas fa-lock" style="color:#f59e0b;margin-right:8px"></i>ความปลอดภัยบัญชี</div>'+body+'</div>';
+}
+
+function cpToggleVis(id, btn){
+  var inp = document.getElementById(id); if(!inp) return;
+  if(inp.type==='password'){ inp.type='text'; btn.innerHTML='<i class="fas fa-eye-slash"></i>'; }
+  else { inp.type='password'; btn.innerHTML='<i class="fas fa-eye"></i>'; }
+}
+
+async function doChangePassword(){
+  var oldVal = (document.getElementById('cp-old')||{value:''}).value||'';
+  var newVal = (document.getElementById('cp-new')||{value:''}).value||'';
+  var confirmVal = (document.getElementById('cp-confirm')||{value:''}).value||'';
+  var errEl = document.getElementById('cp-err'); if(!errEl) return;
+  errEl.textContent='';
+  if(!oldVal){ errEl.textContent='กรุณากรอกรหัสผ่านปัจจุบัน'; return; }
+  if(newVal.length<6){ errEl.textContent='รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร'; return; }
+  if(newVal!==confirmVal){ errEl.textContent='รหัสผ่านใหม่ไม่ตรงกัน'; return; }
+  var users=getUsers();
+  var rec=users.find(function(u){ return u.username===currentUser; });
+  if(!rec){ errEl.textContent='ไม่พบข้อมูลบัญชี'; return; }
+  var saltBytes=Uint8Array.from(atob(rec.salt),function(c){ return c.charCodeAt(0); });
+  var oldHash=await pbkdf2Hash(oldVal,saltBytes);
+  if(oldHash!==rec.hash){ errEl.textContent='รหัสผ่านปัจจุบันไม่ถูกต้อง'; return; }
+  var newSalt=randB64(16);
+  var newSaltBytes=Uint8Array.from(atob(newSalt),function(c){ return c.charCodeAt(0); });
+  var newHash=await pbkdf2Hash(newVal,newSaltBytes);
+  rec.salt=newSalt; rec.hash=newHash;
+  saveUsers(users);
+  document.getElementById('cp-old').value='';
+  document.getElementById('cp-new').value='';
+  document.getElementById('cp-confirm').value='';
+  toast('เปลี่ยนรหัสผ่านสำเร็จ ✓','success');
+}
+
 </script>
 
 <!-- AI Chat FAB + Panel -->
