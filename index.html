@@ -20,6 +20,11 @@
     .login-toggle{font-size:13px;color:#64748b;margin-top:16px;cursor:pointer}
     .login-toggle span{color:#a78bfa;font-weight:600;cursor:pointer}
     .login-toggle span:hover{text-decoration:underline}
+    .login-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:#475569;font-size:12px}
+    .login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.08)}
+    .google-btn{width:100%;background:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:600;color:#1f1f1f;cursor:pointer;font-family:'Sarabun',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity .2s;margin-top:4px}
+    .google-btn:hover{opacity:.88}.google-btn:disabled{opacity:.5}
+    .google-btn svg{width:20px;height:20px;flex-shrink:0}
     .login-user-info{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(124,58,237,.15);border-radius:10px;margin-bottom:8px;font-size:13px;color:#a78bfa;font-weight:600}
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -813,6 +818,11 @@
         onkeydown="if(event.key==='Enter') tryLogin()">
       <button class="login-btn" id="login-btn" onclick="tryLogin()">เข้าสู่ระบบ</button>
       <div class="login-err" id="login-err"></div>
+      <div class="login-divider">หรือ</div>
+      <button class="google-btn" id="google-login-btn" onclick="tryGoogleLogin()">
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        เข้าสู่ระบบด้วย Google
+      </button>
       <div class="login-toggle">ยังไม่มีบัญชี? <span onclick="switchToRegister()">สมัครใหม่</span></div>
       <div class="login-toggle" style="margin-top:8px">ลืมรหัสผ่าน? <span onclick="switchToForgot()">รีเซ็ตรหัสผ่าน</span></div>
     </div>
@@ -826,6 +836,11 @@
         onkeydown="if(event.key==='Enter') tryRegister()">
       <button class="login-btn" id="reg-btn" onclick="tryRegister()">สมัครใช้งาน</button>
       <div class="login-err" id="reg-err"></div>
+      <div class="login-divider">หรือสมัครด้วย</div>
+      <button class="google-btn" id="google-reg-btn" onclick="tryGoogleLogin()">
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Google
+      </button>
       <div class="login-toggle">มีบัญชีแล้ว? <span onclick="switchToLogin()">เข้าสู่ระบบ</span></div>
     </div>
 
@@ -884,6 +899,7 @@
     <div class="nav-item" onclick="nav('retire')"><i class="fas fa-umbrella-beach"></i> แผนเกษียณ</div>
     <div class="nav-item" onclick="nav('profile')"><i class="fas fa-id-card"></i> ประวัติส่วนตัว</div>
     <div style="margin-top:auto">
+      <div class="nav-item" id="nav-admin" style="display:none" onclick="nav('admin')"><i class="fas fa-shield-alt" style="color:#f59e0b"></i> <span style="color:#f59e0b">Admin</span></div>
       <div class="nav-item" onclick="nav('settings')"><i class="fas fa-cog"></i> ตั้งค่า</div>
     </div>
   </div>
@@ -2674,6 +2690,73 @@ function doLogout(){
   document.getElementById('login-err').textContent='';
   switchToLogin();
   stopInvAutoRefresh();
+}
+
+// ── Google Sign-in ──
+async function tryGoogleLogin(){
+  const errEl=document.getElementById('login-err')||document.getElementById('reg-err');
+  const btns=[document.getElementById('google-login-btn'),document.getElementById('google-reg-btn')];
+  btns.forEach(b=>{ if(b){ b.disabled=true; b.style.opacity='.5'; } });
+  if(errEl) errEl.textContent='';
+  if(!_auth||!_fs){ if(errEl) errEl.textContent='ระบบยังไม่พร้อม ลองใหม่'; btns.forEach(b=>{ if(b){ b.disabled=false; b.style.opacity=''; } }); return; }
+  try{
+    const provider=new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({prompt:'select_account'});
+    const result=await _auth.signInWithPopup(provider);
+    const fbUser=result.user;
+    const email=fbUser.email;
+    // ตรวจสอบว่ามีบัญชีอยู่แล้วหรือไม่
+    const snap=await _fs.collection('members').where('email','==',email).limit(1).get();
+    if(!snap.empty){
+      // มีบัญชีแล้ว — login ทันที
+      const memberData=snap.docs[0].data();
+      currentUser=memberData.username;
+      DB={ transactions:[],savings:[],debts:[],investments:[],settings:{apiKey:''},tax:{},plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]},profile:{} };
+      loadDB();
+      const _synced=await fsLoad();
+      enterApp();
+      if(!_synced) fsSave();
+      fsListen();
+    } else {
+      // ผู้ใช้ใหม่ — สร้างบัญชีอัตโนมัติ
+      let autoUser=(email.split('@')[0]).toLowerCase().replace(/[^a-z0-9_]/g,'_').substring(0,16);
+      if(autoUser.length<3) autoUser='user'+Date.now().toString().slice(-5);
+      const existingUsers=getUsers();
+      if(existingUsers.find(u=>u.username===autoUser)||autoUser===(_ENC&&_ENC.user||'').toLowerCase()){
+        autoUser=autoUser.substring(0,14)+'_'+Date.now().toString().slice(-3);
+      }
+      // บันทึกลง Firestore members
+      await _fs.collection('members').doc(autoUser).set({
+        username:autoUser,
+        email:email,
+        uid:fbUser.uid,
+        displayName:fbUser.displayName||'',
+        photoURL:fbUser.photoURL||'',
+        createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+        platform:'google'
+      });
+      // บันทึกลง localStorage
+      const salt=randB64(16);
+      const saltBytes=Uint8Array.from(atob(salt),c=>c.charCodeAt(0));
+      const rndPass=randB64(12);
+      const hash=await pbkdf2Hash(rndPass,saltBytes);
+      existingUsers.push({username:autoUser,salt,hash,email,googleAuth:true});
+      saveUsers(existingUsers);
+      currentUser=autoUser;
+      DB={ transactions:[],savings:[],debts:[],investments:[],settings:{apiKey:''},tax:{},plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]},profile:{} };
+      saveLocalOnly();
+      const _syncedNew=await fsLoad();
+      enterApp();
+      if(!_syncedNew) fsSave();
+      fsListen();
+      setTimeout(()=>toast('ยินดีต้อนรับ! ชื่อผู้ใช้ของคุณคือ: '+autoUser+' 🎉','success'),800);
+    }
+  }catch(e){
+    const msgMap={'auth/popup-closed-by-user':'ยกเลิกการเข้าสู่ระบบ','auth/popup-blocked':'กรุณาอนุญาต Popup ในเบราว์เซอร์','auth/cancelled-popup-request':'','auth/network-request-failed':'ไม่มีการเชื่อมต่ออินเทอร์เน็ต'};
+    const msg=msgMap[e.code]||'เกิดข้อผิดพลาด ลองใหม่';
+    if(errEl&&msg) errEl.textContent=msg;
+  }
+  btns.forEach(b=>{ if(b){ b.disabled=false; b.style.opacity=''; } });
 }
 
 // ── Toggle login/register ──
