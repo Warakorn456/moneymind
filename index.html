@@ -8720,7 +8720,86 @@ renderSettings=function(){
   _origRenderSettingsBase();
   if(typeof renderPinSettings==='function') renderPinSettings();
   if(typeof renderNWMilestoneSettings==='function') renderNWMilestoneSettings();
+  renderEmailSettings();
 };
+
+function renderEmailSettings(){
+  var cont=document.getElementById('settings-content')||document.querySelector('.settings-wrap')||document.getElementById('pg-settings');
+  if(!cont) return;
+  var users=getUsers();
+  var rec=users.find(function(u){ return u.username===currentUser; });
+  if(!rec) return; // owner account — skip
+  var email=rec.email||'';
+  var html='<div class="set-card" id="email-settings-card" style="margin-top:16px">'
+    +'<div class="set-title"><i class="fas fa-envelope" style="color:#06b6d4"></i> Email & ยืนยันตัวตน</div>'
+    +'<div style="font-size:13px;color:var(--muted);margin-bottom:12px">ใช้ Email สำหรับเข้าสู่ระบบ, กู้คืนรหัสผ่าน และยืนยันตัวตน</div>'
+    +(email
+      ?('<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">'
+        +'<div style="font-size:13px;"><i class="fas fa-check-circle" style="color:#10b981"></i> <strong>'+email+'</strong></div>'
+        +'<button class="btn btn-ghost" style="font-size:12px;padding:4px 12px" onclick="sendVerifyEmail()"><i class="fas fa-paper-plane"></i> ส่งอีเมลยืนยัน</button>'
+        +'</div>')
+      :'<div style="font-size:13px;color:#f59e0b;margin-bottom:10px"><i class="fas fa-exclamation-triangle"></i> ยังไม่ได้เพิ่ม Email — ถ้าลืมรหัสผ่านจะกู้คืนทาง Email ไม่ได้</div>')
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">'
+    +'<div style="flex:1;min-width:200px"><label class="flabel">'+(email?'เปลี่ยน Email':'เพิ่ม Email')+'</label>'
+    +'<input type="email" id="set-email-inp" class="finput" placeholder="email@example.com" value="'+email+'"></div>'
+    +'<button class="btn btn-primary" onclick="saveEmailSetting()" style="height:40px"><i class="fas fa-save"></i> บันทึก</button>'
+    +'</div>'
+    +'<div id="set-email-msg" style="font-size:12px;margin-top:8px;min-height:16px"></div>'
+    +'</div>';
+  cont.insertAdjacentHTML('beforeend',html);
+}
+
+async function saveEmailSetting(){
+  var newEmail=(document.getElementById('set-email-inp').value||'').trim().toLowerCase();
+  var msgEl=document.getElementById('set-email-msg');
+  msgEl.style.color='#ef4444'; msgEl.textContent='';
+  if(!newEmail){ msgEl.textContent='กรุณากรอก Email'; return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)){ msgEl.textContent='รูปแบบ Email ไม่ถูกต้อง'; return; }
+  var users=getUsers();
+  var rec=users.find(function(u){ return u.username===currentUser; });
+  if(!rec){ msgEl.textContent='ไม่พบข้อมูลบัญชี'; return; }
+  // สร้าง/อัปเดต Firebase Auth
+  if(_auth){
+    var fbUser=_auth.currentUser;
+    if(!fbUser){
+      // พยายาม sign in ก่อน เพื่อ update email
+      var oldEmail=rec.email;
+      if(oldEmail){
+        try{
+          // ถ้ามี email เดิม ต้อง re-auth ก่อน — แต่ไม่มีรหัสผ่านให้เรา prompt
+          msgEl.textContent='กรุณาออกจากระบบแล้ว Login ด้วย Email เดิมก่อนเปลี่ยน Email';
+          return;
+        }catch(e){}
+      } else {
+        // ไม่มี email เดิม — สร้าง Firebase Auth account ใหม่
+        // ต้องการรหัสผ่านของผู้ใช้ — ไม่มี plain text → ไม่สามารถทำได้จาก Settings
+        // เก็บ email ไว้ใน local record ก่อน (ไม่มี Firebase Auth)
+      }
+    } else {
+      try{
+        await fbUser.updateEmail(newEmail);
+        try{ await fbUser.sendEmailVerification({url:location.href}); }catch(ve){}
+      }catch(e){
+        if(e.code==='auth/email-already-in-use'){ msgEl.textContent='Email นี้ถูกใช้งานแล้ว'; return; }
+        if(e.code==='auth/requires-recent-login'){ msgEl.textContent='กรุณา Logout แล้ว Login ใหม่ก่อนเปลี่ยน Email'; return; }
+      }
+    }
+  }
+  rec.email=newEmail;
+  saveUsers(users);
+  if(_fs){ try{ await _fs.collection('members').doc(currentUser).set({email:newEmail},{merge:true}); }catch(e){} }
+  msgEl.style.color='#10b981';
+  msgEl.textContent='บันทึก Email แล้ว'+((_auth&&_auth.currentUser)?'  ส่งอีเมลยืนยันไปแล้ว':'  (ส่งอีเมลยืนยันได้หลัง Login ด้วย Email)');
+  setTimeout(function(){ renderSettings(); },1500);
+}
+
+async function sendVerifyEmail(){
+  if(!_auth||!_auth.currentUser){ toast('กรุณา Login ด้วย Email ก่อน','error'); return; }
+  try{
+    await _auth.currentUser.sendEmailVerification({url:location.href});
+    toast('ส่งอีเมลยืนยันแล้ว ตรวจสอบกล่องจดหมาย','success');
+  }catch(e){ toast('ส่งไม่ได้: '+e.message,'error'); }
+}
 
 // Patch saveTx to save tags
 const _origSaveTxV2=saveTx;
