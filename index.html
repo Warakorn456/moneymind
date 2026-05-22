@@ -2554,7 +2554,8 @@ function _sendHeartbeat(){
   _fs.collection('members').doc(currentUser).set({
     lastSeen:firebase.firestore.FieldValue.serverTimestamp(),
     username:currentUser,
-    isOwner:isOwner||false
+    isOwner:isOwner||false,
+    currentPlatform:'web'
   },{merge:true}).catch(()=>{});
 }
 
