@@ -8065,18 +8065,18 @@ function openPinSetup(){
 function _updateSetupDots(step){
   const buf=step===1?_setupBuffer1:_setupBuffer2;
   const prefix=step===1?'sp':'sp2';
-  for(let i=0;i<4;i++){ const d=document.getElementById(prefix+i); if(d) d.className='pin-dot'+(i<buf.length?' filled':''); }
+  for(let i=0;i<6;i++){ const d=document.getElementById(prefix+i); if(d) d.className='pin-dot'+(i<buf.length?' filled':''); }
 }
 function setupPinPress(d){
-  if(_setupBuffer1.length>=4) return;
+  if(_setupBuffer1.length>=6) return;
   _setupBuffer1+=d; _updateSetupDots(1);
-  if(_setupBuffer1.length===4){ setTimeout(()=>{ document.getElementById('pin-setup-step1').style.display='none'; document.getElementById('pin-setup-step2').style.display='block'; },120); }
+  if(_setupBuffer1.length===6){ setTimeout(()=>{ document.getElementById('pin-setup-step1').style.display='none'; document.getElementById('pin-setup-step2').style.display='block'; },120); }
 }
 function setupPinDelete(){ if(_setupBuffer1.length){ _setupBuffer1=_setupBuffer1.slice(0,-1); _updateSetupDots(1); } }
 function confirmPinPress(d){
-  if(_setupBuffer2.length>=4) return;
+  if(_setupBuffer2.length>=6) return;
   _setupBuffer2+=d; _updateSetupDots(2);
-  if(_setupBuffer2.length===4){ setTimeout(_finishPinSetup,120); }
+  if(_setupBuffer2.length===6){ setTimeout(_finishPinSetup,120); }
 }
 function confirmPinDelete(){ if(_setupBuffer2.length){ _setupBuffer2=_setupBuffer2.slice(0,-1); _updateSetupDots(2); } }
 function _finishPinSetup(){
