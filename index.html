@@ -2535,6 +2535,27 @@ function enterApp(){
   if(typeof applyTheme==='function') applyTheme();
   setTimeout(()=>{ if(typeof applyRecurringTx==='function') applyRecurringTx(); },1500);
   setTimeout(()=>{ if(typeof checkNotifications==='function') checkNotifications(); },2000);
+  // แสดง Admin nav เฉพาะ owner
+  const adminNav=document.getElementById('nav-admin');
+  if(adminNav) adminNav.style.display=(_ENC&&currentUser===_ENC.user)?'flex':'none';
+  // Heartbeat — บันทึก lastSeen ทุก 5 นาที
+  _startHeartbeat();
+}
+
+let _heartbeatTimer=null;
+function _startHeartbeat(){
+  clearInterval(_heartbeatTimer);
+  _sendHeartbeat();
+  _heartbeatTimer=setInterval(_sendHeartbeat,5*60*1000);
+}
+function _sendHeartbeat(){
+  if(!_fs||!currentUser) return;
+  const isOwner=_ENC&&currentUser===_ENC.user;
+  _fs.collection('members').doc(currentUser).set({
+    lastSeen:firebase.firestore.FieldValue.serverTimestamp(),
+    username:currentUser,
+    isOwner:isOwner||false
+  },{merge:true}).catch(()=>{});
 }
 
 // ── Login ──
