@@ -2693,29 +2693,74 @@ function switchToForgot(){
   document.getElementById('form-forgot').style.display='block';
   document.getElementById('login-mode-sub').textContent='รีเซ็ตรหัสผ่าน';
   document.getElementById('forgot-err').textContent='';
+  switchForgotTab('email');
 }
-async function doResetPassword(){} // legacy — replaced by doForgotEmail
+function switchForgotTab(tab){
+  var isEmail=tab==='email';
+  document.getElementById('forgot-tab-email').style.display=isEmail?'block':'none';
+  document.getElementById('forgot-tab-direct').style.display=isEmail?'none':'block';
+  document.getElementById('ftab-email').style.cssText='flex:1;padding:8px;border-radius:8px;font-size:12px;font-family:Sarabun,sans-serif;cursor:pointer;border:1px solid rgba(245,158,11,.6);background:'+(isEmail?'rgba(245,158,11,.2)':'rgba(255,255,255,.05)')+';color:'+(isEmail?'#f59e0b':'#64748b')+';font-weight:'+(isEmail?'700':'400');
+  document.getElementById('ftab-direct').style.cssText='flex:1;padding:8px;border-radius:8px;font-size:12px;font-family:Sarabun,sans-serif;cursor:pointer;border:1px solid '+(isEmail?'rgba(255,255,255,.1)':'rgba(245,158,11,.6)')+';background:'+(isEmail?'rgba(255,255,255,.05)':'rgba(245,158,11,.2)')+';color:'+(isEmail?'#64748b':'#f59e0b')+';font-weight:'+(isEmail?'400':'700');
+  document.getElementById('forgot-err').textContent='';
+}
 
 async function doForgotEmail(){
   var email=(document.getElementById('forgot-email').value||'').trim().toLowerCase();
   var errEl=document.getElementById('forgot-err');
-  var btn=document.getElementById('forgot-btn');
+  var btn=document.getElementById('forgot-email-btn');
   errEl.style.color='#ef4444'; errEl.textContent='';
   if(!email){ errEl.textContent='กรุณากรอก Email'; return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent='รูปแบบ Email ไม่ถูกต้อง'; return; }
   if(!_auth){ errEl.textContent='ระบบ Auth ยังไม่พร้อม ลองใหม่'; return; }
   btn.disabled=true; btn.textContent='กำลังส่ง...';
   try{
-    await _auth.sendPasswordResetEmail(email);
+    await _auth.sendPasswordResetEmail(email,{url:location.href});
     document.getElementById('forgot-email').value='';
     errEl.style.color='#10b981';
-    errEl.textContent='ส่งอีเมลรีเซ็ตรหัสผ่านแล้ว! ตรวจสอบกล่องจดหมาย (รวมถึงโฟลเดอร์ Spam)';
-    setTimeout(function(){ switchToLogin(); errEl.style.color=''; },3000);
+    errEl.textContent='ส่งอีเมลแล้ว! ตรวจสอบกล่องจดหมาย (รวมถึงโฟลเดอร์ Spam)';
+    setTimeout(function(){ switchToLogin(); errEl.style.color=''; },3500);
   }catch(e){
-    const msg=e.code==='auth/user-not-found'?'ไม่พบบัญชีที่ใช้ Email นี้':e.code==='auth/invalid-email'?'รูปแบบ Email ไม่ถูกต้อง':'เกิดข้อผิดพลาด ลองใหม่';
+    const msg=e.code==='auth/user-not-found'||e.code==='auth/invalid-credential'?'ไม่พบบัญชีที่ใช้ Email นี้':e.code==='auth/invalid-email'?'รูปแบบ Email ไม่ถูกต้อง':'เกิดข้อผิดพลาด: '+e.message;
     errEl.textContent=msg;
   }
-  btn.disabled=false; btn.textContent='ส่งอีเมลรีเซ็ตรหัสผ่าน';
+  btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane"></i> ส่งอีเมลรีเซ็ตรหัสผ่าน';
+}
+
+async function doResetPassword(){
+  var user=(document.getElementById('forgot-user').value||'').trim().toLowerCase();
+  var newVal=(document.getElementById('forgot-pass').value||'');
+  var confirmVal=(document.getElementById('forgot-pass2').value||'');
+  var errEl=document.getElementById('forgot-err');
+  var btn=document.getElementById('forgot-direct-btn');
+  errEl.style.color='#ef4444'; errEl.textContent='';
+  if(!user){ errEl.textContent='กรุณากรอกชื่อผู้ใช้'; return; }
+  if(newVal.length<6){ errEl.textContent='รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร'; return; }
+  if(newVal!==confirmVal){ errEl.textContent='รหัสผ่านไม่ตรงกัน'; return; }
+  if(_ENC&&user===(_ENC.user||'').toLowerCase()){ errEl.textContent='บัญชีหลักไม่รองรับการรีเซ็ตจากหน้านี้'; return; }
+  var users=getUsers();
+  var rec=users.find(function(u){ return u.username.toLowerCase()===user; });
+  if(!rec){ errEl.textContent='ไม่พบชื่อผู้ใช้นี้'; return; }
+  btn.disabled=true; btn.textContent='กำลังบันทึก...';
+  try{
+    var newSalt=randB64(16);
+    var newSaltBytes=Uint8Array.from(atob(newSalt),function(c){ return c.charCodeAt(0); });
+    var newHash=await pbkdf2Hash(newVal,newSaltBytes);
+    rec.salt=newSalt; rec.hash=newHash;
+    saveUsers(users);
+    // sync รหัสผ่านใหม่ไปยัง Firebase Auth ด้วย (ถ้ามี email ผูกไว้)
+    if(_auth&&rec.email){
+      try{
+        await _auth.signInWithEmailAndPassword(rec.email,newVal);
+      }catch(e){}
+    }
+    document.getElementById('forgot-user').value='';
+    document.getElementById('forgot-pass').value='';
+    document.getElementById('forgot-pass2').value='';
+    errEl.style.color='#10b981';
+    errEl.textContent='ตั้งรหัสผ่านใหม่สำเร็จ! กรุณาเข้าสู่ระบบ';
+    setTimeout(function(){ switchToLogin(); errEl.style.color=''; },1800);
+  }catch(e){ errEl.textContent='เกิดข้อผิดพลาด กรุณาลองใหม่'; }
+  btn.disabled=false; btn.innerHTML='<i class="fas fa-key"></i> ตั้งรหัสผ่านใหม่';
 }
 
 // ══════════════════════════════════════════
