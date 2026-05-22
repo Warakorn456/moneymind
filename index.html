@@ -812,6 +812,7 @@
       <button class="login-btn" id="login-btn" onclick="tryLogin()">เข้าสู่ระบบ</button>
       <div class="login-err" id="login-err"></div>
       <div class="login-toggle">ยังไม่มีบัญชี? <span onclick="switchToRegister()">สมัครใหม่</span></div>
+      <div class="login-toggle" style="margin-top:8px">ลืมรหัสผ่าน? <span onclick="switchToForgot()">รีเซ็ตรหัสผ่าน</span></div>
     </div>
 
     <!-- Register form -->
@@ -823,6 +824,18 @@
       <button class="login-btn" id="reg-btn" onclick="tryRegister()">สมัครใช้งาน</button>
       <div class="login-err" id="reg-err"></div>
       <div class="login-toggle">มีบัญชีแล้ว? <span onclick="switchToLogin()">เข้าสู่ระบบ</span></div>
+    </div>
+
+    <!-- Forgot Password form -->
+    <div id="form-forgot" style="display:none">
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:16px;line-height:1.6">เนื่องจากรหัสผ่านถูกเข้ารหัสแบบ one-way จึงไม่สามารถกู้คืนได้ แต่สามารถ<strong style="color:#a78bfa">ตั้งรหัสผ่านใหม่</strong>แทนได้เลย</div>
+      <input class="login-inp" id="forgot-user" type="text" placeholder="ชื่อผู้ใช้ของคุณ" autocomplete="username">
+      <input class="login-inp" id="forgot-pass" type="password" placeholder="รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)" autocomplete="new-password">
+      <input class="login-inp" id="forgot-pass2" type="password" placeholder="ยืนยันรหัสผ่านใหม่" autocomplete="new-password"
+        onkeydown="if(event.key==='Enter') doResetPassword()">
+      <button class="login-btn" id="forgot-btn" onclick="doResetPassword()" style="background:linear-gradient(135deg,#f59e0b,#d97706)">ตั้งรหัสผ่านใหม่</button>
+      <div class="login-err" id="forgot-err"></div>
+      <div class="login-toggle">กลับไป <span onclick="switchToLogin()">เข้าสู่ระบบ</span></div>
     </div>
   </div>
 </div>
