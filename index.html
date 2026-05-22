@@ -10155,7 +10155,8 @@ async function renderAdmin(){
         createdAt:d.createdAt?.toDate?.()||null,
         lastSeen:d.lastSeen?.toDate?.()||null,
         isOwner:d.isOwner||false,
-        platform:d.platform||'web'
+        platform:d.platform||'web',
+        currentPlatform:d.currentPlatform||''
       });
     });
     // เรียงจากใหม่ → เก่า
