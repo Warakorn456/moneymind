@@ -8028,12 +8028,12 @@ function lockApp(){
 }
 
 function _updatePinDots(){
-  for(let i=0;i<4;i++){ const d=document.getElementById('pd'+i); if(d) d.className='pin-dot'+(i<_pinBuffer.length?' filled':''); }
+  for(let i=0;i<6;i++){ const d=document.getElementById('pd'+i); if(d) d.className='pin-dot'+(i<_pinBuffer.length?' filled':''); }
 }
 function pinPress(d){
-  if(_pinBuffer.length>=4) return;
+  if(_pinBuffer.length>=6) return;
   _pinBuffer+=d; _updatePinDots();
-  if(_pinBuffer.length===4) setTimeout(_checkPin,120);
+  if(_pinBuffer.length===6) setTimeout(_checkPin,120);
 }
 function pinDelete(){ if(_pinBuffer.length) { _pinBuffer=_pinBuffer.slice(0,-1); _updatePinDots(); } }
 async function _checkPin(){
