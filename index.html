@@ -2970,7 +2970,10 @@ function checkLogin(){
         const ui=document.getElementById('sidebar-user-info');
         const un=document.getElementById('sidebar-username');
         if(ui&&un){ un.textContent=currentUser; ui.style.display='flex'; }
+        const adminNav=document.getElementById('nav-admin');
+        if(adminNav) adminNav.style.display=(_ENC&&currentUser===_ENC.user)?'flex':'none';
         resetLockTimer();
+        _startHeartbeat();
         fsLoad().then(synced=>{ if(synced) renderPage(curPage); else fsSave(); fsListen(); });
         return;
       }
