@@ -3179,9 +3179,11 @@ function txHTML(tx,acts=true){
 
 let _txChart=null;
 let _txChartYear=null;
+let _txChartMonth=null;
 
-function renderTxChart(year){
-  _txChartYear=year??null;
+function renderTxChart(year,month){
+  _txChartYear=(year==null)?null:year;
+  _txChartMonth=(month==null)?null:month;
   const el=document.getElementById('tx-chart-card');
   if(!el) return;
   if(_txChart){_txChart.destroy();_txChart=null;}
@@ -3191,8 +3193,7 @@ function renderTxChart(year){
   const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   let labels=[],datasets=[],yearList=[];
 
-  // aggregate ใน 1 pass — เพื่อ performance เมื่อมีรายการเยอะ
-  const agg={}; // agg[yr][type][cat] = [12 months]
+  const agg={};
   const allYears=new Set();
   DB.transactions.forEach(t=>{
     const d=new Date(t.date); const yr=d.getFullYear(); const mo=d.getMonth();
@@ -3204,11 +3205,11 @@ function renderTxChart(year){
   });
   const getMonths=(yr,type,cat)=>agg[yr]?.[type]?.[cat]||new Array(12).fill(0);
   const getTotal=(yr,type,cat)=>getMonths(yr,type,cat).reduce((s,v)=>s+v,0);
-  const hasAny=(type,cat)=>year==null
-    ? yearList.some(yr=>getTotal(yr,type,cat)>0)
-    : getMonths(year,type,cat).some(v=>v>0);
+
+  let title='',hint='',backBtn='',onClickFn=(e,els)=>{},hasAny;
 
   if(year==null){
+    // ── รายปี ──
     yearList=[...allYears].sort();
     if(!yearList.includes(nowY)) yearList.push(nowY);
     yearList=yearList.slice(-5);
@@ -3219,7 +3220,12 @@ function renderTxChart(year){
       ...EXP_CATS.map(cat=>({label:cat.label,stack:'expense',backgroundColor:cat.color+'bb',borderWidth:0,
         data:yearList.map(yr=>getTotal(yr,'expense',cat.id))}))
     ];
-  } else {
+    hasAny=(type,cat)=>yearList.some(yr=>getTotal(yr,type,cat)>0);
+    title='ภาพรวมรายรับ-รายจ่าย (รายปี)';
+    hint='<div style="font-size:11px;color:var(--muted);margin-top:6px"><i class="fas fa-hand-pointer"></i> คลิกที่แท่งกราฟเพื่อดูรายละเอียดรายเดือน</div>';
+    onClickFn=(e,els)=>{ if(els.length) renderTxChart(yearList[els[0].index]); };
+  } else if(month==null){
+    // ── รายเดือน ──
     labels=MN;
     datasets=[
       ...INC_CATS.map(cat=>({label:cat.label,stack:'income',backgroundColor:cat.color+'bb',borderWidth:0,
@@ -3227,6 +3233,32 @@ function renderTxChart(year){
       ...EXP_CATS.map(cat=>({label:cat.label,stack:'expense',backgroundColor:cat.color+'bb',borderWidth:0,
         data:[...getMonths(year,'expense',cat.id)]}))
     ];
+    hasAny=(type,cat)=>getMonths(year,type,cat).some(v=>v>0);
+    title=`รายละเอียดปี ${year} (${year+543})`;
+    hint='<div style="font-size:11px;color:var(--muted);margin-top:6px"><i class="fas fa-hand-pointer"></i> คลิกที่แท่งกราฟเพื่อดูรายละเอียดรายวัน</div>';
+    backBtn=`<button onclick="renderTxChart(null)" style="background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);color:#a78bfa;border-radius:8px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:Sarabun,sans-serif"><i class="fas fa-arrow-left"></i> กลับภาพรวม</button>`;
+    onClickFn=(e,els)=>{ if(els.length) renderTxChart(year,els[0].index); };
+  } else {
+    // ── รายวัน ──
+    const daysInMonth=new Date(year,month+1,0).getDate();
+    labels=Array.from({length:daysInMonth},(_,i)=>String(i+1));
+    const aggDay={};
+    DB.transactions.filter(t=>{ const d=new Date(t.date); return d.getFullYear()===year&&d.getMonth()===month; }).forEach(t=>{
+      const day=new Date(t.date).getDate()-1;
+      if(!aggDay[t.type]) aggDay[t.type]={};
+      if(!aggDay[t.type][t.category]) aggDay[t.type][t.category]=new Array(daysInMonth).fill(0);
+      aggDay[t.type][t.category][day]+=t.amount;
+    });
+    const getDays=(type,cat)=>aggDay[type]?.[cat]||new Array(daysInMonth).fill(0);
+    datasets=[
+      ...INC_CATS.map(cat=>({label:cat.label,stack:'income',backgroundColor:cat.color+'bb',borderWidth:0,
+        data:[...getDays('income',cat.id)]})),
+      ...EXP_CATS.map(cat=>({label:cat.label,stack:'expense',backgroundColor:cat.color+'bb',borderWidth:0,
+        data:[...getDays('expense',cat.id)]}))
+    ];
+    hasAny=(type,cat)=>getDays(type,cat).some(v=>v>0);
+    title=`${MN[month]} ${year} — รายวัน`;
+    backBtn=`<button onclick="renderTxChart(${year})" style="background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);color:#a78bfa;border-radius:8px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:Sarabun,sans-serif"><i class="fas fa-arrow-left"></i> กลับรายเดือน</button>`;
   }
 
   const legendHtml=`<div style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06)">
@@ -3238,11 +3270,11 @@ function renderTxChart(year){
 
   el.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-bottom:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-      <div style="font-size:15px;font-weight:700"><i class="fas fa-chart-bar" style="color:var(--primary-l)"></i> ${year==null?'ภาพรวมรายรับ-รายจ่าย (รายปี)':`รายละเอียดปี ${year} (${year+543})`}</div>
-      ${year!=null?`<button onclick="renderTxChart(null)" style="background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);color:#a78bfa;border-radius:8px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:Sarabun,sans-serif"><i class="fas fa-arrow-left"></i> กลับภาพรวม</button>`:''}
+      <div style="font-size:15px;font-weight:700"><i class="fas fa-chart-bar" style="color:var(--primary-l)"></i> ${title}</div>
+      ${backBtn}
     </div>
     <div style="position:relative;height:260px"><canvas id="tx-chart-canvas"></canvas></div>
-    ${year==null?'<div style="font-size:11px;color:var(--muted);margin-top:6px"><i class="fas fa-hand-pointer"></i> คลิกที่แท่งกราฟเพื่อดูรายละเอียดรายเดือน</div>':''}
+    ${hint}
     ${legendHtml}
   </div>`;
 
@@ -3253,7 +3285,7 @@ function renderTxChart(year){
     data:{labels,datasets},
     options:{
       responsive:true,maintainAspectRatio:false,
-      onClick(e,els){ if(year==null&&els.length) renderTxChart(yearList[els[0].index]); },
+      onClick:onClickFn,
       plugins:{
         legend:{display:false},
         tooltip:{callbacks:{label:ctx=>`  ${ctx.dataset.label}: ฿${Math.round(ctx.raw).toLocaleString('th-TH')}`},filter:item=>item.raw>0}
