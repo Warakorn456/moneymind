@@ -8724,7 +8724,7 @@ renderSettings=function(){
 };
 
 function renderEmailSettings(){
-  var cont=document.getElementById('settings-content')||document.querySelector('.settings-wrap')||document.getElementById('pg-settings');
+  var cont=document.getElementById('pg-settings');
   if(!cont) return;
   var users=getUsers();
   var rec=users.find(function(u){ return u.username===currentUser; });
