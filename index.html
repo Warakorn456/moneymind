@@ -8098,7 +8098,7 @@ function saveInlinePin(){
   const p2=(document.getElementById('pin-confirm-inp')?.value||'').trim();
   const errEl=document.getElementById('pin-inline-err');
   if(!errEl) return;
-  if(!/^\d{4}$/.test(p1)){ errEl.textContent='PIN ต้องเป็นตัวเลข 4 หลัก'; return; }
+  if(!/^\d{6}$/.test(p1)){ errEl.textContent='PIN ต้องเป็นตัวเลข 6 หลัก'; return; }
   if(p1!==p2){ errEl.textContent='PIN ไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง'; return; }
   errEl.textContent='';
   if(!DB.settings) DB.settings={};
