@@ -3301,7 +3301,7 @@ function renderTxChart(year,month){
 let _txPage=0;
 const TX_PAGE_SIZE=100;
 function renderTx(appendMore=false){
-  if(!appendMore){ _txPage=0; renderTxChart(_txChartYear); }
+  if(!appendMore){ _txPage=0; renderTxChart(_txChartYear,_txChartMonth); }
   const el=document.getElementById('tx-list');
   let txs=[...DB.transactions].sort((a,b)=>new Date(b.date)-new Date(a.date));
   if(txFilter!=='all') txs=txs.filter(t=>t.type===txFilter);
