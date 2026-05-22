@@ -2617,8 +2617,46 @@ function switchToRegister(){
 function switchToLogin(){
   document.getElementById('form-login').style.display='block';
   document.getElementById('form-register').style.display='none';
+  document.getElementById('form-forgot').style.display='none';
   document.getElementById('login-mode-sub').textContent='ระบบการเงินส่วนตัว';
   document.getElementById('login-err').textContent='';
+}
+function switchToForgot(){
+  document.getElementById('form-login').style.display='none';
+  document.getElementById('form-register').style.display='none';
+  document.getElementById('form-forgot').style.display='block';
+  document.getElementById('login-mode-sub').textContent='รีเซ็ตรหัสผ่าน';
+  document.getElementById('forgot-err').textContent='';
+}
+async function doResetPassword(){
+  var user=(document.getElementById('forgot-user').value||'').trim().toLowerCase();
+  var pass=document.getElementById('forgot-pass').value||'';
+  var pass2=document.getElementById('forgot-pass2').value||'';
+  var errEl=document.getElementById('forgot-err');
+  var btn=document.getElementById('forgot-btn');
+  errEl.textContent='';
+  if(!user){errEl.textContent='กรุณากรอกชื่อผู้ใช้';return;}
+  if(pass.length<6){errEl.textContent='รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร';return;}
+  if(pass!==pass2){errEl.textContent='รหัสผ่านไม่ตรงกัน';return;}
+  if(_ENC&&user===(_ENC.user||'').toLowerCase()){errEl.textContent='บัญชีนี้ไม่รองรับการรีเซ็ตรหัสผ่านจากหน้านี้';return;}
+  var users=getUsers();
+  var rec=users.find(function(u){return u.username.toLowerCase()===user;});
+  if(!rec){errEl.textContent='ไม่พบชื่อผู้ใช้นี้';return;}
+  btn.disabled=true; btn.textContent='กำลังบันทึก...';
+  try{
+    var newSalt=randB64(16);
+    var newSaltBytes=Uint8Array.from(atob(newSalt),function(c){return c.charCodeAt(0);});
+    var newHash=await pbkdf2Hash(pass,newSaltBytes);
+    rec.salt=newSalt; rec.hash=newHash;
+    saveUsers(users);
+    document.getElementById('forgot-user').value='';
+    document.getElementById('forgot-pass').value='';
+    document.getElementById('forgot-pass2').value='';
+    errEl.style.color='#10b981';
+    errEl.textContent='ตั้งรหัสผ่านใหม่สำเร็จ! กรุณาเข้าสู่ระบบ';
+    setTimeout(function(){switchToLogin();errEl.style.color='';},1800);
+  }catch(e){errEl.textContent='เกิดข้อผิดพลาด กรุณาลองใหม่';}
+  btn.disabled=false; btn.textContent='ตั้งรหัสผ่านใหม่';
 }
 
 // ══════════════════════════════════════════
