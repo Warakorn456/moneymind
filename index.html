@@ -10885,6 +10885,21 @@ function updateLoan(key,val){
   window._loanTimer=setTimeout(function(){ renderLoan(); },400);
 }
 
+// ── Fixed/Variable toggle helpers ──
+function setTxFixed(isFixed){
+  document.getElementById('tx-fixed-val').value=isFixed?'1':'0';
+  document.getElementById('tx-fixed-btn-f').classList.toggle('active',isFixed);
+  document.getElementById('tx-fixed-btn-v').classList.toggle('active',!isFixed);
+}
+
+function autoSetTxFixed(){
+  var type=document.getElementById('tx-type')?.value;
+  if(type!=='expense') return;
+  var cat=document.getElementById('tx-cat')?.value||'';
+  var fixedCats=DB.settings.fixedExpCats||['housing','utility','insurance','debt_pay','tax_exp'];
+  setTxFixed(fixedCats.indexOf(cat)>=0);
+}
+
 </script>
 
 <!-- AI Chat FAB + Panel -->
