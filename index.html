@@ -11086,18 +11086,40 @@ function renderCalendarPage(){
   if(_calPickerOpen){
     if(_calPickerYear<0) _calPickerYear=_calYear;
     var pyDisp=_calPickerYear+543;
-    var monBtns='';
-    for(var mi=0;mi<12;mi++){
-      var isSelMon=(_calPickerYear===_calYear&&mi===_calMonth);
-      monBtns+='<button onclick="calPickMonth('+_calPickerYear+','+mi+')" style="padding:8px 4px;border-radius:8px;border:1px solid '+(isSelMon?'var(--primary-l)':'var(--border)')+';background:'+(isSelMon?'var(--primary)':'var(--surface2)')+';color:'+(isSelMon?'#fff':'var(--text)')+';font-size:13px;cursor:pointer;font-family:inherit">'+CAL_MON_SHORT[mi]+'</button>';
-    }
-    pickerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 4px 20px rgba(0,0,0,.25)">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+    var pickerBody='';
+
+    if(_calPickerMode==='year'){
+      // Year grid: 12 years per page, centred around _calPickerYear
+      var pageStart=_calPickerYear - (_calPickerYear % 12) + _calPickerYearPage*12;
+      var yrBtns='';
+      for(var yi=0;yi<12;yi++){
+        var yr=pageStart+yi;
+        var isSelYr=(yr===_calYear);
+        var isCurPicker=(yr===_calPickerYear);
+        yrBtns+='<button onclick="calPickYear('+yr+')" style="padding:10px 4px;border-radius:8px;border:1px solid '+(isSelYr?'var(--primary-l)':(isCurPicker?'var(--border)':'transparent'))+';background:'+(isSelYr?'var(--primary)':'var(--surface2)')+';color:'+(isSelYr?'#fff':'var(--text)')+';font-size:14px;font-weight:'+(isCurPicker?'700':'400')+';cursor:pointer;font-family:inherit">'+(yr+543)+'</button>';
+      }
+      pickerBody='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+        +'<button class="btn btn-ghost" style="padding:6px 10px" onclick="calPickerPageNav(-1)"><i class="fas fa-chevron-left"></i></button>'
+        +'<span style="font-size:14px;font-weight:600;color:var(--muted)">'+(pageStart+543)+'–'+(pageStart+11+543)+'</span>'
+        +'<button class="btn btn-ghost" style="padding:6px 10px" onclick="calPickerPageNav(1)"><i class="fas fa-chevron-right"></i></button>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">'+yrBtns+'</div>';
+    } else {
+      var monBtns='';
+      for(var mi=0;mi<12;mi++){
+        var isSelMon=(_calPickerYear===_calYear&&mi===_calMonth);
+        monBtns+='<button onclick="calPickMonth('+_calPickerYear+','+mi+')" style="padding:8px 4px;border-radius:8px;border:1px solid '+(isSelMon?'var(--primary-l)':'var(--border)')+';background:'+(isSelMon?'var(--primary)':'var(--surface2)')+';color:'+(isSelMon?'#fff':'var(--text)')+';font-size:13px;cursor:pointer;font-family:inherit">'+CAL_MON_SHORT[mi]+'</button>';
+      }
+      pickerBody='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
         +'<button class="btn btn-ghost" style="padding:6px 10px" onclick="calPickerYearNav(-1)"><i class="fas fa-chevron-left"></i></button>'
-        +'<span style="font-size:16px;font-weight:700">'+pyDisp+'</span>'
+        +'<button class="btn btn-ghost" style="font-size:16px;font-weight:700;padding:4px 10px;border-radius:8px;background:rgba(124,58,237,.08);color:var(--primary-l)" onclick="calPickerSwitchMode(\'year\')">'+pyDisp+' <i class="fas fa-caret-down" style="font-size:11px"></i></button>'
         +'<button class="btn btn-ghost" style="padding:6px 10px" onclick="calPickerYearNav(1)"><i class="fas fa-chevron-right"></i></button>'
       +'</div>'
-      +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">'+monBtns+'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">'+monBtns+'</div>';
+    }
+
+    pickerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 4px 20px rgba(0,0,0,.25)">'
+      +pickerBody
     +'</div>';
   }
 
