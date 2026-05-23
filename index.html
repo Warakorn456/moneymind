@@ -11228,6 +11228,76 @@ function calPickMonth(y,m){
 
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// ══════════════════════════════════════════
+//  NAV SORTABLE
+// ══════════════════════════════════════════
+(function initNavSort(){
+  var wrap=document.getElementById('nav-sortable');
+  if(!wrap) return;
+  var _dragSrc=null;
+
+  function getItems(){ return Array.from(wrap.querySelectorAll('.nav-item[data-nav]')); }
+
+  function applyOrder(order){
+    if(!order||!order.length) return;
+    order.forEach(function(id){
+      var el=wrap.querySelector('.nav-item[data-nav="'+id+'"]');
+      if(el) wrap.insertBefore(el, wrap.querySelector('[style*="margin-top:auto"]') || null);
+    });
+  }
+
+  function saveOrder(){
+    var order=getItems().map(function(el){ return el.getAttribute('data-nav'); });
+    if(!DB.settings) DB.settings={};
+    DB.settings.navOrder=order;
+    saveLocalOnly();
+  }
+
+  function bindDrag(){
+    getItems().forEach(function(item){
+      item.addEventListener('dragstart',function(e){
+        _dragSrc=item;
+        e.dataTransfer.effectAllowed='move';
+        setTimeout(function(){ item.style.opacity='0.4'; },0);
+      });
+      item.addEventListener('dragend',function(){
+        item.style.opacity='';
+        wrap.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('nav-drag-over'); });
+        saveOrder();
+      });
+      item.addEventListener('dragover',function(e){
+        e.preventDefault();
+        e.dataTransfer.dropEffect='move';
+        if(_dragSrc&&_dragSrc!==item){
+          wrap.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('nav-drag-over'); });
+          item.classList.add('nav-drag-over');
+        }
+      });
+      item.addEventListener('dragleave',function(){ item.classList.remove('nav-drag-over'); });
+      item.addEventListener('drop',function(e){
+        e.preventDefault();
+        if(_dragSrc&&_dragSrc!==item){
+          var items=getItems();
+          var si=items.indexOf(_dragSrc), di=items.indexOf(item);
+          if(si<di) item.after(_dragSrc); else item.before(_dragSrc);
+        }
+        item.classList.remove('nav-drag-over');
+      });
+    });
+  }
+
+  // Apply saved order on load (after DB is ready)
+  var _navSortInit=checkLogin;
+  checkLogin=function(){
+    _navSortInit();
+    var order=(DB&&DB.settings&&DB.settings.navOrder)||[];
+    applyOrder(order);
+    bindDrag();
+  };
+  // Also re-bind if called before checkLogin fires
+  bindDrag();
+})();
+
 </script>
 
 <!-- AI Chat FAB + Panel -->
