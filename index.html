@@ -11081,15 +11081,36 @@ function renderCalendarPage(){
     +'</div>';
   }
 
+  // ── Month/Year picker panel ──
+  var pickerHTML='';
+  if(_calPickerOpen){
+    if(_calPickerYear<0) _calPickerYear=_calYear;
+    var pyDisp=_calPickerYear+543;
+    var monBtns='';
+    for(var mi=0;mi<12;mi++){
+      var isSelMon=(_calPickerYear===_calYear&&mi===_calMonth);
+      monBtns+='<button onclick="calPickMonth('+_calPickerYear+','+mi+')" style="padding:8px 4px;border-radius:8px;border:1px solid '+(isSelMon?'var(--primary-l)':'var(--border)')+';background:'+(isSelMon?'var(--primary)':'var(--surface2)')+';color:'+(isSelMon?'#fff':'var(--text)')+';font-size:13px;cursor:pointer;font-family:inherit">'+CAL_MON_SHORT[mi]+'</button>';
+    }
+    pickerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 4px 20px rgba(0,0,0,.25)">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+        +'<button class="btn btn-ghost" style="padding:6px 10px" onclick="calPickerYearNav(-1)"><i class="fas fa-chevron-left"></i></button>'
+        +'<span style="font-size:16px;font-weight:700">'+pyDisp+'</span>'
+        +'<button class="btn btn-ghost" style="padding:6px 10px" onclick="calPickerYearNav(1)"><i class="fas fa-chevron-right"></i></button>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">'+monBtns+'</div>'
+    +'</div>';
+  }
+
   el.innerHTML=
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">'
       +'<div style="display:flex;align-items:center;gap:8px">'
         +'<button class="btn btn-ghost" style="padding:8px 12px" onclick="calNav(-1)"><i class="fas fa-chevron-left"></i></button>'
-        +'<div style="font-size:18px;font-weight:700;min-width:160px;text-align:center">'+CAL_MON_FULL[_calMonth]+' '+(_calYear+543)+'</div>'
+        +'<button class="btn btn-ghost" style="font-size:18px;font-weight:700;min-width:160px;text-align:center;padding:6px 10px;border-radius:10px;'+(  _calPickerOpen?'background:rgba(124,58,237,.15);color:var(--primary-l)':'')+'" onclick="calTogglePicker()">'+CAL_MON_FULL[_calMonth]+' '+(_calYear+543)+' <i class="fas fa-caret-'+(  _calPickerOpen?'up':'down')+'" style="font-size:13px;opacity:.7"></i></button>'
         +'<button class="btn btn-ghost" style="padding:8px 12px" onclick="calNav(1)"><i class="fas fa-chevron-right"></i></button>'
       +'</div>'
       +'<button class="btn btn-ghost" style="font-size:13px" onclick="calGoToday()"><i class="fas fa-dot-circle" style="color:var(--primary-l);margin-right:4px"></i>วันนี้</button>'
     +'</div>'
+    +pickerHTML
     +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">'
       +'<span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block"></span>รายรับ</span>'
       +'<span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block"></span>รายจ่าย</span>'
