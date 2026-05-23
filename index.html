@@ -66,6 +66,9 @@
     .nav-item.active{background:rgba(124,58,237,.15);color:var(--primary-l)}
     .nav-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--primary);border-radius:0 2px 2px 0}
     .nav-item i{width:18px;text-align:center;font-size:15px}
+    .nav-drag-handle{display:none;align-items:center;margin-right:2px;margin-left:-6px;cursor:grab;color:var(--muted);opacity:.5;font-size:11px;width:14px}
+    .nav-item:hover .nav-drag-handle{display:flex}
+    .nav-item.nav-drag-over{background:rgba(124,58,237,.2);border-radius:8px}
     .sidebar-foot{padding:14px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);text-align:center;line-height:1.6}
 
     /* ── Main ── */
