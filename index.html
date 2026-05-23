@@ -3722,6 +3722,8 @@ function setTxType(type,btn){
   document.getElementById('tx-cat').innerHTML=cats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')+(customCats.length?'<optgroup label="— หมวดหมู่ของฉัน —">'+customCats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')+'</optgroup>':'');
   document.getElementById('carryover-row').style.display=type==='income'?'block':'none';
   if(type!=='income') document.getElementById('tx-carryover').checked=false;
+  document.getElementById('tx-fixed-row').style.display=type==='expense'?'block':'none';
+  if(type==='expense') setTimeout(autoSetTxFixed,20); else document.getElementById('tx-fixed-val').value='';
   const hasCC=getBanks().some(b=>b.type==='บัตรเครดิต');
   document.getElementById('paybycard-row').style.display=(type==='expense'&&hasCC)?'block':'none';
   if(type!=='expense'){ document.getElementById('tx-paybycard').checked=false; onPayByCCChange(); }
