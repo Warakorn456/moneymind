@@ -10626,6 +10626,243 @@ function toggleRvvCat(id,checked){
   };
 })();
 
+// ══════════════════════════════════════════
+//  FEATURE: YTD SUMMARY
+// ══════════════════════════════════════════
+function renderYTD(){
+  var el=document.getElementById('dash-ytd-section'); if(!el) return;
+  var now=new Date();
+  var curY=now.getFullYear();
+  var prevY=curY-1;
+  var todayMD=now.getMonth()*100+now.getDate(); // for same-period cutoff
+
+  function ytdTxs(year){
+    return DB.transactions.filter(function(t){
+      var d=new Date(t.date);
+      if(d.getFullYear()!==year) return false;
+      if(year===curY) return true;
+      // prev year: only up to same calendar date
+      return d.getMonth()*100+d.getDate()<=todayMD;
+    });
+  }
+
+  var curTxs=ytdTxs(curY);
+  var prvTxs=ytdTxs(prevY);
+
+  function sum(txs,type){ return txs.filter(function(t){return t.type===type&&!t.carryover;}).reduce(function(s,t){return s+t.amount;},0); }
+
+  var ci=sum(curTxs,'income'), ce=sum(curTxs,'expense'), cs=ci-ce;
+  var pi=sum(prvTxs,'income'), pe=sum(prvTxs,'expense'), ps=pi-pe;
+
+  if(ci===0&&ce===0&&pi===0&&pe===0){ el.innerHTML=''; return; }
+
+  var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  var periodStr='1 ม.ค. – '+now.getDate()+' '+TH_MON[now.getMonth()];
+
+  function pctChange(cur,prev){
+    if(prev===0) return cur>0?'+100%':'—';
+    var p=((cur-prev)/Math.abs(prev)*100);
+    return (p>=0?'+':'')+p.toFixed(1)+'%';
+  }
+  function changeColor(cur,prev,higherIsBetter){
+    if(prev===0) return 'var(--muted)';
+    return (cur>=prev)===higherIsBetter?'#10b981':'#ef4444';
+  }
+
+  function statCol(label,icon,iconColor,curAmt,prvAmt,higherIsBetter){
+    var chg=pctChange(curAmt,prvAmt);
+    var chgColor=changeColor(curAmt,prvAmt,higherIsBetter);
+    return '<div style="padding:12px;background:var(--surface2);border-radius:12px">'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'
+        +'<i class="fas '+icon+'" style="color:'+iconColor+';font-size:11px;width:14px"></i>'
+        +'<span style="font-size:11px;color:var(--muted)">'+label+'</span>'
+      +'</div>'
+      +'<div style="font-size:17px;font-weight:800;color:'+iconColor+';margin-bottom:3px">'+fmt(Math.round(curAmt))+'</div>'
+      +(prvAmt>0||curAmt>0?'<div style="font-size:11px;color:'+chgColor+'">'+chg+' vs ปีก่อน</div>':'')
+      +(prvAmt>0?'<div style="font-size:10px;color:var(--muted);margin-top:1px">ปีก่อน: '+fmt(Math.round(prvAmt))+'</div>':'')
+    +'</div>';
+  }
+
+  // Savings rate this year
+  var srCur=ci>0?Math.round(cs/ci*100):0;
+  var srPrv=pi>0?Math.round(ps/pi*100):0;
+
+  el.innerHTML='<div class="card">'
+    +'<div class="sec-hd" style="margin-bottom:14px">'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<div style="width:30px;height:30px;border-radius:8px;background:rgba(6,182,212,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-calendar-check" style="color:#06b6d4;font-size:12px"></i></div>'
+        +'<div>'
+          +'<div class="sec-title">สรุปปีนี้ (YTD)</div>'
+          +'<div style="font-size:11px;color:var(--muted)">'+periodStr+' '+( curY+543)+'</div>'
+        +'</div>'
+      +'</div>'
+      +(srCur!==0?'<div style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(16,185,129,.12);color:#10b981">ออม '+srCur+'%</div>':'')
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">'
+      +statCol('รายรับ YTD','fa-arrow-down','#34d399',ci,pi,true)
+      +statCol('รายจ่าย YTD','fa-arrow-up','#f87171',ce,pe,false)
+      +statCol('ออม/คงเหลือ','fa-piggy-bank',cs>=0?'#a78bfa':'#f87171',Math.abs(cs),Math.abs(ps),true)
+    +'</div>'
+    // Mini progress bar: expense ratio of income
+    +(ci>0?'<div style="margin-top:2px">'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px">'
+        +'<span>สัดส่วนรายจ่าย/รายรับ</span><span style="color:'+(ce/ci>0.9?'#ef4444':ce/ci>0.7?'#f59e0b':'#10b981')+'">'+Math.round(ce/ci*100)+'%</span>'
+      +'</div>'
+      +'<div style="height:6px;border-radius:99px;background:var(--surface2);overflow:hidden">'
+        +'<div style="height:100%;border-radius:99px;width:'+Math.min(100,Math.round(ce/ci*100))+'%;background:'+(ce/ci>0.9?'#ef4444':ce/ci>0.7?'#f59e0b':'linear-gradient(90deg,#7c3aed,#06b6d4)')+'"></div>'
+      +'</div>'
+    +'</div>':'')
+  +'</div>';
+}
+
+(function(){
+  var _o=renderDash;
+  renderDash=function(){ _o(); renderYTD(); };
+})();
+
+// ══════════════════════════════════════════
+//  FEATURE: LOAN CALCULATOR
+// ══════════════════════════════════════════
+if(!window._loanState) window._loanState={principal:0,rate:0,months:0,startDate:'',showTable:false};
+
+function renderLoan(){
+  var el=document.getElementById('loan-content'); if(!el) return;
+  var s=window._loanState;
+  var now=new Date();
+  var defaultDate=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-01';
+
+  // Amortization calc
+  var schedule=[];
+  var monthly=0, totalInterest=0, totalPayment=0;
+  if(s.principal>0&&s.rate>=0&&s.months>0){
+    var P=s.principal, r=s.rate/100/12, n=s.months;
+    if(r===0){ monthly=P/n; }
+    else { monthly=P*(r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1); }
+    var bal=P;
+    var startD=s.startDate?new Date(s.startDate):new Date(defaultDate);
+    for(var i=1;i<=n;i++){
+      var interest=bal*r;
+      var principal2=monthly-interest;
+      if(i===n){ principal2=bal; monthly=principal2+interest; } // last payment adjustment
+      bal-=principal2;
+      if(bal<0.01) bal=0;
+      var d=new Date(startD);
+      d.setMonth(d.getMonth()+(i-1));
+      schedule.push({month:i,date:d,interest:interest,principal:principal2,payment:principal2+interest,balance:bal});
+    }
+    totalInterest=schedule.reduce(function(s,r){return s+r.interest;},0);
+    totalPayment=schedule.reduce(function(s,r){return s+r.payment;},0);
+  }
+
+  var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+  var tableHtml='';
+  if(s.showTable&&schedule.length){
+    var rows=schedule.map(function(r){
+      return '<tr style="border-bottom:1px solid var(--border);font-size:12px">'
+        +'<td style="padding:7px 8px;color:var(--muted)">'+r.month+'</td>'
+        +'<td style="padding:7px 8px;color:var(--muted)">'+r.date.getDate()+' '+TH_MON[r.date.getMonth()]+' '+(r.date.getFullYear()+543)+'</td>'
+        +'<td style="padding:7px 8px;text-align:right;font-weight:600">'+fmt(Math.round(r.payment))+'</td>'
+        +'<td style="padding:7px 8px;text-align:right;color:#a78bfa">'+fmt(Math.round(r.principal))+'</td>'
+        +'<td style="padding:7px 8px;text-align:right;color:#f87171">'+fmt(Math.round(r.interest))+'</td>'
+        +'<td style="padding:7px 8px;text-align:right;color:var(--muted)">'+fmt(Math.round(r.balance))+'</td>'
+      +'</tr>';
+    }).join('');
+    tableHtml='<div style="margin-top:18px">'
+      +'<div style="font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px">'
+        +'<i class="fas fa-table" style="color:var(--primary-l);font-size:12px"></i> ตารางการผ่อนชำระ'
+      +'</div>'
+      +'<div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border)">'
+        +'<table style="width:100%;border-collapse:collapse;min-width:480px">'
+          +'<thead><tr style="background:var(--surface2);font-size:11px;color:var(--muted)">'
+            +'<th style="padding:8px;text-align:left;font-weight:600">งวด</th>'
+            +'<th style="padding:8px;text-align:left;font-weight:600">วันที่</th>'
+            +'<th style="padding:8px;text-align:right;font-weight:600">ค่างวด</th>'
+            +'<th style="padding:8px;text-align:right;font-weight:600;color:#a78bfa">เงินต้น</th>'
+            +'<th style="padding:8px;text-align:right;font-weight:600;color:#f87171">ดอกเบี้ย</th>'
+            +'<th style="padding:8px;text-align:right;font-weight:600">คงเหลือ</th>'
+          +'</tr></thead>'
+          +'<tbody>'+rows+'</tbody>'
+        +'</table>'
+      +'</div>'
+    +'</div>';
+  }
+
+  el.innerHTML=
+  '<div class="card" style="margin-bottom:16px;border-top:2px solid var(--primary)">'
+    +'<div class="sec-hd" style="margin-bottom:16px">'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<div style="width:30px;height:30px;border-radius:8px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-hand-holding-usd" style="color:var(--primary-l);font-size:13px"></i></div>'
+        +'<div class="sec-title">คำนวณสินเชื่อ / ผ่อนชำระ</div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="frow" style="flex-wrap:wrap;gap:12px;margin-bottom:12px">'
+      +'<div class="fg"><label class="flabel">ยอดกู้ / ราคาสินค้า (บาท)</label>'
+        +'<input type="number" class="finput" id="ln-principal" value="'+(s.principal||'')+'" placeholder="เช่น 500000" min="0" oninput="updateLoan(\'principal\',this.value)"></div>'
+      +'<div class="fg"><label class="flabel">อัตราดอกเบี้ย (%/ปี)</label>'
+        +'<input type="number" class="finput" id="ln-rate" value="'+(s.rate||'')+'" placeholder="เช่น 5.5" min="0" max="100" step="0.1" oninput="updateLoan(\'rate\',this.value)"></div>'
+      +'<div class="fg"><label class="flabel">จำนวนงวด (เดือน)</label>'
+        +'<input type="number" class="finput" id="ln-months" value="'+(s.months||'')+'" placeholder="เช่น 60" min="1" max="600" oninput="updateLoan(\'months\',this.value)"></div>'
+      +'<div class="fg"><label class="flabel">วันที่เริ่มผ่อน</label>'
+        +'<input type="date" class="finput" id="ln-start" value="'+(s.startDate||defaultDate)+'" oninput="updateLoan(\'startDate\',this.value)"></div>'
+    +'</div>'
+    // Quick preset buttons
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">'
+      +'<span style="font-size:12px;color:var(--muted);align-self:center">งวด:</span>'
+      +[12,24,36,48,60,84,120,180,240,360].map(function(m){
+        return '<button class="btn btn-ghost" style="padding:4px 10px;font-size:11px'+(s.months===m?';background:rgba(99,102,241,.2);color:var(--primary-l)':'')+'" onclick="updateLoan(\'months\','+m+');renderLoan()">'+m+' เดือน</button>';
+      }).join('')
+    +'</div>'
+  +'</div>'
+
+  // Results
+  +(monthly>0?
+  '<div class="card" style="margin-bottom:16px;border-top:2px solid rgba(16,185,129,.5)">'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">'
+      +'<div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-calculator" style="color:#10b981;font-size:12px"></i></div>'
+      +'<div class="sec-title">ผลลัพธ์</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px">'
+      +[
+        {label:'ค่างวด/เดือน',val:fmt(Math.round(monthly)),color:'#a78bfa',icon:'fa-calendar-alt'},
+        {label:'ดอกเบี้ยรวม',val:fmt(Math.round(totalInterest)),color:'#f87171',icon:'fa-percentage'},
+        {label:'ยอดรวมที่ต้องจ่าย',val:fmt(Math.round(totalPayment)),color:'#fbbf24',icon:'fa-coins'},
+        {label:'ดอกเบี้ย/เงินต้น',val:(s.principal>0?Math.round(totalInterest/s.principal*100):0)+'%',color:'#06b6d4',icon:'fa-chart-pie'},
+      ].map(function(x){
+        return '<div style="padding:12px;background:var(--surface2);border-radius:12px">'
+          +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="fas '+x.icon+'" style="color:'+x.color+';font-size:11px"></i><span style="font-size:11px;color:var(--muted)">'+x.label+'</span></div>'
+          +'<div style="font-size:20px;font-weight:800;color:'+x.color+'">'+x.val+'</div>'
+        +'</div>';
+      }).join('')
+    +'</div>'
+    // Principal vs Interest bar
+    +'<div style="margin-bottom:14px">'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px">'
+        +'<span><span style="color:#a78bfa">■</span> เงินต้น '+fmt(Math.round(s.principal))+'</span>'
+        +'<span><span style="color:#f87171">■</span> ดอกเบี้ย '+fmt(Math.round(totalInterest))+'</span>'
+      +'</div>'
+      +'<div style="height:8px;border-radius:99px;overflow:hidden;display:flex">'
+        +'<div style="width:'+(s.principal/totalPayment*100).toFixed(1)+'%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div>'
+        +'<div style="flex:1;background:linear-gradient(90deg,#f87171,#fca5a5)"></div>'
+      +'</div>'
+    +'</div>'
+    +'<button class="btn '+(s.showTable?'btn-primary':'btn-ghost')+'" style="font-size:13px" onclick="window._loanState.showTable=!window._loanState.showTable;renderLoan()">'
+      +'<i class="fas fa-table"></i> '+(s.showTable?'ซ่อนตารางผ่อน':'ดูตารางผ่อนรายงวด')+' ('+schedule.length+' งวด)'
+    +'</button>'
+    +tableHtml
+  +'</div>'
+  :'')
+  ;
+}
+
+function updateLoan(key,val){
+  var s=window._loanState;
+  if(key==='startDate') s.startDate=val;
+  else s[key]=parseFloat(val)||0;
+  clearTimeout(window._loanTimer);
+  window._loanTimer=setTimeout(function(){ renderLoan(); },400);
+}
+
 </script>
 
 <!-- AI Chat FAB + Panel -->
