@@ -189,6 +189,14 @@
     .scard:hover{transform:translateY(-2px)}
     .scard.dragging{opacity:.35;transform:scale(.97)}
     .scard.drag-over{outline:2px dashed var(--primary);outline-offset:3px;background:rgba(124,58,237,.08);transform:none}
+    /* ── Dashboard Sortable ── */
+    #dash-sortable.dash-sort-mode>*{position:relative;cursor:grab;border-radius:14px;transition:opacity .2s,box-shadow .2s}
+    #dash-sortable.dash-sort-mode>*:hover{box-shadow:0 0 0 2px rgba(124,58,237,.35)}
+    #dash-sortable.dash-sort-mode>.dash-dragging{opacity:.45;cursor:grabbing}
+    #dash-sortable.dash-sort-mode>.dash-drag-over{outline:2px dashed var(--primary);outline-offset:2px;background:rgba(124,58,237,.06)}
+    .dash-drag-handle{position:absolute;top:10px;right:12px;z-index:10;width:26px;height:26px;border-radius:7px;background:rgba(124,58,237,.18);display:flex;align-items:center;justify-content:center;color:#a78bfa;font-size:12px;cursor:grab;opacity:0;transition:opacity .15s}
+    #dash-sortable.dash-sort-mode>*:hover .dash-drag-handle{opacity:1}
+    #dash-sortable.dash-sort-mode .dash-drag-handle{opacity:.55}
     .drag-handle{color:var(--muted);font-size:18px;line-height:1;margin-right:8px;cursor:grab;flex-shrink:0;opacity:.45;display:inline-block}
     .scard-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
     .scard-name{font-size:15px;font-weight:600}
