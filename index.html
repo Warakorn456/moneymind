@@ -911,22 +911,22 @@
     <h1>💰 MoneyMind</h1>
     <p>การเงินส่วนบุคคล</p>
   </div>
-  <div class="nav-wrap">
-    <div class="nav-item active" onclick="nav('dashboard')"><i class="fas fa-home"></i> แดชบอร์ด</div>
-    <div class="nav-item" onclick="nav('transactions')"><i class="fas fa-exchange-alt"></i> รายรับ-รายจ่าย</div>
-    <div class="nav-item" onclick="nav('recurring')"><i class="fas fa-redo-alt"></i> รายการซ้ำ</div>
-    <div class="nav-item" onclick="nav('ot')"><i class="fas fa-business-time"></i> คำนวณ OT</div>
-    <div class="nav-item" onclick="nav('loan')"><i class="fas fa-hand-holding-usd"></i> คำนวณสินเชื่อ</div>
-    <div class="nav-item" onclick="nav('wishlist')"><i class="fas fa-star"></i> Wishlist</div>
-    <div class="nav-item" onclick="nav('savings')"><i class="fas fa-piggy-bank"></i> เงินออม</div>
-    <div class="nav-item" onclick="nav('banks')"><i class="fas fa-university"></i> ธนาคาร</div>
-    <div class="nav-item" onclick="nav('debts')"><i class="fas fa-credit-card"></i> หนี้สิน</div>
-    <div class="nav-item" onclick="nav('investments')"><i class="fas fa-chart-line"></i> พอร์ตลงทุน</div>
-    <div class="nav-item" onclick="nav('tax')"><i class="fas fa-file-invoice"></i> ภาษีเงินได้</div>
-    <div class="nav-item" onclick="nav('balance')"><i class="fas fa-balance-scale"></i> งบดุล & แผน</div>
-    <div class="nav-item" onclick="nav('calendar')"><i class="fas fa-calendar-alt"></i> ปฏิทิน</div>
-    <div class="nav-item" onclick="nav('retire')"><i class="fas fa-umbrella-beach"></i> แผนเกษียณ</div>
-    <div class="nav-item" onclick="nav('profile')"><i class="fas fa-id-card"></i> ประวัติส่วนตัว</div>
+  <div class="nav-wrap" id="nav-sortable">
+    <div class="nav-item active" data-nav="dashboard" draggable="true" onclick="nav('dashboard')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-home"></i> แดชบอร์ด</div>
+    <div class="nav-item" data-nav="transactions" draggable="true" onclick="nav('transactions')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-exchange-alt"></i> รายรับ-รายจ่าย</div>
+    <div class="nav-item" data-nav="recurring" draggable="true" onclick="nav('recurring')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-redo-alt"></i> รายการซ้ำ</div>
+    <div class="nav-item" data-nav="ot" draggable="true" onclick="nav('ot')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-business-time"></i> คำนวณ OT</div>
+    <div class="nav-item" data-nav="loan" draggable="true" onclick="nav('loan')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-hand-holding-usd"></i> คำนวณสินเชื่อ</div>
+    <div class="nav-item" data-nav="wishlist" draggable="true" onclick="nav('wishlist')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-star"></i> Wishlist</div>
+    <div class="nav-item" data-nav="savings" draggable="true" onclick="nav('savings')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-piggy-bank"></i> เงินออม</div>
+    <div class="nav-item" data-nav="banks" draggable="true" onclick="nav('banks')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-university"></i> ธนาคาร</div>
+    <div class="nav-item" data-nav="debts" draggable="true" onclick="nav('debts')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-credit-card"></i> หนี้สิน</div>
+    <div class="nav-item" data-nav="investments" draggable="true" onclick="nav('investments')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-chart-line"></i> พอร์ตลงทุน</div>
+    <div class="nav-item" data-nav="tax" draggable="true" onclick="nav('tax')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-file-invoice"></i> ภาษีเงินได้</div>
+    <div class="nav-item" data-nav="balance" draggable="true" onclick="nav('balance')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-balance-scale"></i> งบดุล & แผน</div>
+    <div class="nav-item" data-nav="calendar" draggable="true" onclick="nav('calendar')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-calendar-alt"></i> ปฏิทิน</div>
+    <div class="nav-item" data-nav="retire" draggable="true" onclick="nav('retire')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-umbrella-beach"></i> แผนเกษียณ</div>
+    <div class="nav-item" data-nav="profile" draggable="true" onclick="nav('profile')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-id-card"></i> ประวัติส่วนตัว</div>
     <div style="margin-top:auto">
       <div class="nav-item" id="nav-admin" style="display:none" onclick="nav('admin')"><i class="fas fa-shield-alt" style="color:#f59e0b"></i> <span style="color:#f59e0b">Admin</span></div>
       <div class="nav-item" onclick="nav('settings')"><i class="fas fa-cog"></i> ตั้งค่า</div>
