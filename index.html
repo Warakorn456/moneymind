@@ -9519,8 +9519,9 @@ function renderOT(){
         +'<input type="number" class="finput" value="'+(s.cutoffDay||25)+'" min="1" max="31" oninput="saveOTSetting(\'cutoffDay\',this.value)"></div>'
     +'</div>'
     +(hourlyRate>0?'<div style="margin-top:10px;padding:8px 12px;background:rgba(99,102,241,.08);border-radius:8px;font-size:12px;color:var(--muted)">'
-      +'อัตรา OT: <strong style="color:var(--primary-l)">'+fmt(Math.round(hourlyRate*1.5))+'/ชม.</strong> (วันธรรมดา) &nbsp;•&nbsp; '
-      +'<strong style="color:var(--primary-l)">'+fmt(Math.round(hourlyRate*3))+'/ชม.</strong> (วันหยุด)'
+      +'อัตรา OT: <strong style="color:var(--primary-l)">'+fmt(Math.round(hourlyRate*1))+'/ชม.</strong> (×1) &nbsp;•&nbsp; '
+      +'<strong style="color:var(--primary-l)">'+fmt(Math.round(hourlyRate*1.5))+'/ชม.</strong> (×1.5) &nbsp;•&nbsp; '
+      +'<strong style="color:var(--primary-l)">'+fmt(Math.round(hourlyRate*3))+'/ชม.</strong> (×3)'
     +'</div>':'')
   +'</div>'
 
