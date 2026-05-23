@@ -11191,7 +11191,7 @@ function calDeleteNote(dateStr,noteId){
 
 function calTogglePicker(){
   _calPickerOpen=!_calPickerOpen;
-  if(_calPickerOpen) _calPickerYear=_calYear;
+  if(_calPickerOpen){ _calPickerYear=_calYear; _calPickerMode='month'; _calPickerYearPage=0; }
   renderCalendarPage();
 }
 
@@ -11200,9 +11200,26 @@ function calPickerYearNav(dir){
   renderCalendarPage();
 }
 
+function calPickerPageNav(dir){
+  _calPickerYearPage+=dir;
+  renderCalendarPage();
+}
+
+function calPickerSwitchMode(mode){
+  _calPickerMode=mode;
+  if(mode==='year') _calPickerYearPage=0;
+  renderCalendarPage();
+}
+
+function calPickYear(y){
+  _calPickerYear=y;
+  _calPickerMode='month';
+  renderCalendarPage();
+}
+
 function calPickMonth(y,m){
   _calYear=y; _calMonth=m;
-  _calPickerOpen=false; _calPickerYear=-1; _calSelDate=null;
+  _calPickerOpen=false; _calPickerYear=-1; _calPickerMode='month'; _calPickerYearPage=0; _calSelDate=null;
   renderCalendarPage();
 }
 
