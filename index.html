@@ -11167,6 +11167,23 @@ function calDeleteNote(dateStr,noteId){
   saveDB(); renderCalendarPage();
 }
 
+function calTogglePicker(){
+  _calPickerOpen=!_calPickerOpen;
+  if(_calPickerOpen) _calPickerYear=_calYear;
+  renderCalendarPage();
+}
+
+function calPickerYearNav(dir){
+  _calPickerYear+=dir;
+  renderCalendarPage();
+}
+
+function calPickMonth(y,m){
+  _calYear=y; _calMonth=m;
+  _calPickerOpen=false; _calPickerYear=-1; _calSelDate=null;
+  renderCalendarPage();
+}
+
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 </script>
