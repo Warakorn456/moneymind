@@ -9463,8 +9463,8 @@ function renderOT(){
   var salary=parseFloat(s.salary)||0;
   var workDays=parseInt(s.workDays)||26;
   var hourlyRate=workDays>0&&salary>0?(salary/workDays/8):0;
-  var OT_MULT={weekday:1.5,weekend:3,holiday:3};
-  var OT_LABEL={weekday:'วันธรรมดา (×1.5)',weekend:'วันหยุด (×3)',holiday:'วันนักขัตฤกษ์ (×3)'};
+  var OT_MULT={regular:1,weekday:1.5,weekend:3,holiday:3};
+  var OT_LABEL={regular:'วันธรรมดา (×1)',weekday:'วันธรรมดา (×1.5)',weekend:'วันหยุด (×3)',holiday:'วันนักขัตฤกษ์ (×3)'};
 
   var totalHours=0, totalOTPay=0;
   logs.forEach(function(l){
