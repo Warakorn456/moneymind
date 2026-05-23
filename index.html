@@ -10474,6 +10474,148 @@ async function renderAdmin(){
   };
 })();
 
+// ══════════════════════════════════════════
+//  FEATURE: RECURRING vs VARIABLE EXPENSE
+// ══════════════════════════════════════════
+var _rvvSettingsOpen=false;
+
+var RVV_DEFAULT_FIXED=['housing','utility','insurance','debt_pay','tax_exp'];
+
+function getRvvFixed(){
+  if(!DB.settings.fixedExpCats) DB.settings.fixedExpCats=[...RVV_DEFAULT_FIXED];
+  return DB.settings.fixedExpCats;
+}
+
+function renderRVV(){
+  var el=document.getElementById('dash-rvv-section'); if(!el) return;
+  var txs=monthTx().filter(function(t){ return t.type==='expense'; });
+  if(!txs.length){ el.innerHTML=''; return; }
+
+  var fixedCats=getRvvFixed();
+  var fixedTxs=txs.filter(function(t){ return t.isRecurring||fixedCats.indexOf(t.category)>=0; });
+  var varTxs=txs.filter(function(t){ return !t.isRecurring&&fixedCats.indexOf(t.category)<0; });
+
+  var fixedAmt=fixedTxs.reduce(function(s,t){ return s+t.amount; },0);
+  var varAmt=varTxs.reduce(function(s,t){ return s+t.amount; },0);
+  var total=fixedAmt+varAmt;
+  if(total<=0){ el.innerHTML=''; return; }
+
+  var fixedPct=Math.round(fixedAmt/total*100);
+  var varPct=100-fixedPct;
+
+  // Top 3 categories for each type
+  function topCats(list){
+    var map={};
+    list.forEach(function(t){
+      var k=t.category; if(!map[k]) map[k]=0;
+      map[k]+=t.amount;
+    });
+    return Object.keys(map).sort(function(a,b){ return map[b]-map[a]; }).slice(0,3).map(function(id){
+      var cat=getCat(id,'expense');
+      return {cat:cat,amt:map[id]};
+    });
+  }
+  var fixedTop=topCats(fixedTxs);
+  var varTop=topCats(varTxs);
+
+  function catRow(item){
+    return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">'
+      +'<i class="fas '+item.cat.icon+'" style="color:'+item.cat.color+';width:13px;font-size:11px"></i>'
+      +'<span style="font-size:12px;flex:1;color:var(--muted)">'+item.cat.label+'</span>'
+      +'<span style="font-size:12px;font-weight:600">'+fmt(Math.round(item.amt))+'</span>'
+    +'</div>';
+  }
+
+  // Status indicator for fixed ratio
+  var statusColor, statusTxt;
+  if(fixedPct>60){ statusColor='#ef4444'; statusTxt='สูงเกินไป'; }
+  else if(fixedPct>50){ statusColor='#f59e0b'; statusTxt='ระวัง'; }
+  else { statusColor='#10b981'; statusTxt='ดี'; }
+
+  // Settings panel (category toggle)
+  var allExpCats=[].concat(typeof EXP_CATS!=='undefined'?EXP_CATS:[]).concat(DB.settings.customExpCats||[]);
+  var settingsHtml='';
+  if(_rvvSettingsOpen){
+    settingsHtml='<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">'
+      +'<div style="font-size:12px;color:var(--muted);margin-bottom:10px">เลือกหมวดที่เป็น <strong style="color:var(--primary-l)">รายจ่ายคงที่</strong> (Recurring ถูกนับอัตโนมัติ)</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:7px">'
+      +allExpCats.map(function(c){
+        var isFixed=fixedCats.indexOf(c.id)>=0;
+        return '<label style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;cursor:pointer;border:1px solid '+(isFixed?c.color:'var(--border)')+';background:'+(isFixed?c.color+'22':'var(--surface2)')+';font-size:12px">'
+          +'<input type="checkbox" '+(isFixed?'checked':'')+' onchange="toggleRvvCat(\''+c.id+'\',this.checked)" style="accent-color:'+c.color+';width:13px;height:13px">'
+          +'<i class="fas '+c.icon+'" style="color:'+c.color+';font-size:10px"></i>'
+          +c.label
+        +'</label>';
+      }).join('')
+      +'</div>'
+    +'</div>';
+  }
+
+  el.innerHTML='<div class="card">'
+    +'<div class="sec-hd" style="margin-bottom:14px">'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<div style="width:30px;height:30px;border-radius:8px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-balance-scale-right" style="color:var(--primary-l);font-size:12px"></i></div>'
+        +'<div class="sec-title">รายจ่ายคงที่ vs แปรผัน</div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<span style="font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;background:'+statusColor+'22;color:'+statusColor+'">คงที่ '+fixedPct+'% — '+statusTxt+'</span>'
+        +'<button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="_rvvSettingsOpen=!_rvvSettingsOpen;renderRVV()"><i class="fas fa-sliders-h"></i></button>'
+      +'</div>'
+    +'</div>'
+
+    // Stacked bar
+    +'<div style="height:10px;border-radius:99px;overflow:hidden;background:var(--surface2);margin-bottom:14px;display:flex">'
+      +'<div style="width:'+fixedPct+'%;background:linear-gradient(90deg,#7c3aed,#a78bfa);transition:width .4s"></div>'
+      +'<div style="flex:1;background:linear-gradient(90deg,#f97316,#fb923c)"></div>'
+    +'</div>'
+
+    // Two columns
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+      // Fixed column
+      +'<div style="padding:12px;background:rgba(124,58,237,.07);border-radius:12px;border:1px solid rgba(124,58,237,.2)">'
+        +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
+          +'<div style="width:8px;height:8px;border-radius:2px;background:#7c3aed;flex-shrink:0"></div>'
+          +'<span style="font-size:11px;color:var(--muted);font-weight:600">คงที่ (Fixed)</span>'
+        +'</div>'
+        +'<div style="font-size:20px;font-weight:800;color:#a78bfa;margin-bottom:2px">'+fixedPct+'%</div>'
+        +'<div style="font-size:13px;font-weight:600;margin-bottom:10px">'+fmt(Math.round(fixedAmt))+'</div>'
+        +(fixedTop.length?fixedTop.map(catRow).join(''):'<div style="font-size:11px;color:var(--muted)">ไม่มีรายการ</div>')
+      +'</div>'
+      // Variable column
+      +'<div style="padding:12px;background:rgba(249,115,22,.07);border-radius:12px;border:1px solid rgba(249,115,22,.2)">'
+        +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
+          +'<div style="width:8px;height:8px;border-radius:2px;background:#f97316;flex-shrink:0"></div>'
+          +'<span style="font-size:11px;color:var(--muted);font-weight:600">แปรผัน (Variable)</span>'
+        +'</div>'
+        +'<div style="font-size:20px;font-weight:800;color:#fb923c;margin-bottom:2px">'+varPct+'%</div>'
+        +'<div style="font-size:13px;font-weight:600;margin-bottom:10px">'+fmt(Math.round(varAmt))+'</div>'
+        +(varTop.length?varTop.map(catRow).join(''):'<div style="font-size:11px;color:var(--muted)">ไม่มีรายการ</div>')
+      +'</div>'
+    +'</div>'
+
+    +(fixedPct>50?'<div style="margin-top:12px;padding:8px 12px;background:rgba(245,158,11,.08);border-radius:8px;font-size:12px;color:#f59e0b"><i class="fas fa-lightbulb" style="margin-right:5px"></i>รายจ่ายคงที่ควรไม่เกิน 50% ของรายจ่ายรวม — ลองทบทวน Subscription หรือสัญญาที่ยังจำเป็นอยู่</div>':'')
+
+    +settingsHtml
+  +'</div>';
+}
+
+function toggleRvvCat(id,checked){
+  if(!DB.settings.fixedExpCats) DB.settings.fixedExpCats=[...RVV_DEFAULT_FIXED];
+  if(checked){ if(DB.settings.fixedExpCats.indexOf(id)<0) DB.settings.fixedExpCats.push(id); }
+  else { DB.settings.fixedExpCats=DB.settings.fixedExpCats.filter(function(x){ return x!==id; }); }
+  saveLocalOnly();
+  renderRVV();
+}
+
+// Patch renderDash
+(function(){
+  var _orig=renderDash;
+  renderDash=function(){
+    _orig();
+    renderRVV();
+  };
+})();
+
 </script>
 
 <!-- AI Chat FAB + Panel -->
