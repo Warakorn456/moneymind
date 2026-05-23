@@ -10938,6 +10938,7 @@ var CAL_MON_SHORT=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.',
 var CAL_DOW_TH=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
 
 function renderCalendarPage(){
+  try{
   var el=document.getElementById('cal-content'); if(!el) return;
   var now=new Date();
   if(_calYear<0){ _calYear=now.getFullYear(); _calMonth=now.getMonth(); }
@@ -10947,146 +10948,132 @@ function renderCalendarPage(){
 
   // ── Build day-data map ──
   var dayMap={};
-  function getDay(k){ if(!dayMap[k]) dayMap[k]={inc:[],exp:[],recur:[],notes:[]}; return dayMap[k]; }
+  function getDayData(k){ if(!dayMap[k]) dayMap[k]={inc:[],exp:[],recur:[],notes:[]}; return dayMap[k]; }
 
-  // Transactions this month
-  DB.transactions.forEach(function(t){
-    var p=t.date.split('-');
-    if(parseInt(p[0])!==_calYear||parseInt(p[1])-1!==_calMonth) return;
-    var d=getDay(t.date);
-    if(t.type==='income') d.inc.push(t); else d.exp.push(t);
+  // Transactions this month (guarded)
+  (DB.transactions||[]).forEach(function(t){
+    if(!t||!t.date) return;
+    var pts=t.date.split('-');
+    if(pts.length<2) return;
+    if(parseInt(pts[0])!==_calYear||parseInt(pts[1])-1!==_calMonth) return;
+    var dd=getDayData(t.date);
+    if(t.type==='income') dd.inc.push(t); else dd.exp.push(t);
   });
 
   // Recurring this month
-  (DB.recurringTx||[]).filter(function(r){ return r.active&&r.freq==='monthly'; }).forEach(function(r){
-    var day=parseInt(r.day)||1;
-    var k=_calYear+'-'+String(_calMonth+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
-    // validate day exists in month
-    var test=new Date(_calYear,_calMonth,day);
-    if(test.getMonth()!==_calMonth) return;
-    getDay(k).recur.push(r);
+  (DB.recurringTx||[]).filter(function(r){ return r&&r.active&&r.freq==='monthly'; }).forEach(function(r){
+    var dayNum=parseInt(r.day)||1;
+    var testDate=new Date(_calYear,_calMonth,dayNum);
+    if(testDate.getMonth()!==_calMonth) return;
+    var kk=_calYear+'-'+String(_calMonth+1).padStart(2,'0')+'-'+String(dayNum).padStart(2,'0');
+    getDayData(kk).recur.push(r);
   });
 
   // Debts due this month
-  (DB.debts||[]).filter(function(d){ return d.remaining>0&&d.dueDate; }).forEach(function(d){
-    var p=d.dueDate.split('-');
-    if(!p[0]||parseInt(p[0])!==_calYear||parseInt(p[1])-1!==_calMonth) return;
-    getDay(d.dueDate).recur.push({name:'ครบกำหนด: '+d.name,type:'expense',amount:d.pay||0,_isDebt:true});
+  (DB.debts||[]).filter(function(dt){ return dt&&dt.remaining>0&&dt.dueDate; }).forEach(function(dt){
+    var dpts=dt.dueDate.split('-');
+    if(dpts.length<2) return;
+    if(parseInt(dpts[0])!==_calYear||parseInt(dpts[1])-1!==_calMonth) return;
+    getDayData(dt.dueDate).recur.push({name:'ครบกำหนด: '+dt.name,type:'expense',amount:dt.pay||0,_isDebt:true});
   });
 
   // User notes
   Object.keys(DB.calNotes).forEach(function(k){
-    var p=k.split('-');
-    if(parseInt(p[0])!==_calYear||parseInt(p[1])-1!==_calMonth) return;
-    getDay(k).notes=DB.calNotes[k]||[];
+    var npts=k.split('-');
+    if(npts.length<2) return;
+    if(parseInt(npts[0])!==_calYear||parseInt(npts[1])-1!==_calMonth) return;
+    getDayData(k).notes=DB.calNotes[k]||[];
   });
 
   // ── Calendar grid ──
   var firstDOW=new Date(_calYear,_calMonth,1).getDay();
   var daysInMonth=new Date(_calYear,_calMonth+1,0).getDate();
 
-  var dowHdr=['อา','จ','อ','พ','พฤ','ศ','ส'].map(function(d,i){
-    return '<div class="cal-dow'+(i===0?' cal-dow-sun':'')+'" style="'+(i===0?'color:#f87171':'')+'">'+d+'</div>';
-  }).join('');
+  var dowHdr='';
+  var dowLabels=['อา','จ','อ','พ','พฤ','ศ','ส'];
+  for(var di=0;di<7;di++){
+    dowHdr+='<div class="cal-dow" style="'+(di===0?'color:#f87171':'')+'">'+dowLabels[di]+'</div>';
+  }
 
   var cells='';
-  for(var i=0;i<firstDOW;i++) cells+='<div class="cal-cell" style="cursor:default"></div>';
-  for(var d=1;d<=daysInMonth;d++){
-    var k=_calYear+'-'+String(_calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    var data=dayMap[k]||{inc:[],exp:[],recur:[],notes:[]};
-    var isSun=(new Date(_calYear,_calMonth,d).getDay()===0);
-    var isToday=(k===todayStr);
-    var isSel=(k===_calSelDate);
+  for(var bi=0;bi<firstDOW;bi++) cells+='<div></div>';
+  for(var dn=1;dn<=daysInMonth;dn++){
+    var dk=_calYear+'-'+String(_calMonth+1).padStart(2,'0')+'-'+String(dn).padStart(2,'0');
+    var ddata=dayMap[dk]||{inc:[],exp:[],recur:[],notes:[]};
+    var isSun=(new Date(_calYear,_calMonth,dn).getDay()===0);
+    var isToday=(dk===todayStr);
+    var isSel=(dk===_calSelDate);
     var cls='cal-cell'+(isToday?' today':'')+(isSel?' selected':'')+(isSun?' sunday':'');
-
-    var dots='';
-    if(data.inc.length) dots+='<span class="cal-dot" style="background:#10b981"></span>';
-    if(data.exp.length) dots+='<span class="cal-dot" style="background:#ef4444"></span>';
-    if(data.recur.length) dots+='<span class="cal-dot" style="background:#f59e0b"></span>';
-    if(data.notes.length) dots+='<span class="cal-dot" style="background:#a78bfa"></span>';
-
-    cells+='<div class="'+cls+'" onclick="calSelectDay(\''+k+'\') ">'
-      +'<span class="cal-day-num">'+d+'</span>'
-      +'<div class="cal-dots">'+dots+'</div>'
-    +'</div>';
+    var ddots='';
+    if(ddata.inc.length) ddots+='<span class="cal-dot" style="background:#10b981"></span>';
+    if(ddata.exp.length) ddots+='<span class="cal-dot" style="background:#ef4444"></span>';
+    if(ddata.recur.length) ddots+='<span class="cal-dot" style="background:#f59e0b"></span>';
+    if(ddata.notes.length) ddots+='<span class="cal-dot" style="background:#a78bfa"></span>';
+    cells+='<div class="'+cls+'" onclick="calSelectDay(\''+dk+'\')"><span class="cal-day-num">'+dn+'</span><div class="cal-dots">'+ddots+'</div></div>';
   }
 
   // ── Selected day panel ──
   var panel='';
   if(_calSelDate){
-    var sp=_calSelDate.split('-');
-    var sd=new Date(parseInt(sp[0]),parseInt(sp[1])-1,parseInt(sp[2]));
-    var sdData=dayMap[_calSelDate]||{inc:[],exp:[],recur:[],notes:[]};
-    var DOW_TH=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+    var sparts=_calSelDate.split('-');
+    var selDate=new Date(parseInt(sparts[0]),parseInt(sparts[1])-1,parseInt(sparts[2]));
+    var selData=dayMap[_calSelDate]||{inc:[],exp:[],recur:[],notes:[]};
 
-    var incAmt=sdData.inc.reduce(function(s,t){return s+t.amount;},0);
-    var expAmt=sdData.exp.reduce(function(s,t){return s+t.amount;},0);
+    var sIncAmt=selData.inc.reduce(function(s,t){return s+t.amount;},0);
+    var sExpAmt=selData.exp.reduce(function(s,t){return s+t.amount;},0);
 
-    // Transaction rows
     var txRows='';
-    sdData.inc.concat(sdData.exp).sort(function(a,b){return a.type.localeCompare(b.type);}).forEach(function(t){
+    selData.inc.concat(selData.exp).forEach(function(t){
       var cat=getCat(t.category,t.type);
       txRows+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">'
         +'<i class="fas '+cat.icon+'" style="color:'+cat.color+';width:14px;font-size:12px"></i>'
-        +'<span style="flex:1;font-size:13px">'+t.description+'</span>'
+        +'<span style="flex:1;font-size:13px">'+( t.description||'')+'</span>'
         +'<span style="font-size:13px;font-weight:600;color:'+(t.type==='income'?'#34d399':'#f87171')+'">'+(t.type==='income'?'+':'-')+fmt(t.amount)+'</span>'
       +'</div>';
     });
 
-    // Recurring rows
     var recurRows='';
-    sdData.recur.forEach(function(r){
+    selData.recur.forEach(function(r){
       recurRows+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">'
         +'<i class="fas '+(r._isDebt?'fa-exclamation-circle':'fa-redo-alt')+'" style="color:#f59e0b;width:14px;font-size:12px"></i>'
-        +'<span style="flex:1;font-size:13px">'+r.name+'</span>'
+        +'<span style="flex:1;font-size:13px">'+(r.name||'')+'</span>'
         +(r.amount?'<span style="font-size:13px;font-weight:600;color:#f59e0b">'+fmt(r.amount)+'</span>':'')
       +'</div>';
     });
 
-    // Notes
-    var noteColors={purple:'#a78bfa',red:'#f87171',green:'#34d399',amber:'#fbbf24',blue:'#60a5fa'};
+    var NC={purple:'#a78bfa',red:'#f87171',green:'#34d399',amber:'#fbbf24',blue:'#60a5fa'};
     var noteRows=(DB.calNotes[_calSelDate]||[]).map(function(n){
-      var c=noteColors[n.color||'purple']||'#a78bfa';
-      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0" id="cnote-'+n.id+'">'
-        +'<span style="width:10px;height:10px;border-radius:50%;background:'+c+';flex-shrink:0"></span>'
+      var nc=NC[n.color||'purple']||'#a78bfa';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0">'
+        +'<span style="width:10px;height:10px;border-radius:50%;background:'+nc+';flex-shrink:0"></span>'
         +'<span style="flex:1;font-size:13px">'+_escHtml(n.text)+'</span>'
         +'<button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;color:var(--red)" onclick="calDeleteNote(\''+_calSelDate+'\',\''+n.id+'\')"><i class="fas fa-times"></i></button>'
       +'</div>';
     }).join('');
 
-    // Color picker for new note
-    var colorPicker=Object.keys(noteColors).map(function(c){
-      return '<span onclick="document.getElementById(\'cal-note-color\').value=\''+c+'\';document.querySelectorAll(\'.cal-color-opt\').forEach(function(x){x.style.outline=\'none\'});this.style.outline=\'2px solid white\'" '
-        +'class="cal-color-opt" style="display:inline-block;width:16px;height:16px;border-radius:50%;background:'+noteColors[c]+';cursor:pointer;flex-shrink:0"></span>';
+    var colorPicker=Object.keys(NC).map(function(c){
+      return '<span class="cal-color-opt" onclick="document.getElementById(\'cal-note-color\').value=\''+c+'\';document.querySelectorAll(\'.cal-color-opt\').forEach(function(x){x.style.outline=\'none\'});this.style.outline=\'2px solid white\'" style="display:inline-block;width:16px;height:16px;border-radius:50%;background:'+NC[c]+';cursor:pointer;flex-shrink:0"></span>';
     }).join('');
 
     panel='<div class="cal-detail">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
         +'<div>'
-          +'<div style="font-size:15px;font-weight:700">'+sd.getDate()+' '+TH_MON_CAL[sd.getMonth()]+' '+(sd.getFullYear()+543)+'</div>'
-          +'<div style="font-size:12px;color:var(--muted)">วัน'+DOW_TH[sd.getDay()]+'</div>'
+          +'<div style="font-size:15px;font-weight:700">'+selDate.getDate()+' '+CAL_MON_FULL[selDate.getMonth()]+' '+(selDate.getFullYear()+543)+'</div>'
+          +'<div style="font-size:12px;color:var(--muted)">วัน'+CAL_DOW_TH[selDate.getDay()]+'</div>'
         +'</div>'
-        +(incAmt||expAmt?'<div style="text-align:right;font-size:12px">'
-          +(incAmt?'<div style="color:#34d399">+'+fmt(Math.round(incAmt))+'</div>':'')
-          +(expAmt?'<div style="color:#f87171">-'+fmt(Math.round(expAmt))+'</div>':'')
+        +(sIncAmt||sExpAmt?'<div style="text-align:right;font-size:12px">'
+          +(sIncAmt?'<div style="color:#34d399">+'+fmt(Math.round(sIncAmt))+'</div>':'')
+          +(sExpAmt?'<div style="color:#f87171">−'+fmt(Math.round(sExpAmt))+'</div>':'')
         +'</div>':'')
       +'</div>'
-
-      // Transactions
-      +(txRows?'<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">รายการ</div>'+txRows+'</div>':'')
-
-      // Recurring
-      +(recurRows?'<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">กำหนดชำระ / รายการซ้ำ</div>'+recurRows+'</div>':'')
-
-      // Notes
+      +(txRows?'<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">รายการวันนี้</div>'+txRows+'</div>':'')
+      +(recurRows?'<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">กำหนดชำระ / รายการซ้ำ</div>'+recurRows+'</div>':'')
       +'<div style="margin-bottom:10px">'
-        +'<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">โน้ต</div>'
-        +(noteRows||'<div style="font-size:12px;color:var(--muted);padding:4px 0">ยังไม่มีโน้ต</div>')
+        +'<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px">โน้ต</div>'
+        +(noteRows||'<div style="font-size:12px;color:var(--muted)">ยังไม่มีโน้ต — เพิ่มด้านล่างได้เลย</div>')
       +'</div>'
-
-      // Add note form
       +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--border)">'
-        +'<input type="text" id="cal-note-inp" class="finput" placeholder="เพิ่มโน้ต..." style="flex:1;min-width:150px;padding:8px 12px;font-size:13px" onkeydown="if(event.key===\'Enter\')calAddNote(\''+_calSelDate+'\')">'
+        +'<input type="text" id="cal-note-inp" class="finput" placeholder="เพิ่มโน้ต... (Enter เพื่อบันทึก)" style="flex:1;min-width:140px;padding:8px 12px;font-size:13px" onkeydown="if(event.key===\'Enter\')calAddNote(\''+_calSelDate+'\')">'
         +'<input type="hidden" id="cal-note-color" value="purple">'
         +'<div style="display:flex;gap:5px;align-items:center">'+colorPicker+'</div>'
         +'<button class="btn btn-primary" style="padding:8px 14px;font-size:13px" onclick="calAddNote(\''+_calSelDate+'\')"><i class="fas fa-plus"></i></button>'
@@ -11095,33 +11082,28 @@ function renderCalendarPage(){
   }
 
   el.innerHTML=
-  // Header
-  '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">'
-    +'<div style="display:flex;align-items:center;gap:10px">'
-      +'<button class="btn btn-ghost" style="padding:8px 12px" onclick="calNav(-1)"><i class="fas fa-chevron-left"></i></button>'
-      +'<div style="font-size:18px;font-weight:700;min-width:160px;text-align:center">'+TH_MON_CAL[_calMonth]+' '+(_calYear+543)+'</div>'
-      +'<button class="btn btn-ghost" style="padding:8px 12px" onclick="calNav(1)"><i class="fas fa-chevron-right"></i></button>'
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<button class="btn btn-ghost" style="padding:8px 12px" onclick="calNav(-1)"><i class="fas fa-chevron-left"></i></button>'
+        +'<div style="font-size:18px;font-weight:700;min-width:160px;text-align:center">'+CAL_MON_FULL[_calMonth]+' '+(_calYear+543)+'</div>'
+        +'<button class="btn btn-ghost" style="padding:8px 12px" onclick="calNav(1)"><i class="fas fa-chevron-right"></i></button>'
+      +'</div>'
+      +'<button class="btn btn-ghost" style="font-size:13px" onclick="calGoToday()"><i class="fas fa-dot-circle" style="color:var(--primary-l);margin-right:4px"></i>วันนี้</button>'
     +'</div>'
-    +'<button class="btn btn-ghost" style="font-size:13px" onclick="calGoToday()"><i class="fas fa-circle" style="font-size:8px;margin-right:5px;color:var(--primary-l)"></i>วันนี้</button>'
-  +'</div>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">'
+      +'<span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block"></span>รายรับ</span>'
+      +'<span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block"></span>รายจ่าย</span>'
+      +'<span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block"></span>กำหนดชำระ</span>'
+      +'<span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#a78bfa;display:inline-block"></span>โน้ต</span>'
+    +'</div>'
+    +'<div class="card" style="padding:10px">'
+      +'<div class="cal-grid" style="margin-bottom:6px">'+dowHdr+'</div>'
+      +'<div class="cal-grid">'+cells+'</div>'
+    +'</div>'
+    +panel;
 
-  // Legend
-  +'<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">'
-    +[['#10b981','รายรับ'],['#ef4444','รายจ่าย'],['#f59e0b','กำหนดชำระ'],['#a78bfa','โน้ต']].map(function(x){
-      return '<div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)">'
-        +'<span style="width:8px;height:8px;border-radius:50%;background:'+x[0]+'"></span>'+x[1]+'</div>';
-    }).join('')
-  +'</div>'
-
-  +'<div class="card" style="padding:12px">'
-    +'<div class="cal-grid">'+dowHdr+'</div>'
-    +'<div class="cal-grid">'+cells+'</div>'
-  +'</div>'
-
-  +panel;
-
-  // Scroll to panel if selected
-  if(_calSelDate) setTimeout(function(){ var p=el.querySelector('.cal-detail'); if(p) p.scrollIntoView({behavior:'smooth',block:'nearest'}); },100);
+  if(_calSelDate) setTimeout(function(){ var pe=el.querySelector('.cal-detail'); if(pe) pe.scrollIntoView({behavior:'smooth',block:'nearest'}); },80);
+  }catch(e){ var el2=document.getElementById('cal-content'); if(el2) el2.innerHTML='<div class="card" style="color:var(--red);padding:20px"><i class="fas fa-exclamation-triangle"></i> Error: '+e.message+'</div>'; }
 }
 
 function calNav(dir){
