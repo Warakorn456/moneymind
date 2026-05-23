@@ -10339,6 +10339,136 @@ async function renderAdmin(){
   }
 }
 
+// ══════════════════════════════════════════
+//  FEATURE: DASHBOARD SECTION REORDER
+// ══════════════════════════════════════════
+(function(){
+  var DASH_SECTIONS=['budget-card','charts-grid','dash-banks-section','dash-bs-section','dash-comparison-section','dash-sr-section','dash-merchants-section','dash-health-section','dash-nw-history-section','dash-insights-section','dash-catbud-section','dash-anomaly-section','dash-calendar-section','dash-subscription-section','dash-tax-advisor-section','dash-emergency-section','dash-503020-section','dash-pyf-section'];
+  var _sortMode=false;
+  var _dragSrc=null;
+
+  function getContainer(){return document.getElementById('dash-sortable');}
+
+  function applyDashOrder(){
+    if(!DB.settings.dashOrder||!DB.settings.dashOrder.length) return;
+    var c=getContainer(); if(!c) return;
+    DB.settings.dashOrder.forEach(function(id){
+      var el=document.getElementById(id);
+      if(el&&el.parentElement===c) c.appendChild(el);
+    });
+  }
+
+  function saveDashOrder(){
+    var c=getContainer(); if(!c) return;
+    DB.settings.dashOrder=Array.from(c.children).map(function(el){return el.id;}).filter(Boolean);
+    saveLocalOnly();
+  }
+
+  function _addHandles(c){
+    Array.from(c.children).forEach(function(el){
+      if(el.querySelector('.dash-drag-handle')) return;
+      var h=document.createElement('div');
+      h.className='dash-drag-handle';
+      h.innerHTML='<i class="fas fa-grip-vertical"></i>';
+      el.style.position='relative';
+      el.insertBefore(h,el.firstChild);
+    });
+  }
+
+  function _removeHandles(c){
+    Array.from(c.children).forEach(function(el){
+      var h=el.querySelector('.dash-drag-handle');
+      if(h) h.remove();
+      el.draggable=false;
+    });
+  }
+
+  function _onDragStart(e){
+    _dragSrc=this;
+    e.dataTransfer.effectAllowed='move';
+    e.dataTransfer.setData('text/plain',this.id);
+    this.classList.add('dash-dragging');
+  }
+  function _onDragOver(e){
+    e.preventDefault();
+    e.dataTransfer.dropEffect='move';
+    if(this!==_dragSrc) this.classList.add('dash-drag-over');
+    return false;
+  }
+  function _onDragLeave(){this.classList.remove('dash-drag-over');}
+  function _onDrop(e){
+    e.stopPropagation(); e.preventDefault();
+    if(_dragSrc&&_dragSrc!==this){
+      var c=this.parentElement;
+      var all=Array.from(c.children);
+      var si=all.indexOf(_dragSrc), ti=all.indexOf(this);
+      if(si<ti) c.insertBefore(_dragSrc,this.nextSibling);
+      else c.insertBefore(_dragSrc,this);
+    }
+    this.classList.remove('dash-drag-over');
+    return false;
+  }
+  function _onDragEnd(){
+    var c=getContainer(); if(!c) return;
+    Array.from(c.children).forEach(function(el){el.classList.remove('dash-dragging','dash-drag-over');});
+    _dragSrc=null;
+  }
+
+  function _bindEvents(c,add){
+    Array.from(c.children).forEach(function(el){
+      if(add){
+        el.draggable=true;
+        el.addEventListener('dragstart',_onDragStart);
+        el.addEventListener('dragover',_onDragOver);
+        el.addEventListener('dragleave',_onDragLeave);
+        el.addEventListener('drop',_onDrop);
+        el.addEventListener('dragend',_onDragEnd);
+      } else {
+        el.draggable=false;
+        el.removeEventListener('dragstart',_onDragStart);
+        el.removeEventListener('dragover',_onDragOver);
+        el.removeEventListener('dragleave',_onDragLeave);
+        el.removeEventListener('drop',_onDrop);
+        el.removeEventListener('dragend',_onDragEnd);
+      }
+    });
+  }
+
+  window.toggleDashSort=function(){
+    var c=getContainer(); if(!c) return;
+    var btn=document.getElementById('dash-sort-btn');
+    _sortMode=!_sortMode;
+    if(_sortMode){
+      c.classList.add('dash-sort-mode');
+      _addHandles(c);
+      _bindEvents(c,true);
+      if(btn){btn.innerHTML='<i class="fas fa-check"></i>';btn.style.cssText+=';background:rgba(16,185,129,.2);border-color:rgba(16,185,129,.4);color:#34d399';}
+      toast('ลากเพื่อจัดเรียง — กดเครื่องหมายถูกเมื่อเสร็จ','info');
+    } else {
+      c.classList.remove('dash-sort-mode');
+      _removeHandles(c);
+      _bindEvents(c,false);
+      saveDashOrder();
+      if(btn){btn.innerHTML='<i class="fas fa-grip-lines"></i>';btn.style.background='';btn.style.borderColor='';btn.style.color='';}
+      toast('บันทึกลำดับแล้ว','success');
+    }
+  };
+
+  window.applyDashOrder=applyDashOrder;
+
+  // Patch renderDash to apply saved order after each render
+  var _origRenderDashOrder=renderDash;
+  renderDash=function(){
+    _origRenderDashOrder();
+    applyDashOrder();
+    if(_sortMode){
+      var c=getContainer(); if(!c) return;
+      _addHandles(c);
+      _bindEvents(c,true);
+    }
+  };
+})();
+
 </script>
 
 <!-- AI Chat FAB + Panel -->
