@@ -1629,6 +1629,16 @@
         </div>
       </label>
     </div>
+    <!-- Fixed / Variable toggle (expense only) -->
+    <div id="tx-fixed-row" style="display:none;margin-bottom:8px">
+      <label class="flabel">ประเภทรายจ่าย</label>
+      <div class="fixed-toggle">
+        <button type="button" id="tx-fixed-btn-f" class="fixed-btn fix" onclick="setTxFixed(true)"><i class="fas fa-lock"></i> คงที่ (Fixed)</button>
+        <button type="button" id="tx-fixed-btn-v" class="fixed-btn var" onclick="setTxFixed(false)"><i class="fas fa-random"></i> แปรผัน (Variable)</button>
+      </div>
+    </div>
+    <input type="hidden" id="tx-fixed-val" value="">
+
     <!-- Split Transaction Panel -->
     <div id="tx-split-panel" style="display:none;margin-bottom:4px;padding:12px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
