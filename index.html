@@ -998,6 +998,9 @@
       </div>
     </div>
 
+    <!-- ── Sortable Container ── -->
+    <div id="dash-sortable">
+
     <!-- ── Budget Card ── -->
     <div class="budget-card" id="budget-card">
       <div class="budget-top">
@@ -2715,7 +2718,69 @@ function doLogout(){
 }
 
 // ── Google Sign-in ──
+// ── รับ token จาก Android Native Google Sign-In ──
+async function handleNativeGoogleToken(idToken, email, displayName, photoUrl){
+  const errEl=document.getElementById('login-err');
+  try{
+    const credential=firebase.auth.GoogleAuthProvider.credential(idToken);
+    const result=await _auth.signInWithCredential(credential);
+    const fbUser=result.user;
+    const snap=await _fs.collection('members').where('email','==',email).limit(1).get();
+    if(!snap.empty){
+      const memberData=snap.docs[0].data();
+      currentUser=memberData.username;
+      DB={ transactions:[],savings:[],debts:[],investments:[],settings:{apiKey:''},tax:{},plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]},profile:{} };
+      loadDB();
+      const _synced=await fsLoad();
+      enterApp();
+      if(!_synced) fsSave();
+      fsListen();
+    } else {
+      let autoUser=(email.split('@')[0]).toLowerCase().replace(/[^a-z0-9_]/g,'_').substring(0,16);
+      if(autoUser.length<3) autoUser='user'+Date.now().toString().slice(-5);
+      const existingUsers=getUsers();
+      if(existingUsers.find(u=>u.username===autoUser)||autoUser===(_ENC&&_ENC.user||'').toLowerCase()){
+        autoUser=autoUser.substring(0,13)+'_'+Date.now().toString().slice(-3);
+      }
+      await _fs.collection('members').doc(autoUser).set({
+        username:autoUser, email:email, uid:fbUser.uid,
+        displayName:displayName||'', photoURL:photoUrl||'',
+        createdAt:firebase.firestore.FieldValue.serverTimestamp(), platform:'google-android'
+      });
+      const salt=randB64(16);
+      const saltBytes=Uint8Array.from(atob(salt),c=>c.charCodeAt(0));
+      const hash=await pbkdf2Hash(randB64(12),saltBytes);
+      existingUsers.push({username:autoUser,salt,hash,email,googleAuth:true});
+      saveUsers(existingUsers);
+      currentUser=autoUser;
+      DB={ transactions:[],savings:[],debts:[],investments:[],settings:{apiKey:''},tax:{},plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]},profile:{} };
+      saveLocalOnly();
+      const _syncedNew=await fsLoad();
+      enterApp();
+      if(!_syncedNew) fsSave();
+      fsListen();
+      setTimeout(()=>toast('ยินดีต้อนรับ! ชื่อผู้ใช้: '+autoUser+' 🎉','success'),800);
+    }
+  }catch(e){
+    if(errEl) errEl.textContent='เกิดข้อผิดพลาด: '+e.message;
+  }
+}
+
+function handleNativeGoogleError(code){
+  const errEl=document.getElementById('login-err');
+  if(errEl) errEl.textContent='Google Sign-In ล้มเหลว (code: '+code+')';
+}
+
+// ปรับปุ่ม Google ให้ใช้ Native เมื่ออยู่บน Android
+function setupAndroidGoogleBtn(){
+  document.querySelectorAll('.google-btn').forEach(function(b){
+    b.onclick=function(){ if(window.AndroidBridge) window.AndroidBridge.startGoogleSignIn(); };
+  });
+}
+
 async function tryGoogleLogin(){
+  // ถ้าอยู่บน Android ให้ใช้ Native แทน
+  if(window._isAndroidApp && window.AndroidBridge){ window.AndroidBridge.startGoogleSignIn(); return; }
   const errEl=document.getElementById('login-err')||document.getElementById('reg-err');
   const btns=[document.getElementById('google-login-btn'),document.getElementById('google-reg-btn')];
   btns.forEach(b=>{ if(b){ b.disabled=true; b.style.opacity='.5'; } });
@@ -3102,6 +3167,8 @@ function nav(page){
   // เริ่ม/หยุด auto-refresh ตามหน้า
   if(page==='investments') startInvAutoRefresh();
   else stopInvAutoRefresh();
+  // แจ้ง Android ว่าเปลี่ยนหน้า เพื่อ trigger Interstitial Ad
+  if(window._isAndroidApp && window.AndroidBridge) window.AndroidBridge.onPageChanged();
 }
 
 function renderPage(p){
