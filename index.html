@@ -10524,8 +10524,14 @@ function renderRVV(){
   if(!txs.length){ el.innerHTML=''; return; }
 
   var fixedCats=getRvvFixed();
-  var fixedTxs=txs.filter(function(t){ return t.isRecurring||fixedCats.indexOf(t.category)>=0; });
-  var varTxs=txs.filter(function(t){ return !t.isRecurring&&fixedCats.indexOf(t.category)<0; });
+  function isFixedTx(t){
+    if(t.isRecurring) return true;
+    if(t.isFixed===true) return true;
+    if(t.isFixed===false) return false;
+    return fixedCats.indexOf(t.category)>=0;
+  }
+  var fixedTxs=txs.filter(function(t){ return isFixedTx(t); });
+  var varTxs=txs.filter(function(t){ return !isFixedTx(t); });
 
   var fixedAmt=fixedTxs.reduce(function(s,t){ return s+t.amount; },0);
   var varAmt=varTxs.reduce(function(s,t){ return s+t.amount; },0);
