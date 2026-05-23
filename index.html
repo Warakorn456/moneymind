@@ -3771,7 +3771,9 @@ function saveTx(){
   if(!amt||amt<=0){ toast('กรุณาใส่จำนวนเงิน','error'); return; }
   if(!date){ toast('กรุณาเลือกวันที่','error'); return; }
   const currencyInfo=curSel!=='THB'?{currency:curSel,origAmount}:{};
-  const obj={amount:amt,category:cat,date,description:desc||getCat(cat,type).label,type,carryover,bankId:bankId||null,...currencyInfo};
+  const fixedVal=document.getElementById('tx-fixed-val')?.value;
+  const isFixedInfo=type==='expense'&&fixedVal!==''?{isFixed:fixedVal==='1'}:{};
+  const obj={amount:amt,category:cat,date,description:desc||getCat(cat,type).label,type,carryover,bankId:bankId||null,...currencyInfo,...isFixedInfo};
   if(editTxId){
     const i=DB.transactions.findIndex(t=>t.id===editTxId);
     if(i>=0){
