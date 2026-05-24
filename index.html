@@ -3723,7 +3723,8 @@ function editTx(id){
   const linkedBank=tx.bankId?getBanks().find(b=>b.id===tx.bankId):null;
   const isCCTx=linkedBank?.type==='บัตรเครดิต';
   document.getElementById('tx-paybycard').checked=isCCTx;
-  setTxType(tx.type);
+  const editUiType=(tx.type==='expense'&&isSavingTx(tx))?'saving':tx.type;
+  setTxType(editUiType);
   _populateTxBankDropdown(tx.bankId||'', isCCTx);
   if(isCCTx){
     document.getElementById('tx-bank-label').textContent='บัตรเครดิต (เลือกบัตรที่ใช้จ่าย)';
@@ -3731,7 +3732,7 @@ function editTx(id){
   setTimeout(()=>{
     document.getElementById('tx-cat').value=tx.category;
     if(tx.type==='income') document.getElementById('tx-carryover').checked=!!tx.carryover;
-    if(tx.type==='expense'){
+    if(tx.type==='expense'&&!isSavingTx(tx)){
       if(tx.isFixed!==undefined) setTxFixed(tx.isFixed);
       else autoSetTxFixed();
     }
