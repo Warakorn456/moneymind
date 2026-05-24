@@ -11238,12 +11238,18 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
 
   function getItems(){ return Array.from(wrap.querySelectorAll('.nav-item[data-nav]')); }
 
+  function getBottom(){ return document.getElementById('nav-bottom'); }
+
   function applyOrder(order){
     if(!order||!order.length) return;
+    var bottom=getBottom();
     order.forEach(function(id){
       var el=wrap.querySelector('.nav-item[data-nav="'+id+'"]');
-      if(el) wrap.insertBefore(el, wrap.querySelector('[style*="margin-top:auto"]') || null);
+      if(el) wrap.insertBefore(el, bottom||null);
     });
+    // restore admin nav visibility after DOM reorder
+    var adminNav=document.getElementById('nav-admin');
+    if(adminNav) adminNav.style.display=(typeof _ENC!=='undefined'&&typeof currentUser!=='undefined'&&_ENC&&currentUser===_ENC.user)?'flex':'none';
   }
 
   function saveOrder(){
@@ -11255,6 +11261,8 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
 
   function bindDrag(){
     getItems().forEach(function(item){
+      // avoid duplicate listeners by flagging
+      if(item._navDragBound) return; item._navDragBound=true;
       item.addEventListener('dragstart',function(e){
         _dragSrc=item;
         e.dataTransfer.effectAllowed='move';
@@ -11286,16 +11294,27 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
     });
   }
 
-  // Apply saved order on load (after DB is ready)
-  var _navSortInit=checkLogin;
-  checkLogin=function(){
-    _navSortInit();
+  function applyAndBind(){
     var order=(DB&&DB.settings&&DB.settings.navOrder)||[];
     applyOrder(order);
     bindDrag();
+  }
+
+  // Patch checkLogin (initial page load)
+  var _navSortCheckLogin=checkLogin;
+  checkLogin=function(){
+    _navSortCheckLogin();
+    applyAndBind();
   };
-  // Also re-bind if called before checkLogin fires
-  bindDrag();
+
+  // Patch enterApp (re-login after logout)
+  var _navSortEnterApp=enterApp;
+  enterApp=function(){
+    _navSortEnterApp();
+    applyAndBind();
+  };
+
+  bindDrag(); // bind immediately for initial render
 })();
 
 </script>
