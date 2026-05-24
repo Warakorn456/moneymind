@@ -11386,7 +11386,7 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
     var order=getItems().map(function(el){ return el.getAttribute('data-nav'); });
     if(!DB.settings) DB.settings={};
     DB.settings.navOrder=order;
-    saveLocalOnly();
+    saveDB();
   }
 
   function bindDrag(){
