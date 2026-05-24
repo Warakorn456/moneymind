@@ -3248,7 +3248,7 @@ function savSum(txs){ return txs.filter(isSavingTx).reduce((s,t)=>s+t.amount,0);
 // ══════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════
-const PAGE_TITLE = {dashboard:'Dashboard',transactions:'รายรับ-รายจ่าย',recurring:'รายการซ้ำประจำ',ot:'คำนวณ OT',loan:'คำนวณสินเชื่อ',subscriptions:'Subscriptions',calendar:'ปฏิทิน',savings:'เงินออม',banks:'บัญชีธนาคาร',debts:'หนี้สิน',investments:'พอร์ตลงทุน',tax:'ภาษีเงินได้',balance:'งบดุล & แผนการเงิน',retire:'แผนเกษียณ',profile:'ประวัติส่วนตัว',settings:'ตั้งค่า',admin:'Admin Dashboard',forecast:'พยากรณ์กระแสเงินสด'};
+const PAGE_TITLE = {dashboard:'Dashboard',transactions:'รายรับ-รายจ่าย',recurring:'รายการซ้ำประจำ',ot:'คำนวณ OT',loan:'คำนวณสินเชื่อ',subscriptions:'Subscriptions',calendar:'ปฏิทิน',savings:'เงินออม',banks:'บัญชีธนาคาร',debts:'หนี้สิน',investments:'พอร์ตลงทุน',tax:'ภาษีเงินได้',balance:'งบดุล & แผนการเงิน',retire:'แผนเกษียณ',profile:'ประวัติส่วนตัว',settings:'ตั้งค่า',admin:'Admin Dashboard',forecast:'พยากรณ์กระแสเงินสด',priority:'จัดลำดับความสำคัญ'};
 let curPage='dashboard', txFilter='all';
 
 function nav(page){
