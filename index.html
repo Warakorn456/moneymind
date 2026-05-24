@@ -11445,8 +11445,7 @@ var PQ_QUADS=[
 
 function renderPriority(){
   var list=getPriorities();
-  var axisRow='<div class="pq-axis-row">'
-    +'<div class="pq-axis-label-left" style="display:flex;align-items:center;justify-content:center"><div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;white-space:nowrap">ความสำคัญ ↑</div></div>'
+  var axisRow='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:4px">'
     +'<div class="pq-axis-col">เร่งด่วน</div>'
     +'<div class="pq-axis-col">ไม่เร่งด่วน</div>'
     +'</div>';
