@@ -10062,9 +10062,9 @@ function renderRule503020(){
   if(!income){el.innerHTML='';return;}
   var needsCats=_NEEDS_CATS;
   var expTxs=txs.filter(function(t){return t.type==='expense';});
-  var needs=expTxs.filter(function(t){return needsCats.indexOf(t.category)>=0;}).reduce(function(s,t){return s+t.amount;},0);
-  var invest=expTxs.filter(function(t){return _INVEST_CATS.indexOf(t.category)>=0;}).reduce(function(s,t){return s+t.amount;},0);
-  var wants=expTxs.filter(function(t){return needsCats.indexOf(t.category)<0&&_INVEST_CATS.indexOf(t.category)<0;}).reduce(function(s,t){return s+t.amount;},0);
+  var needs=expTxs.filter(function(t){return needsCats.indexOf(t.category)>=0&&!isSavingTx(t);}).reduce(function(s,t){return s+t.amount;},0);
+  var invest=expTxs.filter(function(t){return _INVEST_CATS.indexOf(t.category)>=0||isSavingTx(t);}).reduce(function(s,t){return s+t.amount;},0);
+  var wants=expTxs.filter(function(t){return needsCats.indexOf(t.category)<0&&_INVEST_CATS.indexOf(t.category)<0&&!isSavingTx(t);}).reduce(function(s,t){return s+t.amount;},0);
   var surplus=Math.max(0,income-needs-wants-invest);
   var savings=invest+surplus;
   var needsPct=Math.round(needs/income*100);
