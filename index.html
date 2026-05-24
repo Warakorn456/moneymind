@@ -11684,7 +11684,7 @@ function _gmailBankMeta(id){
 function _gmailPoll(){
   var url=DB.settings&&DB.settings.gmailImportUrl;
   if(!url) return;
-  fetch(url+'?action=list')
+  fetch(url+'?action=list&t='+Date.now())
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(Array.isArray(d)){
