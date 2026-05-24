@@ -11010,7 +11010,7 @@ function renderCalendarPage(){
   var dowHdr='';
   var dowLabels=['อา','จ','อ','พ','พฤ','ศ','ส'];
   for(var di=0;di<7;di++){
-    dowHdr+='<div class="cal-dow" style="'+(di===0?'color:#f87171':'')+'">'+dowLabels[di]+'</div>';
+    dowHdr+='<div class="cal-dow'+(di===0?' sun-col':'')+'">'+dowLabels[di]+'</div>';
   }
 
   var cells='';
@@ -11027,7 +11027,10 @@ function renderCalendarPage(){
     if(ddata.exp.length) ddots+='<span class="cal-dot" style="background:#ef4444"></span>';
     if(ddata.recur.length) ddots+='<span class="cal-dot" style="background:#f59e0b"></span>';
     if(ddata.notes.length) ddots+='<span class="cal-dot" style="background:#a78bfa"></span>';
-    cells+='<div class="'+cls+'" onclick="calSelectDay(\''+dk+'\')"><span class="cal-day-num">'+dn+'</span><div class="cal-dots">'+ddots+'</div></div>';
+    var dayAmt='';
+    var totalExp=ddata.exp.reduce(function(s,t){return s+t.amount;},0);
+    if(totalExp>0) dayAmt='<div class="cal-amt" style="color:#f87171">−'+fmt(Math.round(totalExp))+'</div>';
+    cells+='<div class="'+cls+'" onclick="calSelectDay(\''+dk+'\')"><div class="cal-day-badge"><span class="cal-day-num">'+dn+'</span></div><div class="cal-dots">'+ddots+'</div>'+dayAmt+'</div>';
   }
 
   // ── Selected day panel ──
