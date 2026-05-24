@@ -11154,22 +11154,25 @@ function renderCalendarPage(){
   }
 
   el.innerHTML=
+    // ── toolbar ──
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">'
-      +'<div style="display:flex;align-items:center;gap:8px">'
-        +'<button class="btn btn-ghost" style="padding:8px 12px" onclick="calNav(-1)"><i class="fas fa-chevron-left"></i></button>'
-        +'<button class="btn btn-ghost" style="font-size:18px;font-weight:700;min-width:160px;text-align:center;padding:6px 10px;border-radius:10px;'+(  _calPickerOpen?'background:rgba(124,58,237,.15);color:var(--primary-l)':'')+'" onclick="calTogglePicker()">'+CAL_MON_FULL[_calMonth]+' '+(_calYear+543)+' <i class="fas fa-caret-'+(  _calPickerOpen?'up':'down')+'" style="font-size:13px;opacity:.7"></i></button>'
-        +'<button class="btn btn-ghost" style="padding:8px 12px" onclick="calNav(1)"><i class="fas fa-chevron-right"></i></button>'
+      +'<div style="display:flex;align-items:center;gap:6px">'
+        +'<button class="btn btn-ghost" style="padding:8px 12px;border-radius:10px" onclick="calNav(-1)"><i class="fas fa-chevron-left"></i></button>'
+        +'<button style="font-size:19px;font-weight:800;min-width:172px;text-align:center;padding:7px 14px;border-radius:12px;border:1.5px solid '+(  _calPickerOpen?'var(--primary-l)':'var(--border)')+';background:'+(  _calPickerOpen?'rgba(124,58,237,.12)':'var(--surface2)')+';color:'+(  _calPickerOpen?'var(--primary-l)':'var(--text)')+';cursor:pointer;font-family:inherit;transition:all .18s" onclick="calTogglePicker()">'+CAL_MON_FULL[_calMonth]+' '+(_calYear+543)+'&thinsp;<i class="fas fa-caret-'+(  _calPickerOpen?'up':'down')+'" style="font-size:12px;opacity:.6"></i></button>'
+        +'<button class="btn btn-ghost" style="padding:8px 12px;border-radius:10px" onclick="calNav(1)"><i class="fas fa-chevron-right"></i></button>'
       +'</div>'
-      +'<button class="btn btn-ghost" style="font-size:13px" onclick="calGoToday()"><i class="fas fa-dot-circle" style="color:var(--primary-l);margin-right:4px"></i>วันนี้</button>'
+      +'<button class="btn btn-ghost" style="font-size:13px;padding:7px 14px;border-radius:10px" onclick="calGoToday()"><i class="fas fa-crosshairs" style="color:var(--primary-l);margin-right:6px"></i>วันนี้</button>'
     +'</div>'
     +pickerHTML
-    +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">'
-      +'<span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block"></span>รายรับ</span>'
-      +'<span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block"></span>รายจ่าย</span>'
-      +'<span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block"></span>กำหนดชำระ</span>'
-      +'<span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#a78bfa;display:inline-block"></span>โน้ต</span>'
+    // ── legend ──
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">'
+      +'<div class="cal-legend-pill"><span style="width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block"></span>รายรับ</div>'
+      +'<div class="cal-legend-pill"><span style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block"></span>รายจ่าย</div>'
+      +'<div class="cal-legend-pill"><span style="width:7px;height:7px;border-radius:50%;background:#f59e0b;display:inline-block"></span>กำหนดชำระ</div>'
+      +'<div class="cal-legend-pill"><span style="width:7px;height:7px;border-radius:50%;background:#a78bfa;display:inline-block"></span>โน้ต</div>'
     +'</div>'
-    +'<div class="card" style="padding:10px">'
+    // ── calendar grid ──
+    +'<div class="cal-wrap">'
       +'<div class="cal-grid" style="margin-bottom:6px">'+dowHdr+'</div>'
       +'<div class="cal-grid">'+cells+'</div>'
     +'</div>'
