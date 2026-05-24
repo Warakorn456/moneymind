@@ -10113,7 +10113,7 @@ function renderPayYourselfFirst(){
   if(!income){el.innerHTML='';return;}
   var target=parseFloat(DB.settings.pyfTarget)||20;
   var targetAmt=income*target/100;
-  var totalExp=txs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+  var totalExp=txs.filter(function(t){return t.type==='expense'&&!isSavingTx(t);}).reduce(function(s,t){return s+t.amount;},0);
   var saved=Math.max(0,income-totalExp);
   var pct=targetAmt>0?Math.min(100,saved/targetAmt*100):0;
   var achieved=saved>=targetAmt;
