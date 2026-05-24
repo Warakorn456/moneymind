@@ -7580,9 +7580,9 @@ function rulesAI(msg){
 
   function txMonth(y,mn){ return (DB.transactions||[]).filter(t=>{ const d=new Date(t.date); return d.getFullYear()===y&&(d.getMonth()+1)===mn; }); }
   function incSum(txs){ return txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0); }
-  function expSum(txs){ return txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0); }
+  function expSum(txs){ return txs.filter(t=>t.type==='expense'&&!isSavingTx(t)).reduce((s,t)=>s+t.amount,0); }
   function catSum(txs,cat){ return txs.filter(t=>t.category===cat).reduce((s,t)=>s+t.amount,0); }
-  function topCats(txs,n=5){ const map={}; txs.filter(t=>t.type==='expense').forEach(t=>map[t.category]=(map[t.category]||0)+t.amount); return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,n); }
+  function topCats(txs,n=5){ const map={}; txs.filter(t=>t.type==='expense'&&!isSavingTx(t)).forEach(t=>map[t.category]=(map[t.category]||0)+t.amount); return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,n); }
   function trend(cur,prev){ const d=parseFloat(pct(cur,prev)); return d>0?`▲+${d}%`:`▼${d}%`; }
 
   const cur=txMonth(curY,curM), prev=txMonth(prevY,prevM);
