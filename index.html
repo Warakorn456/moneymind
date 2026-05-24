@@ -11715,7 +11715,7 @@ function _gmailStartPoll(){
   _gmailUpdateBadge();
   if(!(DB.settings&&DB.settings.gmailImportUrl)) return;
   _gmailPoll();
-  _gmailTimer=setInterval(_gmailPoll, 5*60*1000);
+  _gmailTimer=setInterval(_gmailPoll, 60*1000);
 }
 
 function openGmailInbox(){
