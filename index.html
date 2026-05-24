@@ -10533,13 +10533,19 @@ async function renderAdmin(){
 
   window.applyDashOrder=applyDashOrder;
 
-  // Patch renderDash to apply saved order after each render
+  // Patch renderDash to apply saved order after each render (no flash)
   var _origRenderDashOrder=renderDash;
   renderDash=function(){
+    var c=getContainer();
+    var hasOrder=DB&&DB.settings&&DB.settings.dashOrder&&DB.settings.dashOrder.length;
+    // hide before render to prevent flash of wrong order
+    if(c&&hasOrder) c.style.visibility='hidden';
     _origRenderDashOrder();
     applyDashOrder();
+    // restore in same synchronous tick — browser paints only once
+    if(c&&hasOrder) c.style.visibility='';
     if(_sortMode){
-      var c=getContainer(); if(!c) return;
+      if(!c) return;
       _addHandles(c);
       _bindEvents(c,true);
     }
