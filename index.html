@@ -3789,6 +3789,19 @@ function onPayByCCChange(){
   }
 }
 
+function _populateSavingBankDropdowns(srcId, dstId){
+  const banks=getBanks().filter(b=>b.type!=='บัตรเครดิต');
+  const opts='<option value="">— ไม่ระบุ —</option>'+banks.map(b=>{
+    const m=BANK_META[b.name]||BANK_META['อื่นๆ'];
+    const last4=b.accountNo?` ····${b.accountNo}`:'';
+    return `<option value="${b.id}">[${m.abbr}] ${b.name}${last4} (${fmt(b.balance)})</option>`;
+  }).join('');
+  const src=document.getElementById('tx-save-src');
+  const dst=document.getElementById('tx-save-dst');
+  if(src){ src.innerHTML=opts; src.value=srcId||''; }
+  if(dst){ dst.innerHTML=opts; dst.value=dstId||''; }
+}
+
 function _adjustBankBalance(bankId, type, amount, reverse=false){
   if(!bankId) return;
   const bank=getBanks().find(b=>b.id===bankId); if(!bank) return;
