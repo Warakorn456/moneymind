@@ -11687,7 +11687,10 @@ function _gmailPoll(){
   fetch(url+'?action=list')
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if(d.ok&&Array.isArray(d.pending)){
+      if(Array.isArray(d)){
+        _gmailItems=d;
+        _gmailUpdateBadge();
+      } else if(d.ok&&Array.isArray(d.pending)){
         _gmailItems=d.pending;
         _gmailUpdateBadge();
       }
