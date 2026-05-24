@@ -3769,8 +3769,12 @@ function setTxType(type,btn){
   document.getElementById('tx-fixed-row').style.display=(dbType==='expense'&&!isSaving)?'block':'none';
   if(dbType==='expense'&&!isSaving) setTimeout(autoSetTxFixed,20); else document.getElementById('tx-fixed-val').value='';
   const hasCC=getBanks().some(b=>b.type==='บัตรเครดิต');
-  document.getElementById('paybycard-row').style.display=(dbType==='expense'&&hasCC)?'block':'none';
+  document.getElementById('paybycard-row').style.display=(dbType==='expense'&&!isSaving&&hasCC)?'block':'none';
   if(dbType!=='expense'){ document.getElementById('tx-paybycard').checked=false; onPayByCCChange(); }
+  // saving-specific bank row
+  document.getElementById('tx-bank-row').style.display=isSaving?'none':'block';
+  document.getElementById('saving-bank-row').style.display=isSaving?'block':'none';
+  if(isSaving) _populateSavingBankDropdowns('','');
 }
 
 function onPayByCCChange(){
