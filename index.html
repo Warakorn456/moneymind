@@ -3253,12 +3253,14 @@ let selMonth, selYear;
 function initDate(){
   const now=new Date(); selMonth=now.getMonth(); selYear=now.getFullYear();
   const ms=document.getElementById('sel-month'), ys=document.getElementById('sel-year');
-  const MN=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-  MN.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=m; if(i===selMonth) o.selected=true; ms.appendChild(o); });
-  for(let y=now.getFullYear()-4;y<=now.getFullYear()+1;y++){ const o=document.createElement('option'); o.value=y; o.textContent=y+543; if(y===selYear) o.selected=true; ys.appendChild(o); }
+  if(ms&&ys){
+    const MN=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    MN.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=m; if(i===selMonth) o.selected=true; ms.appendChild(o); });
+    for(let y=now.getFullYear()-4;y<=now.getFullYear()+1;y++){ const o=document.createElement('option'); o.value=y; o.textContent=y+543; if(y===selYear) o.selected=true; ys.appendChild(o); }
+  }
 }
 
-function onDateChange(){ selMonth=parseInt(document.getElementById('sel-month').value); selYear=parseInt(document.getElementById('sel-year').value); renderPage(curPage); }
+function onDateChange(){ const ms=document.getElementById('sel-month'),ys=document.getElementById('sel-year'); if(ms) selMonth=parseInt(ms.value); if(ys) selYear=parseInt(ys.value); renderPage(curPage); }
 
 function monthTx(m=selMonth,y=selYear){ return DB.transactions.filter(t=>{ const d=new Date(t.date); return d.getMonth()===m&&d.getFullYear()===y; }); }
 
