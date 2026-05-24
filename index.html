@@ -6730,6 +6730,7 @@ function renderBalance(){
   const startYear=now.getFullYear();
   const dobYear=DB.profile&&DB.profile.dob?new Date(DB.profile.dob).getFullYear():null;
   const hasAge=!!dobYear;
+  const incomeStopYear=(dobYear&&(plan.incomeStopAge||0))?(dobYear+plan.incomeStopAge):null;
   const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   let cumNW=nw.netWorth;
   let planRows='';
