@@ -11236,20 +11236,22 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
   if(!wrap) return;
   var _dragSrc=null;
 
-  function getItems(){ return Array.from(wrap.querySelectorAll('.nav-item[data-nav]')); }
+  // ── Admin nav sync (single source of truth) ──
+  function _syncAdminNav(){
+    var adminNav=document.getElementById('nav-admin');
+    if(!adminNav) return;
+    adminNav.style.display=(_ENC&&currentUser&&currentUser===_ENC.user)?'flex':'none';
+  }
 
-  function getBottom(){ return document.getElementById('nav-bottom'); }
+  function getItems(){ return Array.from(wrap.querySelectorAll('.nav-item[data-nav]')); }
 
   function applyOrder(order){
     if(!order||!order.length) return;
-    var bottom=getBottom();
+    var bottom=document.getElementById('nav-bottom');
     order.forEach(function(id){
       var el=wrap.querySelector('.nav-item[data-nav="'+id+'"]');
       if(el) wrap.insertBefore(el, bottom||null);
     });
-    // restore admin nav visibility after DOM reorder
-    var adminNav=document.getElementById('nav-admin');
-    if(adminNav) adminNav.style.display=(typeof _ENC!=='undefined'&&typeof currentUser!=='undefined'&&_ENC&&currentUser===_ENC.user)?'flex':'none';
   }
 
   function saveOrder(){
@@ -11261,7 +11263,6 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
 
   function bindDrag(){
     getItems().forEach(function(item){
-      // avoid duplicate listeners by flagging
       if(item._navDragBound) return; item._navDragBound=true;
       item.addEventListener('dragstart',function(e){
         _dragSrc=item;
@@ -11300,21 +11301,29 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
     bindDrag();
   }
 
-  // Patch checkLogin (initial page load)
-  var _navSortCheckLogin=checkLogin;
-  checkLogin=function(){
-    _navSortCheckLogin();
-    applyAndBind();
-  };
-
-  // Patch enterApp (re-login after logout)
+  // Patch enterApp — apply nav order + sync admin nav after login
   var _navSortEnterApp=enterApp;
   enterApp=function(){
     _navSortEnterApp();
     applyAndBind();
+    // setTimeout ensures admin nav syncs AFTER all enterApp side-effects settle
+    setTimeout(_syncAdminNav, 0);
   };
 
-  bindDrag(); // bind immediately for initial render
+  // Patch doLogout — immediately hide admin nav on logout
+  var _navSortDoLogout=doLogout;
+  doLogout=function(){
+    _navSortDoLogout();
+    // after logout currentUser=null, so admin nav must be hidden
+    setTimeout(_syncAdminNav, 0);
+  };
+
+  // Initial page load: checkLogin() already ran before this IIFE,
+  // so apply order and sync admin nav directly
+  setTimeout(function(){
+    applyAndBind();
+    _syncAdminNav();
+  }, 0);
 })();
 
 </script>
