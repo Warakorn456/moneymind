@@ -11444,7 +11444,8 @@ var PQ_QUADS=[
 ];
 
 var _pqTab='tobuy';
-function switchPqTab(t){ _pqTab=t; renderPriority(); }
+var _pqEditId=null;
+function switchPqTab(t){ _pqEditId=null; _pqTab=t; renderPriority(); }
 
 function _pqBuildGrid(list, isBoughtTab){
   var axisRow='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:4px">'
@@ -11456,25 +11457,37 @@ function _pqBuildGrid(list, isBoughtTab){
     var tasks=list.filter(function(t){ return t.quad===q.id; });
     var totalPrice=tasks.reduce(function(s,t){ return s+(t.price||0); },0);
     var taskRows=tasks.map(function(t){
+      // ── edit mode ──
+      if(_pqEditId===t.id){
+        return '<div class="pq-task" style="flex-direction:column;align-items:stretch;gap:6px;padding:8px 10px">'
+          +'<input id="pq-edit-text" class="finput" value="'+_escHtml(t.text)+'" style="font-size:13px;padding:6px 10px" onkeydown="if(event.key===\'Enter\')saveEditPriority(\''+t.id+'\')" autofocus>'
+          +'<div style="display:flex;gap:6px">'
+            +'<input id="pq-edit-price" class="finput" type="number" min="0" value="'+(t.price||'')+'" placeholder="ราคา (ไม่บังคับ)" style="flex:1;font-size:13px;padding:6px 10px" onkeydown="if(event.key===\'Enter\')saveEditPriority(\''+t.id+'\')">'
+            +'<button onclick="saveEditPriority(\''+t.id+'\')" style="background:'+q.color+'22;border:1.5px solid '+q.color+'55;color:'+q.color+';border-radius:8px;padding:0 12px;cursor:pointer;font-size:12px;font-weight:700">บันทึก</button>'
+            +'<button onclick="cancelEditPriority()" style="background:transparent;border:1.5px solid var(--border);color:var(--muted);border-radius:8px;padding:0 10px;cursor:pointer;font-size:12px">ยกเลิก</button>'
+          +'</div>'
+          +'</div>';
+      }
       var priceTag=t.price
         ?'<span style="font-size:11px;font-weight:700;color:'+q.color+';background:'+q.color+'18;border-radius:6px;padding:2px 8px;flex-shrink:0;white-space:nowrap">'+fmt(t.price)+'</span>'
         :'';
+      var editBtn='<button onclick="openEditPriority(\''+t.id+'\')" title="แก้ไข" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 4px;font-size:12px;opacity:.5;flex-shrink:0" onmouseover="this.style.opacity=\'1\'" onmouseout="this.style.opacity=\'.5\'"><i class="fas fa-pen"></i></button>';
       if(isBoughtTab){
-        // ซื้อแล้ว — ปุ่มย้ายกลับ + ลบ
         return '<div class="pq-task">'
           +'<button onclick="togglePriorityBought(\''+t.id+'\')" title="ย้ายกลับ ต้องซื้อ" style="background:'+q.color+';border:2px solid '+q.color+';border-radius:50%;width:18px;height:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s">'
           +'<i class="fas fa-check" style="font-size:9px;color:#fff"></i>'
           +'</button>'
           +'<span class="pq-task-text" style="flex:1;font-size:13px;line-height:1.4">'+_escHtml(t.text)+'</span>'
           +priceTag
+          +editBtn
           +'<button class="pq-del" onclick="deletePriorityTask(\''+t.id+'\')" title="ลบ"><i class="fas fa-times"></i></button>'
           +'</div>';
       } else {
-        // ต้องซื้อ — ปุ่มติ๊กซื้อแล้ว + ลบ
         return '<div class="pq-task">'
           +'<button onclick="togglePriorityBought(\''+t.id+'\')" title="ติ๊กว่าซื้อแล้ว" style="background:none;border:2px solid var(--border);border-radius:50%;width:18px;height:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s" onmouseover="this.style.borderColor=\''+q.color+'\'" onmouseout="this.style.borderColor=\'\'"></button>'
           +'<span class="pq-task-text" style="flex:1;font-size:13px;line-height:1.4">'+_escHtml(t.text)+'</span>'
           +priceTag
+          +editBtn
           +'<button class="pq-del" onclick="deletePriorityTask(\''+t.id+'\')" title="ลบ"><i class="fas fa-times"></i></button>'
           +'</div>';
       }
