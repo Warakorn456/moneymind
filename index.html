@@ -3286,12 +3286,15 @@ let chCat,chTrend;
 function renderDash(){
   const txs=monthTx();
   const inc=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const exp=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  const bal=inc-exp;
+  const sav=savSum(txs);
+  const exp=txs.filter(t=>t.type==='expense'&&!isSavingTx(t)).reduce((s,t)=>s+t.amount,0);
+  const bal=inc-exp-sav;
   const port=DB.investments.reduce((s,i)=>s+i.value,0);
 
   document.getElementById('s-income').textContent=fmt(inc);
   document.getElementById('s-expense').textContent=fmt(exp);
+  const savRow=document.getElementById('s-saving-row');
+  if(savRow){ if(sav>0){ document.getElementById('s-saving').textContent=fmt(sav); savRow.style.display=''; } else { savRow.style.display='none'; } }
   const bEl=document.getElementById('s-balance');
   bEl.textContent=fmt(bal);
   bEl.style.color=bal>=0?'var(--green)':'var(--red)';
