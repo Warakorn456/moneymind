@@ -11046,58 +11046,67 @@ function renderCalendarPage(){
     var txRows='';
     selData.inc.concat(selData.exp).forEach(function(t){
       var cat=getCat(t.category,t.type);
-      txRows+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">'
-        +'<i class="fas '+cat.icon+'" style="color:'+cat.color+';width:14px;font-size:12px"></i>'
-        +'<span style="flex:1;font-size:13px">'+( t.description||'')+'</span>'
-        +'<span style="font-size:13px;font-weight:600;color:'+(t.type==='income'?'#34d399':'#f87171')+'">'+(t.type==='income'?'+':'-')+fmt(t.amount)+'</span>'
+      var isInc=t.type==='income';
+      txRows+='<div class="cal-tx-row">'
+        +'<div class="cal-tx-icon" style="background:'+(isInc?'rgba(16,185,129,.15)':'rgba(239,68,68,.12)')+'"><i class="fas '+cat.icon+'" style="color:'+(isInc?'#34d399':'#f87171')+'"></i></div>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(t.description||cat.label||'')+'</div>'
+          +'<div style="font-size:11px;color:var(--muted)">'+(cat.label||'')+'</div></div>'
+        +'<div style="font-size:14px;font-weight:700;color:'+(isInc?'#34d399':'#f87171')+';flex-shrink:0">'+(isInc?'+':'−')+fmt(t.amount)+'</div>'
       +'</div>';
     });
 
     var recurRows='';
     selData.recur.forEach(function(r){
-      recurRows+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">'
-        +'<i class="fas '+(r._isDebt?'fa-exclamation-circle':'fa-redo-alt')+'" style="color:#f59e0b;width:14px;font-size:12px"></i>'
-        +'<span style="flex:1;font-size:13px">'+(r.name||'')+'</span>'
-        +(r.amount?'<span style="font-size:13px;font-weight:600;color:#f59e0b">'+fmt(r.amount)+'</span>':'')
+      recurRows+='<div class="cal-recur-row">'
+        +'<div class="cal-tx-icon" style="background:rgba(245,158,11,.12)"><i class="fas '+(r._isDebt?'fa-calendar-times':'fa-redo-alt')+'" style="color:#f59e0b"></i></div>'
+        +'<div style="flex:1;font-size:13px;font-weight:500">'+(r.name||'')+'</div>'
+        +(r.amount?'<div style="font-size:14px;font-weight:700;color:#f59e0b">'+fmt(r.amount)+'</div>':'')
       +'</div>';
     });
 
     var NC={purple:'#a78bfa',red:'#f87171',green:'#34d399',amber:'#fbbf24',blue:'#60a5fa'};
     var noteRows=(DB.calNotes[_calSelDate]||[]).map(function(n){
       var nc=NC[n.color||'purple']||'#a78bfa';
-      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0">'
-        +'<span style="width:10px;height:10px;border-radius:50%;background:'+nc+';flex-shrink:0"></span>'
+      return '<div class="cal-note-row">'
+        +'<span class="cal-note-dot" style="background:'+nc+'"></span>'
         +'<span style="flex:1;font-size:13px">'+_escHtml(n.text)+'</span>'
-        +'<button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;color:var(--red)" onclick="calDeleteNote(\''+_calSelDate+'\',\''+n.id+'\')"><i class="fas fa-times"></i></button>'
+        +'<button onclick="calDeleteNote(\''+_calSelDate+'\',\''+n.id+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;border-radius:6px;font-size:13px;line-height:1;opacity:.6" onmouseover="this.style.opacity=\'1\'" onmouseout="this.style.opacity=\'.6\'"><i class="fas fa-trash-alt"></i></button>'
       +'</div>';
     }).join('');
 
-    var colorPicker=Object.keys(NC).map(function(c){
-      return '<span class="cal-color-opt" onclick="document.getElementById(\'cal-note-color\').value=\''+c+'\';document.querySelectorAll(\'.cal-color-opt\').forEach(function(x){x.style.outline=\'none\'});this.style.outline=\'2px solid white\'" style="display:inline-block;width:16px;height:16px;border-radius:50%;background:'+NC[c]+';cursor:pointer;flex-shrink:0"></span>';
-    }).join('');
+    var colorPicker='<div style="display:flex;gap:6px;align-items:center">'+Object.keys(NC).map(function(c){
+      return '<span class="cal-color-opt" onclick="document.getElementById(\'cal-note-color\').value=\''+c+'\';document.querySelectorAll(\'.cal-color-opt\').forEach(function(x){x.style.boxShadow=\'none\'});this.style.boxShadow=\'0 0 0 2px white,0 0 0 4px '+NC[c]+'\'" style="display:inline-block;width:18px;height:18px;border-radius:50%;background:'+NC[c]+';cursor:pointer;flex-shrink:0;transition:transform .15s" onmouseover="this.style.transform=\'scale(1.2)\'" onmouseout="this.style.transform=\'scale(1)\'"></span>';
+    }).join('')+'</div>';
 
+    var dowNames=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
     panel='<div class="cal-detail">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
-        +'<div>'
-          +'<div style="font-size:15px;font-weight:700">'+selDate.getDate()+' '+CAL_MON_FULL[selDate.getMonth()]+' '+(selDate.getFullYear()+543)+'</div>'
-          +'<div style="font-size:12px;color:var(--muted)">วัน'+CAL_DOW_TH[selDate.getDay()]+'</div>'
+      // ── header ──
+      +'<div class="cal-detail-head">'
+        +'<div style="display:flex;align-items:flex-start;justify-content:space-between">'
+          +'<div>'
+            +'<div style="font-size:20px;font-weight:800;line-height:1.2">'+selDate.getDate()+' '+CAL_MON_FULL[selDate.getMonth()]+'</div>'
+            +'<div style="font-size:12px;color:var(--muted);margin-top:2px">วัน'+dowNames[selDate.getDay()]+' · '+(selDate.getFullYear()+543)+'</div>'
+          +'</div>'
+          +(sIncAmt||sExpAmt?'<div style="text-align:right">'
+            +(sIncAmt?'<div style="font-size:13px;font-weight:700;color:#34d399">+'+fmt(Math.round(sIncAmt))+'</div>':'')
+            +(sExpAmt?'<div style="font-size:13px;font-weight:700;color:#f87171">−'+fmt(Math.round(sExpAmt))+'</div>':'')
+          +'</div>':'')
         +'</div>'
-        +(sIncAmt||sExpAmt?'<div style="text-align:right;font-size:12px">'
-          +(sIncAmt?'<div style="color:#34d399">+'+fmt(Math.round(sIncAmt))+'</div>':'')
-          +(sExpAmt?'<div style="color:#f87171">−'+fmt(Math.round(sExpAmt))+'</div>':'')
-        +'</div>':'')
       +'</div>'
-      +(txRows?'<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">รายการวันนี้</div>'+txRows+'</div>':'')
-      +(recurRows?'<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">กำหนดชำระ / รายการซ้ำ</div>'+recurRows+'</div>':'')
-      +'<div style="margin-bottom:10px">'
-        +'<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px">โน้ต</div>'
-        +(noteRows||'<div style="font-size:12px;color:var(--muted)">ยังไม่มีโน้ต — เพิ่มด้านล่างได้เลย</div>')
-      +'</div>'
-      +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--border)">'
-        +'<input type="text" id="cal-note-inp" class="finput" placeholder="เพิ่มโน้ต... (Enter เพื่อบันทึก)" style="flex:1;min-width:140px;padding:8px 12px;font-size:13px" onkeydown="if(event.key===\'Enter\')calAddNote(\''+_calSelDate+'\')">'
-        +'<input type="hidden" id="cal-note-color" value="purple">'
-        +'<div style="display:flex;gap:5px;align-items:center">'+colorPicker+'</div>'
-        +'<button class="btn btn-primary" style="padding:8px 14px;font-size:13px" onclick="calAddNote(\''+_calSelDate+'\')"><i class="fas fa-plus"></i></button>'
+      // ── body ──
+      +'<div class="cal-detail-body">'
+        +(txRows?'<div style="margin-bottom:14px"><div class="cal-section-label">รายการ</div>'+txRows+'</div>':'')
+        +(recurRows?'<div style="margin-bottom:14px"><div class="cal-section-label">กำหนดชำระ / ซ้ำประจำ</div>'+recurRows+'</div>':'')
+        +'<div style="margin-bottom:14px">'
+          +'<div class="cal-section-label">โน้ต</div>'
+          +(noteRows||'<div style="font-size:12px;color:var(--muted);padding:8px 0">ยังไม่มีโน้ต</div>')
+        +'</div>'
+        +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border)">'
+          +colorPicker
+          +'<input type="text" id="cal-note-inp" class="finput" placeholder="เพิ่มโน้ต... (Enter)" style="flex:1;min-width:120px;padding:8px 12px;font-size:13px" onkeydown="if(event.key===\'Enter\')calAddNote(\''+_calSelDate+'\')">'
+          +'<input type="hidden" id="cal-note-color" value="purple">'
+          +'<button class="btn btn-primary" style="padding:8px 14px;flex-shrink:0" onclick="calAddNote(\''+_calSelDate+'\')"><i class="fas fa-plus"></i></button>'
+        +'</div>'
       +'</div>'
     +'</div>';
   }
