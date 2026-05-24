@@ -6179,6 +6179,7 @@ function getPlan(){
   if(!DB.plan.extraAssets) DB.plan.extraAssets=[];
   if(!DB.plan.extraDebts) DB.plan.extraDebts=[];
   if(DB.plan.incomeGrowth===undefined) DB.plan.incomeGrowth=0;
+  if(DB.plan.incomeStopAge===undefined) DB.plan.incomeStopAge=0;
   // migrate old single otherAssets field
   if(DB.plan.otherAssets>0 && DB.plan.extraAssets.length===0){
     DB.plan.extraAssets.push({id:uid(),name:'สินทรัพย์อื่น',amount:DB.plan.otherAssets});
