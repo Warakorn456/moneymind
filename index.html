@@ -9241,7 +9241,7 @@ function renderSavingsRate(){
     if(mo<0){mo+=12;yr--;}
     var txs=monthTx(mo,yr);
     var inc=txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
-    var exp=txs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+    var exp=txs.filter(function(t){return t.type==='expense'&&!isSavingTx(t);}).reduce(function(s,t){return s+t.amount;},0);
     var sr=inc>0?Math.round(((inc-exp)/inc)*100):0;
     var thM=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][mo];
     labels.push(thM); srData.push(sr);
