@@ -3198,6 +3198,11 @@ const EXP_CATS = [
 
 function getCat(id,type){ const custom=(type==='income'?(DB.settings?.customIncCats||[]):(DB.settings?.customExpCats||[])); const l=type==='income'?[...INC_CATS,...custom]:[...EXP_CATS,...custom]; return l.find(c=>c.id===id)||{label:id,icon:'fa-circle',color:'#94a3b8'}; }
 
+// ── Saving transaction helpers ──
+const SAVING_CAT_IDS=['save_tx'];
+function isSavingTx(t){ if(!t||t.type!=='expense') return false; const all=[...SAVING_CAT_IDS,...(DB.settings?.savingExpCats||[])]; return all.includes(t.category); }
+function savSum(txs){ return txs.filter(isSavingTx).reduce((s,t)=>s+t.amount,0); }
+
 // ══════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════
