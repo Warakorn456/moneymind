@@ -11259,6 +11259,54 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
 
 </script>
 
+<!-- Subscription Modal -->
+<div id="m-sub" class="overlay">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title"><i class="fas fa-credit-card" style="color:#a78bfa"></i> <span id="sub-m-title">เพิ่ม Subscription</span></div>
+    <input type="hidden" id="sub-eid">
+    <div class="fgroup"><label class="flabel">ชื่อบริการ</label><input id="sub-name" class="finput" placeholder="เช่น Netflix, iCloud, Spotify"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fgroup"><label class="flabel">ราคา (บาท)</label><input id="sub-price" type="number" class="finput" placeholder="0" min="0"></div>
+      <div class="fgroup"><label class="flabel">รอบชำระ</label>
+        <select id="sub-cycle" class="fselect">
+          <option value="monthly">รายเดือน</option>
+          <option value="yearly">รายปี</option>
+          <option value="weekly">รายสัปดาห์</option>
+          <option value="quarterly">รายไตรมาส</option>
+        </select>
+      </div>
+    </div>
+    <div class="fgroup"><label class="flabel">วันชำระครั้งถัดไป</label><input id="sub-date" type="date" class="finput"></div>
+    <div class="fgroup"><label class="flabel">หมวดหมู่</label>
+      <select id="sub-cat" class="fselect">
+        <option value="entertainment">🎬 ความบันเทิง</option>
+        <option value="productivity">💼 การทำงาน</option>
+        <option value="health">💪 สุขภาพ & ฟิตเนส</option>
+        <option value="cloud">☁️ Cloud & Storage</option>
+        <option value="news">📰 ข่าว & สื่อ</option>
+        <option value="education">📚 การศึกษา</option>
+        <option value="other">📦 อื่นๆ</option>
+      </select>
+    </div>
+    <div class="fgroup"><label class="flabel">สี</label>
+      <div id="sub-color-picker" style="display:flex;gap:8px;flex-wrap:wrap;padding:4px 0">
+        <span data-color="#a78bfa" onclick="setSubColor('#a78bfa')" style="width:24px;height:24px;border-radius:50%;background:#a78bfa;cursor:pointer"></span>
+        <span data-color="#60a5fa" onclick="setSubColor('#60a5fa')" style="width:24px;height:24px;border-radius:50%;background:#60a5fa;cursor:pointer"></span>
+        <span data-color="#34d399" onclick="setSubColor('#34d399')" style="width:24px;height:24px;border-radius:50%;background:#34d399;cursor:pointer"></span>
+        <span data-color="#f87171" onclick="setSubColor('#f87171')" style="width:24px;height:24px;border-radius:50%;background:#f87171;cursor:pointer"></span>
+        <span data-color="#fbbf24" onclick="setSubColor('#fbbf24')" style="width:24px;height:24px;border-radius:50%;background:#fbbf24;cursor:pointer"></span>
+        <span data-color="#f472b6" onclick="setSubColor('#f472b6')" style="width:24px;height:24px;border-radius:50%;background:#f472b6;cursor:pointer"></span>
+        <span data-color="#fb923c" onclick="setSubColor('#fb923c')" style="width:24px;height:24px;border-radius:50%;background:#fb923c;cursor:pointer"></span>
+      </div>
+      <input type="hidden" id="sub-color" value="#a78bfa">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-sub')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveSub()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
 <!-- AI Chat FAB + Panel -->
 <button class="chat-fab" onclick="toggleChat()" title="ถามผู้ช่วย AI">
   <i class="fas fa-robot"></i>
