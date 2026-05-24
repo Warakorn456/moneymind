@@ -8399,7 +8399,7 @@ function renderPinSettings(){
 function calcHealthScore(){
   const txs6=[]; for(let i=0;i<6;i++){ let m=selMonth-i,y=selYear; if(m<0){m+=12;y--;} txs6.push(...monthTx(m,y)); }
   const avgInc=txs6.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)/6;
-  const avgExp=txs6.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)/6;
+  const avgExp=txs6.filter(t=>t.type==='expense'&&!isSavingTx(t)).reduce((s,t)=>s+t.amount,0)/6;
   const savingsRate=avgInc>0?Math.min(100,((avgInc-avgExp)/avgInc)*100):0;
   const totalDebt=(DB.debts||[]).reduce((s,d)=>s+(d.remaining||d.total||0),0);
   const dti=avgInc>0?Math.min(100,(totalDebt/(avgInc*12))*10):100;
