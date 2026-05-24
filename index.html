@@ -3740,20 +3740,24 @@ function editTx(id){
 }
 
 function setTxType(type,btn){
-  document.getElementById('tx-type').value=type;
-  document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));
+  const isSaving=type==='saving';
+  const dbType=isSaving?'expense':type;
+  document.getElementById('tx-type').value=dbType;
+  document.querySelectorAll('#m-tx .type-btn').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
-  else document.querySelector('.type-btn.'+( type==='income'?'inc':'exp'))?.classList.add('active');
-  const cats=type==='income'?INC_CATS:EXP_CATS;
-  const customCats=type==='income'?(DB.settings?.customIncCats||[]):(DB.settings?.customExpCats||[]);
+  else if(isSaving) document.querySelector('#m-tx .type-btn.sav')?.classList.add('active');
+  else document.querySelector('#m-tx .type-btn.'+(dbType==='income'?'inc':'exp'))?.classList.add('active');
+  const cats=dbType==='income'?INC_CATS:EXP_CATS;
+  const customCats=dbType==='income'?(DB.settings?.customIncCats||[]):(DB.settings?.customExpCats||[]);
   document.getElementById('tx-cat').innerHTML=cats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')+(customCats.length?'<optgroup label="— หมวดหมู่ของฉัน —">'+customCats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')+'</optgroup>':'');
-  document.getElementById('carryover-row').style.display=type==='income'?'block':'none';
-  if(type!=='income') document.getElementById('tx-carryover').checked=false;
-  document.getElementById('tx-fixed-row').style.display=type==='expense'?'block':'none';
-  if(type==='expense') setTimeout(autoSetTxFixed,20); else document.getElementById('tx-fixed-val').value='';
+  if(isSaving) setTimeout(()=>{ document.getElementById('tx-cat').value='save_tx'; },0);
+  document.getElementById('carryover-row').style.display=dbType==='income'?'block':'none';
+  if(dbType!=='income') document.getElementById('tx-carryover').checked=false;
+  document.getElementById('tx-fixed-row').style.display=(dbType==='expense'&&!isSaving)?'block':'none';
+  if(dbType==='expense'&&!isSaving) setTimeout(autoSetTxFixed,20); else document.getElementById('tx-fixed-val').value='';
   const hasCC=getBanks().some(b=>b.type==='บัตรเครดิต');
-  document.getElementById('paybycard-row').style.display=(type==='expense'&&hasCC)?'block':'none';
-  if(type!=='expense'){ document.getElementById('tx-paybycard').checked=false; onPayByCCChange(); }
+  document.getElementById('paybycard-row').style.display=(dbType==='expense'&&hasCC)?'block':'none';
+  if(dbType!=='expense'){ document.getElementById('tx-paybycard').checked=false; onPayByCCChange(); }
 }
 
 function onPayByCCChange(){
