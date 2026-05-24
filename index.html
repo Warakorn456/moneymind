@@ -3737,9 +3737,11 @@ function editTx(id){
   document.getElementById('tx-paybycard').checked=isCCTx;
   const editUiType=(tx.type==='expense'&&isSavingTx(tx))?'saving':tx.type;
   setTxType(editUiType);
-  _populateTxBankDropdown(tx.bankId||'', isCCTx);
-  if(isCCTx){
-    document.getElementById('tx-bank-label').textContent='บัตรเครดิต (เลือกบัตรที่ใช้จ่าย)';
+  if(editUiType==='saving'){
+    setTimeout(()=>_populateSavingBankDropdowns(tx.bankId||'', tx.savingDestBankId||''), 0);
+  } else {
+    _populateTxBankDropdown(tx.bankId||'', isCCTx);
+    if(isCCTx) document.getElementById('tx-bank-label').textContent='บัตรเครดิต (เลือกบัตรที่ใช้จ่าย)';
   }
   setTimeout(()=>{
     document.getElementById('tx-cat').value=tx.category;
