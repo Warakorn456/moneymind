@@ -997,6 +997,13 @@
     <div class="topbar-right">
       <!-- Theme toggle -->
       <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="สลับ Dark/Light Mode"><i class="fas fa-sun" id="theme-icon"></i></button>
+      <!-- Gmail Bank Import -->
+      <div style="position:relative">
+        <button id="gmail-import-btn" onclick="openGmailInbox()" title="นำเข้าจากอีเมลธนาคาร" style="display:none;position:relative;background:none;border:1px solid var(--border);border-radius:10px;width:36px;height:36px;cursor:pointer;color:var(--text);font-size:14px;align-items:center;justify-content:center;transition:all .2s">
+          <i class="fas fa-envelope-open-text"></i>
+          <span id="gmail-import-badge" style="display:none;position:absolute;top:-5px;right:-5px;background:#f87171;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;border:2px solid var(--surface)"></span>
+        </button>
+      </div>
       <!-- Notification bell -->
       <div class="notif-wrap">
         <button class="notif-btn" onclick="toggleNotifPanel()" title="การแจ้งเตือน">
