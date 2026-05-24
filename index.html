@@ -11926,6 +11926,7 @@ if(_origCheckLogin){
     setTimeout(_gmailStartPoll, 2000);
   };
 }
+setTimeout(function(){ if(typeof _gmailStartPoll==='function') _gmailStartPoll(); }, 2500);
 
 // ══════════════════════════════════════════
 //  NAV SORTABLE
