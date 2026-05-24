@@ -11616,6 +11616,21 @@ function togglePriorityBought(id){
   renderPriority();
 }
 
+function openEditPriority(id){ _pqEditId=id; renderPriority(); setTimeout(function(){ var el=document.getElementById('pq-edit-text'); if(el){ el.focus(); el.select(); } },50); }
+function cancelEditPriority(){ _pqEditId=null; renderPriority(); }
+function saveEditPriority(id){
+  var t=getPriorities().find(function(x){ return x.id===id; });
+  if(!t) return;
+  var textEl=document.getElementById('pq-edit-text');
+  var priceEl=document.getElementById('pq-edit-price');
+  var newText=textEl?textEl.value.trim():'';
+  if(newText) t.text=newText;
+  t.price=priceEl&&priceEl.value!==''?parseFloat(priceEl.value)||0:0;
+  _pqEditId=null;
+  saveDB();
+  renderPriority();
+}
+
 function deletePriorityTask(id){
   DB.priorities=getPriorities().filter(function(x){ return x.id!==id; });
   saveDB();
