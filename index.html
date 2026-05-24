@@ -11157,6 +11157,187 @@ function calPickMonth(y,m){
   renderCalendarPage();
 }
 
+// ══════════════════════════════════════════
+//  SUBSCRIPTION MANAGER
+// ══════════════════════════════════════════
+PAGE_TITLE['subscriptions']='Subscriptions';
+
+function getSubs(){ if(!DB.subscriptions) DB.subscriptions=[]; return DB.subscriptions; }
+
+function subMonthly(s){
+  var p=s.price||0;
+  if(s.cycle==='monthly') return p;
+  if(s.cycle==='yearly') return p/12;
+  if(s.cycle==='weekly') return p*52/12;
+  if(s.cycle==='quarterly') return p/3;
+  return p;
+}
+
+var _subColor='#a78bfa';
+function setSubColor(c){
+  _subColor=c;
+  document.getElementById('sub-color').value=c;
+  document.querySelectorAll('#sub-color-picker span').forEach(function(el){
+    el.style.outline=el.getAttribute('data-color')===c?'3px solid white':'none';
+    el.style.outlineOffset='2px';
+  });
+}
+
+function openSubModal(id){
+  var item=id?getSubs().find(function(s){return s.id===id;}):null;
+  document.getElementById('sub-eid').value=id||'';
+  document.getElementById('sub-m-title').textContent=id?'แก้ไข Subscription':'เพิ่ม Subscription';
+  document.getElementById('sub-name').value=item?item.name:'';
+  document.getElementById('sub-price').value=item?item.price:'';
+  document.getElementById('sub-cycle').value=item?item.cycle:'monthly';
+  document.getElementById('sub-cat').value=item?item.cat:'entertainment';
+  var today=new Date(); var dd=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  document.getElementById('sub-date').value=item?item.nextDate:dd;
+  setSubColor(item?item.color:'#a78bfa');
+  openM('m-sub');
+}
+
+function saveSub(){
+  var id=document.getElementById('sub-eid').value;
+  var name=document.getElementById('sub-name').value.trim();
+  var price=parseFloat(document.getElementById('sub-price').value);
+  var cycle=document.getElementById('sub-cycle').value;
+  var nextDate=document.getElementById('sub-date').value;
+  var cat=document.getElementById('sub-cat').value;
+  var color=document.getElementById('sub-color').value||'#a78bfa';
+  if(!name||isNaN(price)||price<0){ toast('กรุณากรอกชื่อและราคา','error'); return; }
+  var list=getSubs();
+  if(id){ var s=list.find(function(x){return x.id===id;}); if(s){s.name=name;s.price=price;s.cycle=cycle;s.nextDate=nextDate;s.cat=cat;s.color=color;} }
+  else { list.push({id:'sub_'+Date.now(),name:name,price:price,cycle:cycle,nextDate:nextDate,cat:cat,color:color,active:true}); }
+  saveDB(); closeM('m-sub'); renderSubscriptions();
+  toast('บันทึกแล้ว','success');
+}
+
+function deleteSub(id){
+  if(!confirm('ลบ subscription นี้?')) return;
+  DB.subscriptions=getSubs().filter(function(s){return s.id!==id;});
+  saveDB(); renderSubscriptions();
+}
+
+function toggleSubActive(id){
+  var s=getSubs().find(function(x){return x.id===id;}); if(!s) return;
+  s.active=!s.active; saveDB(); renderSubscriptions();
+}
+
+function renderSubscriptions(){
+  var el=document.getElementById('sub-content'); if(!el) return;
+  var list=getSubs();
+
+  var cycleLabel={monthly:'รายเดือน',yearly:'รายปี',weekly:'รายสัปดาห์',quarterly:'รายไตรมาส'};
+  var catLabel={entertainment:'🎬 ความบันเทิง',productivity:'💼 การทำงาน',health:'💪 สุขภาพ',cloud:'☁️ Cloud & Storage',news:'📰 ข่าว & สื่อ',education:'📚 การศึกษา',other:'📦 อื่นๆ'};
+
+  var activeList=list.filter(function(s){return s.active!==false;});
+  var inactiveList=list.filter(function(s){return s.active===false;});
+
+  var totalMonthly=activeList.reduce(function(sum,s){return sum+subMonthly(s);},0);
+  var totalYearly=totalMonthly*12;
+
+  // upcoming this month
+  var now=new Date();
+  var upcoming=activeList.filter(function(s){
+    if(!s.nextDate) return false;
+    var d=new Date(s.nextDate);
+    return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()&&d>=now;
+  }).sort(function(a,b){return new Date(a.nextDate)-new Date(b.nextDate);});
+
+  function daysUntil(dateStr){
+    var d=new Date(dateStr); d.setHours(0,0,0,0);
+    var t=new Date(); t.setHours(0,0,0,0);
+    return Math.round((d-t)/(1000*60*60*24));
+  }
+
+  function makeCards(arr){
+    if(!arr.length) return '<div class="empty"><i class="fas fa-credit-card"></i><p>ยังไม่มี subscription</p></div>';
+    return arr.map(function(s){
+      var mo=subMonthly(s);
+      var dim=s.active===false?'opacity:.45;':'';
+      var days=s.nextDate?daysUntil(s.nextDate):-1;
+      var dueStr='';
+      if(s.nextDate){
+        if(days<0) dueStr='<span style="font-size:11px;color:var(--muted)">ครบกำหนดแล้ว</span>';
+        else if(days===0) dueStr='<span style="font-size:11px;color:#f87171;font-weight:700">ชำระวันนี้!</span>';
+        else if(days<=3) dueStr='<span style="font-size:11px;color:#fbbf24;font-weight:700">อีก '+days+' วัน</span>';
+        else dueStr='<span style="font-size:11px;color:var(--muted)">อีก '+days+' วัน</span>';
+      }
+      return '<div class="sub-card" style="'+dim+'">'
+        +'<div class="sub-card-accent" style="background:'+s.color+'"></div>'
+        +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding-left:8px">'
+          +'<div style="flex:1;min-width:0">'
+            +'<div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_escHtml(s.name)+'</div>'
+            +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(catLabel[s.cat]||s.cat)+'</div>'
+          +'</div>'
+          +'<div style="text-align:right;flex-shrink:0">'
+            +'<div style="font-size:17px;font-weight:800;color:'+s.color+'">'+fmt(s.price)+'</div>'
+            +'<div style="font-size:10px;color:var(--muted)">'+cycleLabel[s.cycle]+'</div>'
+          +'</div>'
+        +'</div>'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;padding-left:8px;flex-wrap:wrap;gap:6px">'
+          +'<div style="display:flex;align-items:center;gap:8px">'
+            +'<span class="sub-badge" style="background:'+s.color+'22;color:'+s.color+'"><i class="fas fa-sync-alt" style="font-size:10px"></i>'+fmt(Math.round(mo))+'/เดือน</span>'
+            +dueStr
+          +'</div>'
+          +'<div style="display:flex;gap:4px">'
+            +'<button onclick="toggleSubActive(\''+s.id+'\')" class="btn btn-ghost" style="padding:4px 8px;font-size:11px" title="'+(s.active===false?'เปิดใช้งาน':'ปิดชั่วคราว')+'">'
+              +'<i class="fas '+(s.active===false?'fa-play':'fa-pause')+'"></i>'
+            +'</button>'
+            +'<button onclick="openSubModal(\''+s.id+'\')" class="btn btn-ghost" style="padding:4px 8px;font-size:11px"><i class="fas fa-edit"></i></button>'
+            +'<button onclick="deleteSub(\''+s.id+'\')" class="btn btn-ghost" style="padding:4px 8px;font-size:11px;color:var(--red)"><i class="fas fa-trash"></i></button>'
+          +'</div>'
+        +'</div>'
+      +'</div>';
+    }).join('');
+  }
+
+  // upcoming section
+  var upcomingHTML='';
+  if(upcoming.length){
+    upcomingHTML='<div style="margin-bottom:20px">'
+      +'<div class="sec-title" style="margin-bottom:10px"><i class="fas fa-bell" style="color:#fbbf24;margin-right:6px"></i>ชำระเดือนนี้</div>'
+      +'<div style="display:flex;flex-direction:column;gap:8px">'
+      +upcoming.map(function(s){
+        var d=new Date(s.nextDate);
+        var dstr=(d.getDate())+' '+(d.toLocaleString('th-TH',{month:'short'}));
+        var days=daysUntil(s.nextDate);
+        var urgColor=days<=0?'#f87171':days<=3?'#fbbf24':'var(--muted)';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;border-left:3px solid '+s.color+'">'
+          +'<div style="width:36px;height:36px;border-radius:10px;background:'+s.color+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-calendar-day" style="color:'+s.color+'"></i></div>'
+          +'<div style="flex:1"><div style="font-size:13px;font-weight:600">'+_escHtml(s.name)+'</div><div style="font-size:11px;color:var(--muted)">'+dstr+' · '+cycleLabel[s.cycle]+'</div></div>'
+          +'<div style="text-align:right"><div style="font-size:14px;font-weight:700">'+fmt(s.price)+'</div><div style="font-size:11px;color:'+urgColor+'">'+(days<=0?'ครบกำหนดแล้ว':days===0?'วันนี้':'อีก '+days+' วัน')+'</div></div>'
+        +'</div>';
+      }).join('')
+      +'</div></div>';
+  }
+
+  el.innerHTML=
+    // header
+    '<div class="sec-hd" style="margin-bottom:20px">'
+      +'<div><div class="sec-title">Subscription Manager</div><div style="font-size:12px;color:var(--muted);margin-top:3px">ติดตามค่าบริการรายเดือน / รายปีทั้งหมด</div></div>'
+      +'<button class="btn btn-primary" onclick="openSubModal()"><i class="fas fa-plus"></i> เพิ่มบริการ</button>'
+    +'</div>'
+    // summary bar
+    +(list.length?'<div class="sub-summary-bar">'
+      +'<div class="sub-stat"><div class="sub-stat-val">'+fmt(Math.round(totalMonthly))+'</div><div class="sub-stat-lbl">รวม / เดือน</div></div>'
+      +'<div style="width:1px;background:rgba(124,58,237,.25);height:40px"></div>'
+      +'<div class="sub-stat"><div class="sub-stat-val">'+fmt(Math.round(totalYearly))+'</div><div class="sub-stat-lbl">รวม / ปี</div></div>'
+      +'<div style="width:1px;background:rgba(124,58,237,.25);height:40px"></div>'
+      +'<div class="sub-stat"><div class="sub-stat-val">'+activeList.length+'</div><div class="sub-stat-lbl">บริการที่ใช้อยู่</div></div>'
+      +(inactiveList.length?'<div style="width:1px;background:rgba(124,58,237,.25);height:40px"></div><div class="sub-stat"><div class="sub-stat-val" style="color:var(--muted)">'+inactiveList.length+'</div><div class="sub-stat-lbl">ปิดชั่วคราว</div></div>':'')
+    +'</div>':'')
+    // upcoming
+    +upcomingHTML
+    // active cards
+    +(activeList.length?'<div style="margin-bottom:8px"><div class="sec-title" style="margin-bottom:12px">บริการทั้งหมด</div><div class="sub-grid">'+makeCards(activeList)+'</div></div>':'')
+    // inactive
+    +(inactiveList.length?'<div style="margin-top:20px"><div class="sec-title" style="margin-bottom:12px;color:var(--muted)"><i class="fas fa-pause-circle" style="margin-right:6px"></i>ปิดชั่วคราว</div><div class="sub-grid">'+makeCards(inactiveList)+'</div></div>':'')
+    // empty state
+    +(!list.length?'<div class="empty"><i class="fas fa-credit-card"></i><p>ยังไม่มี subscription — กด "+ เพิ่มบริการ" เพื่อเริ่มต้น</p></div>':'');
+}
+
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ══════════════════════════════════════════
