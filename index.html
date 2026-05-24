@@ -6758,7 +6758,8 @@ function renderBalance(){
       for(let m=1;m<=12;m++){
         const ym=ymStr(yr,m);
         const mitems=getMonthItems(ym);
-        const mInc=(plan.monthlyIncome||0)+mitems.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);
+        const _mMult=Math.pow(1+(plan.incomeGrowth||0)/100,Math.max(0,yr-startYear));
+        const mInc=(plan.monthlyIncome||0)*_mMult+mitems.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);
         const mExp2=mitems.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);
         const mBal=mInc-mExp2;
         const mBalC=mBal>=0?'#10b981':'#ef4444';
