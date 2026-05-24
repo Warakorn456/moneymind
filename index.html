@@ -3828,20 +3828,24 @@ function saveTx(){
   const desc=document.getElementById('tx-desc').value.trim();
   const type=document.getElementById('tx-type').value;
   const carryover=type==='income'&&document.getElementById('tx-carryover').checked;
-  const bankId=document.getElementById('tx-bank')?.value||'';
+  const isSavMode=cat==='save_tx'||(DB.settings?.savingExpCats||[]).includes(cat);
+  const bankId=isSavMode?(document.getElementById('tx-save-src')?.value||''):(document.getElementById('tx-bank')?.value||'');
+  const savingDestBankId=isSavMode?(document.getElementById('tx-save-dst')?.value||''):'';
   if(!amt||amt<=0){ toast('กรุณาใส่จำนวนเงิน','error'); return; }
   if(!date){ toast('กรุณาเลือกวันที่','error'); return; }
   const currencyInfo=curSel!=='THB'?{currency:curSel,origAmount}:{};
   const fixedVal=document.getElementById('tx-fixed-val')?.value;
   const isFixedInfo=type==='expense'&&fixedVal!==''?{isFixed:fixedVal==='1'}:{};
-  const obj={amount:amt,category:cat,date,description:desc||getCat(cat,type).label,type,carryover,bankId:bankId||null,...currencyInfo,...isFixedInfo};
+  const savingDestInfo=savingDestBankId?{savingDestBankId}:{};
+  const obj={amount:amt,category:cat,date,description:desc||getCat(cat,type).label,type,carryover,bankId:bankId||null,...currencyInfo,...isFixedInfo,...savingDestInfo};
   if(editTxId){
     const i=DB.transactions.findIndex(t=>t.id===editTxId);
     if(i>=0){
       const old=DB.transactions[i];
       // ย้อนยอดเก่า แล้วใส่ยอดใหม่
       if(old.bankId) _adjustBankBalance(old.bankId, old.type, old.amount, true);
-      DB.transactions[i]={...old,...obj};
+      if(old.savingDestBankId) _adjustBankBalance(old.savingDestBankId, 'income', old.amount, true);
+      DB.transactions[i]={...old,...obj,savingDestBankId:savingDestBankId||null};
     }
     toast('แก้ไขแล้ว','success');
   } else {
@@ -3849,6 +3853,7 @@ function saveTx(){
     toast(carryover?'เพิ่มรายการและตั้งเป็นงบเดือนหน้าแล้ว':'เพิ่มรายการแล้ว','success');
   }
   if(bankId) _adjustBankBalance(bankId, type, amt);
+  if(savingDestBankId) _adjustBankBalance(savingDestBankId, 'income', amt);
   saveDB(); closeM('m-tx'); renderPage(curPage);
 }
 
@@ -3856,6 +3861,7 @@ function delTx(id){
   if(!confirm('ต้องการลบรายการนี้?')) return;
   const tx=DB.transactions.find(t=>t.id===id);
   if(tx?.bankId) _adjustBankBalance(tx.bankId, tx.type, tx.amount, true); // ย้อนยอดธนาคาร
+  if(tx?.savingDestBankId) _adjustBankBalance(tx.savingDestBankId, 'income', tx.amount, true); // ย้อนปลายทาง
   DB.transactions=DB.transactions.filter(t=>t.id!==id);
   saveDB(); renderPage(curPage); toast('ลบแล้ว','info');
 }
