@@ -189,3 +189,47 @@ renderDash = function(){
 Static file — ไม่ต้อง build:
 - เปิด `index.html` ใน browser โดยตรง
 - หรือ host บน GitHub Pages, Netlify, Firebase Hosting
+
+---
+
+## Infrastructure & Integrations
+
+โปรเจกต์นี้เชื่อมต่อกับ external services หลายตัว:
+
+| Service | รายละเอียด | หน้าที่ |
+|---------|-----------|---------|
+| **n8n** | `localhost:5678` (run ด้วย `npx n8n`) | Workflow automation |
+| **Google Sheets** | "MoneyMind" (`1IdfyUExUkkDFK7es4mnUWE5gvXpspHx6PaOJtBR05zg`) | พักข้อมูล bank transactions |
+| **Firebase Firestore** | config ใน `_ENC` (ต้นไฟล์ index.html) | Cloud sync ข้ามอุปกรณ์ |
+| **GitHub** | repo นี้ | deploy via GitHub Pages |
+| **Gmail (OAuth2)** | credential ID `v7EQvnFH4mbTwfHL` ใน n8n | ดัก bank email |
+
+### n8n Workflow: "MoneyMind Gmail Import"
+- **Workflow ID:** `y6gGC6tBWqIeOKbR`
+- **Pipeline:** Gmail Trigger → Get Gmail Message → Parse Bank Email → Write to Google Sheets
+- **Sheet/Tab:** "PendingTx" — columns: `id, bank, amount, type, desc, date, raw, status, ts`
+- **MoneyMind poll URL:** ตั้งใน `DB.settings.gmailImportUrl` — app poll ทุก 1 นาที
+
+### Bank Email ที่รองรับ
+| bank value | ตรวจจากคำ |
+|-----------|-----------|
+| `kbank` | kasikorn, kbank, kplus, k-plus |
+| `scb` | siam commercial, @scb, scbeasy |
+| `ktb` | krungthai, krung thai, ktb |
+| `ttb` | ttb, tmb, thanachart |
+| `bay` | krungsri, bank of ayudhya |
+| `kkp` | kiatnakin, kkp |
+
+### สิ่งที่เคยแก้ไข (อย่าทำซ้ำ)
+- **Gmail Trigger v1 ไม่ส่ง body** — แก้โดยเพิ่ม "Get Gmail Message" node (resource=`message`, operation=`get`, messageId=`={{ $json.id }}`)
+- **Regex ใน Code node มี Thai text** — ต้องใช้ `String.raw\`...\`` เมื่อ insert ผ่าน CodeMirror ไม่งั้น `\n`, `\d` จะถูก unescape
+- **n8n SQLite อยู่ที่** `C:\Users\warakorn\.n8n\database.sqlite` — แก้ workflow ตรงได้ถ้า restart n8n หลัง
+
+### Restart n8n
+```bash
+# หา PID แล้ว kill
+wmic process where "name='node.exe'" get ProcessId,CommandLine | grep n8n
+taskkill /F /PID <pid>
+# รันใหม่
+npx n8n
+```
