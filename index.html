@@ -11878,6 +11878,11 @@ function confirmAllGmailTx(){
 function rejectGmailTx(id){
   var url=DB.settings.gmailImportUrl+'?action=reject&id='+encodeURIComponent(id);
   fetch(url,{mode:'no-cors'}).catch(function(){});
+  _gmailRejected.add(id);
+  if(!DB.settings) DB.settings={};
+  var arr=DB.settings.gmailRejectedIds||[];
+  if(!arr.includes(id)){ arr.push(id); DB.settings.gmailRejectedIds=arr.slice(-200); }
+  saveDB();
   _gmailItems=_gmailItems.filter(function(x){ return x.id!==id; });
   _gmailUpdateBadge();
   _renderGmailModal();
