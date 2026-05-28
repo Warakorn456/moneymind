@@ -317,6 +317,8 @@ $env:PATH += ";C:\Users\warakorn\AppData\Local\Google\Cloud SDK\google-cloud-sdk
 - **LINE Notify ปิดให้บริการแล้ว** — ใช้ Telegram Bot แทนทั้งหมด
 - **Bot หลาย instance พร้อมกัน → 409 Conflict** — ต้องมี instance เดียวเท่านั้น (ปัจจุบันรันบน GCP)
 - **yfinance regularMarketPrice** — ใช้เฉพาะ `regularMarketPrice` ห้ามใช้ preMarket/postMarket price
+- **Gemini API free tier limit: 0** — เกิดจาก billing account ของ Google Cloud ปิด free tier โดยอัตโนมัติ แก้ไขโดยสร้าง project ใหม่ `gemini-n8n-3963` (ไม่มี billing) และใช้ `gemini-2.5-flash` แทน `gemini-2.0-flash`
+- **Re-inject n8n workflows:** รัน `python C:\Users\warakorn\Documents\create_ai_workflows.py` แล้ว restart n8n
 
 ### Restart n8n
 ```powershell
