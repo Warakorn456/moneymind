@@ -286,6 +286,20 @@ $env:PATH += ";C:\Users\warakorn\AppData\Local\Google\Cloud SDK\google-cloud-sdk
 - **Alert threshold:** ≥80% ของงบแต่ละหมวด
 - **Email:** `warakornbest6@gmail.com` | **Telegram:** chat_id `8172260229`
 
+### "MoneyMind Monthly AI Analysis" (Workflow ID: `mm-gemini-monthly-01`)
+- **Schedule:** `0 2 1 * *` (วันที่ 1 ของเดือน 09:00 Bangkok)
+- **Pipeline:** Schedule → Fetch Firestore → Parse Spending (Code) → Gemini → Telegram
+- **Gemini Model:** `gemini-2.5-flash` | **API Key project:** `gemini-n8n-3963`
+- **GEMINI_KEY:** `AIzaSyBrG15Zg93k9FdO5Nh7tN4td5NYYrcX1uc`
+- **Output:** สรุปการเงินประจำเดือน 4-5 ประโยค + คำแนะนำ
+
+### "MoneyMind Daily Stock AI" (Workflow ID: `mm-gemini-stock-01`)
+- **Schedule:** `5 2 * * 1-5` (วันจันทร์-ศุกร์ 09:05 Bangkok)
+- **Pipeline:** Schedule → Yahoo Finance v7 → Prepare Prompt (Code) → Gemini → Telegram
+- **Gemini Model:** `gemini-2.5-flash` | **API Key project:** `gemini-n8n-3963`
+- **Stocks:** ASTS, RKLB, MSFT, NVDA, META, TSLA, IREN, IONQ, AMD, OKLO, GOOG, AMZN, LLY, TSM, AAPL, CRWD, PLTR, AVGO, MU, SNDK, INTC, ARM, EOSE, RGTI, IBM, ORCL, CRWV, ONDS
+- **Script:** `C:\Users\warakorn\Documents\create_ai_workflows.py` (inject ใน n8n SQLite)
+
 ### Bank Email ที่รองรับ
 | bank value | ตรวจจากคำ |
 |-----------|-----------|
