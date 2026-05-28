@@ -11864,6 +11864,9 @@ function confirmGmailTx(id){
   // mark confirmed (fire-and-forget)
   var url=DB.settings.gmailImportUrl+'?action=confirm&id='+encodeURIComponent(id);
   fetch(url,{mode:'no-cors'}).catch(function(){});
+  if(!DB.settings) DB.settings={};
+  var cArr=DB.settings.gmailConfirmedIds||[];
+  if(!cArr.includes(id)){ cArr.push(id); DB.settings.gmailConfirmedIds=cArr.slice(-500); }
   _gmailItems=_gmailItems.filter(function(x){ return x.id!==id; });
   _gmailUpdateBadge();
   _renderGmailModal();
