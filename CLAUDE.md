@@ -203,12 +203,88 @@ Static file — ไม่ต้อง build:
 | **Firebase Firestore** | config ใน `_ENC` (ต้นไฟล์ index.html) | Cloud sync ข้ามอุปกรณ์ |
 | **GitHub** | repo นี้ | deploy via GitHub Pages |
 | **Gmail (OAuth2)** | credential ID `v7EQvnFH4mbTwfHL` ใน n8n | ดัก bank email |
+| **Telegram Bot** | `@moneymind_alert_bot` token: `8841603911:AAFz0JrEZcMTc5nxtxmzSAmg5y4w7odwi5o` chat_id: `8172260229` | แจ้งเตือนและตอบคำสั่ง |
+| **Google Cloud VM** | e2-micro, us-central1-a, IP: `34.16.55.125` project: `teak-perigee-497404-b7` | รัน Telegram bot 24/7 |
 
-### n8n Workflow: "MoneyMind Gmail Import"
-- **Workflow ID:** `y6gGC6tBWqIeOKbR`
+---
+
+## Telegram Bot — ฟังก์ชันทั้งหมด
+
+Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ปิดเครื่องได้ bot ยังทำงาน
+
+### คำสั่ง Interactive (พิมในแชท)
+| คำสั่ง | คำที่ใช้ | ผลลัพธ์ |
+|--------|---------|---------|
+| ดูราคาหุ้น | `ราคา` / `หุ้น` / `price` / `stock` | ราคาหุ้น 28 ตัว เรียงตาม % change |
+| ดูพอร์ต | `พอต` / `port` / `portfolio` | มูลค่าพอร์ตแต่ละตัว + กำไร/ขาดทุน |
+
+### แจ้งเตือนอัตโนมัติ
+| ฟังก์ชัน | ความถี่ | trigger |
+|---------|---------|---------|
+| รายงานราคาประจำวัน | ทุกวัน 09:00 Bangkok (cron 02:00 UTC) | อัตโนมัติ |
+| แจ้งเตือนหุ้นแกว่ง ≥10% | ทุก 30 นาที (Windows Task Scheduler) | stock_alert.py |
+| แจ้งเตือนงบประมาณเกิน 80% | ทุก 12 ชั่วโมง (n8n workflow) | budget-alert-01 |
+
+### หุ้นที่ติดตาม (28 ตัว)
+```
+ASTS, RKLB, MSFT, NVDA, META, TSLA, IREN, IONQ, AMD, OKLO,
+GOOG, AMZN, LLY, TSM, AAPL, CRWD, PLTR, AVGO, MU, SNDK,
+INTC, ARM, EOSE, RGTI, IBM, ORCL, CRWV, ONDS
+```
+
+### ไฟล์ Bot บนโน้ตบุค (C:\Users\warakorn\Documents\)
+| ไฟล์ | หน้าที่ |
+|------|---------|
+| `stock_bot.py` | ไม่ใช้แล้ว (ย้ายไป GCP) |
+| `stock_daily_report.py` | ไม่ใช้แล้ว (ย้ายไป GCP) |
+| `stock_alert.py` | แจ้งเตือนแกว่ง ≥10% — ยังรันบนโน้ตบุค (Task Scheduler ทุก 30 นาที) |
+
+### ไฟล์ Bot บน GCP VM (/home/warakornbest6/moneymind/)
+| ไฟล์ | หน้าที่ |
+|------|---------|
+| `stock_bot.py` | Interactive bot (systemd service: moneymind-bot) |
+| `stock_daily_report.py` | Daily 09:00 report (cron) |
+| `bot_offset.json` | Telegram update offset |
+| `stock_bot.log` | Log file |
+
+### วิธีจัดการ GCP Bot
+```bash
+# ดู status
+gcloud compute ssh warakornbest6@moneymind-bot --zone=us-central1-a --command="sudo systemctl status moneymind-bot"
+
+# ดู log
+gcloud compute ssh warakornbest6@moneymind-bot --zone=us-central1-a --command="tail -20 ~/moneymind/stock_bot.log"
+
+# restart bot
+gcloud compute ssh warakornbest6@moneymind-bot --zone=us-central1-a --command="sudo systemctl restart moneymind-bot"
+
+# อัพเดทไฟล์ bot (รันจาก PowerShell หลัง gcloud auth)
+$content = Get-Content "C:\Users\warakorn\Documents\stock_bot.py" -Raw -Encoding UTF8
+$encoded = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($content))
+gcloud compute ssh warakornbest6@moneymind-bot --zone=us-central1-a --command="echo '$encoded' | base64 -d > ~/moneymind/stock_bot.py && sudo systemctl restart moneymind-bot"
+```
+
+### gcloud CLI (ติดตั้งแล้วที่ C:\Users\warakorn\AppData\Local\Google\Cloud SDK\)
+```powershell
+# ต้อง set PATH ก่อนทุกครั้ง
+$env:PATH += ";C:\Users\warakorn\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin"
+# project และ zone ตั้งค่าไว้แล้ว: teak-perigee-497404-b7 / us-central1-a
+```
+
+---
+
+## n8n Workflows
+
+### "MoneyMind Gmail Import" (Workflow ID: `y6gGC6tBWqIeOKbR`)
 - **Pipeline:** Gmail Trigger → Get Gmail Message → Parse Bank Email → Write to Google Sheets
 - **Sheet/Tab:** "PendingTx" — columns: `id, bank, amount, type, desc, date, raw, status, ts`
 - **MoneyMind poll URL:** ตั้งใน `DB.settings.gmailImportUrl` — app poll ทุก 1 นาที
+
+### "MoneyMind Budget Alert" (Workflow ID: `budget-alert-01`)
+- **Pipeline:** Schedule (12h) → Fetch Firestore → Calculate Budget → Has Alerts? → Send Email + Telegram
+- **Firestore URL:** `https://firestore.googleapis.com/v1/projects/moneymind-d97f3/databases/(default)/documents/userdata/warakorn`
+- **Alert threshold:** ≥80% ของงบแต่ละหมวด
+- **Email:** `warakornbest6@gmail.com` | **Telegram:** chat_id `8172260229`
 
 ### Bank Email ที่รองรับ
 | bank value | ตรวจจากคำ |
@@ -224,11 +300,14 @@ Static file — ไม่ต้อง build:
 - **Gmail Trigger v1 ไม่ส่ง body** — แก้โดยเพิ่ม "Get Gmail Message" node (resource=`message`, operation=`get`, messageId=`={{ $json.id }}`)
 - **Regex ใน Code node มี Thai text** — ต้องใช้ `String.raw\`...\`` เมื่อ insert ผ่าน CodeMirror ไม่งั้น `\n`, `\d` จะถูก unescape
 - **n8n SQLite อยู่ที่** `C:\Users\warakorn\.n8n\database.sqlite` — แก้ workflow ตรงได้ถ้า restart n8n หลัง
+- **LINE Notify ปิดให้บริการแล้ว** — ใช้ Telegram Bot แทนทั้งหมด
+- **Bot หลาย instance พร้อมกัน → 409 Conflict** — ต้องมี instance เดียวเท่านั้น (ปัจจุบันรันบน GCP)
+- **yfinance regularMarketPrice** — ใช้เฉพาะ `regularMarketPrice` ห้ามใช้ preMarket/postMarket price
 
 ### Restart n8n
-```bash
+```powershell
 # หา PID แล้ว kill
-wmic process where "name='node.exe'" get ProcessId,CommandLine | grep n8n
+Get-WmiObject Win32_Process | Where-Object { $_.CommandLine -like "*n8n*" } | Select-Object ProcessId
 taskkill /F /PID <pid>
 # รันใหม่
 npx n8n
