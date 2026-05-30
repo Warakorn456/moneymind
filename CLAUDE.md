@@ -240,17 +240,74 @@ GOOG, AMZN, LLY, TSM, AAPL, CRWD, PLTR, AVGO, MU, SNDK,
 INTC, ARM, EOSE, RGTI, IBM, ORCL, CRWV, ONDS
 ```
 
+### Source Files Mapping — โน้ตบุค → GCP VM
+
+> **สำคัญ:** ไฟล์บนโน้ตบุคบางตัว **ล้าหลัง** VM เพราะ patch ทำตรงบน VM  
+> วิธี deploy ที่ถูกต้อง: `gcloud compute scp <local_file> warakornbest6@moneymind-bot:/home/warakornbest6/moneymind/<file> --zone=us-central1-a`
+
+| โน้ตบุค (`C:\Users\warakorn\Documents\`) | VM (`/home/warakornbest6/moneymind/`) | หมายเหตุ |
+|------------------------------------------|--------------------------------------|----------|
+| `gmail_bank_alert.py` | `gmail_bank_alert.py` | ✅ sync — source of truth คือโน้ตบุค |
+| `stock_bot.py` | `stock_bot.py` | ⚠️ VM version ใหม่กว่า (มี GROUP_ID, thread_id, dynamic stock count) |
+| `stock_daily_report.py` | `stock_daily_report.py` | deploy ได้ตามปกติ |
+| `stock_alert.py` | `stock_alert.py` | deploy ได้ตามปกติ |
+| `daily_briefing.py` | `daily_briefing.py` | deploy ได้ตามปกติ |
+| `health_monitor.py` | `health_monitor.py` | deploy ได้ตามปกติ |
+| `monthly_report.py` | `monthly_report.py` | deploy ได้ตามปกติ |
+| `weekly_ai_coach.py` | `weekly_ai_coach.py` | deploy ได้ตามปกติ |
+| `news_sentiment.py` | `news_sentiment.py` | deploy ได้ตามปกติ |
+| `calendar_reminder.py` | `calendar_reminder.py` | deploy ได้ตามปกติ |
+| `bank_statement_analysis.py` | `bank_statement_analysis.py` | deploy ได้ตามปกติ |
+
+### Firestore Paths — ที่ GCP Scripts ใช้
+
+URL เดียวสำหรับทุก script:
+```
+https://firestore.googleapis.com/v1/projects/moneymind-d97f3/databases/(default)/documents/userdata/warakorn
+```
+
+| การใช้งาน | script | วิธีเข้าถึง |
+|-----------|--------|------------|
+| อ่าน symbols หุ้นในพอร์ต (USD, qty>0) | `stock_bot.py` → `get_symbols_from_firestore()` | `fields.db.stringValue` → JSON → `investments[].name` |
+| อ่าน DB ทั้งหมด (budget/debt/saving/summary) | `stock_bot.py` → `_fetch_db()` | `fields.db.stringValue` → JSON |
+| เขียน transaction ใหม่ | `stock_bot.py` → `save_to_firestore(tx)` | PATCH — append ใน `transactions[]` |
+| อ่าน portfolio มูลค่า | `stock_bot.py` → `get_portfolio()` | `fields.db.stringValue` → `investments[]` |
+
+`gmail_bank_alert.py` ไม่ได้ต่อ Firestore โดยตรง — เขียนลง `gmail_pending.json` แล้วให้ `stock_bot.py` จัดการเมื่อกดปุ่ม ✅
+
+### โครงสร้าง stock_bot.py — Key Functions
+
+| บรรทัด | ฟังก์ชัน | หน้าที่ |
+|--------|----------|---------|
+| ~16–24 | constants | `TOKEN`, `CHAT_ID`, `GROUP_ID`, `API`, `FIRESTORE_URL` |
+| ~58 | `send(chat_id, text, thread_id=None)` | ส่ง Telegram message (รองรับ group topic) |
+| ~71 | `fetch_quotes(symbols)` | ดึงราคาหุ้นจาก Yahoo Finance |
+| ~82 | `get_symbols_from_firestore()` | อ่าน symbols USD จาก Firestore investments |
+| ~97 | `get_prices(symbols=None)` | รวม quotes + format (รับ pre-fetched symbols ได้) |
+| ~136 | `get_portfolio()` | ดึงพอร์ตพร้อมราคาปัจจุบัน + FX |
+| ~211 | `get_summary()` | สรุปรายรับ-รายจ่ายเดือนนี้ |
+| ~264 | `_fetch_db()` | อ่าน DB ทั้งหมดจาก Firestore |
+| ~282 | `get_budget_data()` | งบแต่ละหมวด + % ที่ใช้ |
+| ~312 | `get_debt_data()` | หนี้คงเหลือ |
+| ~339 | `get_saving_data()` | เงินออมแต่ละกอง |
+| ~410 | `save_to_firestore(tx)` | PATCH transaction ลง Firestore |
+| ~459 | `load_dca()` / `save_dca()` | DCA tracker (JSON file) |
+| ~542 | `load_targets()` / `save_targets()` | SL/TP targets (JSON file) |
+| ~582 | `main()` | long-polling loop — getUpdates ทุก 30s |
+| ~600 | callback handler | จัดการ inline button (confirm/skip/cat:) |
+| ~681 | message handler | กรอง CHAT_ID/GROUP_ID → dispatch คำสั่ง |
+
 ### ไฟล์ Bot บนโน้ตบุค (C:\Users\warakorn\Documents\)
 | ไฟล์ | หน้าที่ |
 |------|---------|
-| `stock_bot.py` | ไม่ใช้แล้ว (ย้ายไป GCP) |
+| `stock_bot.py` | source สำรอง — **ล้าหลัง VM** อย่า deploy ทับโดยไม่ตรวจก่อน |
 | `stock_daily_report.py` | ไม่ใช้แล้ว (ย้ายไป GCP) |
-| `stock_alert.py` | แจ้งเตือนแกว่ง ≥10% — ยังรันบนโน้ตบุค (Task Scheduler ทุก 30 นาที) |
+| `stock_alert.py` | แจ้งเตือนแกว่ง ≥10% — ย้ายไป GCP cron แล้ว |
 
 ### ไฟล์ Bot บน GCP VM (/home/warakornbest6/moneymind/)
 | ไฟล์ | หน้าที่ |
 |------|---------|
-| `stock_bot.py` | Interactive bot (systemd service: moneymind-bot) |
+| `stock_bot.py` | Interactive bot (systemd service: moneymind-bot) — เวอร์ชัน canonical |
 | `stock_daily_report.py` | Daily 09:00 report (cron) |
 | `bot_offset.json` | Telegram update offset |
 | `stock_bot.log` | Log file |
