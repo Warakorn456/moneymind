@@ -247,7 +247,7 @@ INTC, ARM, EOSE, RGTI, IBM, ORCL, CRWV, ONDS
 
 | โน้ตบุค (`C:\Users\warakorn\Documents\`) | VM (`/home/warakornbest6/moneymind/`) | หมายเหตุ |
 |------------------------------------------|--------------------------------------|----------|
-| `gmail_bank_alert.py` | `gmail_bank_alert.py` | ✅ sync — source of truth คือโน้ตบุค |
+| `gmail_bank_alert.py` | `gmail_bank_alert.py` | ✅ sync — ส่งไป group topic 💰 การเงิน (TG_CHAT=`-1004296300749`, TG_TOPIC=`4`) |
 | `stock_bot.py` | `stock_bot.py` | ⚠️ VM version ใหม่กว่า (มี GROUP_ID, thread_id, dynamic stock count) |
 | `stock_daily_report.py` | `stock_daily_report.py` | deploy ได้ตามปกติ |
 | `stock_alert.py` | `stock_alert.py` | deploy ได้ตามปกติ |
