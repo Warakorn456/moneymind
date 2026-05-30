@@ -254,7 +254,9 @@ INTC, ARM, EOSE, RGTI, IBM, ORCL, CRWV, ONDS
 | โน้ตบุค (`C:\Users\warakorn\Documents\`) | VM (`/home/warakornbest6/moneymind/`) | หมายเหตุ |
 |------------------------------------------|--------------------------------------|----------|
 | `gmail_bank_alert.py` | `gmail_bank_alert.py` | ✅ sync — ส่งไป group topic 💰 การเงิน (TG_CHAT=`-1004296300749`, TG_TOPIC=`4`) |
-| `stock_bot.py` | `stock_bot.py` | ⚠️ VM version ใหม่กว่า (มี GROUP_ID, thread_id, dynamic stock count) |
+| `stock_bot.py` | `stock_bot.py` | ⚠️ VM version ใหม่กว่า (มี GROUP_ID, thread_id, dynamic stock count) — อย่า deploy ทับ |
+| `monthly_report.py` | `monthly_report.py` | ✅ sync (thinkingBudget: 0, maxOutputTokens: 600) |
+| `weekly_ai_coach.py` | `weekly_ai_coach.py` | ✅ sync (thinkingBudget: 0, maxOutputTokens: 600) |
 | `stock_daily_report.py` | `stock_daily_report.py` | deploy ได้ตามปกติ |
 | `stock_alert.py` | `stock_alert.py` | deploy ได้ตามปกติ |
 | `daily_briefing.py` | `daily_briefing.py` | deploy ได้ตามปกติ |
