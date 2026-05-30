@@ -204,6 +204,7 @@ Static file — ไม่ต้อง build:
 | **GitHub** | repo นี้ | deploy via GitHub Pages |
 | **Gmail (OAuth2)** | credential ID `v7EQvnFH4mbTwfHL` ใน n8n | ดัก bank email |
 | **Telegram Bot** | `@moneymind_alert_bot` token: `8841603911:AAFz0JrEZcMTc5nxtxmzSAmg5y4w7odwi5o` chat_id: `8172260229` | แจ้งเตือนและตอบคำสั่ง |
+| **Telegram Group** | MoneyMind Hub — group_id: `-1004296300749` topic หุ้น: thread_id=`3`, topic การเงิน: thread_id=`4` | รับแจ้งเตือนทุก script |
 | **Google Cloud VM** | e2-micro, us-central1-a, IP: `34.16.55.125` project: `teak-perigee-497404-b7` | รัน Telegram bot 24/7 |
 
 ---
