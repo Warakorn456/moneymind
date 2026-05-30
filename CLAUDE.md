@@ -2,6 +2,12 @@
 
 แอปจัดการการเงินส่วนตัวภาษาไทย เขียนเป็น Single HTML File ไม่มี build process ไม่มี framework ไม่มี dependencies ที่ต้อง install
 
+## กฎการทำงาน (ทำทุกครั้งโดยไม่ต้องรอให้สั่ง)
+
+- **หลังแก้ไข/deploy ทุกครั้ง:** อัปเดต CLAUDE.md และ memory files ที่เกี่ยวข้องทันที ไม่ต้องรอให้สั่ง
+- **Memory path:** `C:\Users\warakorn\.claude\projects\D--wabbest\memory\`
+- อัปเดตเฉพาะส่วนที่เปลี่ยนจริง — ไม่เขียนซ้ำสิ่งที่มีอยู่แล้ว
+
 ## สถาปัตยกรรม
 
 **ไฟล์เดียว:** `index.html` (~10,700 บรรทัด) — HTML + CSS + Vanilla JavaScript ทั้งหมดอยู่ในไฟล์เดียว
