@@ -393,7 +393,8 @@ $env:PATH += ";C:\Users\warakorn\AppData\Local\Google\Cloud SDK\google-cloud-sdk
 - **stock_bot.py "28 ตัว" hardcoded** — แก้แล้ว (2026-05-30): pre-fetch `get_symbols_from_firestore()` ก่อนส่งข้อความ แล้วส่งต่อให้ `get_prices(syms)` เพื่อไม่ให้ดึง Firestore ซ้ำ
 - **gmail_bank_alert.py desc ยาว/ติด disclaimer** — แก้แล้ว (2026-05-30): `extract_merchant()` จำกัด 40 chars ต่อ pattern + KKP pattern `from account name : NAME to`; เพิ่ม `clean_desc(desc, max_len=70)` ตัด disclaimer keywords; `parse_email()` ใช้ `clean_desc(merchant or subject)`
 - **gmail_bank_alert.py ส่งไป personal chat** — ย้ายไป group topic 💰 การเงิน แล้ว (2026-05-30): `TG_CHAT = '-1004296300749'`, `TG_TOPIC = 4`, เพิ่ม `message_thread_id` ใน sendMessage payload
-- **news_sentiment.py ข้อความสั้นเกิน** — แก้แล้ว (2026-05-30): `maxOutputTokens` 350→700, prompt เปลี่ยนจาก "สั้นๆ ไม่เกิน 5 บรรทัด" เป็นวิเคราะห์รายหุ้นพร้อม sentiment icon 🟢🔴⚪
+- **news_sentiment.py ข้อความสั้นเกิน** — แก้แล้ว (2026-05-30): `maxOutputTokens` 350→700, prompt เปลี่ยนเป็นวิเคราะห์รายหุ้นพร้อม sentiment icon 🟢🔴⚪, และเพิ่ม `thinkingConfig: {thinkingBudget: 0}` เพื่อ disable thinking
+- **Gemini 2.5 Flash thinking tokens กิน budget** — ถ้า response สั้นผิดปกติ ให้เพิ่ม `'thinkingConfig': {'thinkingBudget': 0}` ใน `generationConfig` — ใช้กับทุก script ที่ส่ง Gemini request และไม่ต้องการ deep reasoning
 - **Telegram group bot ต้องเป็น admin** — `createForumTopic` ต้องการสิทธิ์ can_manage_topics; group ID ใน Bot API ต้องมี prefix `-100` (URL `-4296300749` → API `-1004296300749`)
 
 ### Restart n8n
