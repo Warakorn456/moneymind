@@ -213,17 +213,24 @@ Static file — ไม่ต้อง build:
 
 Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ปิดเครื่องได้ bot ยังทำงาน
 
+### Telegram Group — MoneyMind Hub (สร้าง 2026-05-30)
+- Group ID (Bot API): `-1004296300749`
+- topic `📈 หุ้น` → `message_thread_id=3`
+- topic `💰 การเงิน` → `message_thread_id=4`
+- Stock scripts (9 ตัว) ส่งไป thread 3, Finance scripts (7 ตัว) ส่งไป thread 4
+- `stock_bot.py` รับคำสั่งจากทั้ง personal chat (`8172260229`) และ group แล้ว reply ใน thread เดิม
+
 ### คำสั่ง Interactive (พิมในแชท)
 | คำสั่ง | คำที่ใช้ | ผลลัพธ์ |
 |--------|---------|---------|
-| ดูราคาหุ้น | `ราคา` / `หุ้น` / `price` / `stock` | ราคาหุ้น 28 ตัว เรียงตาม % change |
+| ดูราคาหุ้น | `ราคา` / `หุ้น` / `price` / `stock` | ราคาหุ้น (dynamic จาก Firestore portfolio) เรียงตาม % change |
 | ดูพอร์ต | `พอต` / `port` / `portfolio` | มูลค่าพอร์ตแต่ละตัว + กำไร/ขาดทุน |
 
 ### แจ้งเตือนอัตโนมัติ
 | ฟังก์ชัน | ความถี่ | trigger |
 |---------|---------|---------|
 | รายงานราคาประจำวัน | ทุกวัน 09:00 Bangkok (cron 02:00 UTC) | อัตโนมัติ |
-| แจ้งเตือนหุ้นแกว่ง ≥10% | ทุก 30 นาที (Windows Task Scheduler) | stock_alert.py |
+| แจ้งเตือนหุ้นแกว่ง ≥10% | ทุก 30 นาที จ.–ศ. (GCP cron) | stock_alert.py |
 | แจ้งเตือนงบประมาณเกิน 80% | ทุก 12 ชั่วโมง (n8n workflow) | budget-alert-01 |
 
 ### หุ้นที่ติดตาม (28 ตัว)
