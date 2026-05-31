@@ -401,6 +401,9 @@ $env:PATH += ";C:\Users\warakorn\AppData\Local\Google\Cloud SDK\google-cloud-sdk
 - **news_sentiment.py ข้อความสั้นเกิน** — แก้แล้ว (2026-05-30): `maxOutputTokens` 350→700, prompt เปลี่ยนเป็นวิเคราะห์รายหุ้นพร้อม sentiment icon 🟢🔴⚪, และเพิ่ม `thinkingConfig: {thinkingBudget: 0}` เพื่อ disable thinking
 - **Gemini 2.5 Flash thinking tokens กิน budget** — ถ้า response สั้นผิดปกติ ให้เพิ่ม `'thinkingConfig': {'thinkingBudget': 0}` ใน `generationConfig` — ใช้กับทุก script ที่ส่ง Gemini request และไม่ต้องการ deep reasoning
 - **Telegram group bot ต้องเป็น admin** — `createForumTopic` ต้องการสิทธิ์ can_manage_topics; group ID ใน Bot API ต้องมี prefix `-100` (URL `-4296300749` → API `-1004296300749`)
+- **Bot 409 Conflict หลัง restart** — `sudo systemctl stop moneymind-bot; sleep 2; sudo systemctl start moneymind-bot` (ไม่ใช้ restart เพราะอาจ overlap)
+- **stock_bot.py อัปเดต 2026-05-31:** เพิ่ม Quick Add (`กาแฟ 65`), vs Benchmark (SPY/QQQ), `get_portfolio()` return 5 values แล้ว (เพิ่ม benchmark dict)
+- **New scripts 2026-05-31:** `sltp_alert.py` (cron ทุก 30 นาที US market), `bill_reminder.py` (cron ทุกวัน 09:00), `earnings_calendar.py` (standalone)
 
 ### Restart n8n
 ```powershell
