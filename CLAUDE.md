@@ -239,11 +239,14 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | แจ้งเตือนหุ้นแกว่ง ≥10% | ทุก 30 นาที จ.–ศ. (GCP cron) | stock_alert.py |
 | แจ้งเตือนงบประมาณเกิน 80% | ทุก 12 ชั่วโมง (n8n workflow) | budget-alert-01 |
 
-### หุ้นที่ติดตาม (28 ตัว)
+### หุ้นที่ติดตาม (dynamic — ดึงจาก Firestore, ปัจจุบัน ~43 ตัว)
+ไม่ใช่ hardcode แล้ว — bot ดึง symbols จาก `get_symbols_from_firestore()` (investments ที่มี qty > 0 และ type = USD)
+ตัวอย่างหุ้นที่เห็นใน Telegram เมื่อ 30-31/05/2026:
 ```
 ASTS, RKLB, MSFT, NVDA, META, TSLA, IREN, IONQ, AMD, OKLO,
-GOOG, AMZN, LLY, TSM, AAPL, CRWD, PLTR, AVGO, MU, SNDK,
-INTC, ARM, EOSE, RGTI, IBM, ORCL, CRWV, ONDS
+GOOG, AMZN, LLY, TSM, AAPL, CRWD, PLTR, MU, SNDK,
+INTC, ARM, EOSE, RGTI, IBM, ORCL, CRWV,
+SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY, AXTI
 ```
 
 ### Source Files Mapping — โน้ตบุค → GCP VM
