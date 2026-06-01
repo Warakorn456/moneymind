@@ -429,6 +429,9 @@ $env:PATH += ";C:\Users\warakorn\AppData\Local\Google\Cloud SDK\google-cloud-sdk
 - **stock_bot.py อัปเดต 2026-05-31:** เพิ่ม Quick Add (`กาแฟ 65`), vs Benchmark (SPY/QQQ), `get_portfolio()` return 5 values แล้ว (เพิ่ม benchmark dict)
 - **New scripts 2026-05-31:** `sltp_alert.py` (cron ทุก 30 นาที US market), `bill_reminder.py` (cron ทุกวัน 09:00), `earnings_calendar.py` (standalone)
 - **stock_bot.py อัปเดต 2026-06-01:** เพิ่ม `/help`, `วันนี้`, `networth_weekly.py`, `financial_journal.py`, `investment_research.py`; Short-poll (timeout=0) แทน long-poll; logging non-200 ใน send()
+- **New scripts 2026-06-01:** `sync_prices.py` (cron 22:30 จ.–ศ.), `tax_notebook.py` (cron 1 พ.ย.), `upload_to_drive.py` (manual/ต้อง setup Drive API ก่อน)
+- **Gemini API key leaked** — key `AIzaSy...` ถูก flag; scripts ใหม่ใช้ key จาก `monthly_report.py` บน VM แทน และเปลี่ยนมาใช้ HTTP requests แทน `google.generativeai` SDK ที่ deprecated แล้ว
+- **Google Drive auto-upload** — ต้อง setup ก่อน: `gcloud services enable drive.googleapis.com`, สร้าง Drive folder, share กับ VM service account, set `DRIVE_FOLDER_ID` ใน `upload_to_drive.py`
 - **`build_help_message()` bug — `'string' '─'*28`** — Python implicit concatenation ทำให้ `'string─'*28` → ข้อความยาวเกิน 4096 chars → Telegram 400 ไม่มี log; แก้ด้วย `sep='─'*28; '\n'.join([...])`
 - **409 Conflict สาเหตุจริง — `health_monitor.py` restart ซ้ำกับ systemd** — `health_monitor.py` (cron */5) เรียก `sudo systemctl restart moneymind-bot` ซ้ำกับ systemd `Restart=always` ทำให้มี 2 instances ชั่วคราว; แก้ด้วยการเอา `moneymind-bot` ออกจาก `SERVICES` list ใน health_monitor.py (บน VM แล้ว)
 
