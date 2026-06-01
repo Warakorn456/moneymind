@@ -251,8 +251,12 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | แจ้งเตือนหุ้นแกว่ง ≥10% | ทุก 30 นาที จ.–ศ. | `stock_alert.py` → topic 📈 |
 | **SL/TP Alert** (user-defined targets) | ทุก 30 นาที จ.–ศ. US market | `sltp_alert.py` → topic 📈 + personal |
 | **Bill Reminder** (subscriptions ครบใน 3 วัน) | 09:00 ทุกวัน | `bill_reminder.py` → topic 💰 |
+| **Net Worth Weekly** | จันทร์ 09:00 | `networth_weekly.py` → topic 💰 |
+| **Stock Price Sync** | 22:30 จ.–ศ. (US market close) | `sync_prices.py` → topic 📈 + อัปเดต Firestore |
 | Weekly AI Coach | วันอาทิตย์ 09:00 | `weekly_ai_coach.py` → topic 💰 |
 | Monthly Report | วันที่ 1 ของเดือน 09:00 | `monthly_report.py` → topic 💰 |
+| **Financial Journal** (Gemini + NotebookLM) | วันที่ 2 ของเดือน 09:00 | `financial_journal.py` → topic 💰 + save .md |
+| **Tax Notebook** | 1 พ.ย. ทุกปี 09:00 | `tax_notebook.py` → topic 💰 + save .md |
 | แจ้งเตือนงบประมาณเกิน 80% | ทุก 12 ชั่วโมง | n8n budget-alert-01 → personal + email |
 
 ### หุ้นที่ติดตาม (dynamic — ดึงจาก Firestore, ปัจจุบัน ~43 ตัว)
