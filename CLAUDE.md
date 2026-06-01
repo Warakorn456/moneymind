@@ -276,7 +276,11 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 | `stock_bot.py` | `stock_bot.py` | ✅ sync (อัปเดต 2026-06-01: Quick Add + vs Benchmark SPY/QQQ) |
 | `sltp_alert.py` | `sltp_alert.py` | ✅ sync — ใหม่ 2026-06-01, cron ทุก 30 นาที US market |
 | `bill_reminder.py` | `bill_reminder.py` | ✅ sync — ใหม่ 2026-06-01, cron 09:00 ทุกวัน |
-| `earnings_calendar.py` | `earnings_calendar.py` | ✅ sync — ใหม่ 2026-06-01, standalone (ไม่มี cron ยัง) |
+| `earnings_calendar.py` | `earnings_calendar.py` | ✅ sync — cron `0 2 * * 1-5` (09:00 Bangkok จ.–ศ.) |
+| `sync_prices.py` | `sync_prices.py` | ✅ sync — ใหม่ 2026-06-01, cron `30 15 * * 1-5` (22:30 Bangkok) |
+| `tax_notebook.py` | `tax_notebook.py` | ✅ sync — ใหม่ 2026-06-01, cron `0 2 1 11 *` (1 พ.ย.) |
+| `networth_weekly.py` | `networth_weekly.py` | ✅ sync — cron `0 2 * * 1` (จันทร์ 09:00) |
+| `upload_to_drive.py` | `upload_to_drive.py` | ✅ sync — ต้อง setup Google Drive API ก่อนใช้ |
 | `monthly_report.py` | `monthly_report.py` | ✅ sync (thinkingBudget: 0, maxOutputTokens: 600) |
 | `weekly_ai_coach.py` | `weekly_ai_coach.py` | ✅ sync (thinkingBudget: 0, maxOutputTokens: 600) |
 | `stock_daily_report.py` | `stock_daily_report.py` | deploy ได้ตามปกติ |
