@@ -272,16 +272,17 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 
 | โน้ตบุค (`C:\Users\warakorn\Documents\`) | VM (`/home/warakornbest6/moneymind/`) | หมายเหตุ |
 |------------------------------------------|--------------------------------------|----------|
-| `gmail_bank_alert.py` | `gmail_bank_alert.py` | ✅ sync — ส่งไป group topic 💰 การเงิน (TG_CHAT=`-1004296300749`, TG_TOPIC=`4`) |
-| `stock_bot.py` | `stock_bot.py` | ⚠️ VM version ใหม่กว่า (มี GROUP_ID, thread_id, dynamic stock count) — อย่า deploy ทับ |
+| `gmail_bank_alert.py` | `gmail_bank_alert.py` | ✅ sync — ส่งไป group topic 💰 (TG_CHAT=`-1004296300749`, TG_TOPIC=`4`) |
+| `stock_bot.py` | `stock_bot.py` | ✅ sync (อัปเดต 2026-06-01: Quick Add + vs Benchmark SPY/QQQ) |
+| `sltp_alert.py` | `sltp_alert.py` | ✅ sync — ใหม่ 2026-06-01, cron ทุก 30 นาที US market |
+| `bill_reminder.py` | `bill_reminder.py` | ✅ sync — ใหม่ 2026-06-01, cron 09:00 ทุกวัน |
+| `earnings_calendar.py` | `earnings_calendar.py` | ✅ sync — ใหม่ 2026-06-01, standalone (ไม่มี cron ยัง) |
 | `monthly_report.py` | `monthly_report.py` | ✅ sync (thinkingBudget: 0, maxOutputTokens: 600) |
 | `weekly_ai_coach.py` | `weekly_ai_coach.py` | ✅ sync (thinkingBudget: 0, maxOutputTokens: 600) |
 | `stock_daily_report.py` | `stock_daily_report.py` | deploy ได้ตามปกติ |
 | `stock_alert.py` | `stock_alert.py` | deploy ได้ตามปกติ |
 | `daily_briefing.py` | `daily_briefing.py` | deploy ได้ตามปกติ |
 | `health_monitor.py` | `health_monitor.py` | deploy ได้ตามปกติ |
-| `monthly_report.py` | `monthly_report.py` | deploy ได้ตามปกติ |
-| `weekly_ai_coach.py` | `weekly_ai_coach.py` | deploy ได้ตามปกติ |
 | `news_sentiment.py` | `news_sentiment.py` | deploy ได้ตามปกติ |
 | `calendar_reminder.py` | `calendar_reminder.py` | deploy ได้ตามปกติ |
 | `bank_statement_analysis.py` | `bank_statement_analysis.py` | deploy ได้ตามปกติ |
