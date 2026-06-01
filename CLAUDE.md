@@ -303,40 +303,47 @@ https://firestore.googleapis.com/v1/projects/moneymind-d97f3/databases/(default)
 
 `gmail_bank_alert.py` ไม่ได้ต่อ Firestore โดยตรง — เขียนลง `gmail_pending.json` แล้วให้ `stock_bot.py` จัดการเมื่อกดปุ่ม ✅
 
-### โครงสร้าง stock_bot.py — Key Functions
+### โครงสร้าง stock_bot.py — Key Functions (อัปเดต 2026-06-01)
 
-| บรรทัด | ฟังก์ชัน | หน้าที่ |
-|--------|----------|---------|
-| ~16–24 | constants | `TOKEN`, `CHAT_ID`, `GROUP_ID`, `API`, `FIRESTORE_URL` |
-| ~58 | `send(chat_id, text, thread_id=None)` | ส่ง Telegram message (รองรับ group topic) |
-| ~71 | `fetch_quotes(symbols)` | ดึงราคาหุ้นจาก Yahoo Finance |
-| ~82 | `get_symbols_from_firestore()` | อ่าน symbols USD จาก Firestore investments |
-| ~97 | `get_prices(symbols=None)` | รวม quotes + format (รับ pre-fetched symbols ได้) |
-| ~136 | `get_portfolio()` | ดึงพอร์ตพร้อมราคาปัจจุบัน + FX |
-| ~211 | `get_summary()` | สรุปรายรับ-รายจ่ายเดือนนี้ |
-| ~264 | `_fetch_db()` | อ่าน DB ทั้งหมดจาก Firestore |
-| ~282 | `get_budget_data()` | งบแต่ละหมวด + % ที่ใช้ |
-| ~312 | `get_debt_data()` | หนี้คงเหลือ |
-| ~339 | `get_saving_data()` | เงินออมแต่ละกอง |
-| ~410 | `save_to_firestore(tx)` | PATCH transaction ลง Firestore |
-| ~459 | `load_dca()` / `save_dca()` | DCA tracker (JSON file) |
-| ~542 | `load_targets()` / `save_targets()` | SL/TP targets (JSON file) |
-| ~582 | `main()` | long-polling loop — getUpdates ทุก 30s |
-| ~600 | callback handler | จัดการ inline button (confirm/skip/cat:) |
-| ~681 | message handler | กรอง CHAT_ID/GROUP_ID → dispatch คำสั่ง |
+| ฟังก์ชัน | หน้าที่ |
+|----------|---------|
+| `_parse_quick_add(text)` | Parse "ข้าว 120" / "120 กาแฟ" → (desc, amount) |
+| `_detect_cat(desc)` | Auto-detect หมวดหมู่จาก keyword |
+| `fetch_quotes(symbols)` | ดึงราคาจาก Yahoo Finance (รวม SPY, QQQ, USDTHB=X) |
+| `get_symbols_from_firestore()` | อ่าน symbols USD จาก Firestore investments (dynamic) |
+| `get_portfolio()` | ดึงพอร์ต + FX + **benchmark** → return 5 values |
+| `build_portfolio_message(..., benchmark)` | แสดงพอร์ต + **vs SPY/QQQ วันนี้** |
+| `get_summary()` | สรุปรายรับ-รายจ่ายเดือนนี้ + Net Worth |
+| `_fetch_db()` | อ่าน DB ทั้งหมดจาก Firestore |
+| `get_budget_data()` | งบแต่ละหมวด + % ที่ใช้ |
+| `get_debt_data()` / `get_saving_data()` | หนี้ / เงินออม |
+| `save_to_firestore(tx)` | PATCH transaction ลง Firestore (ใช้ทั้ง gmail-import และ quick-add) |
+| `load_dca()` / `save_dca()` | DCA tracker (JSON file) |
+| `load_targets()` / `save_targets()` | SL/TP targets → `stock_targets.json` |
+| `main()` | long-polling loop — getUpdates → dispatch commands + Quick Add else clause |
+
+**Quick Add flow:** `else` clause สุดท้ายใน message handler → `_parse_quick_add()` → `_detect_cat()` → `save_to_firestore()`  
+**vs Benchmark:** `get_portfolio()` fetch SPY+QQQ พร้อมกัน → คืน `benchmark` dict → แสดงใน footer
 
 ### ไฟล์ Bot บนโน้ตบุค (C:\Users\warakorn\Documents\)
 | ไฟล์ | หน้าที่ |
 |------|---------|
-| `stock_bot.py` | source สำรอง — **ล้าหลัง VM** อย่า deploy ทับโดยไม่ตรวจก่อน |
-| `stock_daily_report.py` | ไม่ใช้แล้ว (ย้ายไป GCP) |
-| `stock_alert.py` | แจ้งเตือนแกว่ง ≥10% — ย้ายไป GCP cron แล้ว |
+| `stock_bot.py` | ✅ sync กับ VM (2026-06-01) — Quick Add + Benchmark |
+| `sltp_alert.py` | ✅ sync — ตรวจ stock_targets.json แจ้งเตือน SL/TP |
+| `bill_reminder.py` | ✅ sync — ตรวจ subscriptions ครบใน 3 วัน |
+| `earnings_calendar.py` | ✅ sync — ตรวจ earnings dates ใน 7 วัน |
+| `stock_daily_report.py` | ย้ายไป GCP cron แล้ว |
+| `stock_alert.py` | ย้ายไป GCP cron แล้ว |
 
 ### ไฟล์ Bot บน GCP VM (/home/warakornbest6/moneymind/)
 | ไฟล์ | หน้าที่ |
 |------|---------|
-| `stock_bot.py` | Interactive bot (systemd service: moneymind-bot) — เวอร์ชัน canonical |
-| `stock_daily_report.py` | Daily 09:00 report (cron) |
+| `stock_bot.py` | Interactive bot (systemd: moneymind-bot) — canonical version |
+| `sltp_alert.py` | SL/TP alert — cron `*/30 13-21 * * 1-5` |
+| `bill_reminder.py` | Bill reminder — cron `0 2 * * *` (09:00 Bangkok) |
+| `earnings_calendar.py` | Earnings calendar — standalone (เทสได้ตรงๆ) |
+| `stock_daily_report.py` | Daily 09:00 price report — cron `0 2 * * *` |
+| `stock_targets.json` | SL/TP targets ที่ user ตั้งผ่าน bot |
 | `bot_offset.json` | Telegram update offset |
 | `stock_bot.log` | Log file |
 
