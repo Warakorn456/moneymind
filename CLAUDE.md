@@ -230,14 +230,30 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | คำสั่ง | คำที่ใช้ | ผลลัพธ์ |
 |--------|---------|---------|
 | ดูราคาหุ้น | `ราคา` / `หุ้น` / `price` / `stock` | ราคาหุ้น (dynamic จาก Firestore portfolio) เรียงตาม % change |
-| ดูพอร์ต | `พอต` / `port` / `portfolio` | มูลค่าพอร์ตแต่ละตัว + กำไร/ขาดทุน |
+| ดูพอร์ต | `พอต` / `port` / `portfolio` | มูลค่าพอร์ต + กำไร/ขาดทุน + **vs Benchmark (SPY/QQQ วันนี้)** |
+| ดูสรุป | `สรุป` / `summary` | สรุปรายรับ-รายจ่ายเดือนนี้ + Net Worth |
+| ดูงบ | `งบ` / `budget` | รายจ่ายแต่ละหมวดเดือนนี้ + progress bar |
+| ดูหนี้ | `หนี้` / `debt` | หนี้คงเหลือแต่ละรายการ + due date |
+| ดูออม | `ออม` / `saving` | เป้าหมายเงินออมแต่ละกอง + % ที่ถึง |
+| ดู Top | `top` / `ใช้มาก` | Top 5 หมวดรายจ่ายเดือนนี้ |
+| DCA | `dca` / `dca add SYM N PRICE` | ดู DCA tracker หรือเพิ่มรายการ |
+| SL/TP ตั้งค่า | `sl SYM PRICE` / `tp SYM PRICE` | ตั้ง Stop Loss / Take Profit (บันทึกใน stock_targets.json) |
+| SL/TP ดู | `/target` / `/targets` | ดู targets ที่ตั้งไว้ทั้งหมด + ราคาปัจจุบัน |
+| **Quick Add** | `"ข้าว 120"` / `"120 กาแฟ"` | บันทึก expense ลง Firestore ทันที (auto-detect หมวด) |
 
-### แจ้งเตือนอัตโนมัติ
-| ฟังก์ชัน | ความถี่ | trigger |
-|---------|---------|---------|
-| รายงานราคาประจำวัน | ทุกวัน 09:00 Bangkok (cron 02:00 UTC) | อัตโนมัติ |
-| แจ้งเตือนหุ้นแกว่ง ≥10% | ทุก 30 นาที จ.–ศ. (GCP cron) | stock_alert.py |
-| แจ้งเตือนงบประมาณเกิน 80% | ทุก 12 ชั่วโมง (n8n workflow) | budget-alert-01 |
+### แจ้งเตือนอัตโนมัติ (GCP cron)
+| ฟังก์ชัน | เวลา Bangkok | script |
+|---------|------------|--------|
+| Daily Briefing (อากาศ + Top Movers + การเงิน) | 08:01 ทุกวัน | `daily_briefing.py` → topic 💰 |
+| รายงานราคาประจำวัน | 09:00 ทุกวัน | `stock_daily_report.py` → topic 📈 |
+| Earnings Calendar (หุ้นในพอร์ตที่จะรายงานผลใน 7 วัน) | 09:00 จ.–ศ. | `earnings_calendar.py` → topic 📈 |
+| News Sentiment | 09:10 จ.–ศ. | `news_sentiment.py` → topic 📈 |
+| แจ้งเตือนหุ้นแกว่ง ≥10% | ทุก 30 นาที จ.–ศ. | `stock_alert.py` → topic 📈 |
+| **SL/TP Alert** (user-defined targets) | ทุก 30 นาที จ.–ศ. US market | `sltp_alert.py` → topic 📈 + personal |
+| **Bill Reminder** (subscriptions ครบใน 3 วัน) | 09:00 ทุกวัน | `bill_reminder.py` → topic 💰 |
+| Weekly AI Coach | วันอาทิตย์ 09:00 | `weekly_ai_coach.py` → topic 💰 |
+| Monthly Report | วันที่ 1 ของเดือน 09:00 | `monthly_report.py` → topic 💰 |
+| แจ้งเตือนงบประมาณเกิน 80% | ทุก 12 ชั่วโมง | n8n budget-alert-01 → personal + email |
 
 ### หุ้นที่ติดตาม (dynamic — ดึงจาก Firestore, ปัจจุบัน ~43 ตัว)
 ไม่ใช่ hardcode แล้ว — bot ดึง symbols จาก `get_symbols_from_firestore()` (investments ที่มี qty > 0 และ type = USD)
