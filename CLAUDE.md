@@ -289,6 +289,7 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 | `drive_upload.py` | `drive_upload.py` | ✅ sync — shared module upload ไฟล์ขึ้น Drive (ใช้ `drive_token.json`) |
 | `drive_auth_local.py` | — | รันบนโน้ตบุคครั้งเดียวเพื่อ generate `drive_token.json` |
 | `gmail_pdf_to_drive.py` | `gmail_pdf_to_drive.py` | ✅ sync — ใหม่ 2026-06-11, cron `0 */2 * * *` (ทุก 2 ชั่วโมง) PDF → Drive |
+| `gmail_statement_import.py` | `gmail_statement_import.py` | ✅ sync — ใหม่ 2026-06-11, cron `0 9 * * *` (09:00 ทุกวัน) CSV/Excel → Firestore |
 | `monthly_report.py` | `monthly_report.py` | ✅ sync (thinkingBudget: 0, maxOutputTokens: 600) |
 | `weekly_ai_coach.py` | `weekly_ai_coach.py` | ✅ sync (thinkingBudget: 0, maxOutputTokens: 600) |
 | `stock_daily_report.py` | `stock_daily_report.py` | deploy ได้ตามปกติ |
