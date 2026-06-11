@@ -362,6 +362,9 @@ https://firestore.googleapis.com/v1/projects/moneymind-d97f3/databases/(default)
 | `gmail_pdf_to_drive.py` | Gmail PDF → Drive auto-upload — cron `0 */2 * * *` (ทุก 2 ชั่วโมง) |
 | `pdf_seen.json` | Message IDs ที่ upload ไปแล้ว (ป้องกัน duplicate) |
 | `pdf_drive.log` | Log file ของ gmail_pdf_to_drive.py |
+| `gmail_statement_import.py` | Gmail CSV/Excel (bank domain) → parse transactions → Firestore + Drive (cron 09:00) |
+| `statement_seen.json` | ไฟล์ที่ process แล้ว (dedup) |
+| `statement_import.log` | Log ของ gmail_statement_import.py |
 | `stock_bot.log` | Log file |
 
 ### วิธีจัดการ GCP Bot
