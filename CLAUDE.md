@@ -284,7 +284,8 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 | `sync_prices.py` | `sync_prices.py` | ✅ sync — ใหม่ 2026-06-01, cron `30 15 * * 1-5` (22:30 Bangkok) |
 | `tax_notebook.py` | `tax_notebook.py` | ✅ sync — ใหม่ 2026-06-01, cron `0 2 1 11 *` (1 พ.ย.) |
 | `networth_weekly.py` | `networth_weekly.py` | ✅ sync — cron `0 2 * * 1` (จันทร์ 09:00) |
-| `upload_to_drive.py` | `upload_to_drive.py` | ✅ sync — ต้อง setup Google Drive API ก่อนใช้ |
+| `drive_upload.py` | `drive_upload.py` | ✅ sync — shared module upload ไฟล์ขึ้น Drive (ใช้ `drive_token.json`) |
+| `drive_auth_local.py` | — | รันบนโน้ตบุคครั้งเดียวเพื่อ generate `drive_token.json` |
 | `monthly_report.py` | `monthly_report.py` | ✅ sync (thinkingBudget: 0, maxOutputTokens: 600) |
 | `weekly_ai_coach.py` | `weekly_ai_coach.py` | ✅ sync (thinkingBudget: 0, maxOutputTokens: 600) |
 | `stock_daily_report.py` | `stock_daily_report.py` | deploy ได้ตามปกติ |
