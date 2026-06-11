@@ -353,6 +353,8 @@ https://firestore.googleapis.com/v1/projects/moneymind-d97f3/databases/(default)
 | `earnings_calendar.py` | Earnings calendar — standalone (เทสได้ตรงๆ) |
 | `stock_daily_report.py` | Daily 09:00 price report — cron `0 2 * * *` |
 | `stock_targets.json` | SL/TP targets ที่ user ตั้งผ่าน bot |
+| `drive_upload.py` | Shared module upload Google Drive — ใช้ `drive_token.json` (user OAuth) |
+| `drive_token.json` | OAuth token สำหรับ Google Drive — สร้างด้วย `drive_auth_local.py` บนโน้ตบุค |
 | `bot_offset.json` | Telegram update offset |
 | `stock_bot.log` | Log file |
 
