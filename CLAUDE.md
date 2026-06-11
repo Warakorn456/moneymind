@@ -257,6 +257,7 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | Monthly Report | วันที่ 1 ของเดือน 09:00 | `monthly_report.py` → topic 💰 |
 | **Financial Journal** (Gemini + NotebookLM) | วันที่ 2 ของเดือน 09:00 | `financial_journal.py` → topic 💰 + save .md |
 | **Tax Notebook** | 1 พ.ย. ทุกปี 09:00 | `tax_notebook.py` → topic 💰 + save .md |
+| **Gmail PDF → Drive** (auto-upload PDF attachments) | ทุก 2 ชั่วโมง | `gmail_pdf_to_drive.py` → Drive `Email PDFs/` + topic 💰 |
 | แจ้งเตือนงบประมาณเกิน 80% | ทุก 12 ชั่วโมง | n8n budget-alert-01 → personal + email |
 
 ### หุ้นที่ติดตาม (dynamic — ดึงจาก Firestore, ปัจจุบัน ~43 ตัว)
