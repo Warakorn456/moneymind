@@ -472,6 +472,7 @@ $env:PATH += ";C:\Users\warakorn\AppData\Local\Google\Cloud SDK\google-cloud-sdk
 - **earnings_calendar.py bug — KeyError `timing`/`eps_est`** — แก้แล้ว (2026-06-11): markdown template ใช้ key ที่ไม่มีใน dict; เปลี่ยนเป็น `f'- **{s["sym"]}**: รายงาน {s["date"]} (อีก {s["days_left"]} วัน)'`
 - **`build_help_message()` bug — `'string' '─'*28`** — Python implicit concatenation ทำให้ `'string─'*28` → ข้อความยาวเกิน 4096 chars → Telegram 400 ไม่มี log; แก้ด้วย `sep='─'*28; '\n'.join([...])`
 - **409 Conflict สาเหตุจริง — `health_monitor.py` restart ซ้ำกับ systemd** — `health_monitor.py` (cron */5) เรียก `sudo systemctl restart moneymind-bot` ซ้ำกับ systemd `Restart=always` ทำให้มี 2 instances ชั่วคราว; แก้ด้วยการเอา `moneymind-bot` ออกจาก `SERVICES` list ใน health_monitor.py (บน VM แล้ว)
+- **gmail_body_parser.py Gemini 429 — `import urllib.error` ขาด** — ทำให้ `except urllib.error.HTTPError` ไม่ catch ได้, exception propagate ออกจาก retry loop ทันที, script วิ่ง 50 emails ใน 14 วินาที ทุก request 429; แก้: (1) เพิ่ม `import urllib.error` (2) sleep 7s แทน 3s (3) เพิ่ม retry 65s เมื่อ 429 (4) เพิ่ม subject pre-filter ใน Gmail query เพื่อลด Gemini calls
 
 ### Restart n8n
 ```powershell
