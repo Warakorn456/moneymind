@@ -257,8 +257,10 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | Monthly Report | วันที่ 1 ของเดือน 09:00 | `monthly_report.py` → topic 💰 |
 | **Financial Journal** (Gemini + NotebookLM) | วันที่ 2 ของเดือน 09:00 | `financial_journal.py` → topic 💰 + save .md |
 | **Tax Notebook** | 1 พ.ย. ทุกปี 09:00 | `tax_notebook.py` → topic 💰 + save .md |
-| **Gmail PDF → Drive** (auto-upload PDF attachments) | ทุก 2 ชั่วโมง | `gmail_pdf_to_drive.py` → Drive `Email PDFs/` + topic 💰 |
+| **Gmail PDF/DOCX/ZIP → Drive** (auto-upload attachments) | ทุก 2 ชั่วโมง | `gmail_pdf_to_drive.py` → Drive `Email PDFs/Documents/Archives/` + topic 💰 |
 | **Gmail CSV/Excel → Firestore** (bank statement import) | 09:00 ทุกวัน | `gmail_statement_import.py` → Drive `Email Spreadsheets/` + Firestore + topic 💰 |
+| **Gmail Image → Gemini Vision → Firestore** (สลิป/ใบเสร็จ) | ทุก 4 ชั่วโมง | `gmail_image_import.py` → Drive `Email Images/` + Firestore + topic 💰 |
+| **Gmail Body Parser** (ค่าบริการ/Shopping/ประกัน/สลิป HTML) | 08:30 ทุกวัน | `gmail_body_parser.py` → Firestore + topic 💰 |
 | แจ้งเตือนงบประมาณเกิน 80% | ทุก 12 ชั่วโมง | n8n budget-alert-01 → personal + email |
 
 ### หุ้นที่ติดตาม (dynamic — ดึงจาก Firestore, ปัจจุบัน ~43 ตัว)
