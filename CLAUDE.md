@@ -368,6 +368,12 @@ https://firestore.googleapis.com/v1/projects/moneymind-d97f3/databases/(default)
 | `gmail_statement_import.py` | Gmail CSV/Excel (bank domain) → parse transactions → Firestore + Drive (cron 09:00) |
 | `statement_seen.json` | ไฟล์ที่ process แล้ว (dedup) |
 | `statement_import.log` | Log ของ gmail_statement_import.py |
+| `gmail_image_import.py` | PNG/JPG สลิป/ใบเสร็จ → Gemini Vision → Firestore + Drive (cron ทุก 4 ชม.) |
+| `image_import_seen.json` | dedup ของ image_import |
+| `image_import.log` | log ของ gmail_image_import.py |
+| `gmail_body_parser.py` | parse email body (AIS/Shopee/ประกัน/สลิป HTML) → Gemini → Firestore (cron 08:30) |
+| `body_parser_seen.json` | dedup ของ body_parser |
+| `body_parser.log` | log ของ gmail_body_parser.py |
 | `stock_bot.log` | Log file |
 
 ### วิธีจัดการ GCP Bot
