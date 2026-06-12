@@ -473,6 +473,8 @@ $env:PATH += ";C:\Users\warakorn\AppData\Local\Google\Cloud SDK\google-cloud-sdk
 - **`build_help_message()` bug — `'string' '─'*28`** — Python implicit concatenation ทำให้ `'string─'*28` → ข้อความยาวเกิน 4096 chars → Telegram 400 ไม่มี log; แก้ด้วย `sep='─'*28; '\n'.join([...])`
 - **409 Conflict สาเหตุจริง — `health_monitor.py` restart ซ้ำกับ systemd** — `health_monitor.py` (cron */5) เรียก `sudo systemctl restart moneymind-bot` ซ้ำกับ systemd `Restart=always` ทำให้มี 2 instances ชั่วคราว; แก้ด้วยการเอา `moneymind-bot` ออกจาก `SERVICES` list ใน health_monitor.py (บน VM แล้ว)
 - **gmail_body_parser.py Gemini 429 — `import urllib.error` ขาด** — ทำให้ `except urllib.error.HTTPError` ไม่ catch ได้, exception propagate ออกจาก retry loop ทันที, script วิ่ง 50 emails ใน 14 วินาที ทุก request 429; แก้: (1) เพิ่ม `import urllib.error` (2) sleep 7s แทน 3s (3) เพิ่ม retry 65s เมื่อ 429 (4) เพิ่ม subject pre-filter ใน Gmail query เพื่อลด Gemini calls
+- **gmail_body_parser.py Firestore 403 — gmail_token ไม่มี datastore scope** — แก้: ลบ `Authorization` header ออกจาก Firestore calls ทั้งหมด (Firestore rules เป็น public access เหมือน stock_bot.py); ใช้กับ `gmail_image_import.py` และ `gmail_statement_import.py` ด้วย
+- **gmail_body_parser.py body keyword pre-filter + MAX_GEMINI_CALLS=5** — เพิ่ม `has_money_keywords()` check ก่อนถึง Gemini เพื่อตัด shipping/security emails ออก; `MAX_GEMINI_CALLS=5` จำกัด calls/run ป้องกัน throttle ระยะยาว; email ที่ยังไม่ได้ process จะถูก retry run ถัดไป (ไม่ add to seen.json ถ้า limit reached)
 
 ### Restart n8n
 ```powershell
