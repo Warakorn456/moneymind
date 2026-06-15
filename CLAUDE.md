@@ -308,7 +308,7 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 > **🔑 Secrets ผ่าน `.env` (refactor 2026-06-15):** Telegram token + Gemini key **ไม่ hardcode แล้ว** — อยู่ใน `.env` (gitignore)  
 > ทุก script: `import mm_secrets` แล้วอ้าง `mm_secrets.TG_TOKEN`, `mm_secrets.GEMINI_KEY`, `mm_secrets.GEMINI_KEY_OLD`  
 > `mm_secrets.py` อ่าน `.env` เอง (ไม่พึ่ง python-dotenv) จากโฟลเดอร์เดียวกับ script — ใช้ `os.path.dirname(__file__)` รองรับทั้ง cron + systemd  
-> `.env` keys: `MM_TG_TOKEN`, `MM_GEMINI_KEY`, `MM_GEMINI_KEY_OLD`, `MM_TG_CHAT_ID`, `MM_TG_GROUP_ID`, `MM_FIRESTORE_URL`  
+> `.env` keys: `MM_TG_TOKEN`, `MM_GEMINI_KEY`, `MM_GEMINI_KEY_OLD`, `MM_TG_CHAT_ID`, `MM_TG_GROUP_ID`, `MM_FIRESTORE_URL`, `MM_OPENROUTER_KEY`, `MM_HERMES_MODEL` (optional)  
 > **VM:** `.env` + `mm_secrets.py` อยู่ที่ `/home/warakornbest6/moneymind/` — deploy script ใหม่ต้องมี `mm_secrets.py` + `.env` คู่กันเสมอ  
 > chat IDs **ไม่ใช่ secret** (ไม่มี bot token ก็ใช้ไม่ได้) — ยัง hardcode ในบาง script ได้  
 > **เพิ่ม script ใหม่:** ใช้ `import mm_secrets` + `mm_secrets.GEMINI_KEY` แทน hardcode เสมอ
