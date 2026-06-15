@@ -1,0 +1,8 @@
+# Test screenshots (Playwright/manual captures)
+*.png
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Local Claude Code settings (machine-specific permissions)
+.claude/settings.local.json
