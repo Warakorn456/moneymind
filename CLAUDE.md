@@ -276,7 +276,16 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | **NotebookLM Export** (Q&A snapshot ทั้งหมด) | วันที่ 1 ของเดือน 00:00 | `notebooklm_export.py` → Drive `moneymind_qa_snapshot.md` |
 | **Firestore Backup → Drive** (JSON snapshot, เก็บ 90 วัน) | 01:00 ทุกวัน | `firestore_backup.py` → Drive `Backups/` (แจ้ง TG จันทร์) |
 | **Proactive AI Insights** (anomaly detection) | เสาร์ 10:00 | `proactive_insights.py` → topic 💰 |
+| **Cron Health Monitor** (log เก่า + crash ของ ~30 cron) | 11:00 ทุกวัน | `cron_health.py` → topic 💰 (dedup 2 วัน) |
+| **Token Watchdog** (refresh gmail/drive token) | 11:30 ทุกวัน | `token_watchdog.py` → topic 💰 (เตือนก่อน revoke) |
+| **Duplicate Check** (txn ซ้ำจาก 4 pipelines) | อาทิตย์ 09:00 | `dup_cleanup.py` → topic 💰 (report-only ไม่ลบ) |
 | แจ้งเตือนงบประมาณเกิน 80% | ทุก 12 ชั่วโมง | n8n budget-alert-01 → personal + email |
+
+### Reliability Layer (2026-06-15)
+- **`cron_health.py`** — non-invasive: เช็ค `.log` mtime (เก่ากว่า max_age = ไม่รัน) + scan `Traceback` ใน 15 บรรทัดท้าย (เฉพาะรอบล่าสุด — recover แล้วไม่ alert); `REGISTRY` map log→max_age_hours; dedup ผ่าน `cron_health_state.json` (เตือนซ้ำทุก ≥2 วัน) ป้องกัน spam
+- **`token_watchdog.py`** — ทำ OAuth refresh จริงกับ `gmail_token.json` + `drive_token.json`; `invalid_grant` = ถูก revoke → เตือนด่วน + บอก scripts ที่กระทบ
+- **`dup_cleanup.py`** — หา dup 2 ระดับ: HIGH (date+amount+desc เป๊ะ) + MED (date+amount ตรง คนละ `_import` source); report Telegram **ไม่ลบอัตโนมัติ** (ลบเองในเว็บแอป); ตรวจ 120 วันล่าสุด
+- **เหตุผล:** ระบบมี ~30 cron + 4 import pipelines → script พังเงียบ/token ตาย/data ซ้ำ เป็นความเสี่ยงจริง (เคยเจอ bug เงียบหลายตัว)
 
 ### หุ้นที่ติดตาม (dynamic — ดึงจาก Firestore, ปัจจุบัน ~43 ตัว)
 ไม่ใช่ hardcode แล้ว — bot ดึง symbols จาก `get_symbols_from_firestore()` (investments ที่มี qty > 0 และ type = USD)
