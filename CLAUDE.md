@@ -290,11 +290,19 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 
 ### Source Files Mapping — โน้ตบุค → GCP VM
 
-> **Git repo (Python scripts):** `Warakorn456/moneymind-bot` (**PRIVATE**) — สร้าง 2026-06-15  
-> Local: `C:\Users\warakorn\Documents\moneymind-bot\` (init เป็น git, branch `main`)  
+> **Git repo (Python scripts):** `Warakorn456/moneymind-bot` (private ได้/public ได้แล้วหลัง refactor) — สร้าง 2026-06-15  
+> Local: `C:\Users\warakorn\Documents\moneymind-bot\` (git, branch `main`)  
 > ⚠️ source-of-truth ของ scripts ยังเป็น `C:\Users\warakorn\Documents\*.py` (โฟลเดอร์ moneymind-bot เป็น copy ที่ commit) — แก้ที่ Documents แล้ว copy เข้า moneymind-bot ก่อน commit  
 > `.gitignore` กัน `*_token.json`, `*_seen.json`, `*_state.json`, `*.log`, `.env` — secrets ไม่ขึ้น GitHub  
 > Web app repo แยกต่างหาก: `Warakorn456/moneymind` (index.html + CLAUDE.md)
+
+> **🔑 Secrets ผ่าน `.env` (refactor 2026-06-15):** Telegram token + Gemini key **ไม่ hardcode แล้ว** — อยู่ใน `.env` (gitignore)  
+> ทุก script: `import mm_secrets` แล้วอ้าง `mm_secrets.TG_TOKEN`, `mm_secrets.GEMINI_KEY`, `mm_secrets.GEMINI_KEY_OLD`  
+> `mm_secrets.py` อ่าน `.env` เอง (ไม่พึ่ง python-dotenv) จากโฟลเดอร์เดียวกับ script — ใช้ `os.path.dirname(__file__)` รองรับทั้ง cron + systemd  
+> `.env` keys: `MM_TG_TOKEN`, `MM_GEMINI_KEY`, `MM_GEMINI_KEY_OLD`, `MM_TG_CHAT_ID`, `MM_TG_GROUP_ID`, `MM_FIRESTORE_URL`  
+> **VM:** `.env` + `mm_secrets.py` อยู่ที่ `/home/warakornbest6/moneymind/` — deploy script ใหม่ต้องมี `mm_secrets.py` + `.env` คู่กันเสมอ  
+> chat IDs **ไม่ใช่ secret** (ไม่มี bot token ก็ใช้ไม่ได้) — ยัง hardcode ในบาง script ได้  
+> **เพิ่ม script ใหม่:** ใช้ `import mm_secrets` + `mm_secrets.GEMINI_KEY` แทน hardcode เสมอ
 
 > **สำคัญ:** ไฟล์บนโน้ตบุคบางตัว **ล้าหลัง** VM เพราะ patch ทำตรงบน VM  
 > วิธี deploy ที่ถูกต้อง: `gcloud compute scp <local_file> warakornbest6@moneymind-bot:/home/warakornbest6/moneymind/<file> --zone=us-central1-a`
