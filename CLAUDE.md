@@ -284,7 +284,10 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 | โน้ตบุค (`C:\Users\warakorn\Documents\`) | VM (`/home/warakornbest6/moneymind/`) | หมายเหตุ |
 |------------------------------------------|--------------------------------------|----------|
 | `gmail_bank_alert.py` | `gmail_bank_alert.py` | ✅ sync — ส่งไป group topic 💰 (TG_CHAT=`-1004296300749`, TG_TOPIC=`4`) |
-| `stock_bot.py` | `stock_bot.py` | ✅ sync (อัปเดต 2026-06-01: Quick Add + vs Benchmark SPY/QQQ) |
+| `stock_bot.py` | `stock_bot.py` | ✅ sync (อัปเดต 2026-06-15: **รับรูปสลิป Telegram → Gemini Vision → Firestore**) |
+| `rss_news.py` | `rss_news.py` | ✅ sync — ใหม่ 2026-06-15, cron `30 1 * * 1-5` (08:30 Bangkok) |
+| `firestore_to_sheets.py` | `firestore_to_sheets.py` | ✅ sync — ใหม่ 2026-06-15, cron `0 16 * * *` (23:00 Bangkok) |
+| `notebooklm_export.py` | `notebooklm_export.py` | ✅ sync — ใหม่ 2026-06-15, cron `0 17 1 * *` |
 | `sltp_alert.py` | `sltp_alert.py` | ✅ sync — ใหม่ 2026-06-01, cron ทุก 30 นาที US market |
 | `bill_reminder.py` | `bill_reminder.py` | ✅ sync — ใหม่ 2026-06-01, cron 09:00 ทุกวัน |
 | `earnings_calendar.py` | `earnings_calendar.py` | ✅ sync — cron `0 2 * * 1-5` (09:00 Bangkok จ.–ศ.) |
