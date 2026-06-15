@@ -240,6 +240,16 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | SL/TP ตั้งค่า | `sl SYM PRICE` / `tp SYM PRICE` | ตั้ง Stop Loss / Take Profit (บันทึกใน stock_targets.json) |
 | SL/TP ดู | `/target` / `/targets` | ดู targets ที่ตั้งไว้ทั้งหมด + ราคาปัจจุบัน |
 | **Quick Add** | `"ข้าว 120"` / `"120 กาแฟ"` | บันทึก expense ลง Firestore ทันที (auto-detect หมวด) |
+| **รูปสลิป** | ส่งรูปสลิป/ใบเสร็จในแชท | Gemini Vision อ่าน → บันทึก Firestore (tag `slip-scan`) |
+| **เสียง** | ส่งข้อความเสียง (พูดรายการ/คำถาม) | Gemini ถอดเสียง → บันทึกหลายรายการ หรือตอบคำถาม (tag `voice-add`) |
+| **AI Chat** | พิมพ์คำถามอะไรก็ได้ (personal chat) | Gemini + Firestore context ตอบเป็นภาษาคน (มายา) |
+
+### Telegram Bot — 3 ฟีเจอร์ใหม่ (2026-06-15)
+อยู่ใน `stock_bot.py` ทั้งหมด (systemd รันตลอด ไม่ต้อง cron):
+- **รับรูปสลิป**: `analyze_slip(file_id)` → Gemini Vision → `save_to_firestore` (photo handler ก่อน Quick Add)
+- **รับเสียง**: `analyze_voice(file_id)` → Gemini audio (`audio/ogg` inlineData) → JSON `{kind:tx/question}` → บันทึกหลายรายการหรือ route ไป AI chat
+- **AI Chat free-form**: `build_finance_context()` สรุป DB → `gemini_chat(q)` ตอบ; fallback ใน Quick Add else block (เฉพาะ `chat_id == CHAT_ID`, text ≥ 4 ตัว)
+- **หมายเหตุ:** AI chat จำกัดเฉพาะ personal chat เพื่อไม่ให้ตอบทุกข้อความใน group; backup เดิม `stock_bot.py.bak` อยู่บน VM
 
 ### แจ้งเตือนอัตโนมัติ (GCP cron)
 | ฟังก์ชัน | เวลา Bangkok | script |
