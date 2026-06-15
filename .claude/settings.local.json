@@ -2,13 +2,16 @@
   "permissions": {
     "defaultMode": "dontAsk",
     "allow": [
-      "Bash(cd /d \"D:\\\\wabbest\")",
-      "Bash(start \"\" \"http://localhost:8080\")",
-      "Bash(python -m http.server 8080)",
-      "Bash(python *)",
-      "Bash(git --version)",
-      "Bash(gh --version)"
-    ]
+    "Bash(cd /d \"D:\\\\wabbest\")",
+    "Bash(start \"\" \"http://localhost:8080\")",
+    "Bash(python -m http.server 8080)",
+    "Bash(python *)",
+    "Bash(git --version)",
+    "Bash(gh --version)",
+     "Bash(git *)",
+    "Edit",
+    "Write"
+  ]
   },
   "hooks": {
     "PostToolUse": [
