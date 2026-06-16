@@ -137,6 +137,8 @@ _escHtml(s)              // escape HTML string (บรรทัด ~11428)
              renderSettings, renderRetire, renderBalance, renderBanks, ...
 ~7391–7395   INIT block — checkLogin() + renderDash() on load
 ~7396–7500   AI Chat (buildFinanceContext, toggleChat, sendChat, rulesAI)
+             — sendChat ใช้ mayaAgent() (tool calling) เมื่อมี apiKey, fallback rulesAI
+~ก่อน _escHtml  MAYA AGENT — mayaAgent()/MAYA_TOOLS/MAYA_IMPLS (tool calling ใน browser)
 ~7500–8948   Features 1–9: notifications, categories, recurring, export, OT, ฯลฯ
 ~8949–10300  PATCHES: renderDash, renderSettings, saveTx, renderTx
              + Quick Add, Bank Transfer, YTD, Savings Rate, Top Merchants,
