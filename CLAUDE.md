@@ -158,7 +158,8 @@ _escHtml(s)              // escape HTML string (บรรทัด ~11428)
 | Core | ภาษีเงินได้, งบดุล, แผนเกษียณ, รายการซ้ำ, Subscriptions |
 | Tools | คำนวณ OT (×1/×1.5/×3), คำนวณสินเชื่อ (ตาราง amortization) |
 | Calendar | ปฏิทินพร้อมโน้ต, แสดง transactions/recurring/debt due, month/year picker |
-| AI | แชทกับ Maya (Gemini + rule-based), สแกนใบเสร็จ/สลิปภาษี |
+| AI | แชทกับ Maya (Gemini agent + tool calling + rule-based), สแกนใบเสร็จ/สลิปภาษี |
+| AI | Maya agent สั่งงานได้: บันทึกรายการ/เพิ่มออม/จ่ายหนี้/ตั้งงบ (tools ทำงานกับ DB ใน browser, ใช้ apiKey ของ user, Gemini OpenAI-compat endpoint) |
 | Dashboard | Health Score, NW History, Monthly Comparison, Spending Heatmap, YTD Summary |
 | Dashboard | RVV (Fixed vs Variable), 50/30/20, Emergency Fund, Pay Yourself First |
 | Dashboard | Drag-and-drop reorder sections (DB.settings.dashOrder) |
