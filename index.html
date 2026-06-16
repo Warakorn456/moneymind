@@ -11511,6 +11511,65 @@ const MAYA_IMPLS={
     DB.settings.catBudgets[a.category]=amount; _mayaDirty=true; saveDB();
     return {saved:true,category:a.category,budget:amount};
   },
+  search_transactions(a){
+    const days=Number(a.days)||30;
+    const cutoff=new Date(Date.now()-days*86400000).toISOString().slice(0,10);
+    const kw=(a.keyword||'').toLowerCase();
+    let items=(DB.transactions||[]).filter(t=>{
+      if((t.date||'')<cutoff) return false;
+      if(a.type && t.type!==a.type) return false;
+      if(kw && !((t.description||'')+' '+(t.category||'')).toLowerCase().includes(kw)) return false;
+      const amt=Number(t.amount)||0;
+      if(a.min_amount!=null && amt<Number(a.min_amount)) return false;
+      if(a.max_amount!=null && amt>Number(a.max_amount)) return false;
+      return true;
+    }).map(t=>({id:t.id,date:t.date,type:t.type,amount:Number(t.amount)||0,category:t.category,desc:t.description}));
+    items.sort((x,y)=>(y.date||'').localeCompare(x.date||''));
+    return {count:items.length,total:Math.round(items.reduce((s,x)=>s+x.amount,0)*100)/100,items:items.slice(0,20)};
+  },
+  delete_transaction(a){
+    const kw=(a.keyword||'').toLowerCase();
+    let cand=(DB.transactions||[]).filter(t=>(!kw||(t.description||'').toLowerCase().includes(kw))&&(a.amount==null||Math.abs((Number(t.amount)||0)-Number(a.amount))<0.01));
+    cand.sort((x,y)=>(y.date||'').localeCompare(x.date||''));
+    const target=cand[0];
+    if(!target) return {error:'ไม่พบรายการที่ตรง'};
+    DB.transactions=DB.transactions.filter(t=>t.id!==target.id);
+    _mayaDirty=true; saveDB();
+    return {deleted:true,desc:target.description,amount:target.amount};
+  },
+  edit_transaction(a){
+    const kw=(a.keyword||'').toLowerCase();
+    let cand=(DB.transactions||[]).filter(t=>kw&&(t.description||'').toLowerCase().includes(kw));
+    cand.sort((x,y)=>(y.date||'').localeCompare(x.date||''));
+    const t=cand[0];
+    if(!t) return {error:'ไม่พบรายการที่ตรง'};
+    if(a.new_amount!=null) t.amount=Number(a.new_amount);
+    if(a.new_category) t.category=a.new_category;
+    if(a.new_desc) t.description=a.new_desc;
+    _mayaDirty=true; saveDB();
+    return {edited:true,desc:t.description,amount:t.amount,category:t.category};
+  },
+  create_saving_goal(a){
+    if(!DB.savings) DB.savings=[];
+    DB.savings.push({id:uid(),name:a.name,target:Number(a.target),current:Number(a.current)||0});
+    _mayaDirty=true; saveDB();
+    return {created:true,name:a.name,target:Number(a.target)};
+  },
+  create_debt(a){
+    if(!DB.debts) DB.debts=[];
+    const total=Number(a.total);
+    DB.debts.push({id:uid(),name:a.name,total,remaining:a.remaining!=null?Number(a.remaining):total,pay:Number(a.pay)||0});
+    _mayaDirty=true; saveDB();
+    return {created:true,name:a.name,total};
+  },
+  what_if_saving(a){
+    const g=(DB.savings||[]).find(s=>s.name&&(s.name.includes(a.goal_name)||a.goal_name.includes(s.name)));
+    if(!g) return {error:'ไม่พบกองออม',goals:(DB.savings||[]).map(s=>s.name)};
+    const monthly=Number(a.monthly);
+    if(!(monthly>0)) return {error:'จำนวนออมต่อเดือนต้องมากกว่า 0'};
+    const left=Math.max(0,(Number(g.target)||0)-(Number(g.current)||0));
+    return {goal:g.name,target:g.target,current:g.current,remaining:left,monthly,months_needed:Math.ceil(left/monthly)};
+  },
 };
 
 // agent loop — เรียก Gemini (OpenAI-compat) ป้อนผล tool กลับจนได้คำตอบ
