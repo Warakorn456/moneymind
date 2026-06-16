@@ -11442,6 +11442,100 @@ function renderSubscriptions(){
     +(!list.length?'<div class="empty"><i class="fas fa-credit-card"></i><p>ยังไม่มี subscription — กด "+ เพิ่มบริการ" เพื่อเริ่มต้น</p></div>':'');
 }
 
+// ══════════════════════════════════════════
+//  MAYA AGENT — tool calling ผ่าน Gemini OpenAI-compatible endpoint
+//  ใช้ apiKey ของ user เอง เรียก local DB ได้ (action: บันทึก/แก้ไขข้อมูล)
+//  เหมือน agent บน Telegram bot (hermes_agent.py) แต่ tools ทำงานกับ DB ใน browser
+// ══════════════════════════════════════════
+const MAYA_EXP_CATS=['food','transport','fuel','housing','utility','health','entertainment','shopping','education','insurance','debt_pay','tax_exp','family','other_exp'];
+const MAYA_INC_CATS=['salary','freelance','invest_return','bonus','rental','other_inc'];
+
+const MAYA_TOOLS=[
+  {type:'function',function:{name:'add_transaction',description:'บันทึกรายการรายรับหรือรายจ่ายใหม่ ใช้เมื่อผู้ใช้บอกว่าซื้อ/จ่าย/ได้รับเงิน',
+    parameters:{type:'object',properties:{
+      type:{type:'string',enum:['expense','income']},
+      amount:{type:'number',description:'จำนวนเงิน (บาท)'},
+      category:{type:'string',description:'รหัสหมวด รายจ่าย: '+MAYA_EXP_CATS.join('/')+' | รายรับ: '+MAYA_INC_CATS.join('/')},
+      description:{type:'string'},
+      date:{type:'string',description:'YYYY-MM-DD (ไม่ระบุ = วันนี้)'}
+    },required:['type','amount']}}},
+  {type:'function',function:{name:'add_saving_contribution',description:'เพิ่มเงินเข้ากองออมที่มีอยู่',
+    parameters:{type:'object',properties:{name:{type:'string',description:'ชื่อกองออม'},amount:{type:'number'}},required:['name','amount']}}},
+  {type:'function',function:{name:'record_debt_payment',description:'บันทึกการชำระหนี้ (ลดยอดคงเหลือ)',
+    parameters:{type:'object',properties:{name:{type:'string'},amount:{type:'number'}},required:['name','amount']}}},
+  {type:'function',function:{name:'set_category_budget',description:'ตั้งงบประมาณรายเดือนของหมวดรายจ่าย',
+    parameters:{type:'object',properties:{category:{type:'string',description:MAYA_EXP_CATS.join('/')},amount:{type:'number'}},required:['category','amount']}}},
+];
+
+let _mayaDirty=false;
+
+const MAYA_IMPLS={
+  add_transaction(a){
+    const type=a.type==='income'?'income':'expense';
+    const amount=Number(a.amount);
+    if(!(amount>0)) return {error:'จำนวนเงินไม่ถูกต้อง'};
+    let cat=a.category||'';
+    const valid=type==='income'?MAYA_INC_CATS:MAYA_EXP_CATS;
+    if(!valid.includes(cat)) cat=type==='income'?'other_inc':'other_exp';
+    const date=/^\d{4}-\d{2}-\d{2}$/.test(a.date||'')?a.date:new Date().toISOString().slice(0,10);
+    const desc=(a.description||'').trim()||getCat(cat,type).label;
+    DB.transactions.push({id:uid(),type,amount,category:cat,date,description:desc,carryover:false,bankId:null,tags:['maya']});
+    _mayaDirty=true; saveDB();
+    return {saved:true,type,amount,category:cat,description:desc,date};
+  },
+  add_saving_contribution(a){
+    const amount=Number(a.amount);
+    const s=(DB.savings||[]).find(x=>x.name&&(x.name.includes(a.name)||a.name.includes(x.name)));
+    if(!s) return {error:'ไม่พบกองออมชื่อนี้ — ที่มี: '+((DB.savings||[]).map(x=>x.name).join(', ')||'ไม่มี')};
+    s.current=(s.current||0)+amount; _mayaDirty=true; saveDB();
+    return {saved:true,name:s.name,new_current:s.current,target:s.target};
+  },
+  record_debt_payment(a){
+    const amount=Number(a.amount);
+    const d=(DB.debts||[]).find(x=>x.name&&(x.name.includes(a.name)||a.name.includes(x.name)));
+    if(!d) return {error:'ไม่พบหนี้ชื่อนี้ — ที่มี: '+((DB.debts||[]).map(x=>x.name).join(', ')||'ไม่มี')};
+    d.remaining=Math.max(0,(d.remaining||d.total||0)-amount); _mayaDirty=true; saveDB();
+    return {saved:true,name:d.name,remaining:d.remaining};
+  },
+  set_category_budget(a){
+    const amount=Number(a.amount);
+    if(!DB.settings.catBudgets) DB.settings.catBudgets={};
+    DB.settings.catBudgets[a.category]=amount; _mayaDirty=true; saveDB();
+    return {saved:true,category:a.category,budget:amount};
+  },
+};
+
+// agent loop — เรียก Gemini (OpenAI-compat) ป้อนผล tool กลับจนได้คำตอบ
+async function mayaAgent(userMsg){
+  const key=DB.settings.apiKey;
+  const model=(DB.settings.geminiModel&&!/tts|embedding|aqa/i.test(DB.settings.geminiModel))?DB.settings.geminiModel:'gemini-2.5-flash';
+  const url='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+  const sys=buildFinanceContext()+'\n\nเมื่อผู้ใช้สั่งให้บันทึก/แก้ไขข้อมูล (ซื้อของ จ่ายเงิน ได้เงิน ออมเงิน จ่ายหนี้ ตั้งงบ) ให้เรียก tool ที่เหมาะสมเสมอ ห้ามเดาตัวเลขที่ต้องใช้ข้อมูลจริง หลังบันทึกให้ยืนยันสั้นๆ';
+  const messages=[{role:'system',content:sys}];
+  chatHistory.slice(0,-1).forEach(h=>messages.push({role:h.role==='ai'?'assistant':'user',content:h.text}));
+  messages.push({role:'user',content:userMsg});
+
+  for(let step=0;step<5;step++){
+    const r=await fetch(url,{method:'POST',headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+      body:JSON.stringify({model,messages,tools:MAYA_TOOLS,tool_choice:'auto',temperature:0.5})});
+    if(!r.ok) throw new Error('Gemini '+r.status+': '+(await r.text()).slice(0,200));
+    const j=await r.json();
+    const m=j.choices&&j.choices[0]&&j.choices[0].message;
+    if(!m) throw new Error('ไม่ได้รับคำตอบ');
+    const calls=m.tool_calls;
+    if(!calls||!calls.length) return (m.content||'').trim()||'รับทราบครับ';
+    messages.push(m);
+    for(const tc of calls){
+      let args={}; try{args=JSON.parse(tc.function.arguments||'{}');}catch(e){}
+      if(args&&typeof args==='object'){ for(const k in args){ if(k==='') delete args[k]; } }
+      const fn=MAYA_IMPLS[tc.function.name];
+      let result; try{ result=fn?fn(args):{error:'unknown tool'}; }catch(e){ result={error:String(e)}; }
+      messages.push({role:'tool',tool_call_id:tc.id,name:tc.function.name,content:JSON.stringify(result)});
+    }
+  }
+  return 'ทำรายการซับซ้อนเกินไป ลองใหม่แบบเจาะจงนะครับ';
+}
+
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ══════════════════════════════════════════
