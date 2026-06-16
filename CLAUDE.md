@@ -160,7 +160,8 @@ _escHtml(s)              // escape HTML string (บรรทัด ~11428)
 | Calendar | ปฏิทินพร้อมโน้ต, แสดง transactions/recurring/debt due, month/year picker |
 | AI | แชทกับ Maya (Gemini agent + tool calling + rule-based), สแกนใบเสร็จ/สลิปภาษี |
 | AI | Maya agent สั่งงานได้ (10 tools): บันทึก/แก้/ลบ/ค้นหารายการ, เพิ่มออม/จ่ายหนี้, ตั้งงบ, สร้างเป้าออม/หนี้, what-if (tools ทำงานกับ DB ใน browser, ใช้ apiKey ของ user, Gemini OpenAI-compat) |
-| AI | Bot agent 18 tools (ai_agent.py): read (summary/budget/debt/saving/portfolio/prices) + write (add/edit/delete tx, create goal/debt, set SL-TP, dca) + search_transactions + what_if_saving |
+| AI | Bot agent 19 tools (ai_agent.py): read (summary/budget/debt/saving/portfolio/prices) + write (add/edit/delete tx, create goal/debt, set SL-TP, dca) + search_transactions + what_if_saving + detect_subscriptions |
+| AI | จัดหมวดเรียนรู้ได้ — `_learn_cat()` จำ desc→หมวดจากที่ user เลือกเอง (callback `cat:`) / แก้หมวด; `_detect_cat` เช็ค learned cache ก่อน keyword |
 | Dashboard | Health Score, NW History, Monthly Comparison, Spending Heatmap, YTD Summary |
 | Dashboard | RVV (Fixed vs Variable), 50/30/20, Emergency Fund, Pay Yourself First |
 | Dashboard | Drag-and-drop reorder sections (DB.settings.dashOrder) |
