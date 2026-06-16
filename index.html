@@ -11461,6 +11461,18 @@ const MAYA_TOOLS=[
     parameters:{type:'object',properties:{name:{type:'string'},amount:{type:'number'}},required:['name','amount']}}},
   {type:'function',function:{name:'set_category_budget',description:'ตั้งงบประมาณรายเดือนของหมวดรายจ่าย',
     parameters:{type:'object',properties:{category:{type:'string',description:MAYA_EXP_CATS.join('/')},amount:{type:'number'}},required:['category','amount']}}},
+  {type:'function',function:{name:'search_transactions',description:'ค้นหา/สรุปรายการย้อนหลังตามคำค้น/ช่วงเงิน เช่น "กาแฟเดือนนี้รวมเท่าไหร่", "รายการเกิน 1000"',
+    parameters:{type:'object',properties:{keyword:{type:'string'},days:{type:'integer',description:'ย้อนหลังกี่วัน (default 30)'},min_amount:{type:'number'},max_amount:{type:'number'},type:{type:'string',enum:['expense','income']}}}}},
+  {type:'function',function:{name:'delete_transaction',description:'ลบรายการล่าสุดที่ตรง keyword เช่น "ลบค่ากาแฟเมื่อกี้"',
+    parameters:{type:'object',properties:{keyword:{type:'string'},amount:{type:'number'}},required:['keyword']}}},
+  {type:'function',function:{name:'edit_transaction',description:'แก้รายการล่าสุดที่ตรง keyword เช่น "แก้ค่าข้าวเป็น 80"',
+    parameters:{type:'object',properties:{keyword:{type:'string'},new_amount:{type:'number'},new_category:{type:'string'},new_desc:{type:'string'}},required:['keyword']}}},
+  {type:'function',function:{name:'create_saving_goal',description:'สร้างกองออมใหม่ เช่น "ตั้งเป้าออมทริปญี่ปุ่น 50000"',
+    parameters:{type:'object',properties:{name:{type:'string'},target:{type:'number'},current:{type:'number'}},required:['name','target']}}},
+  {type:'function',function:{name:'create_debt',description:'เพิ่มหนี้ใหม่ เช่น "เพิ่มหนี้บัตรเครดิต 20000 ผ่อนเดือนละ 2000"',
+    parameters:{type:'object',properties:{name:{type:'string'},total:{type:'number'},remaining:{type:'number'},pay:{type:'number'}},required:['name','total']}}},
+  {type:'function',function:{name:'what_if_saving',description:'จำลองว่าออมเดือนละเท่านี้อีกกี่เดือนถึงเป้า เช่น "ออมเดือนละ 5000 อีกกี่เดือนถึงเป้าญี่ปุ่น"',
+    parameters:{type:'object',properties:{goal_name:{type:'string'},monthly:{type:'number'}},required:['goal_name','monthly']}}},
 ];
 
 let _mayaDirty=false;
