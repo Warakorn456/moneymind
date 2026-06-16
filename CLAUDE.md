@@ -280,6 +280,8 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | **NotebookLM Export** (Q&A snapshot ทั้งหมด) | วันที่ 1 ของเดือน 00:00 | `notebooklm_export.py` → Drive `moneymind_qa_snapshot.md` |
 | **Firestore Backup → Drive** (JSON snapshot, เก็บ 90 วัน) | 01:00 ทุกวัน | `firestore_backup.py` → Drive `Backups/` (แจ้ง TG จันทร์) |
 | **Proactive AI Insights** (anomaly detection) | เสาร์ 10:00 | `proactive_insights.py` → topic 💰 |
+| **AI Coach** (pace warning กลางเดือน — projection vs avg 3 เดือน + หมวดพุ่ง, AI เรียบเรียง) | พุธ+เสาร์ 19:00 | `ai_coach.py` → topic 💰 |
+| **Subscription Detect** (หา recurring charge ที่ลืมบันทึก) | วันที่ 3 ของเดือน 09:00 | `subscription_detect.py` → topic 💰 |
 | **Cron Health Monitor** (log เก่า + crash ของ ~30 cron) | 11:00 ทุกวัน | `cron_health.py` → topic 💰 (dedup 2 วัน) |
 | **Token Watchdog** (refresh gmail/drive token) | 11:30 ทุกวัน | `token_watchdog.py` → topic 💰 (เตือนก่อน revoke) |
 | **Duplicate Check** (txn ซ้ำจาก 4 pipelines) | อาทิตย์ 09:00 | `dup_cleanup.py` → topic 💰 (report-only ไม่ลบ) |
