@@ -370,7 +370,8 @@ https://firestore.googleapis.com/v1/projects/moneymind-d97f3/databases/(default)
 | ฟังก์ชัน | หน้าที่ |
 |----------|---------|
 | `_parse_quick_add(text)` | Parse "ข้าว 120" / "120 กาแฟ" → (desc, amount) |
-| `_detect_cat(desc)` | Auto-detect หมวดหมู่จาก keyword |
+| `_detect_cat(desc)` | Auto-detect หมวดหมู่: keyword ก่อน → ถ้าเดาไม่ได้เรียก `_detect_cat_ai()` (LLM) → fallback other_exp |
+| `_detect_cat_ai(desc)` | AI จัดหมวด (Phase 2) — `hermes_agent.simple_complete()`, cache ใน `cat_cache.json`, fallback None เมื่อ 429/error |
 | `fetch_quotes(symbols)` | ดึงราคาจาก Yahoo Finance (รวม SPY, QQQ, USDTHB=X) |
 | `get_symbols_from_firestore()` | อ่าน symbols USD จาก Firestore investments (dynamic) |
 | `get_portfolio()` | ดึงพอร์ต + FX + **benchmark** → return 5 values |
