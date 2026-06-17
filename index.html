@@ -1250,6 +1250,11 @@
       <input id="tx-search" placeholder="ค้นหารายการ, หมวดหมู่, แท็ก..." oninput="renderTx()">
       <button onclick="document.getElementById('tx-search').value='';renderTx()" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:2px"><i class="fas fa-times"></i></button>
     </div>
+    <!-- Category filter + bulk manage -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+      <select id="tx-cat-filter" onchange="setTxCatFilter(this.value)" class="fselect" style="max-width:220px;width:auto"></select>
+      <button id="bulk-toggle-btn" onclick="toggleBulkMode()" class="btn btn-ghost" style="padding:7px 14px;font-size:13px"><i class="fas fa-check-double"></i> จัดการหลายรายการ</button>
+    </div>
     <!-- Tag filter -->
     <div id="tx-tag-filters" style="margin-bottom:10px;min-height:0"></div>
     <div id="tx-chart-card"></div>
