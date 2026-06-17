@@ -3353,7 +3353,7 @@ function renderDash(){
   const txs=monthTx();
   const inc=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const sav=savSum(txs);
-  const exp=txs.filter(t=>t.type==='expense'&&!isSavingTx(t)).reduce((s,t)=>s+t.amount,0);
+  const exp=txs.filter(isRealExp).reduce((s,t)=>s+t.amount,0);
   const bal=inc-exp-sav;
   const port=DB.investments.reduce((s,i)=>s+i.value,0);
 
