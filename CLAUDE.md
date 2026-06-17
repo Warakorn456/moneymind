@@ -164,6 +164,7 @@ _escHtml(s)              // escape HTML string (บรรทัด ~11428)
 | AI | จัดหมวดเรียนรู้ได้ — `_learn_cat()` จำ desc→หมวดจากที่ user เลือกเอง (callback `cat:`) / แก้หมวด; `_detect_cat` เช็ค learned cache ก่อน keyword |
 | Dashboard | โหมด "รายจ่ายจริง" — toggle `hideMoneyMove` (default on) ตัด transfer/cash ออกจากรายจ่าย/งบ/กราฟ; helper `isRealExp()`, `isMoneyMove()`, ปุ่มในการ์ดกราฟหมวด |
 | Dashboard | คลิกหมวดในกราฟ pie → `openCatDrill()` modal `m-catdrill` แสดงรายการในหมวดนั้น |
+| Transactions | กรองตามหมวด (`tx-cat-filter`) + bulk select (`toggleBulkMode`): ติ๊กหลายรายการ → เปลี่ยนหมวด (`applyBulkCat`)/ลบ (`bulkDelete`) ทีเดียว; floating `bulk-bar` |
 | Dashboard | Health Score, NW History, Monthly Comparison, Spending Heatmap, YTD Summary |
 | Dashboard | RVV (Fixed vs Variable), 50/30/20, Emergency Fund, Pay Yourself First |
 | Dashboard | Drag-and-drop reorder sections (DB.settings.dashOrder) |
