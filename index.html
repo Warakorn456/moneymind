@@ -3416,7 +3416,12 @@ function renderBudgetCard(){
 }
 
 function renderCatChart(){
-  const txs=monthTx().filter(t=>t.type==='expense');
+  // อัปเดต label ปุ่ม toggle money-movement
+  const tgl=document.getElementById('toggle-money-move');
+  if(tgl) tgl.innerHTML=hideMoveOn()
+    ? '<i class="fas fa-eye-slash"></i> ซ่อนเงินโอน/ถอน'
+    : '<i class="fas fa-eye"></i> รวมเงินโอน/ถอน';
+  const txs=monthTx().filter(isRealExp);
   const by={};
   txs.forEach(t=>{ by[t.category]=(by[t.category]||0)+t.amount; });
   const cats=Object.keys(by);
@@ -3429,11 +3434,30 @@ function renderCatChart(){
   chCat=new Chart(ctx,{
     type:'doughnut',
     data:{labels:cats.map(c=>getCat(c,'expense').label),datasets:[{data:cats.map(c=>by[c]),backgroundColor:cats.map(c=>getCat(c,'expense').color),borderWidth:0,hoverOffset:8}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{
-      legend:{position:'right',labels:{color:'#e2e8f0',font:{family:'Sarabun',size:12},padding:12,boxWidth:9,boxHeight:9}},
-      tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.raw)}`}}
+    options:{responsive:true,maintainAspectRatio:false,
+      onClick:(e,els)=>{ if(els&&els.length) openCatDrill(cats[els[0].index]); },
+      onHover:(e,els)=>{ e.native.target.style.cursor=els&&els.length?'pointer':'default'; },
+      plugins:{
+      legend:{position:'right',onClick:(e,item)=>openCatDrill(cats[item.index]),labels:{color:'#e2e8f0',font:{family:'Sarabun',size:12},padding:12,boxWidth:9,boxHeight:9}},
+      tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.raw)} (คลิกดูรายการ)`}}
     },cutout:'64%'}
   });
+}
+
+// drill-down: แสดงรายการในหมวดที่คลิก (เดือนปัจจุบัน)
+function openCatDrill(cat){
+  const c=getCat(cat,'expense');
+  const list=monthTx().filter(t=>t.type==='expense'&&t.category===cat)
+    .sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const total=list.reduce((s,t)=>s+t.amount,0);
+  document.getElementById('catdrill-title').innerHTML=
+    `<i class="fas ${c.icon}" style="color:${c.color}"></i> ${c.label}`;
+  document.getElementById('catdrill-sub').textContent=
+    `${list.length} รายการ · รวม ${fmt(total)}`;
+  document.getElementById('catdrill-body').innerHTML=
+    list.length?list.map(t=>txHTML(t,true)).join('')
+    :'<div class="empty"><p>ไม่มีรายการ</p></div>';
+  openM('m-catdrill');
 }
 
 function renderTrendChart(){
