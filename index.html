@@ -3262,6 +3262,12 @@ function getCat(id,type){ const custom=(type==='income'?(DB.settings?.customIncC
 const SAVING_CAT_IDS=['save_tx'];
 function isSavingTx(t){ if(!t||t.type!=='expense') return false; const all=[...SAVING_CAT_IDS,...(DB.settings?.savingExpCats||[])]; return all.includes(t.category); }
 function savSum(txs){ return txs.filter(isSavingTx).reduce((s,t)=>s+t.amount,0); }
+// Money-movement (โอนเงิน/ถอนเงินสด) — ไม่ใช่ "รายจ่ายจริง" ตัดออกจากกราฟ/งบได้ (default ตัด)
+const MONEY_MOVE_CATS=['transfer','cash'];
+function isMoneyMove(t){ return !!t&&t.type==='expense'&&MONEY_MOVE_CATS.includes(t.category); }
+function hideMoveOn(){ return DB.settings?.hideMoneyMove!==false; } // default = true
+function isRealExp(t){ return t.type==='expense'&&!isSavingTx(t)&&!(hideMoveOn()&&isMoneyMove(t)); }
+function toggleMoneyMove(){ if(!DB.settings) DB.settings={}; DB.settings.hideMoneyMove=!hideMoveOn(); saveDB(); renderDash(); }
 
 // ══════════════════════════════════════════
 //  NAVIGATION
