@@ -11653,6 +11653,107 @@ async function mayaAgent(userMsg){
   return 'ทำรายการซับซ้อนเกินไป ลองใหม่แบบเจาะจงนะครับ';
 }
 
+// ══════════════════════════════════════════
+//  TX ADVANCED FILTER + BULK SELECT (จัดการหลายรายการ)
+// ══════════════════════════════════════════
+let _txCatFilter='';
+let _bulkMode=false;
+const _bulkSel=new Set();
+
+function _initTxCatFilter(){
+  const sel=document.getElementById('tx-cat-filter');
+  if(!sel||sel.dataset.init) return;
+  sel.dataset.init='1';
+  const incCats=[...INC_CATS,...(DB.settings?.customIncCats||[])];
+  const expCats=[...EXP_CATS,...(DB.settings?.customExpCats||[])];
+  const exp=expCats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  const inc=incCats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  sel.innerHTML=`<option value="">📂 ทุกหมวด</option><optgroup label="รายจ่าย">${exp}</optgroup><optgroup label="รายรับ">${inc}</optgroup>`;
+}
+
+function setTxCatFilter(v){ _txCatFilter=v; renderTx(); }
+
+function toggleBulkMode(){
+  _bulkMode=!_bulkMode; _bulkSel.clear();
+  const b=document.getElementById('bulk-toggle-btn');
+  if(b){ b.style.background=_bulkMode?'rgba(124,58,237,.25)':''; b.style.borderColor=_bulkMode?'rgba(124,58,237,.5)':''; }
+  renderTx();
+}
+
+function _txMatchesFilters(t){
+  const search=(document.getElementById('tx-search')?.value||'').toLowerCase();
+  const tagFilter=document.getElementById('tx-tag-filters')?.dataset?.active||'';
+  if(txFilter!=='all'&&t.type!==txFilter) return false;
+  if(_txCatFilter&&t.category!==_txCatFilter) return false;
+  if(tagFilter&&!(t.tags||[]).includes(tagFilter)) return false;
+  if(search&&!((t.description||'').toLowerCase().includes(search)||(t.category||'').toLowerCase().includes(search)||(t.tags||[]).some(g=>g.toLowerCase().includes(search)))) return false;
+  return true;
+}
+
+const _renderTxBase=renderTx;
+renderTx=function(appendMore=false){
+  _initTxCatFilter();
+  // ไม่มี category filter และไม่อยู่ bulk mode → ใช้ pipeline เดิม (search/tag/load-more ทำงานปกติ)
+  if(!_txCatFilter && !_bulkMode){ _renderTxBase(appendMore); _renderBulkBar(); return; }
+  const el=document.getElementById('tx-list'); if(!el) return;
+  const txs=[...DB.transactions].sort((a,b)=>new Date(b.date)-new Date(a.date)).filter(_txMatchesFilters);
+  if(!txs.length){ el.innerHTML='<div class="empty"><i class="fas fa-filter"></i><p>ไม่พบรายการตามตัวกรอง</p></div>'; _renderBulkBar(); return; }
+  const cap=txs.slice(0,300);
+  el.innerHTML=cap.map(t=>{
+    if(_bulkMode){
+      const ck=_bulkSel.has(t.id)?'checked':'';
+      return `<label style="display:flex;align-items:center;gap:10px;cursor:pointer"><input type="checkbox" ${ck} onchange="toggleBulkSel('${t.id}',this.checked)" style="width:18px;height:18px;flex-shrink:0;accent-color:#a78bfa"><div style="flex:1;min-width:0">${txHTML(t,false)}</div></label>`;
+    }
+    return txHTML(t,true);
+  }).join('')+(txs.length>300?`<div style="text-align:center;color:var(--muted);padding:10px;font-size:12px">แสดง 300 จาก ${txs.length} รายการ (กรองให้แคบลงเพื่อดูครบ)</div>`:'');
+  _renderBulkBar();
+};
+
+function toggleBulkSel(id,on){ if(on)_bulkSel.add(id); else _bulkSel.delete(id); _renderBulkBar(); }
+
+function bulkSelectAll(){ DB.transactions.filter(_txMatchesFilters).forEach(t=>_bulkSel.add(t.id)); renderTx(); }
+function bulkClearSel(){ _bulkSel.clear(); renderTx(); }
+
+function _renderBulkBar(){
+  let bar=document.getElementById('bulk-bar');
+  if(!_bulkMode){ if(bar) bar.remove(); return; }
+  if(!bar){ bar=document.createElement('div'); bar.id='bulk-bar';
+    bar.style.cssText='position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 14px;display:flex;gap:7px;align-items:center;z-index:300;box-shadow:0 8px 28px rgba(0,0,0,.45);flex-wrap:wrap;max-width:94vw';
+    document.body.appendChild(bar);
+  }
+  const n=_bulkSel.size;
+  const expCats=[...EXP_CATS,...(DB.settings?.customExpCats||[])];
+  const opts=expCats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  const bs='background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:12px;font-family:Sarabun;cursor:pointer';
+  bar.innerHTML=`<span style="font-size:13px;font-weight:700;color:#a78bfa">เลือก ${n}</span>
+    <button onclick="bulkSelectAll()" style="${bs}">ทั้งหมด</button>
+    ${n?`<button onclick="bulkClearSel()" style="${bs}">ล้าง</button>`:''}
+    <select id="bulk-cat" style="${bs}"><option value="">เปลี่ยนหมวด…</option>${opts}</select>
+    <button onclick="applyBulkCat()" ${n?'':'disabled'} style="${bs};background:rgba(124,58,237,.3);border-color:rgba(124,58,237,.5);opacity:${n?1:.4}">ใช้</button>
+    <button onclick="bulkDelete()" ${n?'':'disabled'} style="${bs};background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4);color:#fca5a5;opacity:${n?1:.4}"><i class="fas fa-trash"></i></button>
+    <button onclick="toggleBulkMode()" style="${bs}"><i class="fas fa-times"></i> ปิด</button>`;
+}
+
+function applyBulkCat(){
+  const cat=document.getElementById('bulk-cat')?.value;
+  if(!cat||!_bulkSel.size){ toast('เลือกหมวดและรายการก่อน','error'); return; }
+  let n=0;
+  DB.transactions.forEach(t=>{ if(_bulkSel.has(t.id)){ t.category=cat; n++; } });
+  saveDB(); _bulkSel.clear(); renderTx();
+  if(curPage==='dashboard') renderDash();
+  toast(`เปลี่ยนหมวด ${n} รายการแล้ว`,'success');
+}
+
+function bulkDelete(){
+  if(!_bulkSel.size) return;
+  if(!confirm(`ลบ ${_bulkSel.size} รายการที่เลือก? (ย้อนกลับไม่ได้)`)) return;
+  const n=_bulkSel.size;
+  DB.transactions=DB.transactions.filter(t=>!_bulkSel.has(t.id));
+  saveDB(); _bulkSel.clear(); renderTx();
+  if(curPage==='dashboard') renderDash();
+  toast(`ลบ ${n} รายการแล้ว`,'info');
+}
+
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ══════════════════════════════════════════
