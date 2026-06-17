@@ -3476,7 +3476,7 @@ function openCatDrill(cat){
 function renderTrendChart(){
   const now=new Date(); const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const labels=[],incData=[],expData=[];
-  for(let i=5;i>=0;i--){ let m=now.getMonth()-i,y=now.getFullYear(); if(m<0){m+=12;y--;} const txs=monthTx(m,y); labels.push(MN[m]); incData.push(txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)); expData.push(txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0)); }
+  for(let i=5;i>=0;i--){ let m=now.getMonth()-i,y=now.getFullYear(); if(m<0){m+=12;y--;} const txs=monthTx(m,y); labels.push(MN[m]); incData.push(txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)); expData.push(txs.filter(isRealExp).reduce((s,t)=>s+t.amount,0)); }
   const ctx=document.getElementById('ch-trend').getContext('2d');
   if(chTrend) chTrend.destroy();
   chTrend=new Chart(ctx,{
