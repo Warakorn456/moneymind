@@ -3388,7 +3388,7 @@ function renderBudgetCard(){
   // รายรับเดือนนี้ที่ไม่ได้ carryover (รายรับที่เข้าจริงเดือนนี้)
   const thisInc=monthTx().filter(t=>t.type==='income'&&!t.carryover).reduce((s,t)=>s+t.amount,0);
   const budget=carryAmt+thisInc;
-  const spent=monthTx().filter(t=>t.type==='expense'&&!isSavingTx(t)).reduce((s,t)=>s+t.amount,0);
+  const spent=monthTx().filter(isRealExp).reduce((s,t)=>s+t.amount,0);
   const left=budget-spent;
   const pct=budget>0?Math.min(100,(spent/budget)*100):0;
 
