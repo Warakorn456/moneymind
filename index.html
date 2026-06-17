@@ -1640,6 +1640,18 @@
 
 <!-- ══════════ MODALS ══════════ -->
 
+<!-- Category Drill-down Modal -->
+<div id="m-catdrill" class="overlay">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">
+      <span id="catdrill-title"></span>
+      <button onclick="closeM('m-catdrill')" style="margin-left:auto;background:none;border:none;color:var(--muted);font-size:22px;line-height:1;cursor:pointer">&times;</button>
+    </div>
+    <div id="catdrill-sub" style="color:var(--muted);font-size:13px;margin-bottom:12px"></div>
+    <div id="catdrill-body" style="max-height:60vh;overflow-y:auto"></div>
+  </div>
+</div>
+
 <!-- Transaction Modal -->
 <div id="m-tx" class="overlay">
   <div class="modal">
