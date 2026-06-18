@@ -12174,8 +12174,11 @@ function travelMark(visited){
 async function travelFly(name){
   const p=(DB.travel?.places||[]).find(x=>x.name.toLowerCase()===(name||'').toLowerCase());
   await _ensureTravelGlobe();
+  // scroll ขึ้นไปที่ลูกโลกก่อนเพื่อให้เห็นการหมุน
+  const globeEl=document.getElementById('travel-globe-canvas');
+  if(globeEl) globeEl.scrollIntoView({behavior:'smooth',block:'center'});
   if(p&&p.lat!=null){ _flyToPlace(p.lat,p.lng,_altForType(p.type)); return; }
-  const geo=await _geocode(name);
+  const geo=await _geocode(name,true);
   if(!geo){ toast('ไม่พบพิกัดของ '+name,'error'); return; }
   if(p){ p.lat=geo.lat; p.lng=geo.lng; p.label=geo.label; p.type=geo.type; saveDB(); _refreshTravelGlobe(); }
   _flyToPlace(geo.lat,geo.lng,_altForType(geo.type));
