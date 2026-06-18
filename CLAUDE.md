@@ -160,6 +160,7 @@ _escHtml(s)              // escape HTML string (บรรทัด ~11428)
 | Core | ภาษีเงินได้, งบดุล, แผนเกษียณ, รายการซ้ำ, Subscriptions |
 | Tools | คำนวณ OT (×1/×1.5/×3), คำนวณสินเชื่อ (ตาราง amortization) |
 | Calendar | ปฏิทินพร้อมโน้ต, แสดง transactions/recurring/debt due, month/year picker |
+| Travel | หน้า `travel` (`renderTravel()`) — สรุปทริปท่องเที่ยวแยกตามสถานที่; หมวด `travel` (fa-plane) + ใช้ **tag = ชื่อสถานที่** จัดกลุ่ม; trip detection เว้นช่วง >14 วัน = ทริปใหม่ (`_travelTrips`); การ์ดสรุป (ยอดรวม/จำนวนทริป/สถานที่) + การ์ดสถานที่คลิกขยายดู trip breakdown; ปุ่ม `addTravelTrip()` prompt ชื่อสถานที่ → เปิด tx modal preset cat+tag; system tags ถูกกรองออก (`TRAVEL_SYS_TAGS`) |
 | AI | แชทกับ Maya (Gemini agent + tool calling + rule-based), สแกนใบเสร็จ/สลิปภาษี |
 | AI | Maya agent สั่งงานได้ (10 tools): บันทึก/แก้/ลบ/ค้นหารายการ, เพิ่มออม/จ่ายหนี้, ตั้งงบ, สร้างเป้าออม/หนี้, what-if (tools ทำงานกับ DB ใน browser, ใช้ apiKey ของ user, Gemini OpenAI-compat) |
 | AI | Bot agent 19 tools (ai_agent.py): read (summary/budget/debt/saving/portfolio/prices) + write (add/edit/delete tx, create goal/debt, set SL-TP, dca) + search_transactions + what_if_saving + detect_subscriptions |
