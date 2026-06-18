@@ -11859,7 +11859,7 @@ function renderTravel(){
   if(!Array.isArray(DB.travel.places)) DB.travel.places=[];
 
   // เริ่มลูกโลก + sync พิกัดจากรายการ (async ไม่บล็อก render)
-  _ensureTravelGlobe().then(()=>{ _refreshTravelGlobe(); _syncTravelPlacesFromTx(); }).catch(()=>{});
+  _ensureTravelGlobe().then(()=>{ _travelResize(); _refreshTravelGlobe(); _syncTravelPlacesFromTx(); }).catch(()=>{});
 
   const txs=DB.transactions.filter(t=>t.category==='travel'&&t.type!=='income');
 
