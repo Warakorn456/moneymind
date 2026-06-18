@@ -12102,10 +12102,10 @@ async function travelSearch(){
   await _ensureTravelGlobe();
   const geo=await _geocode(q,true);  // fresh — เลี่ยง cache พิกัดผิดเก่า + ใช้ importance-sort
   if(!geo){ if(pend){ pend.innerHTML='<span style="font-size:12px;color:#f87171">ไม่พบสถานที่ "'+_escHtml(q)+'" — ลองพิมพ์ชื่อภาษาอังกฤษ</span>'; } return; }
-  _flyToPlace(geo.lat,geo.lng);
-  _travelPending={name:q,lat:geo.lat,lng:geo.lng,label:geo.label};
+  _flyToPlace(geo.lat,geo.lng,_altForType(geo.type));
+  _travelPending={name:q,lat:geo.lat,lng:geo.lng,label:geo.label,type:geo.type};
   const ex=(DB.travel?.places||[]).find(p=>p.name.toLowerCase()===q.toLowerCase());
-  if(ex){ ex.lat=geo.lat; ex.lng=geo.lng; ex.label=geo.label; saveDB(); _refreshTravelGlobe(); }  // อัปเดตพิกัดที่เคยผิดให้ถูก
+  if(ex){ ex.lat=geo.lat; ex.lng=geo.lng; ex.label=geo.label; ex.type=geo.type; saveDB(); _refreshTravelGlobe(); }  // อัปเดตพิกัดที่เคยผิดให้ถูก
   if(pend){
     pend.innerHTML='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">'
       +'<span style="font-size:13px;flex:1;min-width:140px"><i class="fas fa-map-pin" style="color:#0ea5e9"></i> <b>'+_escHtml(q)+'</b><div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:280px">'+_escHtml(geo.label||'')+'</div></span>'
