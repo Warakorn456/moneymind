@@ -266,7 +266,7 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | Daily Briefing (อากาศ + Top Movers + การเงิน) | 08:01 ทุกวัน | `daily_briefing.py` → topic 💰 |
 | รายงานราคาประจำวัน | 09:00 ทุกวัน | `stock_daily_report.py` → topic 📈 |
 | Earnings Calendar (หุ้นในพอร์ตที่จะรายงานผลใน 7 วัน) | 09:00 จ.–ศ. | `earnings_calendar.py` → topic 📈 |
-| News Sentiment | 09:10 จ.–ศ. | `news_sentiment.py` → topic 📈 |
+| ~~News Sentiment~~ | ~~09:10 จ.–ศ.~~ | ~~`news_sentiment.py`~~ ❌ ลบออก 2026-06-18 (ลด Gemini token) |
 | แจ้งเตือนหุ้นแกว่ง ≥10% | ทุก 30 นาที จ.–ศ. | `stock_alert.py` → topic 📈 |
 | **SL/TP Alert** (user-defined targets) | ทุก 30 นาที จ.–ศ. US market | `sltp_alert.py` → topic 📈 + personal |
 | **Bill Reminder** (subscriptions ครบใน 3 วัน) | 09:00 ทุกวัน | `bill_reminder.py` → topic 💰 |
