@@ -12220,7 +12220,7 @@ async function _syncTravelPlacesFromTx(){
     for(const p of DB.travel.places){
       if(p.lat!=null) continue;
       const geo=await _geocode(p.name,true);
-      if(geo){ p.lat=geo.lat; p.lng=geo.lng; p.label=geo.label; p.type=geo.type; changed=true; _refreshTravelGlobe(); await new Promise(r=>setTimeout(r,1100)); }
+      if(geo){ p.lat=geo.lat; p.lng=geo.lng; p.label=geo.label; p.type=geo.type; p.bbox=geo.bbox; changed=true; _refreshTravelGlobe(); await new Promise(r=>setTimeout(r,1100)); }
     }
     if(changed){ saveDB(); _refreshTravelGlobe(); if(curPage==='travel') renderTravel(); }
   }finally{ _travelSyncing=false; }
