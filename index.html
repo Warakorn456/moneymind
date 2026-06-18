@@ -12088,7 +12088,7 @@ async function _geocode(place,fresh){
     // เลือกผลที่ importance สูงสุด — กันชื่อพ้องเล็กๆ (เช่น "ญี่ปุ่น" ไปจับหมู่บ้านในไทย importance ต่ำ)
     d.sort((a,b)=>(+b.importance||0)-(+a.importance||0));
     const best=d[0];
-    const res={lat:+best.lat,lng:+best.lon,label:best.display_name};
+    const res={lat:+best.lat,lng:+best.lon,label:best.display_name,type:best.addresstype||best.type||best.class};
     _geoCache[key]=res;
     return res;
   }catch(e){ return null; }
