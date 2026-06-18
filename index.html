@@ -12189,11 +12189,15 @@ async function travelFly(name){
   // scroll ขึ้นไปที่ลูกโลกก่อนเพื่อให้เห็นการหมุน
   const globeEl=document.getElementById('travel-globe-canvas');
   if(globeEl) globeEl.scrollIntoView({behavior:'smooth',block:'center'});
-  if(p&&p.lat!=null){ _flyToPlace(p.lat,p.lng,_altForType(p.type)); return; }
+  if(p&&p.lat!=null){
+    // ใช้ bbox (fitBounds) ถ้ามี — แม่นยำกว่า zoom คงที่
+    if(!_flyToBbox(p.bbox,[p.lng,p.lat])) _flyToPlace(p.lat,p.lng,_altForType(p.type));
+    return;
+  }
   const geo=await _geocode(name,true);
   if(!geo){ toast('ไม่พบพิกัดของ '+name,'error'); return; }
-  if(p){ p.lat=geo.lat; p.lng=geo.lng; p.label=geo.label; p.type=geo.type; saveDB(); _refreshTravelGlobe(); }
-  _flyToPlace(geo.lat,geo.lng,_altForType(geo.type));
+  if(p){ p.lat=geo.lat; p.lng=geo.lng; p.label=geo.label; p.type=geo.type; p.bbox=geo.bbox; saveDB(); _refreshTravelGlobe(); }
+  if(!_flyToBbox(geo.bbox,[geo.lng,geo.lat])) _flyToPlace(geo.lat,geo.lng,_altForType(geo.type));
 }
 
 function travelToggleVisited(name){
