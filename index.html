@@ -12077,6 +12077,18 @@ function _flyToPlace(lat,lng,zoom){
   _travelSpin=false; _setSpinBtn(false); _stopSpin();
   _travelMap.flyTo({center:[+lng,+lat], zoom:zoom||5, speed:1.2, essential:true});
 }
+function _flyToBbox(bbox,center){
+  // bbox จาก Nominatim: [south,north,west,east] (strings)
+  if(!_travelMap||!bbox||bbox.length<4) return false;
+  _travelSpin=false; _setSpinBtn(false); _stopSpin();
+  const s=+bbox[0],n=+bbox[1],w=+bbox[2],e=+bbox[3];
+  if(!isFinite(s)||!isFinite(n)||!isFinite(w)||!isFinite(e)) return false;
+  // ถ้า bbox เล็กมาก (จุด/อาคาร) ให้ zoom คงที่แทน
+  const span=Math.max(n-s,e-w);
+  if(span<0.01){ _flyToPlace(center[1],center[0],14); return true; }
+  _travelMap.fitBounds([[w,s],[e,n]],{padding:60,animate:true,speed:1.2,essential:true});
+  return true;
+}
 
 // ระดับซูมตามชนิดสถานที่: ประเทศ=กว้าง เมือง/อำเภอ=ใกล้ระดับถนน
 function _altForType(t){
