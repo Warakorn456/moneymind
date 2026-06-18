@@ -12045,11 +12045,21 @@ function _refreshTravelGlobe(){
   _travelGlobe.pointsData(pts).labelsData(pts);
 }
 
-function _flyToPlace(lat,lng){
+function _flyToPlace(lat,lng,altitude){
   if(!_travelGlobe||lat==null) return;
   _travelGlobe.controls().autoRotate=false;
   _setSpinBtn(false);
-  _travelGlobe.pointOfView({lat:+lat,lng:+lng,altitude:1.5},1300);
+  _travelGlobe.pointOfView({lat:+lat,lng:+lng,altitude:altitude||0.8},1300);
+}
+
+// ซูมใกล้-ไกลตามชนิดสถานที่: ประเทศ=ไกล เมือง/อำเภอ=ใกล้
+function _altForType(t){
+  t=(t||'').toLowerCase();
+  if(t==='country') return 1.25;
+  if(['state','province','region','county'].includes(t)) return 0.55;
+  if(['city','metropolis','municipality'].includes(t)) return 0.32;
+  if(['town','village','suburb','city_district','hamlet','neighbourhood'].includes(t)) return 0.2;
+  return 0.7;
 }
 
 function _setSpinBtn(spinning){
