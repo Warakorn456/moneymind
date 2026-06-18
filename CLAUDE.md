@@ -362,7 +362,7 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 | `stock_alert.py` | `stock_alert.py` | deploy ได้ตามปกติ |
 | `daily_briefing.py` | `daily_briefing.py` | deploy ได้ตามปกติ |
 | `health_monitor.py` | `health_monitor.py` | ✅ sync 2026-06-18 — แก้ SERVICES ลบ `moneymind-bot` ออก (เพื่อกัน 409 Conflict กับ systemd) เหลือแค่ `gmail-bank-alert` |
-| `news_sentiment.py` | `news_sentiment.py` | deploy ได้ตามปกติ |
+| `news_sentiment.py` | `news_sentiment.py` | ❌ cron ลบแล้ว 2026-06-18 (ลด Gemini token); ไฟล์ยังอยู่บน VM |
 | `calendar_reminder.py` | `calendar_reminder.py` | deploy ได้ตามปกติ |
 | `bank_statement_analysis.py` | `bank_statement_analysis.py` | deploy ได้ตามปกติ |
 | `stock_advanced_alerts.py` | `stock_advanced_alerts.py` | deploy ได้ตามปกติ — SL/TP + 52W High/Low + Volume Spike, cron ทุก 30 นาที US market |
