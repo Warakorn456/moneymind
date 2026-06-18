@@ -11958,7 +11958,7 @@ function renderTravel(){
     +'</div>';
   }).join('');
 
-  el.innerHTML=head+summary+cards;
+  el.innerHTML=head+placesSec+summary+cards;
 }
 
 function _toggleTravelTrip(i){
@@ -11968,6 +11968,185 @@ function _toggleTravelTrip(i){
   const open=d.style.display!=='none';
   d.style.display=open?'none':'block';
   if(c) c.style.transform=open?'':'rotate(180deg)';
+}
+
+// ── 3D Globe (globe.gl + Nominatim geocoding) ──────────────────────────────
+let _travelGlobe=null, _travelGlobeLoading=false, _travelPending=null, _travelSyncing=false;
+
+function _escAttr(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+function _loadScript(src){
+  return new Promise((res,rej)=>{
+    if(document.querySelector('script[data-dyn="'+src+'"]')){
+      // อาจยังโหลดไม่เสร็จ — รอ window.Globe
+      const t0=Date.now();
+      (function wait(){ if(typeof Globe!=='undefined') return res(); if(Date.now()-t0>15000) return rej(new Error('timeout')); setTimeout(wait,100); })();
+      return;
+    }
+    const s=document.createElement('script'); s.src=src; s.setAttribute('data-dyn',src);
+    s.onload=()=>res(); s.onerror=()=>rej(new Error('โหลดไม่ได้: '+src));
+    document.head.appendChild(s);
+  });
+}
+
+async function _ensureTravelGlobe(){
+  if(_travelGlobe) return _travelGlobe;
+  if(_travelGlobeLoading){ await new Promise(r=>setTimeout(r,300)); return _travelGlobe; }
+  const host=document.getElementById('travel-globe-canvas');
+  if(!host) return null;
+  _travelGlobeLoading=true;
+  try{
+    await _loadScript('https://unpkg.com/globe.gl@2.33.2/dist/globe.gl.min.js');
+    if(typeof Globe==='undefined') throw new Error('Globe ไม่พร้อม');
+    host.innerHTML=''; host.style.display='block';
+    const g=Globe()
+      .globeImageUrl('https://unpkg.com/three-globe@2.31.0/example/img/earth-night.jpg')
+      .bumpImageUrl('https://unpkg.com/three-globe@2.31.0/example/img/earth-topology.png')
+      .backgroundColor('rgba(0,0,0,0)')
+      .atmosphereColor('#0ea5e9').atmosphereAltitude(0.18)
+      .pointLat('lat').pointLng('lng')
+      .pointColor(p=>p.visited?'#34d399':'#fbbf24')
+      .pointAltitude(0.04).pointRadius(0.55)
+      .labelLat('lat').labelLng('lng').labelText('name')
+      .labelSize(1.2).labelDotRadius(0.45)
+      .labelColor(p=>p.visited?'#34d399':'#fbbf24')
+      .onPointClick(p=>_flyToPlace(p.lat,p.lng))
+      .width(host.clientWidth||host.offsetWidth||600).height(380)(host);
+    g.controls().autoRotate=true;
+    g.controls().autoRotateSpeed=0.5;
+    g.controls().enableZoom=true;
+    _travelGlobe=g;
+    g.pointOfView({lat:15,lng:100,altitude:2.2},0); // เริ่มที่ไทย
+    window.addEventListener('resize',_travelResize);
+  }catch(e){
+    host.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:30px">โหลดลูกโลกไม่ได้ (ต้องต่อเน็ต)<br>'+_escHtml(e.message||'')+'</div>';
+  }finally{ _travelGlobeLoading=false; }
+  return _travelGlobe;
+}
+
+function _travelResize(){
+  const host=document.getElementById('travel-globe-canvas');
+  if(_travelGlobe&&host&&host.clientWidth) _travelGlobe.width(host.clientWidth);
+}
+
+function _refreshTravelGlobe(){
+  if(!_travelGlobe) return;
+  const pts=(DB.travel?.places||[]).filter(p=>p.lat!=null);
+  _travelGlobe.pointsData(pts).labelsData(pts);
+}
+
+function _flyToPlace(lat,lng){
+  if(!_travelGlobe||lat==null) return;
+  _travelGlobe.controls().autoRotate=false;
+  _setSpinBtn(false);
+  _travelGlobe.pointOfView({lat:+lat,lng:+lng,altitude:1.5},1300);
+}
+
+function _setSpinBtn(spinning){
+  const b=document.getElementById('travel-spin-btn'); if(!b) return;
+  b.innerHTML=spinning?'<i class="fas fa-pause"></i> หยุดหมุน':'<i class="fas fa-play"></i> หมุน';
+}
+function travelToggleSpin(){
+  if(!_travelGlobe){ _ensureTravelGlobe(); return; }
+  const c=_travelGlobe.controls(); c.autoRotate=!c.autoRotate; _setSpinBtn(c.autoRotate);
+}
+
+// Nominatim geocoding (ฟรี ไม่ต้อง key) — cache พิกัดใน DB.travel.places
+const _geoCache={};
+async function _geocode(place){
+  const key=(place||'').trim().toLowerCase(); if(!key) return null;
+  if(_geoCache[key]) return _geoCache[key];
+  const cached=(DB.travel?.places||[]).find(p=>p.name.toLowerCase()===key&&p.lat!=null);
+  if(cached){ const r={lat:cached.lat,lng:cached.lng,label:cached.label}; _geoCache[key]=r; return r; }
+  try{
+    const u='https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=th&q='+encodeURIComponent(place);
+    const r=await fetch(u,{headers:{'Accept':'application/json'}});
+    const d=await r.json();
+    if(!d||!d.length) return null;
+    const res={lat:+d[0].lat,lng:+d[0].lon,label:d[0].display_name};
+    _geoCache[key]=res;
+    return res;
+  }catch(e){ return null; }
+}
+
+async function travelSearch(){
+  const inp=document.getElementById('travel-search'); if(!inp) return;
+  const q=inp.value.trim(); if(!q){ inp.focus(); return; }
+  const pend=document.getElementById('travel-pending');
+  if(pend){ pend.style.display='block'; pend.innerHTML='<span style="font-size:12px;color:var(--muted)"><i class="fas fa-spinner fa-spin"></i> กำลังค้นหา "'+_escHtml(q)+'"…</span>'; }
+  await _ensureTravelGlobe();
+  const geo=await _geocode(q);
+  if(!geo){ if(pend){ pend.innerHTML='<span style="font-size:12px;color:#f87171">ไม่พบสถานที่ "'+_escHtml(q)+'" — ลองพิมพ์ชื่อภาษาอังกฤษ</span>'; } return; }
+  _flyToPlace(geo.lat,geo.lng);
+  _travelPending={name:q,lat:geo.lat,lng:geo.lng,label:geo.label};
+  const exists=(DB.travel?.places||[]).some(p=>p.name.toLowerCase()===q.toLowerCase());
+  if(pend){
+    pend.innerHTML='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">'
+      +'<span style="font-size:13px;flex:1;min-width:140px"><i class="fas fa-map-pin" style="color:#0ea5e9"></i> <b>'+_escHtml(q)+'</b><div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:280px">'+_escHtml(geo.label||'')+'</div></span>'
+      +(exists?'<span style="font-size:12px;color:#34d399">ปักหมุดแล้ว</span>':
+        '<button class="btn btn-primary" style="padding:5px 12px;font-size:12px" onclick="travelMark(true)">✓ เคยไปแล้ว</button>'
+       +'<button class="btn btn-ghost" style="padding:5px 12px;font-size:12px" onclick="travelMark(false)">★ อยากไป</button>')
+      +'</div>';
+  }
+}
+
+function travelMark(visited){
+  if(!_travelPending) return;
+  DB.travel=DB.travel||{places:[]};
+  const p=DB.travel.places.find(x=>x.name.toLowerCase()===_travelPending.name.toLowerCase());
+  if(p){ p.visited=visited; p.lat=_travelPending.lat; p.lng=_travelPending.lng; p.label=_travelPending.label; }
+  else DB.travel.places.push({name:_travelPending.name,lat:_travelPending.lat,lng:_travelPending.lng,label:_travelPending.label,visited:!!visited});
+  saveDB();
+  toast((visited?'✓ ปักหมุดเคยไป ':'★ เพิ่มในรายการอยากไป ')+_travelPending.name,'success');
+  _travelPending=null;
+  const inp=document.getElementById('travel-search'); if(inp) inp.value='';
+  const pend=document.getElementById('travel-pending'); if(pend){ pend.style.display='none'; pend.innerHTML=''; }
+  _refreshTravelGlobe(); renderTravel();
+}
+
+async function travelFly(name){
+  const p=(DB.travel?.places||[]).find(x=>x.name.toLowerCase()===(name||'').toLowerCase());
+  await _ensureTravelGlobe();
+  if(p&&p.lat!=null){ _flyToPlace(p.lat,p.lng); return; }
+  const geo=await _geocode(name);
+  if(!geo){ toast('ไม่พบพิกัดของ '+name,'error'); return; }
+  if(p){ p.lat=geo.lat; p.lng=geo.lng; p.label=geo.label; saveDB(); _refreshTravelGlobe(); }
+  _flyToPlace(geo.lat,geo.lng);
+}
+
+function travelToggleVisited(name){
+  const p=(DB.travel?.places||[]).find(x=>x.name.toLowerCase()===(name||'').toLowerCase());
+  if(!p) return;
+  p.visited=!p.visited; saveDB(); _refreshTravelGlobe(); renderTravel();
+}
+
+function travelRemovePlace(name){
+  if(!DB.travel||!DB.travel.places) return;
+  DB.travel.places=DB.travel.places.filter(p=>p.name.toLowerCase()!==(name||'').toLowerCase());
+  saveDB(); _refreshTravelGlobe(); renderTravel();
+}
+
+// แปลงสถานที่จากรายการ tx (หมวด travel) เป็นหมุดบนลูกโลก — geocode ทีละอันกัน rate-limit
+async function _syncTravelPlacesFromTx(){
+  if(_travelSyncing) return; _travelSyncing=true;
+  try{
+    DB.travel=DB.travel||{places:[]};
+    const txs=DB.transactions.filter(t=>t.category==='travel'&&t.type!=='income');
+    const names=[...new Set(txs.map(_travelDest))].filter(n=>n&&n!=='ไม่ระบุสถานที่');
+    let changed=false;
+    for(const name of names){
+      let p=DB.travel.places.find(x=>x.name.toLowerCase()===name.toLowerCase());
+      if(p&&p.lat!=null){ if(!p.visited){ p.visited=true; changed=true; } continue; }
+      const geo=await _geocode(name);
+      if(geo){
+        if(p){ p.lat=geo.lat; p.lng=geo.lng; p.label=geo.label; p.visited=true; }
+        else DB.travel.places.push({name,lat:geo.lat,lng:geo.lng,label:geo.label,visited:true,fromTx:true});
+        changed=true; _refreshTravelGlobe();
+        await new Promise(r=>setTimeout(r,1100)); // Nominatim ≤1 req/วินาที
+      }
+    }
+    if(changed){ saveLocalOnly(); _refreshTravelGlobe(); if(curPage==='travel') renderTravel(); }
+  }finally{ _travelSyncing=false; }
 }
 
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
