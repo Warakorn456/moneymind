@@ -11707,7 +11707,7 @@ async function mayaAgent(userMsg){
   const key=DB.settings.apiKey;
   const model=(DB.settings.geminiModel&&!/tts|embedding|aqa/i.test(DB.settings.geminiModel))?DB.settings.geminiModel:'gemini-2.5-flash';
   const url='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
-  const sys=buildFinanceContext()+'\n\nเมื่อผู้ใช้สั่งให้บันทึก/แก้ไขข้อมูล (ซื้อของ จ่ายเงิน ได้เงิน ออมเงิน จ่ายหนี้ ตั้งงบ) ให้เรียก tool ที่เหมาะสมเสมอ ห้ามเดาตัวเลขที่ต้องใช้ข้อมูลจริง หลังบันทึกให้ยืนยันสั้นๆ';
+  const sys=buildFinanceContext()+'\n\nเมื่อผู้ใช้สั่งให้บันทึก/แก้ไขข้อมูล (ซื้อของ จ่ายเงิน ได้เงิน ออมเงิน จ่ายหนี้ ตั้งงบ) ให้เรียก tool ที่เหมาะสมเสมอ ห้ามเดาตัวเลขที่ต้องใช้ข้อมูลจริง หลังบันทึกให้ยืนยันสั้นๆ\n\nสำหรับ search_transactions: ถามเรื่อง "อาหาร/กิน" ให้ใช้ category="food" ไม่ใช่ keyword="กิน" | ถามเรื่องเดือนที่ระบุ ให้ใช้ month="2026-04" หรือ month="current"/"last" ไม่ใช่ days | category mapping: กิน/อาหาร→food, น้ำมัน→fuel, เดินทาง/รถ→transport, ช้อปปิ้ง→shopping, ไฟ/น้ำ/โทรศัพท์→utility, สุขภาพ/หมอ→health, บันเทิง→entertainment, ประกัน→insurance, ท่องเที่ยว→travel';
   const messages=[{role:'system',content:sys}];
   chatHistory.slice(0,-1).forEach(h=>messages.push({role:h.role==='ai'?'assistant':'user',content:h.text}));
   messages.push({role:'user',content:userMsg});
