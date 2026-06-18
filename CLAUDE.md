@@ -47,6 +47,7 @@ DB = {
   calNotes: {},         // {"YYYY-MM-DD": [{id, text, color}]}
   forecastCfg: {},      // {startBal, dailyExp, scenario, customEvents}
   wishlist: [],         // (legacy — ไม่แสดง UI แล้ว ข้อมูลยังอยู่ใน DB)
+  travel: { places:[] },// {name, lat, lng, visited, label, fromTx} — หมุดบนลูกโลก 3D หน้า travel
   settings: {
     apiKey: '',         // Google Gemini API Key
     geminiModel: '',
