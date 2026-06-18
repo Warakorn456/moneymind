@@ -11970,17 +11970,23 @@ function _toggleTravelTrip(i){
   if(c) c.style.transform=open?'':'rotate(180deg)';
 }
 
-// ── 3D Globe (globe.gl + Nominatim geocoding) ──────────────────────────────
-let _travelGlobe=null, _travelGlobeLoading=false, _travelPending=null, _travelSyncing=false;
+// ── Travel Map = MapLibre GL (globe projection) + OpenFreeMap tiles + Nominatim ──
+// แผนที่จริง (vector tiles) คมชัดทุกระดับซูม ซูมถึงระดับถนนได้ — แทน globe.gl (texture เดียวซูมแล้วแตก)
+let _travelMap=null, _travelMapLoading=false, _travelPending=null, _travelSyncing=false;
+let _travelMarkers=[], _travelSpin=true, _travelSpinRAF=null, _travelSpinLast=0;
 
 function _escAttr(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
 
+function _loadCss(href){
+  if(document.querySelector('link[data-dyn="'+href+'"]')) return;
+  const l=document.createElement('link'); l.rel='stylesheet'; l.href=href; l.setAttribute('data-dyn',href);
+  document.head.appendChild(l);
+}
 function _loadScript(src){
   return new Promise((res,rej)=>{
     if(document.querySelector('script[data-dyn="'+src+'"]')){
-      // อาจยังโหลดไม่เสร็จ — รอ window.Globe
       const t0=Date.now();
-      (function wait(){ if(typeof Globe!=='undefined') return res(); if(Date.now()-t0>15000) return rej(new Error('timeout')); setTimeout(wait,100); })();
+      (function wait(){ if(window.maplibregl) return res(); if(Date.now()-t0>20000) return rej(new Error('timeout')); setTimeout(wait,100); })();
       return;
     }
     const s=document.createElement('script'); s.src=src; s.setAttribute('data-dyn',src);
@@ -11990,48 +11996,32 @@ function _loadScript(src){
 }
 
 async function _ensureTravelGlobe(){
-  if(_travelGlobe) return _travelGlobe;
-  if(_travelGlobeLoading){ await new Promise(r=>setTimeout(r,300)); return _travelGlobe; }
+  if(_travelMap) return _travelMap;
+  if(_travelMapLoading){ await new Promise(r=>setTimeout(r,300)); return _travelMap; }
   const host=document.getElementById('travel-globe-canvas');
   if(!host) return null;
-  _travelGlobeLoading=true;
+  _travelMapLoading=true;
   try{
-    await _loadScript('https://unpkg.com/globe.gl@2.33.2/dist/globe.gl.min.js');
-    if(typeof Globe==='undefined') throw new Error('Globe ไม่พร้อม');
-    host.innerHTML=''; host.style.display='block';
-    const g=Globe()
-      .globeImageUrl('https://unpkg.com/three-globe@2.31.0/example/img/earth-blue-marble.jpg')
-      .bumpImageUrl('https://unpkg.com/three-globe@2.31.0/example/img/earth-topology.png')
-      .backgroundColor('rgba(0,0,0,0)')
-      .atmosphereColor('#0ea5e9').atmosphereAltitude(0.18)
-      .pointLat('lat').pointLng('lng')
-      .pointColor(p=>p.visited?'#34d399':'#fbbf24')
-      .pointAltitude(0.04).pointRadius(0.55)
-      .labelLat('lat').labelLng('lng').labelText('name')
-      .labelSize(1.2).labelDotRadius(0.45)
-      .labelColor(p=>p.visited?'#34d399':'#fbbf24')
-      .onPointClick(p=>_flyToPlace(p.lat,p.lng))
-      .width(host.clientWidth||host.offsetWidth||600).height(380)(host);
-    g.controls().autoRotate=true;
-    g.controls().autoRotateSpeed=0.5;
-    g.controls().enableZoom=true;
-    g.controls().minDistance=108;   // ซูมเข้าได้ลึกถึงระดับเมือง/จังหวัด
-    g.controls().maxDistance=620;   // จำกัดซูมออก
-    _travelGlobe=g;
-    g.pointOfView({lat:15,lng:100,altitude:2.2},0); // เริ่มที่ไทย
+    _loadCss('https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css');
+    await _loadScript('https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js');
+    if(!window.maplibregl) throw new Error('MapLibre ไม่พร้อม');
+    host.innerHTML=''; host.style.display='block'; host.style.position='relative';
+    const map=new maplibregl.Map({
+      container:host,
+      style:'https://tiles.openfreemap.org/styles/liberty',
+      center:[100,13], zoom:1.6, attributionControl:true,
+    });
+    map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');
+    map.on('style.load',()=>{ try{ map.setProjection({type:'globe'}); }catch(e){} });
+    // หยุดหมุนเมื่อผู้ใช้แตะ/ลาก/ซูม
+    ['mousedown','touchstart','wheel','dragstart'].forEach(ev=>map.on(ev,()=>{ if(_travelSpin){ _travelSpin=false; _setSpinBtn(false); _stopSpin(); } }));
+    map.on('load',()=>{ _refreshTravelGlobe(); if(_travelSpin) _startSpin(); });
+    _travelMap=map;
     window.addEventListener('resize',_travelResize);
-    // เส้นขอบประเทศ (vector คมชัดทุกระดับซูม) ช่วยระบุพื้นที่ตอนซูมลึกถึงระดับจังหวัด/เมือง
-    fetch('https://unpkg.com/globe.gl@2.33.2/example/datasets/ne_110m_admin_0_countries.geojson')
-      .then(r=>r.json()).then(gj=>{ if(_travelGlobe&&gj&&gj.features) _travelGlobe
-        .polygonsData(gj.features)
-        .polygonCapColor(()=>'rgba(0,0,0,0)')
-        .polygonSideColor(()=>'rgba(0,0,0,0)')
-        .polygonStrokeColor(()=>'rgba(255,255,255,0.28)')
-        .polygonAltitude(0.006); }).catch(()=>{});
   }catch(e){
-    host.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:30px">โหลดลูกโลกไม่ได้ (ต้องต่อเน็ต)<br>'+_escHtml(e.message||'')+'</div>';
-  }finally{ _travelGlobeLoading=false; }
-  return _travelGlobe;
+    host.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:30px">โหลดแผนที่ไม่ได้ (ต้องต่อเน็ต)<br>'+_escHtml(e.message||'')+'</div>';
+  }finally{ _travelMapLoading=false; }
+  return _travelMap;
 }
 
 function _travelResize(){
