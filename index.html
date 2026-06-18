@@ -12269,6 +12269,183 @@ async function _syncTravelPlacesFromTx(){
   }finally{ _travelSyncing=false; }
 }
 
+// ══════════════════════════════════════════
+//  TRAVEL ROUTE PLANNER + MY LOCATION
+// ══════════════════════════════════════════
+let _myLocation=null, _myLocMarker=null, _routeMode='driving';
+
+function travelGetMyLocation(){
+  const btn=document.getElementById('travel-myloc-btn');
+  if(!navigator.geolocation){ toast('เบราว์เซอร์นี้ไม่รองรับ GPS','error'); return; }
+  if(btn){ btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> กำลังหาตำแหน่ง…'; btn.disabled=true; }
+  navigator.geolocation.getCurrentPosition(
+    async pos=>{
+      _myLocation={lat:pos.coords.latitude,lng:pos.coords.longitude};
+      await _ensureTravelGlobe();
+      if(_myLocMarker) _myLocMarker.remove();
+      const el=document.createElement('div');
+      el.style.cssText='width:16px;height:16px;border-radius:50%;background:#f87171;border:3px solid #fff;box-shadow:0 0 0 3px #f87171,0 2px 8px rgba(0,0,0,.5);cursor:pointer';
+      el.title='ตำแหน่งของฉัน';
+      _myLocMarker=new maplibregl.Marker({element:el}).setLngLat([_myLocation.lng,_myLocation.lat]).addTo(_travelMap);
+      _flyToPlace(_myLocation.lat,_myLocation.lng,13);
+      if(btn){ btn.innerHTML='<i class="fas fa-crosshairs" style="color:#4ade80"></i> พบตำแหน่งแล้ว'; btn.disabled=false; }
+      toast('พบตำแหน่งของคุณแล้ว','success');
+      _updateRouteSelects();
+    },
+    err=>{
+      if(btn){ btn.innerHTML='<i class="fas fa-crosshairs" style="color:#f87171"></i> ตำแหน่งฉัน'; btn.disabled=false; }
+      toast('ไม่สามารถหาตำแหน่งได้ — ตรวจสอบการอนุญาต GPS','error');
+    },
+    {enableHighAccuracy:true,timeout:12000}
+  );
+}
+
+function travelToggleRoutePanel(){
+  const panel=document.getElementById('travel-route-panel');
+  if(!panel) return;
+  const open=panel.style.display!=='none';
+  panel.style.display=open?'none':'block';
+  if(!open){ _updateRouteSelects(); const g=document.getElementById('travel-globe-canvas'); if(g) g.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+}
+
+function travelSetMode(mode){
+  _routeMode=mode;
+  document.querySelectorAll('.travel-mode-btn').forEach(b=>{
+    const active=b.dataset.mode===mode;
+    b.style.background=active?'var(--primary)':'';
+    b.style.color=active?'#fff':'';
+  });
+}
+
+function _updateRouteSelects(){
+  const fromSel=document.getElementById('travel-route-from');
+  const toSel=document.getElementById('travel-route-to');
+  if(!fromSel||!toSel) return;
+  const places=(DB.travel?.places||[]).filter(p=>p.lat!=null);
+  const myOpt=_myLocation?'<option value="__my__">📍 ตำแหน่งฉัน</option>':'';
+  const opts=places.map(p=>`<option value="${_escAttr(p.name)}">${p.visited?'✓ ':'★ '}${_escHtml(p.name)}</option>`).join('');
+  fromSel.innerHTML=(myOpt+opts)||'<option disabled>ยังไม่มีสถานที่ — กด ตำแหน่งฉัน หรือเพิ่มหมุดก่อน</option>';
+  toSel.innerHTML=opts||'<option disabled>ยังไม่มีสถานที่ — ค้นหาแล้วกด ★ อยากไป</option>';
+  // ถ้ามี _myLocation ให้ default from = ตำแหน่งฉัน
+  if(_myLocation&&fromSel.options[0]) fromSel.value='__my__';
+}
+
+function _getRouteCoords(val){
+  if(val==='__my__'&&_myLocation) return _myLocation;
+  const p=(DB.travel?.places||[]).find(x=>x.name===val);
+  return (p&&p.lat!=null)?{lat:p.lat,lng:p.lng}:null;
+}
+
+async function travelRoute(){
+  const fromVal=document.getElementById('travel-route-from')?.value;
+  const toVal=document.getElementById('travel-route-to')?.value;
+  const resEl=document.getElementById('travel-route-result');
+  if(!fromVal||!toVal||fromVal===toVal){ toast('กรุณาเลือกจุดเริ่มต้นและปลายทางที่ต่างกัน','error'); return; }
+  const from=_getRouteCoords(fromVal);
+  const to=_getRouteCoords(toVal);
+  if(!from||!to){ toast('ไม่พบพิกัดสถานที่','error'); return; }
+  if(!resEl) return;
+  resEl.style.display='block';
+  resEl.innerHTML='<div style="text-align:center;padding:12px;color:var(--muted);font-size:13px"><i class="fas fa-spinner fa-spin"></i> กำลังคำนวณเส้นทาง…</div>';
+  await _ensureTravelGlobe();
+  // เส้นตรงชั่วคราว + zoom ออกให้เห็นทั้งสองจุด
+  _drawRoute({type:'LineString',coordinates:[[from.lng,from.lat],[to.lng,to.lat]]},true);
+  try{
+    const osrmUrl=`https://router.project-osrm.org/route/v1/${_routeMode}/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson`;
+    const r=await fetch(osrmUrl);
+    if(!r.ok) throw new Error('OSRM '+r.status);
+    const d=await r.json();
+    if(d.code!=='Ok'||!d.routes?.length) throw new Error('no_route');
+    const route=d.routes[0];
+    const distKm=(route.distance/1000).toFixed(1);
+    const durMin=Math.round(route.duration/60);
+    const durStr=durMin>=60?`${Math.floor(durMin/60)} ชม. ${durMin%60>0?durMin%60+' นาที':''}`:`${durMin} นาที`;
+    _drawRoute(route.geometry);
+    // fit ลูกโลกให้เห็นทั้งเส้นทาง
+    const cs=route.geometry.coordinates;
+    const lngs=cs.map(c=>c[0]),lats=cs.map(c=>c[1]);
+    _travelMap.fitBounds([[Math.min(...lngs),Math.min(...lats)],[Math.max(...lngs),Math.max(...lats)]],{padding:70,animate:true,speed:1.0});
+    const modeLabel={driving:'ขับรถ',foot:'เดิน',bike:'จักรยาน'}[_routeMode]||'';
+    const modeIcon={driving:'fa-car',foot:'fa-walking',bike:'fa-bicycle'}[_routeMode]||'fa-route';
+    const fromName=fromVal==='__my__'?'ตำแหน่งฉัน':fromVal;
+    resEl.innerHTML=`<div style="border-top:1px solid var(--border);padding-top:10px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:90px;text-align:center;background:var(--surface);border-radius:10px;padding:10px 6px">
+          <i class="fas fa-road" style="color:#0ea5e9;font-size:15px"></i>
+          <div style="font-size:22px;font-weight:800;margin-top:4px">${distKm}</div>
+          <div style="font-size:11px;color:var(--muted)">กิโลเมตร</div>
+        </div>
+        <div style="flex:1;min-width:90px;text-align:center;background:var(--surface);border-radius:10px;padding:10px 6px">
+          <i class="fas fa-clock" style="color:#a78bfa;font-size:15px"></i>
+          <div style="font-size:18px;font-weight:800;margin-top:4px">${durStr}</div>
+          <div style="font-size:11px;color:var(--muted)"><i class="fas ${modeIcon}"></i> ${modeLabel}</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--muted);text-align:center;line-height:1.6">
+        <span style="background:#4ade8033;color:#4ade80;border-radius:4px;padding:2px 6px">A</span> ${_escHtml(fromName)}
+        &nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;
+        <span style="background:#f8717133;color:#f87171;border-radius:4px;padding:2px 6px">B</span> ${_escHtml(toVal)}
+      </div>
+      <button onclick="_clearRoute()" style="width:100%;margin-top:8px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:5px 0;font-size:11px;cursor:pointer"><i class="fas fa-times"></i> ล้างเส้นทาง</button>
+    </div>`;
+  }catch(e){
+    // fallback: เส้นตรง + haversine distance
+    const dist=_haversine(from.lat,from.lng,to.lat,to.lng);
+    const fromName=fromVal==='__my__'?'ตำแหน่งฉัน':fromVal;
+    _drawRoute({type:'LineString',coordinates:[[from.lng,from.lat],[to.lng,to.lat]]});
+    const cs=[[from.lng,from.lat],[to.lng,to.lat]];
+    const lngs=cs.map(c=>c[0]),lats=cs.map(c=>c[1]);
+    _travelMap.fitBounds([[Math.min(...lngs),Math.min(...lats)],[Math.max(...lngs),Math.max(...lats)]],{padding:80,animate:true,speed:1.0});
+    resEl.innerHTML=`<div style="border-top:1px solid var(--border);padding-top:10px">
+      <div style="background:#f59e0b22;border:1px solid #f59e0b55;border-radius:8px;padding:8px 10px;font-size:12px;color:#f59e0b;margin-bottom:8px">
+        <i class="fas fa-info-circle"></i> เส้นทางข้ามทะเล/ไม่มีถนนเชื่อม — แสดงระยะทางเส้นตรง
+      </div>
+      <div style="text-align:center;background:var(--surface);border-radius:10px;padding:12px">
+        <i class="fas fa-ruler" style="color:#0ea5e9;font-size:15px"></i>
+        <div style="font-size:22px;font-weight:800;margin-top:4px">${dist.toFixed(0)}</div>
+        <div style="font-size:11px;color:var(--muted)">กิโลเมตร (เส้นตรง)</div>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--muted);text-align:center">
+        <span style="background:#4ade8033;color:#4ade80;border-radius:4px;padding:2px 6px">A</span> ${_escHtml(fromName)}
+        &nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;
+        <span style="background:#f8717133;color:#f87171;border-radius:4px;padding:2px 6px">B</span> ${_escHtml(toVal)}
+      </div>
+      <button onclick="_clearRoute()" style="width:100%;margin-top:8px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:5px 0;font-size:11px;cursor:pointer"><i class="fas fa-times"></i> ล้างเส้นทาง</button>
+    </div>`;
+  }
+}
+
+function _haversine(lat1,lng1,lat2,lng2){
+  const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function _drawRoute(geometry,dashed){
+  if(!_travelMap) return;
+  _clearRouteLayer();
+  _travelMap.addSource('__route__',{type:'geojson',data:{type:'Feature',geometry}});
+  _travelMap.addLayer({id:'__route__-bg',type:'line',source:'__route__',
+    paint:{'line-color':'#fff','line-width':6,'line-opacity':0.4}});
+  _travelMap.addLayer({id:'__route__',type:'line',source:'__route__',
+    paint:{'line-color':'#a78bfa','line-width':3.5,'line-opacity':0.9,
+      ...(dashed?{'line-dasharray':[4,3]}:{})}});
+}
+
+function _clearRouteLayer(){
+  if(!_travelMap) return;
+  ['__route__','__route__-bg'].forEach(id=>{
+    try{ if(_travelMap.getLayer(id)) _travelMap.removeLayer(id); }catch(e){}
+  });
+  try{ if(_travelMap.getSource('__route__')) _travelMap.removeSource('__route__'); }catch(e){}
+}
+
+function _clearRoute(){
+  _clearRouteLayer();
+  const r=document.getElementById('travel-route-result');
+  if(r){ r.style.display='none'; r.innerHTML=''; }
+}
+
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ══════════════════════════════════════════
