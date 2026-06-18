@@ -411,7 +411,8 @@ https://firestore.googleapis.com/v1/projects/moneymind-d97f3/databases/(default)
 
 **Quick Add flow (expense):** `else` clause → `_parse_quick_add()` → `_detect_cat()` → `save_to_firestore(type=expense)`  
 **Quick Add flow (income):** `+` นำหน้า หรือ keyword ใน `INCOME_CAT_MAP` (เงินเดือน/freelance/ปันผล ฯลฯ) → `_detect_income_cat()` → `save_to_firestore(type=income)`; ตัวอย่าง: `"+เงินเดือน 25000"` หรือ `"เงินเดือน 25000"` → income salary  
-**vs Benchmark:** `get_portfolio()` fetch SPY+QQQ พร้อมกัน → คืน `benchmark` dict → แสดงใน footer
+**vs Benchmark:** `get_portfolio()` fetch SPY+QQQ พร้อมกัน → คืน `benchmark` dict → แสดงใน footer  
+**Slip Scan flow (photo):** photo handler ก่อน text handler → `analyze_slip(file_id)` → ดาวน์โหลดรูป → Gemini Vision (inlineData base64, maxOutputTokens=200) → parse JSON `{amount, description, category, merchant, date}` → `save_to_firestore(tag=slip-scan)`; เฉพาะ personal chat (CHAT_ID)
 
 ### ไฟล์ Bot บนโน้ตบุค (C:\Users\warakorn\Documents\)
 | ไฟล์ | หน้าที่ |
