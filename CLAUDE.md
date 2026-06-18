@@ -257,7 +257,7 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | **Quick Add** | `"ข้าว 120"` / `"120 กาแฟ"` | บันทึก expense ลง Firestore ทันที (auto-detect หมวด) |
 | **รูปสลิป** | ส่งรูปสลิป/ใบเสร็จในแชท | Gemini Vision อ่าน → บันทึก Firestore (tag `slip-scan`) |
 | **เสียง** | ส่งข้อความเสียง (พูดรายการ/คำถาม) | Gemini ถอดเสียง → บันทึกหลายรายการ หรือตอบคำถาม (tag `voice-add`) |
-| **AI Chat** | พิมพ์คำถามอะไรก็ได้ (personal chat) | Gemini + Firestore context ตอบเป็นภาษาคน (มายา) |
+| **AI Chat** | พิมพ์คำถามอะไรก็ได้ (personal chat หรือ topic **แชทคุย** thread 689) | Gemini + Firestore context ตอบเป็นภาษาคน (มายา) |
 
 ### Telegram Bot — 3 ฟีเจอร์ใหม่ (2026-06-15)
 อยู่ใน `stock_bot.py` ทั้งหมด (systemd รันตลอด ไม่ต้อง cron):
