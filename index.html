@@ -11625,13 +11625,30 @@ const MAYA_IMPLS={
     return {saved:true,category:a.category,budget:amount};
   },
   search_transactions(a){
-    const days=Number(a.days)||30;
-    const cutoff=new Date(Date.now()-days*86400000).toISOString().slice(0,10);
+    const _thaiCat={food:'อาหาร',shopping:'ช้อปปิ้ง',utility:'สาธารณูปโภค',transport:'เดินทาง',
+      fuel:'น้ำมัน',health:'สุขภาพ',entertainment:'บันเทิง',insurance:'ประกัน',
+      travel:'ท่องเที่ยว',subscription:'subscription',other_exp:'อื่นๆ',
+      transfer:'โอนเงิน',cash:'เงินสด',salary:'เงินเดือน',freelance:'ฟรีแลนซ์',other_inc:'รายรับอื่น'};
+    const _thaiToKey=Object.fromEntries(Object.entries(_thaiCat).map(([k,v])=>[v,k]));
+    // month filter (แม่นยำกว่า days — ไม่ข้ามเดือน)
+    let monthPrefix=null;
+    if(a.month){
+      const now=new Date();
+      if(a.month==='current') monthPrefix=now.toISOString().slice(0,7);
+      else if(a.month==='last'){const d=new Date(now.getFullYear(),now.getMonth()-1,1);monthPrefix=d.toISOString().slice(0,7);}
+      else if(/^\d{4}-\d{2}$/.test(a.month)) monthPrefix=a.month;
+    }
+    const cutoff=monthPrefix?null:new Date(Date.now()-(Number(a.days)||30)*86400000).toISOString().slice(0,10);
+    // category filter รองรับ Thai name → English key
+    const catFilter=a.category?(_thaiToKey[a.category]||a.category):null;
     const kw=(a.keyword||'').toLowerCase();
     let items=(DB.transactions||[]).filter(t=>{
-      if((t.date||'')<cutoff) return false;
+      const d=t.date||'';
+      if(monthPrefix?!d.startsWith(monthPrefix):d<cutoff) return false;
       if(a.type && t.type!==a.type) return false;
-      if(kw && !((t.description||'')+' '+(t.category||'')).toLowerCase().includes(kw)) return false;
+      if(catFilter && t.category!==catFilter) return false;
+      const cat=t.category||'';
+      if(kw && !((t.description||'')+' '+cat+' '+(_thaiCat[cat]||'')).toLowerCase().includes(kw)) return false;
       const amt=Number(t.amount)||0;
       if(a.min_amount!=null && amt<Number(a.min_amount)) return false;
       if(a.max_amount!=null && amt>Number(a.max_amount)) return false;
