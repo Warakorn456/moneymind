@@ -556,6 +556,7 @@ $env:PATH += ";C:\Users\warakorn\AppData\Local\Google\Cloud SDK\google-cloud-sdk
 - **เปลี่ยนชื่อ `hermes_agent.py` → `ai_agent.py` 2026-06-16** — ชื่อเดิมชวนสับสนเพราะตอนนี้ใช้ Gemini ไม่ใช่ Hermes; แก้ references ใน stock_bot.py (`import ai_agent`, `ai_agent.chat/simple_complete`), log prefix `[hermes]`→`[ai-agent]`, tags `hermes-agent`→`ai-agent`; **env var `MM_HERMES_MODEL` คงชื่อเดิม** (ยังใช้ได้ ไม่อยากแตะ .env หลายที่); deploy: scp ai_agent.py+stock_bot.py, `rm hermes_agent.py` บน VM, restart; commit `929955b` (Hermes ไม่เคยถูกใช้งานจริง — เป็นแค่ชื่อตั้งต้น)
 - **`stock_chart_analysis.py` ลบออกแล้ว 2026-06-18** — script วาด candlestick chart (matplotlib) + Gemini Vision วิเคราะห์ + sendPhoto ไป Telegram personal chat; ลบออกตามคำขอ (ไม่ต้องการกราฟใน TG); ลบทั้งไฟล์บน VM และ cron `0 3 * * 1-5` ออกจาก crontab แล้ว
 - **Drive token re-mint 2026-06-18** — `drive_token.json` เดิม mint วันที่ 11 มิ.ย. (ขณะ app ยัง Testing mode) → วันที่ 18 มิ.ย. ครบ 7 วันพอดี; re-mint ใหม่ผ่าน Playwright + capture9876.py (redirect localhost:9876) ขณะ app เป็น Production mode แล้ว; deploy ไป VM + verify refresh OK ทั้ง Gmail+Drive ด้วย `token_watchdog.py`
+- **`health_monitor.py` 409 Conflict root cause แก้จริงแล้ว 2026-06-18** — ไฟล์บนโน้ตบุคและ VM ยัง monitor `moneymind-bot` อยู่ (CLAUDE.md บอกว่าแก้แล้ว แต่ VM จริงยังไม่แก้); แก้โดยลบ `moneymind-bot` ออกจาก `SERVICES` — เหตุผล: systemd `Restart=always` จัดการ restart เองอยู่แล้ว health_monitor restart ซ้ำทำให้มี 2 instances ชั่วคราว → 409
 
 ### Restart n8n
 ```powershell
