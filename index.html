@@ -11795,6 +11795,135 @@ function bulkDelete(){
   toast(`ลบ ${n} รายการแล้ว`,'info');
 }
 
+// ══════════════════════════════════════════
+//  TRAVEL — ท่องเที่ยว (จัดกลุ่มทริปตาม tag สถานที่)
+// ══════════════════════════════════════════
+const TRAVEL_SYS_TAGS=new Set(['quick-add','gmail-import','maya','slip-scan','bot-import','voice-add','ai-agent','recurring','transfer','cash','bot','bot-quick']);
+const _TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+function _travelDest(t){
+  const tags=(t.tags||[]).filter(g=>g&&!TRAVEL_SYS_TAGS.has(g));
+  return tags[0]||'ไม่ระบุสถานที่';
+}
+function _travelFmtDate(s){
+  if(!s) return '';
+  const d=new Date(s); if(isNaN(d)) return s;
+  return d.getDate()+' '+_TH_MON[d.getMonth()]+' '+(d.getFullYear()+543).toString().slice(-2);
+}
+function _travelRange(first,last){
+  if(!first) return '';
+  if(!last||first===last) return _travelFmtDate(first);
+  return _travelFmtDate(first)+' – '+_travelFmtDate(last);
+}
+function _travelTrips(list){
+  // จัดกลุ่ม tx (เรียงตามวันที่) เป็น "ทริป" — เว้นช่วง > 14 วัน = ทริปใหม่
+  const sorted=[...list].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const trips=[]; let cur=null, lastT=null;
+  sorted.forEach(t=>{
+    const d=t.date?new Date(t.date):null;
+    if(cur&&d&&lastT&&(d-lastT)/86400000>14){ trips.push(cur); cur=null; }
+    if(!cur) cur={txs:[],total:0,first:t.date,last:t.date};
+    cur.txs.push(t); cur.total+=(+t.amount||0); cur.last=t.date; if(!cur.first) cur.first=t.date;
+    if(d) lastT=d;
+  });
+  if(cur) trips.push(cur);
+  return trips;
+}
+
+function addTravelTrip(){
+  const place=prompt('ไปเที่ยวที่ไหน? (ชื่อสถานที่ — จะกลายเป็น tag)');
+  if(place===null) return;
+  const tag=place.trim();
+  openTxModal({type:'expense',cat:'travel',tags:tag?[tag]:[]});
+}
+
+function renderTravel(){
+  const el=document.getElementById('travel-content'); if(!el) return;
+  const txs=DB.transactions.filter(t=>t.category==='travel'&&t.type!=='income');
+
+  const head='<div class="sec-hd" style="margin-bottom:20px">'
+    +'<div><div class="sec-title"><i class="fas fa-plane" style="color:#0ea5e9"></i> ท่องเที่ยว</div>'
+    +'<div style="font-size:12px;color:var(--muted);margin-top:3px">สรุปทริปและค่าใช้จ่ายแยกตามสถานที่ (จัดกลุ่มด้วย tag)</div></div>'
+    +'<button class="btn btn-primary" onclick="addTravelTrip()"><i class="fas fa-plus"></i> เพิ่มรายการเที่ยว</button></div>';
+
+  if(!txs.length){
+    el.innerHTML=head
+      +'<div class="empty"><i class="fas fa-plane-departure"></i>'
+      +'<p>ยังไม่มีรายการท่องเที่ยว</p>'
+      +'<p style="font-size:12px;color:var(--muted);max-width:360px;margin:6px auto 0;line-height:1.7">'
+      +'กดปุ่ม <b>เพิ่มรายการเที่ยว</b> แล้วใส่ชื่อสถานที่ — หรือเพิ่มรายการปกติโดยเลือกหมวด '
+      +'<b>ท่องเที่ยว</b> แล้วติด tag ชื่อสถานที่ (เช่น <b>เชียงใหม่</b>) ระบบจะจัดกลุ่มเป็นทริปให้อัตโนมัติ</p></div>';
+    return;
+  }
+
+  const byDest={};
+  txs.forEach(t=>{ const d=_travelDest(t); (byDest[d]=byDest[d]||[]).push(t); });
+  const dests=Object.keys(byDest).map(name=>{
+    const list=byDest[name];
+    const total=list.reduce((s,t)=>s+(+t.amount||0),0);
+    const trips=_travelTrips(list);
+    const dates=list.map(t=>t.date).filter(Boolean).sort();
+    return {name,total,count:list.length,trips,first:dates[0],last:dates[dates.length-1]};
+  }).sort((a,b)=>b.total-a.total);
+
+  const grand=dests.reduce((s,d)=>s+d.total,0);
+  const totalTrips=dests.reduce((s,d)=>s+d.trips.length,0);
+  const placeCount=dests.filter(d=>d.name!=='ไม่ระบุสถานที่').length;
+
+  const stat=(icon,val,label,color)=>'<div class="card" style="flex:1;min-width:110px;text-align:center;padding:16px">'
+    +'<i class="fas '+icon+'" style="font-size:18px;color:'+color+'"></i>'
+    +'<div style="font-size:22px;font-weight:800;margin-top:6px">'+val+'</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+label+'</div></div>';
+  const summary='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px">'
+    +stat('fa-coins',fmt(grand),'ค่าใช้จ่ายรวม','#0ea5e9')
+    +stat('fa-suitcase-rolling',totalTrips,'จำนวนทริป','#8b5cf6')
+    +stat('fa-map-marked-alt',placeCount,'สถานที่','#10b981')
+    +'</div>';
+
+  const cards=dests.map((d,i)=>{
+    const pct=grand?Math.round(d.total/grand*100):0;
+    const tripsHtml=d.trips.slice().reverse().map(tp=>{
+      const items=tp.txs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(t=>
+        '<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0">'
+        +'<span style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_travelFmtDate(t.date)+' · '+_escHtml(t.description||'(ไม่มีรายละเอียด)')+'</span>'
+        +'<span style="flex-shrink:0">'+fmt(+t.amount||0)+'</span></div>').join('');
+      return '<div style="border-left:2px solid #0ea5e933;padding:6px 0 6px 12px;margin:8px 0">'
+        +'<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;font-weight:700;margin-bottom:2px">'
+        +'<span>📅 '+_travelRange(tp.first,tp.last)+'</span><span style="color:#0ea5e9">'+fmt(tp.total)+'</span></div>'
+        +items+'</div>';
+    }).join('');
+
+    return '<div class="card" style="margin-bottom:12px;padding:0;overflow:hidden">'
+      +'<div onclick="_toggleTravelTrip('+i+')" style="cursor:pointer;padding:16px;display:flex;align-items:center;gap:12px">'
+        +'<div style="width:42px;height:42px;border-radius:12px;background:#0ea5e922;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+          +'<i class="fas fa-map-marker-alt" style="color:#0ea5e9;font-size:18px"></i></div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_escHtml(d.name)+'</div>'
+          +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+d.trips.length+' ทริป · '+d.count+' รายการ'+(d.first?' · '+_travelRange(d.first,d.last):'')+'</div>'
+          +'<div class="pbar" style="margin-top:7px;height:5px"><div class="pfill" style="width:'+pct+'%;background:#0ea5e9"></div></div>'
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0">'
+          +'<div style="font-size:17px;font-weight:800;color:#0ea5e9">'+fmt(d.total)+'</div>'
+          +'<div style="font-size:10px;color:var(--muted)">'+pct+'%</div>'
+        +'</div>'
+        +'<i class="fas fa-chevron-down" id="trav-chev-'+i+'" style="color:var(--muted);transition:transform .2s;flex-shrink:0"></i>'
+      +'</div>'
+      +'<div id="trav-detail-'+i+'" style="display:none;padding:0 16px 14px;border-top:1px solid var(--border)">'+tripsHtml+'</div>'
+    +'</div>';
+  }).join('');
+
+  el.innerHTML=head+summary+cards;
+}
+
+function _toggleTravelTrip(i){
+  const d=document.getElementById('trav-detail-'+i);
+  const c=document.getElementById('trav-chev-'+i);
+  if(!d) return;
+  const open=d.style.display!=='none';
+  d.style.display=open?'none':'block';
+  if(c) c.style.transform=open?'':'rotate(180deg)';
+}
+
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ══════════════════════════════════════════
