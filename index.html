@@ -12057,7 +12057,7 @@ function _altForType(t){
 function _startSpin(){ if(_travelSpinRAF||!_travelMap) return; _travelSpinLast=0; _travelSpinRAF=requestAnimationFrame(_spinLoop); }
 function _stopSpin(){ if(_travelSpinRAF){ cancelAnimationFrame(_travelSpinRAF); _travelSpinRAF=null; } }
 function _spinLoop(t){
-  if(!_travelMap||!_travelSpin){ _travelSpinRAF=null; return; }
+  if(!_travelMap||!_travelSpin||curPage!=='travel'){ _travelSpinRAF=null; return; }  // หยุด render พื้นหลังเมื่อออกจากหน้า travel
   if(_travelMap.getZoom()<4 && !_travelMap.isMoving()){
     if(!_travelSpinLast) _travelSpinLast=t;
     const c=_travelMap.getCenter();
