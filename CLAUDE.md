@@ -572,6 +572,7 @@ $env:PATH += ";C:\Users\warakorn\AppData\Local\Google\Cloud SDK\google-cloud-sdk
 - **บันทึก cost audit 2026-06-18:** ตัวที่กิน Gemini จริง = scheduled รายวัน (`news_sentiment`, `rss_news` 1 call/วัน); `gmail_image_import` ส่วนใหญ่ "No image emails found" = แทบไม่เรียก Gemini; ตัววนหุ้น (news/research/watchlist) เรียก Gemini **1 ครั้ง/รัน** (ลูปแค่รวบรวม prompt ไม่ใช่ต่อหุ้น); AI chat ผ่าน ai_agent แทบไม่ใช้
 - **🐛 cron_health window ใหม่จับเพิ่ม 3 crash (fix 2026-06-18)** — หลังขยาย window 45 + recovery detection พบ 3 crash ที่ window 15 เดิมพลาด: (1) `gmail_statement_import` HTTP 400 = Gmail token ตาย 17 มิ.ย. (เหมือน body_parser) → harden token refresh แบบเดียวกัน (try/except → log+SystemExit), เพิ่ม `import urllib.error`; (2) `rss_news` + (3) `news_sentiment` HTTP **503** (Gemini overloaded ชั่วคราว) → **ไม่มี retry 503** ครั้งเดียวล้ม run; แก้: rss_news เพิ่ม 503 ใน handler 429 เดิม (backoff 30×attempt), news_sentiment เพิ่ม retry loop 3 รอบ (ไม่เคยมี retry เลย + `import time`) — ทั้งคู่ retry ทั้ง 429 และ 503
 - **บทเรียน 503 vs 429:** Gemini ส่ง **503 (overloaded)** ได้ตอน peak — ต่างจาก 429 (rate limit); ทุก script ที่เรียก Gemini ควร retry **ทั้ง 429 และ 503** ด้วย backoff (429 รอ ~65s, 503 รอ ~30s×attempt)
+- **✂️ ตัด rss_news + news_sentiment ออกจาก cron 2026-06-18** — ทั้งคู่เป็น top daily Gemini consumers (1 call/วัน/script); content ซ้ำซ้อนกับ `daily_briefing.py`; ลบออกจาก crontab VM + REGISTRY ใน cron_health; ไฟล์ .py ยังอยู่บน VM (ถ้าต้องการ re-enable เพิ่ม cron + REGISTRY กลับ)
 
 ### Restart n8n
 ```powershell
