@@ -237,8 +237,9 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 - Group ID (Bot API): `-1004296300749`
 - topic `📈 หุ้น` → `message_thread_id=3`
 - topic `💰 การเงิน` → `message_thread_id=4`
+- topic `💬 แชทคุย` → `message_thread_id=689` — **AI chat** (สร้าง 2026-06-18)
 - Stock scripts (9 ตัว) ส่งไป thread 3, Finance scripts (7 ตัว) ส่งไป thread 4
-- `stock_bot.py` รับคำสั่งจากทั้ง personal chat (`8172260229`) และ group แล้ว reply ใน thread เดิม
+- `stock_bot.py` รับคำสั่งจากทั้ง personal chat (`8172260229`) และ group; AI chat เปิดใน personal chat + topic 689; `TG_CHAT_TOPIC=689`
 
 ### คำสั่ง Interactive (พิมในแชท)
 | คำสั่ง | คำที่ใช้ | ผลลัพธ์ |
