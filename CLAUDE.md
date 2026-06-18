@@ -341,7 +341,7 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 | `gmail_bank_alert.py` | `gmail_bank_alert.py` | ✅ sync — ส่งไป group topic 💰 (TG_CHAT=`-1004296300749`, TG_TOPIC=`4`) |
 | `stock_bot.py` | `stock_bot.py` | ✅ sync (อัปเดต 2026-06-15: **รับรูปสลิป Telegram → Gemini Vision → Firestore**) |
 | `ai_agent.py` | `ai_agent.py` | ✅ deploy แล้ว — **AI agent (tool calling)** AI chat ใน bot; entry point `ai_agent.chat(text)`; lazy-import `stock_bot` กัน circular; **provider สลับได้ (default gemini-2.5-flash, OpenRouter fallback)** |
-| `rss_news.py` | `rss_news.py` | ✅ sync — ใหม่ 2026-06-15, cron `30 1 * * 1-5` (08:30 Bangkok) |
+| `rss_news.py` | `rss_news.py` | ❌ cron ลบแล้ว 2026-06-18 (ลด Gemini token); ไฟล์ยังอยู่บน VM |
 | `firestore_to_sheets.py` | `firestore_to_sheets.py` | ✅ sync — ใหม่ 2026-06-15, cron `0 16 * * *` (23:00 Bangkok) |
 | `notebooklm_export.py` | `notebooklm_export.py` | ✅ sync — ใหม่ 2026-06-15, cron `0 17 1 * *` |
 | `sltp_alert.py` | `sltp_alert.py` | ✅ sync — ใหม่ 2026-06-01, cron ทุก 30 นาที US market |
