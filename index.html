@@ -11855,6 +11855,12 @@ function addTravelTrip(){
 
 function renderTravel(){
   const el=document.getElementById('travel-content'); if(!el) return;
+  DB.travel=DB.travel||{places:[]};
+  if(!Array.isArray(DB.travel.places)) DB.travel.places=[];
+
+  // เริ่มลูกโลก + sync พิกัดจากรายการ (async ไม่บล็อก render)
+  _ensureTravelGlobe().then(()=>{ _refreshTravelGlobe(); _syncTravelPlacesFromTx(); }).catch(()=>{});
+
   const txs=DB.transactions.filter(t=>t.category==='travel'&&t.type!=='income');
 
   const head='<div class="sec-hd" style="margin-bottom:20px">'
@@ -11862,13 +11868,37 @@ function renderTravel(){
     +'<div style="font-size:12px;color:var(--muted);margin-top:3px">สรุปทริปและค่าใช้จ่ายแยกตามสถานที่ (จัดกลุ่มด้วย tag)</div></div>'
     +'<button class="btn btn-primary" onclick="addTravelTrip()"><i class="fas fa-plus"></i> เพิ่มรายการเที่ยว</button></div>';
 
+  // ── สถานที่ที่ปักหมุด (เคยไป / อยากไป) ──
+  const places=DB.travel.places||[];
+  const visited=places.filter(p=>p.visited);
+  const wishlist=places.filter(p=>!p.visited);
+  const chip=(p)=>'<span class="travel-chip" onclick="travelFly(\''+_escAttr(p.name)+'\')" title="หมุนลูกโลกไปที่นี่" '
+      +'style="display:inline-flex;align-items:center;gap:6px;background:'+(p.visited?'#34d39922':'#fbbf2422')+';'
+      +'color:'+(p.visited?'#34d399':'#fbbf24')+';border:1px solid '+(p.visited?'#34d39955':'#fbbf2455')+';'
+      +'border-radius:999px;padding:5px 11px;font-size:12px;cursor:pointer;margin:0 6px 6px 0">'
+      +'<i class="fas '+(p.visited?'fa-check':'fa-star')+'" style="font-size:10px"></i>'+_escHtml(p.name)
+      +(p.lat==null?' <i class="fas fa-spinner fa-spin" style="opacity:.6;font-size:9px"></i>':'')
+      +' <i class="fas fa-times" onclick="event.stopPropagation();travelRemovePlace(\''+_escAttr(p.name)+'\')" style="opacity:.55;font-size:11px;margin-left:2px"></i></span>';
+
+  let placesSec='';
+  if(visited.length){
+    placesSec+='<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:#34d399;margin-bottom:8px">'
+      +'<i class="fas fa-check-circle"></i> เคยไปแล้ว ('+visited.length+')</div><div>'+visited.map(chip).join('')+'</div></div>';
+  }
+  if(wishlist.length){
+    placesSec+='<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:#fbbf24;margin-bottom:8px">'
+      +'<i class="fas fa-star"></i> อยากไป ('+wishlist.length+')</div><div>'+wishlist.map(p=>
+        chip(p)+'<button class="btn btn-ghost" onclick="travelToggleVisited(\''+_escAttr(p.name)+'\')" '
+        +'style="padding:3px 9px;font-size:11px;margin:0 6px 6px 0">✓ เคยไปแล้ว</button>').join('')+'</div></div>';
+  }
+
   if(!txs.length){
-    el.innerHTML=head
+    el.innerHTML=head+placesSec
       +'<div class="empty"><i class="fas fa-plane-departure"></i>'
       +'<p>ยังไม่มีรายการท่องเที่ยว</p>'
-      +'<p style="font-size:12px;color:var(--muted);max-width:360px;margin:6px auto 0;line-height:1.7">'
-      +'กดปุ่ม <b>เพิ่มรายการเที่ยว</b> แล้วใส่ชื่อสถานที่ — หรือเพิ่มรายการปกติโดยเลือกหมวด '
-      +'<b>ท่องเที่ยว</b> แล้วติด tag ชื่อสถานที่ (เช่น <b>เชียงใหม่</b>) ระบบจะจัดกลุ่มเป็นทริปให้อัตโนมัติ</p></div>';
+      +'<p style="font-size:12px;color:var(--muted);max-width:380px;margin:6px auto 0;line-height:1.7">'
+      +'พิมพ์ชื่อประเทศ/เมืองในช่องด้านบน → ลูกโลกจะหมุนไปหา แล้วกด <b>✓ เคยไปแล้ว</b> เพื่อปักหมุด<br>'
+      +'หรือกดปุ่ม <b>เพิ่มรายการเที่ยว</b> เพื่อบันทึกค่าใช้จ่าย (เลือกหมวด <b>ท่องเที่ยว</b> + tag ชื่อสถานที่)</p></div>';
     return;
   }
 
