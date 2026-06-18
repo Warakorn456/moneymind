@@ -12144,7 +12144,7 @@ async function travelSearch(){
   const geo=await _geocode(q,true);  // fresh — เลี่ยง cache พิกัดผิดเก่า + ใช้ importance-sort
   if(!geo){ if(pend){ pend.innerHTML='<span style="font-size:12px;color:#f87171">ไม่พบสถานที่ "'+_escHtml(q)+'" — ลองพิมพ์ชื่อภาษาอังกฤษ</span>'; } return; }
   _flyToPlace(geo.lat,geo.lng,_altForType(geo.type));
-  _travelPending={name:q,lat:geo.lat,lng:geo.lng,label:geo.label,type:geo.type};
+  _travelPending={name:q,lat:geo.lat,lng:geo.lng,label:geo.label,type:geo.type,bbox:geo.bbox};
   const ex=(DB.travel?.places||[]).find(p=>p.name.toLowerCase()===q.toLowerCase());
   if(ex){ ex.lat=geo.lat; ex.lng=geo.lng; ex.label=geo.label; ex.type=geo.type; saveDB(); _refreshTravelGlobe(); }  // อัปเดตพิกัดที่เคยผิดให้ถูก
   if(pend){
