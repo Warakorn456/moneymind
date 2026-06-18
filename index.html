@@ -12059,11 +12059,14 @@ async function _geocode(place){
   const cached=(DB.travel?.places||[]).find(p=>p.name.toLowerCase()===key&&p.lat!=null);
   if(cached){ const r={lat:cached.lat,lng:cached.lng,label:cached.label}; _geoCache[key]=r; return r; }
   try{
-    const u='https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=th&q='+encodeURIComponent(place);
+    const u='https://nominatim.openstreetmap.org/search?format=json&limit=8&accept-language=th&q='+encodeURIComponent(place);
     const r=await fetch(u,{headers:{'Accept':'application/json'}});
     const d=await r.json();
     if(!d||!d.length) return null;
-    const res={lat:+d[0].lat,lng:+d[0].lon,label:d[0].display_name};
+    // เลือกผลที่ importance สูงสุด — กันชื่อพ้องเล็กๆ (เช่น "ญี่ปุ่น" ไปจับหมู่บ้านในไทย importance ต่ำ)
+    d.sort((a,b)=>(+b.importance||0)-(+a.importance||0));
+    const best=d[0];
+    const res={lat:+best.lat,lng:+best.lon,label:best.display_name};
     _geoCache[key]=res;
     return res;
   }catch(e){ return null; }
