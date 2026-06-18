@@ -90,6 +90,7 @@ Navigation ผ่าน `nav(page)` — routing อยู่ใน `renderPage(p
 | `loan` | คำนวณสินเชื่อ | `renderLoan()` |
 | `subscriptions` | Subscriptions | `renderSubscriptions()` |
 | `calendar` | ปฏิทิน | `renderCalendarPage()` |
+| `travel` | ท่องเที่ยว | `renderTravel()` |
 | `savings` | เงินออม | — |
 | `banks` | ธนาคาร | — |
 | `debts` | หนี้สิน | — |
