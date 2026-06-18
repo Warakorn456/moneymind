@@ -280,7 +280,7 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | **Gmail CSV/Excel → Firestore** (bank statement import) | 09:00 ทุกวัน | `gmail_statement_import.py` → Drive `Email Spreadsheets/` + Firestore + topic 💰 |
 | **Gmail Image → Gemini Vision → Firestore** (สลิป/ใบเสร็จ) | ทุก 4 ชั่วโมง | `gmail_image_import.py` → Drive `Email Images/` + Firestore + topic 💰 |
 | **Gmail Body Parser** (ค่าบริการ/Shopping/ประกัน/สลิป HTML) | 08:30 ทุกวัน | `gmail_body_parser.py` → Firestore + topic 💰 |
-| **RSS News Digest** (MarketWatch/Yahoo/CNBC → Gemini → หุ้นในพอร์ต) | 08:30 จ.–ศ. | `rss_news.py` → topic 📈 |
+| ~~**RSS News Digest**~~ (MarketWatch/Yahoo/CNBC → Gemini → หุ้นในพอร์ต) | ~~08:30 จ.–ศ.~~ | ~~`rss_news.py`~~ ❌ ลบออก 2026-06-18 (ลด Gemini token) |
 | **Firestore → Google Sheets** (Transactions/Monthly/NW/Portfolio) | 23:00 ทุกวัน | `firestore_to_sheets.py` → Sheets (Looker Studio) |
 | **NotebookLM Export** (Q&A snapshot ทั้งหมด) | วันที่ 1 ของเดือน 00:00 | `notebooklm_export.py` → Drive `moneymind_qa_snapshot.md` |
 | **Firestore Backup → Drive** (JSON snapshot, เก็บ 90 วัน) | 01:00 ทุกวัน | `firestore_backup.py` → Drive `Backups/` (แจ้ง TG จันทร์) |
