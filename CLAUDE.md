@@ -377,6 +377,7 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 | `stock_earnings.py` | `stock_earnings.py` | deploy ได้ตามปกติ — Earnings + Post-Earnings summary, cron 2 รอบ/วัน |
 | `stock_watchlist_score.py` | `stock_watchlist_score.py` | deploy ได้ตามปกติ — Gemini score รายสัปดาห์, cron จันทร์ 09:00 |
 | `investment_research.py` | `investment_research.py` | deploy ได้ตามปกติ — วิเคราะห์หุ้นรายอาทิตย์ → Drive + Telegram |
+| `smart_advisor.py` | `smart_advisor.py` | ✅ deploy 2026-06-18 — spending pace advisor; cron `0 13 * * *` (20:00 Bangkok); เงียบถ้าปกติ |
 
 ### Firestore Paths — ที่ GCP Scripts ใช้
 
