@@ -291,6 +291,15 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | **Token Watchdog** (refresh gmail/drive token) | 11:30 ทุกวัน | `token_watchdog.py` → topic 💰 (เตือนก่อน revoke) |
 | **Duplicate Check** (txn ซ้ำจาก 4 pipelines) | อาทิตย์ 09:00 | `dup_cleanup.py` → topic 💰 (report-only ไม่ลบ) |
 | แจ้งเตือนงบประมาณเกิน 80% | ทุก 12 ชั่วโมง | n8n budget-alert-01 → personal + email |
+| **Stock Advanced Alerts** (SL/TP + 52-Week High/Low + Volume Spike) | ทุก 30 นาที จ.–ศ. US market | `stock_advanced_alerts.py` → topic 📈 |
+| **Stock Support & Resistance** (Classic Pivot Points สำหรับพอร์ต) | 09:30 Bangkok จ.–ศ. | `stock_support_resistance.py` → topic 📈 |
+| **Stock Macro Calendar** (Fed/CPI/NFP events แจ้ง 14 วันล่วงหน้า) | จันทร์ 08:00 Bangkok | `stock_macro_calendar.py` → topic 📈 |
+| **Stock Earnings** (Earnings Calendar + Post-Earnings Gemini Summary) | 21:00 Bangkok (pre-open) + 04:30 Bangkok (post-close) จ.–ศ. | `stock_earnings.py` → topic 📈 |
+| **Stock Watchlist Score** (Gemini ให้คะแนนหุ้นในพอร์ตรายสัปดาห์) | จันทร์ 09:00 Bangkok | `stock_watchlist_score.py` → topic 📈 |
+| **Calendar Reminder** (แจ้ง Telegram ล่วงหน้า 60 นาที สำหรับ Google Calendar events) | ทุก 15 นาที | `calendar_reminder.py` → personal |
+| **Bank Statement Analysis** (Gemini วิเคราะห์ transaction data จาก Firestore ประจำเดือน) | วันที่ 1 ของเดือน 10:00 Bangkok | `bank_statement_analysis.py` → topic 💰 |
+| **Investment Research** (วิเคราะห์หุ้นในพอร์ตรายสัปดาห์ ส่ง Telegram + Drive) | อาทิตย์ 10:00 Bangkok | `investment_research.py` → topic 📈 + Drive |
+| **Health Monitor** (ตรวจ systemd services ทุก 5 นาที แจ้งถ้าล่ม + restart) | ทุก 5 นาที | `health_monitor.py` → personal (monitor เฉพาะ `gmail-bank-alert`; **ไม่** monitor `moneymind-bot` เพราะ systemd Restart=always จัดการอยู่แล้ว) |
 
 ### Reliability Layer (2026-06-15)
 - **`cron_health.py`** — non-invasive: เช็ค `.log` mtime (เก่ากว่า max_age = ไม่รัน) + scan `Traceback` ใน 15 บรรทัดท้าย (เฉพาะรอบล่าสุด — recover แล้วไม่ alert); `REGISTRY` map log→max_age_hours; dedup ผ่าน `cron_health_state.json` (เตือนซ้ำทุก ≥2 วัน) ป้องกัน spam
