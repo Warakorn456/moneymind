@@ -427,7 +427,7 @@ https://firestore.googleapis.com/v1/projects/moneymind-d97f3/databases/(default)
 | ไฟล์ | หน้าที่ |
 |------|---------|
 | `stock_bot.py` | Interactive bot (systemd: moneymind-bot) — canonical version + **รับรูปสลิป → Gemini Vision → Firestore** (2026-06-15) |
-| `rss_news.py` | RSS News Digest — cron `30 1 * * 1-5` (08:30 Bangkok จ.–ศ.) → topic 📈 |
+| ~~`rss_news.py`~~ | ~~RSS News Digest~~ — ❌ ลบออกจาก cron 2026-06-18 (ลด Gemini token, overlap กับ daily_briefing) |
 | `firestore_to_sheets.py` | Firestore → Google Sheets 4 tabs (Transactions/Monthly/NW/Portfolio) — cron `0 16 * * *` |
 | `notebooklm_export.py` | สร้าง Q&A snapshot .md → Drive → NotebookLM — cron `0 17 1 * *` |
 | `sltp_alert.py` | SL/TP alert — cron `*/30 13-21 * * 1-5` |
