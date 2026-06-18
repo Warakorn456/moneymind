@@ -12055,11 +12055,13 @@ function travelToggleSpin(){
 
 // Nominatim geocoding (ฟรี ไม่ต้อง key) — cache พิกัดใน DB.travel.places
 const _geoCache={};
-async function _geocode(place){
+async function _geocode(place,fresh){
   const key=(place||'').trim().toLowerCase(); if(!key) return null;
-  if(_geoCache[key]) return _geoCache[key];
-  const cached=(DB.travel?.places||[]).find(p=>p.name.toLowerCase()===key&&p.lat!=null);
-  if(cached){ const r={lat:cached.lat,lng:cached.lng,label:cached.label}; _geoCache[key]=r; return r; }
+  if(!fresh){
+    if(_geoCache[key]) return _geoCache[key];
+    const cached=(DB.travel?.places||[]).find(p=>p.name.toLowerCase()===key&&p.lat!=null);
+    if(cached){ const r={lat:cached.lat,lng:cached.lng,label:cached.label}; _geoCache[key]=r; return r; }
+  }
   try{
     const u='https://nominatim.openstreetmap.org/search?format=json&limit=8&accept-language=th&q='+encodeURIComponent(place);
     const r=await fetch(u,{headers:{'Accept':'application/json'}});
