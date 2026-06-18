@@ -12015,6 +12015,8 @@ async function _ensureTravelGlobe(){
     g.controls().autoRotate=true;
     g.controls().autoRotateSpeed=0.5;
     g.controls().enableZoom=true;
+    g.controls().minDistance=160;   // จำกัดซูมเข้า — กันภาพ texture แตกเวลาซูมใกล้เกินไป
+    g.controls().maxDistance=520;   // จำกัดซูมออก
     _travelGlobe=g;
     g.pointOfView({lat:15,lng:100,altitude:2.2},0); // เริ่มที่ไทย
     window.addEventListener('resize',_travelResize);
