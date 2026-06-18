@@ -12024,32 +12024,47 @@ async function _ensureTravelGlobe(){
   return _travelMap;
 }
 
-function _travelResize(){
-  const host=document.getElementById('travel-globe-canvas');
-  if(_travelGlobe&&host&&host.clientWidth) _travelGlobe.width(host.clientWidth);
-}
+function _travelResize(){ if(_travelMap) _travelMap.resize(); }
 
 function _refreshTravelGlobe(){
-  if(!_travelGlobe) return;
-  const pts=(DB.travel?.places||[]).filter(p=>p.lat!=null);
-  _travelGlobe.pointsData(pts).labelsData(pts);
+  if(!_travelMap||!window.maplibregl) return;
+  _travelMarkers.forEach(m=>m.remove()); _travelMarkers=[];
+  (DB.travel?.places||[]).filter(p=>p.lat!=null).forEach(p=>{
+    const el=document.createElement('div');
+    el.style.cssText='width:16px;height:16px;border-radius:50%;border:2px solid #fff;cursor:pointer;box-shadow:0 0 5px rgba(0,0,0,.55);background:'+(p.visited?'#34d399':'#fbbf24');
+    el.title=p.name;
+    el.addEventListener('click',()=>_flyToPlace(p.lat,p.lng,_altForType(p.type)));
+    _travelMarkers.push(new maplibregl.Marker({element:el}).setLngLat([p.lng,p.lat]).addTo(_travelMap));
+  });
 }
 
-function _flyToPlace(lat,lng,altitude){
-  if(!_travelGlobe||lat==null) return;
-  _travelGlobe.controls().autoRotate=false;
-  _setSpinBtn(false);
-  _travelGlobe.pointOfView({lat:+lat,lng:+lng,altitude:altitude||0.8},1300);
+function _flyToPlace(lat,lng,zoom){
+  if(!_travelMap||lat==null) return;
+  _travelSpin=false; _setSpinBtn(false); _stopSpin();
+  _travelMap.flyTo({center:[+lng,+lat], zoom:zoom||5, speed:1.2, essential:true});
 }
 
-// ซูมใกล้-ไกลตามชนิดสถานที่: ประเทศ=ไกล เมือง/อำเภอ=ใกล้
+// ระดับซูมตามชนิดสถานที่: ประเทศ=กว้าง เมือง/อำเภอ=ใกล้ระดับถนน
 function _altForType(t){
   t=(t||'').toLowerCase();
-  if(t==='country') return 1.25;
-  if(['state','province','region','county'].includes(t)) return 0.55;
-  if(['city','metropolis','municipality'].includes(t)) return 0.32;
-  if(['town','village','suburb','city_district','hamlet','neighbourhood'].includes(t)) return 0.2;
-  return 0.7;
+  if(t==='country') return 4;
+  if(['state','province','region','county'].includes(t)) return 6.5;
+  if(['city','metropolis','municipality'].includes(t)) return 10;
+  if(['town','village','suburb','city_district','hamlet','neighbourhood'].includes(t)) return 12;
+  return 5.5;
+}
+
+function _startSpin(){ if(_travelSpinRAF||!_travelMap) return; _travelSpinLast=0; _travelSpinRAF=requestAnimationFrame(_spinLoop); }
+function _stopSpin(){ if(_travelSpinRAF){ cancelAnimationFrame(_travelSpinRAF); _travelSpinRAF=null; } }
+function _spinLoop(t){
+  if(!_travelMap||!_travelSpin){ _travelSpinRAF=null; return; }
+  if(_travelMap.getZoom()<4 && !_travelMap.isMoving()){
+    if(!_travelSpinLast) _travelSpinLast=t;
+    const c=_travelMap.getCenter();
+    _travelMap.setCenter([c.lng + (t-_travelSpinLast)*0.006, c.lat]);
+  }
+  _travelSpinLast=t;
+  _travelSpinRAF=requestAnimationFrame(_spinLoop);
 }
 
 function _setSpinBtn(spinning){
@@ -12057,8 +12072,10 @@ function _setSpinBtn(spinning){
   b.innerHTML=spinning?'<i class="fas fa-pause"></i> หยุดหมุน':'<i class="fas fa-play"></i> หมุน';
 }
 function travelToggleSpin(){
-  if(!_travelGlobe){ _ensureTravelGlobe(); return; }
-  const c=_travelGlobe.controls(); c.autoRotate=!c.autoRotate; _setSpinBtn(c.autoRotate);
+  if(!_travelMap){ _ensureTravelGlobe(); return; }
+  _travelSpin=!_travelSpin; _setSpinBtn(_travelSpin);
+  if(_travelSpin){ if(_travelMap.getZoom()>3) _travelMap.easeTo({zoom:1.8,duration:800}); _startSpin(); }
+  else _stopSpin();
 }
 
 // Nominatim geocoding (ฟรี ไม่ต้อง key) — cache พิกัดใน DB.travel.places
