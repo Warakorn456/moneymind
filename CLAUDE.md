@@ -583,6 +583,8 @@ $env:PATH += ";C:\Users\warakorn\AppData\Local\Google\Cloud SDK\google-cloud-sdk
 - **✂️ ตัด rss_news + news_sentiment ออกจาก cron 2026-06-18** — ทั้งคู่เป็น top daily Gemini consumers (1 call/วัน/script); content ซ้ำซ้อนกับ `daily_briefing.py`; ลบออกจาก crontab VM + REGISTRY ใน cron_health; ไฟล์ .py ยังอยู่บน VM (ถ้าต้องการ re-enable เพิ่ม cron + REGISTRY กลับ)
 - **📸 Slip Scan ผ่าน Telegram (2026-06-18)** — `analyze_slip(file_id)` ใน `stock_bot.py`: ดาวน์โหลดรูปจาก Telegram → base64 → Gemini Vision (inlineData, maxOutputTokens=200) → parse JSON response → `save_to_firestore(tag=slip-scan)`; photo handler อยู่ก่อน text handler ใน main loop; เฉพาะ CHAT_ID (personal chat ไม่ใช่ group); `GEMINI_KEY`/`GEMINI_URL` เพิ่มไว้ใน stock_bot.py constants แล้ว
 - **📓 NotebookLM Q&A Auto-gen (2026-06-18)** — `financial_journal.py` เพิ่ม Gemini call ที่ 2 หลัง analysis: สร้าง 8 Q&A pairs จากข้อมูลเดือน → append เป็น section `## Q&A สำหรับ NotebookLM` ใน .md file ก่อน upload Drive; try/except ป้องกัน Q&A ล้มเหลวทำให้ journal ทั้งหมดพัง
+- **🧠 เปิด thinking (thinkingBudget: 1024) ใน analysis scripts (2026-06-18)** — `monthly_report`, `weekly_ai_coach`, `investment_research`, `financial_journal` (main call) เปลี่ยนจาก 0→1024; Q&A call ใน financial_journal ยังเป็น 0 (ไม่ต้อง reasoning ลึก); ประเมิน cost เพิ่ม ~฿1.3/เดือน
+- **💡 Smart Advisor — new script (2026-06-18)** — `smart_advisor.py`: รันทุกวัน 20:00 Bangkok, เปรียบ spending เดือนนี้ vs avg 3 เดือน แยกหมวด, ถ้า projected เกิน avg 30% → Gemini วิเคราะห์ + ส่ง Telegram; เงียบถ้าทุกอย่างปกติ; `SKIP_CATS={'transfer','cash','other_exp'}` กัน noise; test run แรกพบ 5 หมวดเกิน threshold (proj=116k avg=68k)
 
 ### Restart n8n
 ```powershell
