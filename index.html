@@ -12133,11 +12133,11 @@ function travelMark(visited){
 async function travelFly(name){
   const p=(DB.travel?.places||[]).find(x=>x.name.toLowerCase()===(name||'').toLowerCase());
   await _ensureTravelGlobe();
-  if(p&&p.lat!=null){ _flyToPlace(p.lat,p.lng); return; }
+  if(p&&p.lat!=null){ _flyToPlace(p.lat,p.lng,_altForType(p.type)); return; }
   const geo=await _geocode(name);
   if(!geo){ toast('ไม่พบพิกัดของ '+name,'error'); return; }
-  if(p){ p.lat=geo.lat; p.lng=geo.lng; p.label=geo.label; saveDB(); _refreshTravelGlobe(); }
-  _flyToPlace(geo.lat,geo.lng);
+  if(p){ p.lat=geo.lat; p.lng=geo.lng; p.label=geo.label; p.type=geo.type; saveDB(); _refreshTravelGlobe(); }
+  _flyToPlace(geo.lat,geo.lng,_altForType(geo.type));
 }
 
 function travelToggleVisited(name){
