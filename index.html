@@ -1303,6 +1303,22 @@
 
   <!-- ════ TRAVEL ════ -->
   <div id="pg-travel" class="page">
+    <div class="card" style="padding:16px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <div style="font-size:15px;font-weight:700"><i class="fas fa-globe-asia" style="color:#0ea5e9"></i> แผนที่การเดินทาง</div>
+        <button id="travel-spin-btn" class="btn btn-ghost" style="padding:6px 10px;font-size:12px" onclick="travelToggleSpin()"><i class="fas fa-pause"></i> หยุดหมุน</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <input id="travel-search" class="finput" style="flex:1;min-width:170px" placeholder="พิมพ์ประเทศ/เมือง เช่น ญี่ปุ่น, ปารีส, เชียงใหม่" onkeydown="if(event.key==='Enter')travelSearch()">
+        <button class="btn btn-primary" onclick="travelSearch()"><i class="fas fa-location-arrow"></i> หมุนไป</button>
+      </div>
+      <div id="travel-pending" style="display:none;margin-bottom:12px"></div>
+      <div id="travel-globe-canvas" style="width:100%;height:380px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px">แตะปุ่ม "หมุนไป" หรือเปิดหน้านี้เพื่อโหลดลูกโลก…</div>
+      <div style="display:flex;gap:16px;justify-content:center;margin-top:10px;font-size:11px;color:var(--muted)">
+        <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#34d399;margin-right:4px"></span>เคยไปแล้ว</span>
+        <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#fbbf24;margin-right:4px"></span>อยากไป</span>
+      </div>
+    </div>
     <div id="travel-content"></div>
   </div>
 
