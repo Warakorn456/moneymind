@@ -12145,7 +12145,7 @@ async function _syncTravelPlacesFromTx(){
         await new Promise(r=>setTimeout(r,1100)); // Nominatim ≤1 req/วินาที
       }
     }
-    if(changed){ saveLocalOnly(); _refreshTravelGlobe(); if(curPage==='travel') renderTravel(); }
+    if(changed){ saveDB(); _refreshTravelGlobe(); if(curPage==='travel') renderTravel(); }
   }finally{ _travelSyncing=false; }
 }
 
