@@ -361,10 +361,16 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 | `stock_daily_report.py` | `stock_daily_report.py` | deploy ได้ตามปกติ |
 | `stock_alert.py` | `stock_alert.py` | deploy ได้ตามปกติ |
 | `daily_briefing.py` | `daily_briefing.py` | deploy ได้ตามปกติ |
-| `health_monitor.py` | `health_monitor.py` | deploy ได้ตามปกติ |
+| `health_monitor.py` | `health_monitor.py` | ✅ sync 2026-06-18 — แก้ SERVICES ลบ `moneymind-bot` ออก (เพื่อกัน 409 Conflict กับ systemd) เหลือแค่ `gmail-bank-alert` |
 | `news_sentiment.py` | `news_sentiment.py` | deploy ได้ตามปกติ |
 | `calendar_reminder.py` | `calendar_reminder.py` | deploy ได้ตามปกติ |
 | `bank_statement_analysis.py` | `bank_statement_analysis.py` | deploy ได้ตามปกติ |
+| `stock_advanced_alerts.py` | `stock_advanced_alerts.py` | deploy ได้ตามปกติ — SL/TP + 52W High/Low + Volume Spike, cron ทุก 30 นาที US market |
+| `stock_support_resistance.py` | `stock_support_resistance.py` | deploy ได้ตามปกติ — Pivot Points, cron 09:30 Bangkok จ.–ศ. |
+| `stock_macro_calendar.py` | `stock_macro_calendar.py` | deploy ได้ตามปกติ — Fed/CPI/NFP 14 วัน, cron จันทร์ 08:00 |
+| `stock_earnings.py` | `stock_earnings.py` | deploy ได้ตามปกติ — Earnings + Post-Earnings summary, cron 2 รอบ/วัน |
+| `stock_watchlist_score.py` | `stock_watchlist_score.py` | deploy ได้ตามปกติ — Gemini score รายสัปดาห์, cron จันทร์ 09:00 |
+| `investment_research.py` | `investment_research.py` | deploy ได้ตามปกติ — วิเคราะห์หุ้นรายอาทิตย์ → Drive + Telegram |
 
 ### Firestore Paths — ที่ GCP Scripts ใช้
 
