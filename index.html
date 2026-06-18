@@ -12134,24 +12134,31 @@ function travelRemovePlace(name){
   saveDB(); _refreshTravelGlobe(); renderTravel();
 }
 
-// แปลงสถานที่จากรายการ tx (หมวด travel) เป็นหมุดบนลูกโลก — geocode ทีละอันกัน rate-limit
+// แปลงสถานที่จากรายการ tx (หมวด travel) เป็นหมุดบนลูกโลก + geocode พิกัดที่ขาด
 async function _syncTravelPlacesFromTx(){
   if(_travelSyncing) return; _travelSyncing=true;
   try{
     DB.travel=DB.travel||{places:[]};
+    // migration v2: ล้างพิกัดเก่าที่ geocode ผิด (ก่อนใช้ importance-sort) แล้ว geocode ใหม่
+    if(DB.travel.geoVer!==2){
+      DB.travel.places.forEach(p=>{ p.lat=null; p.lng=null; });
+      for(const k in _geoCache) delete _geoCache[k];
+      DB.travel.geoVer=2;
+    }
+    // เพิ่มสถานที่จากรายการ tx ที่ยังไม่มีในลิสต์ (visited)
     const txs=DB.transactions.filter(t=>t.category==='travel'&&t.type!=='income');
     const names=[...new Set(txs.map(_travelDest))].filter(n=>n&&n!=='ไม่ระบุสถานที่');
     let changed=false;
-    for(const name of names){
-      let p=DB.travel.places.find(x=>x.name.toLowerCase()===name.toLowerCase());
-      if(p&&p.lat!=null){ if(!p.visited){ p.visited=true; changed=true; } continue; }
-      const geo=await _geocode(name);
-      if(geo){
-        if(p){ p.lat=geo.lat; p.lng=geo.lng; p.label=geo.label; p.visited=true; }
-        else DB.travel.places.push({name,lat:geo.lat,lng:geo.lng,label:geo.label,visited:true,fromTx:true});
-        changed=true; _refreshTravelGlobe();
-        await new Promise(r=>setTimeout(r,1100)); // Nominatim ≤1 req/วินาที
-      }
+    names.forEach(name=>{
+      const p=DB.travel.places.find(x=>x.name.toLowerCase()===name.toLowerCase());
+      if(!p){ DB.travel.places.push({name,lat:null,lng:null,visited:true,fromTx:true}); changed=true; }
+      else if(!p.visited){ p.visited=true; changed=true; }
+    });
+    // geocode ทุกหมุดที่ยังไม่มีพิกัด (ทีละ 1.1s กัน Nominatim rate-limit)
+    for(const p of DB.travel.places){
+      if(p.lat!=null) continue;
+      const geo=await _geocode(p.name,true);
+      if(geo){ p.lat=geo.lat; p.lng=geo.lng; p.label=geo.label; changed=true; _refreshTravelGlobe(); await new Promise(r=>setTimeout(r,1100)); }
     }
     if(changed){ saveDB(); _refreshTravelGlobe(); if(curPage==='travel') renderTravel(); }
   }finally{ _travelSyncing=false; }
