@@ -12015,11 +12015,19 @@ async function _ensureTravelGlobe(){
     g.controls().autoRotate=true;
     g.controls().autoRotateSpeed=0.5;
     g.controls().enableZoom=true;
-    g.controls().minDistance=160;   // จำกัดซูมเข้า — กันภาพ texture แตกเวลาซูมใกล้เกินไป
-    g.controls().maxDistance=520;   // จำกัดซูมออก
+    g.controls().minDistance=108;   // ซูมเข้าได้ลึกถึงระดับเมือง/จังหวัด
+    g.controls().maxDistance=620;   // จำกัดซูมออก
     _travelGlobe=g;
     g.pointOfView({lat:15,lng:100,altitude:2.2},0); // เริ่มที่ไทย
     window.addEventListener('resize',_travelResize);
+    // เส้นขอบประเทศ (vector คมชัดทุกระดับซูม) ช่วยระบุพื้นที่ตอนซูมลึกถึงระดับจังหวัด/เมือง
+    fetch('https://unpkg.com/globe.gl@2.33.2/example/datasets/ne_110m_admin_0_countries.geojson')
+      .then(r=>r.json()).then(gj=>{ if(_travelGlobe&&gj&&gj.features) _travelGlobe
+        .polygonsData(gj.features)
+        .polygonCapColor(()=>'rgba(0,0,0,0)')
+        .polygonSideColor(()=>'rgba(0,0,0,0)')
+        .polygonStrokeColor(()=>'rgba(255,255,255,0.28)')
+        .polygonAltitude(0.006); }).catch(()=>{});
   }catch(e){
     host.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:30px">โหลดลูกโลกไม่ได้ (ต้องต่อเน็ต)<br>'+_escHtml(e.message||'')+'</div>';
   }finally{ _travelGlobeLoading=false; }
