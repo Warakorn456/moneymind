@@ -12161,8 +12161,8 @@ function travelMark(visited){
   if(!_travelPending) return;
   DB.travel=DB.travel||{places:[]};
   const p=DB.travel.places.find(x=>x.name.toLowerCase()===_travelPending.name.toLowerCase());
-  if(p){ p.visited=visited; p.lat=_travelPending.lat; p.lng=_travelPending.lng; p.label=_travelPending.label; p.type=_travelPending.type; }
-  else DB.travel.places.push({name:_travelPending.name,lat:_travelPending.lat,lng:_travelPending.lng,label:_travelPending.label,type:_travelPending.type,visited:!!visited});
+  if(p){ p.visited=visited; p.lat=_travelPending.lat; p.lng=_travelPending.lng; p.label=_travelPending.label; p.type=_travelPending.type; p.bbox=_travelPending.bbox; }
+  else DB.travel.places.push({name:_travelPending.name,lat:_travelPending.lat,lng:_travelPending.lng,label:_travelPending.label,type:_travelPending.type,bbox:_travelPending.bbox,visited:!!visited});
   saveDB();
   toast((visited?'✓ ปักหมุดเคยไป ':'★ เพิ่มในรายการอยากไป ')+_travelPending.name,'success');
   _travelPending=null;
