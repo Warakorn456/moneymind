@@ -12448,15 +12448,16 @@ function _haversine(lat1,lng1,lat2,lng2){
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-function _drawRoute(geometry,dashed){
+function _drawRoute(geometry,dashed,color){
   if(!_travelMap) return;
   _clearRouteLayer();
+  const lineColor=color||'#a78bfa';
   _travelMap.addSource('__route__',{type:'geojson',data:{type:'Feature',geometry}});
   _travelMap.addLayer({id:'__route__-bg',type:'line',source:'__route__',
-    paint:{'line-color':'#fff','line-width':6,'line-opacity':0.4}});
+    paint:{'line-color':'#fff','line-width':6,'line-opacity':0.3}});
   _travelMap.addLayer({id:'__route__',type:'line',source:'__route__',
-    paint:{'line-color':'#a78bfa','line-width':3.5,'line-opacity':0.9,
-      ...(dashed?{'line-dasharray':[4,3]}:{})}});
+    paint:{'line-color':lineColor,'line-width':3.5,'line-opacity':0.9,
+      ...(dashed?{'line-dasharray':[5,4]}:{})}});
 }
 
 function _clearRouteLayer(){
