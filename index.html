@@ -11883,6 +11883,29 @@ function _travelDest(t){
   const tags=(t.tags||[]).filter(g=>g&&!TRAVEL_SYS_TAGS.has(g));
   return tags[0]||'ไม่ระบุสถานที่';
 }
+// ดึงชื่อประเทศจาก label ที่ geocode ไว้ (display_name ลงท้ายด้วยประเทศ)
+function _travelCountry(name){
+  const p=(DB.travel?.places||[]).find(x=>x.name.toLowerCase()===(name||'').toLowerCase());
+  if(p&&p.label){
+    let parts=String(p.label).split(',').map(s=>s.trim()).filter(Boolean);
+    while(parts.length>1&&/^\d{3,6}$/.test(parts[parts.length-1])) parts.pop(); // ตัดรหัสไปรษณีย์ท้าย
+    let c=(parts[parts.length-1]||'').replace(/^ประเทศ/,'').trim();
+    return c||'ไม่ระบุประเทศ';
+  }
+  return 'ไม่ระบุประเทศ';
+}
+function travelSetBudget(name){
+  DB.travel=DB.travel||{places:[]};
+  DB.travel.budgets=DB.travel.budgets||{};
+  const cur=DB.travel.budgets[name]||'';
+  const v=prompt('ตั้งงบทริปสำหรับ "'+name+'" (บาท)\nใส่ 0 เพื่อลบงบ',cur);
+  if(v===null) return;
+  const amt=Math.max(0,Math.round(+String(v).replace(/[^0-9.]/g,'')||0));
+  if(amt>0) DB.travel.budgets[name]=amt; else delete DB.travel.budgets[name];
+  saveDB();
+  if(curPage==='travel') renderTravel();
+  toast(amt>0?'ตั้งงบ '+fmt(amt)+' แล้ว':'ลบงบแล้ว','success');
+}
 function _travelFmtDate(s){
   if(!s) return '';
   const d=new Date(s); if(isNaN(d)) return s;
