@@ -10960,6 +10960,29 @@ function renderLoan(){
     totalPayment=schedule.reduce(function(s,r){return s+r.payment;},0);
   }
 
+  // Accelerated schedule (โป๊ะเพิ่ม ลดต้นลดดอก) — เงินโป๊ะลงเงินต้นทั้งหมด ดอกงวดถัดไปลดตาม
+  var accSchedule=[], accInterest=0, accPayment=0, hasExtra=(s.extraMonthly>0||s.lumpSum>0);
+  if(monthly>0&&hasExtra){
+    var P2=s.principal, r2=s.rate/100/12, n2=s.months;
+    var b2=P2, startD2=s.startDate?new Date(s.startDate):new Date(defaultDate);
+    for(var k=1;k<=n2+1&&b2>0.01;k++){
+      var intr=b2*r2;
+      var basePrin=monthly-intr;
+      var extra=(+s.extraMonthly||0);
+      if(s.lumpMonth>0&&k===s.lumpMonth) extra+=(+s.lumpSum||0);
+      else if(s.lumpMonth<=0&&k===1) extra+=(+s.lumpSum||0); // ไม่ระบุงวด = โป๊ะก้อนงวดแรก
+      var prin=basePrin+extra;
+      if(prin>b2) prin=b2;
+      b2-=prin; if(b2<0.01) b2=0;
+      var dd=new Date(startD2); dd.setMonth(dd.getMonth()+(k-1));
+      accSchedule.push({month:k,date:dd,interest:intr,principal:prin,payment:prin+intr,balance:b2});
+    }
+    accInterest=accSchedule.reduce(function(s,r){return s+r.interest;},0);
+    accPayment=accSchedule.reduce(function(s,r){return s+r.payment;},0);
+  }
+  var monthsSaved=hasExtra?(schedule.length-accSchedule.length):0;
+  var interestSaved=hasExtra?(totalInterest-accInterest):0;
+
   var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
   var tableHtml='';
