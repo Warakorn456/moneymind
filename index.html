@@ -12305,7 +12305,7 @@ function travelToggleRoutePanel(){
   if(!panel) return;
   const open=panel.style.display!=='none';
   panel.style.display=open?'none':'block';
-  if(!open){ _updateRouteSelects(); const g=document.getElementById('travel-globe-canvas'); if(g) g.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+  if(!open){ _updateRouteSelects(); setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'nearest'}),50); }
 }
 
 function travelSetMode(mode){
