@@ -11988,8 +11988,48 @@ function renderTravel(){
     +stat('fa-map-marked-alt',placeCount,'สถานที่','#10b981')
     +'</div>';
 
+  // ── ค่าใช้จ่ายต่อประเทศ ──
+  const byCountry={};
+  dests.forEach(d=>{ if(d.name==='ไม่ระบุสถานที่') return; const c=_travelCountry(d.name); byCountry[c]=(byCountry[c]||0)+d.total; });
+  const countries=Object.entries(byCountry).sort((a,b)=>b[1]-a[1]);
+  let countrySec='';
+  if(countries.length>1){
+    countrySec='<div class="card" style="padding:16px;margin-bottom:18px">'
+      +'<div style="font-size:13px;font-weight:700;margin-bottom:12px"><i class="fas fa-globe-asia" style="color:#10b981"></i> ค่าใช้จ่ายต่อประเทศ</div>'
+      +countries.map(([c,amt])=>{
+        const cpct=grand?Math.round(amt/grand*100):0;
+        return '<div style="margin-bottom:10px">'
+          +'<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">'
+            +'<span>'+_escHtml(c)+'</span><span style="font-weight:700">'+fmt(amt)+' <span style="color:var(--muted);font-weight:400">'+cpct+'%</span></span></div>'
+          +'<div class="pbar" style="height:6px"><div class="pfill" style="width:'+cpct+'%;background:#10b981"></div></div>'
+        +'</div>';
+      }).join('')
+    +'</div>';
+  }
+
+  const budgets=(DB.travel.budgets||{});
   const cards=dests.map((d,i)=>{
     const pct=grand?Math.round(d.total/grand*100):0;
+    const budget=budgets[d.name]||0;
+    const overBudget=budget>0&&d.total>budget;
+    let budgetHtml='';
+    if(budget>0){
+      const bpct=Math.min(100,Math.round(d.total/budget*100));
+      const remain=budget-d.total;
+      const bcol=overBudget?'#f87171':'#10b981';
+      budgetHtml='<div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin:10px 0 4px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:6px">'
+          +'<span style="font-weight:700"><i class="fas fa-wallet" style="color:'+bcol+'"></i> งบทริป</span>'
+          +'<span><span style="color:'+bcol+';font-weight:700">'+fmt(d.total)+'</span> <span style="color:var(--muted)">/ '+fmt(budget)+'</span>'
+          +' <i class="fas fa-pen" onclick="event.stopPropagation();travelSetBudget(\''+_escAttr(d.name)+'\')" style="cursor:pointer;color:var(--muted);font-size:10px;margin-left:5px"></i></span>'
+        +'</div>'
+        +'<div class="pbar" style="height:7px"><div class="pfill" style="width:'+bpct+'%;background:'+bcol+'"></div></div>'
+        +'<div style="font-size:11px;margin-top:5px;color:'+(overBudget?'#f87171':'var(--muted)')+'">'
+          +(overBudget?'<i class="fas fa-exclamation-triangle"></i> เกินงบ '+fmt(-remain):'เหลืองบ '+fmt(remain)+' ('+(100-bpct)+'%)')+'</div>'
+      +'</div>';
+    } else {
+      budgetHtml='<button onclick="event.stopPropagation();travelSetBudget(\''+_escAttr(d.name)+'\')" style="width:100%;background:none;border:1px dashed var(--border);border-radius:8px;color:var(--muted);padding:7px 0;font-size:11px;cursor:pointer;margin:10px 0 4px"><i class="fas fa-plus"></i> ตั้งงบทริปนี้</button>';
+    }
     const tripsHtml=d.trips.slice().reverse().map(tp=>{
       const items=tp.txs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(t=>
         '<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0">'
