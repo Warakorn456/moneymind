@@ -12046,7 +12046,8 @@ function renderTravel(){
         +'<div style="width:42px;height:42px;border-radius:12px;background:#0ea5e922;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
           +'<i class="fas fa-map-marker-alt" style="color:#0ea5e9;font-size:18px"></i></div>'
         +'<div style="flex:1;min-width:0">'
-          +'<div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_escHtml(d.name)+'</div>'
+          +'<div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_escHtml(d.name)
+            +(overBudget?' <span style="font-size:10px;font-weight:700;color:#f87171;background:#f8717122;border-radius:5px;padding:1px 6px;vertical-align:middle"><i class="fas fa-exclamation-triangle"></i> เกินงบ</span>':'')+'</div>'
           +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+d.trips.length+' ทริป · '+d.count+' รายการ'+(d.first?' · '+_travelRange(d.first,d.last):'')+'</div>'
           +'<div class="pbar" style="margin-top:7px;height:5px"><div class="pfill" style="width:'+pct+'%;background:#0ea5e9"></div></div>'
         +'</div>'
