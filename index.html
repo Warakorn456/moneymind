@@ -10931,6 +10931,57 @@ function renderYTD(){
 // ══════════════════════════════════════════
 if(!window._loanState) window._loanState={principal:0,rate:0,months:0,startDate:'',showTable:false,extraMonthly:0,lumpSum:0,lumpMonth:0,showAccTable:false};
 
+function loanInputCardHtml(s,defaultDate){
+  return '<div class="card" style="margin-bottom:16px;border-top:2px solid var(--primary)">'
+    +'<div class="sec-hd" style="margin-bottom:16px">'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<div style="width:30px;height:30px;border-radius:8px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-hand-holding-usd" style="color:var(--primary-l);font-size:13px"></i></div>'
+        +'<div class="sec-title">คำนวณสินเชื่อ / ผ่อนชำระ</div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="frow" style="flex-wrap:wrap;gap:12px;margin-bottom:12px">'
+      +'<div class="fg"><label class="flabel">ยอดกู้ / ราคาสินค้า (บาท)</label>'
+        +'<input type="number" class="finput" id="ln-principal" value="'+(s.principal||'')+'" placeholder="เช่น 500000" min="0" oninput="updateLoan(\'principal\',this.value)"></div>'
+      +'<div class="fg"><label class="flabel">อัตราดอกเบี้ย (%/ปี)</label>'
+        +'<input type="number" class="finput" id="ln-rate" value="'+(s.rate||'')+'" placeholder="เช่น 5.5" min="0" max="100" step="0.1" oninput="updateLoan(\'rate\',this.value)"></div>'
+      +'<div class="fg"><label class="flabel">จำนวนงวด (เดือน)</label>'
+        +'<input type="number" class="finput" id="ln-months" value="'+(s.months||'')+'" placeholder="เช่น 60" min="1" max="600" oninput="updateLoan(\'months\',this.value)"></div>'
+      +'<div class="fg"><label class="flabel">วันที่เริ่มผ่อน</label>'
+        +'<input type="date" class="finput" id="ln-start" value="'+(s.startDate||defaultDate)+'" oninput="updateLoan(\'startDate\',this.value)"></div>'
+    +'</div>'
+    // Quick preset buttons
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">'
+      +'<span style="font-size:12px;color:var(--muted);align-self:center">งวด:</span>'
+      +[12,24,36,48,60,84,120,180,240,360].map(function(m){
+        return '<button class="btn btn-ghost" style="padding:4px 10px;font-size:11px'+(s.months===m?';background:rgba(99,102,241,.2);color:var(--primary-l)':'')+'" onclick="updateLoan(\'months\','+m+');renderLoan()">'+m+' เดือน</button>';
+      }).join('')
+    +'</div>'
+    // ── โป๊ะเพิ่ม (ลดต้นลดดอก) ──
+    +'<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">'
+        +'<i class="fas fa-bolt" style="color:#fbbf24;font-size:12px"></i>'
+        +'<span style="font-size:13px;font-weight:700">โป๊ะเพิ่ม (ลดต้นลดดอก)</span>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-bottom:12px">จ่ายเกินค่างวด — เงินส่วนเกินตัดเงินต้นทั้งหมด ดอกเบี้ยงวดถัดไปลดทันที ผ่อนหมดเร็วขึ้น</div>'
+      +'<div class="frow" style="flex-wrap:wrap;gap:12px">'
+        +'<div class="fg"><label class="flabel">โป๊ะเพิ่มทุกเดือน (บาท)</label>'
+          +'<input type="number" class="finput" id="ln-extra" value="'+(s.extraMonthly||'')+'" placeholder="เช่น 3000" min="0" oninput="updateLoan(\'extraMonthly\',this.value)"></div>'
+        +'<div class="fg"><label class="flabel">โป๊ะก้อนครั้งเดียว (บาท)</label>'
+          +'<input type="number" class="finput" id="ln-lump" value="'+(s.lumpSum||'')+'" placeholder="เช่น 100000" min="0" oninput="updateLoan(\'lumpSum\',this.value)"></div>'
+        +'<div class="fg"><label class="flabel">โป๊ะก้อนที่งวด</label>'
+          +'<input type="number" class="finput" id="ln-lumpmonth" value="'+(s.lumpMonth||'')+'" placeholder="ว่าง = งวดแรก" min="1" oninput="updateLoan(\'lumpMonth\',this.value)"></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
+        +'<span style="font-size:12px;color:var(--muted);align-self:center">โป๊ะ/เดือน:</span>'
+        +[1000,2000,3000,5000,10000].map(function(m){
+          return '<button class="btn btn-ghost" style="padding:4px 10px;font-size:11px'+(s.extraMonthly===m?';background:rgba(251,191,36,.2);color:#fbbf24':'')+'" onclick="updateLoan(\'extraMonthly\','+m+');renderLoan()">+'+fmt(m)+'</button>';
+        }).join('')
+        +(s.extraMonthly||s.lumpSum?'<button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;color:#f87171" onclick="updateLoan(\'extraMonthly\',0);window._loanState.lumpSum=0;window._loanState.lumpMonth=0;renderLoan()"><i class="fas fa-times"></i> ล้าง</button>':'')
+      +'</div>'
+    +'</div>'
+  +'</div>';
+}
+
 function renderLoan(){
   var el=document.getElementById('loan-content'); if(!el) return;
   var s=window._loanState;
