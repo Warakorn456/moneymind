@@ -10936,6 +10936,16 @@ function renderLoan(){
   var s=window._loanState;
   var now=new Date();
   var defaultDate=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-01';
+  // แยกช่องกรอก (สร้างครั้งเดียว) กับผลลัพธ์ (อัปเดตแยก) — กัน input เด้ง/focus หลุดตอนพิมพ์
+  el.innerHTML=loanInputCardHtml(s,defaultDate)+'<div id="loan-results"></div>';
+  renderLoanResults();
+}
+
+function renderLoanResults(){
+  var el=document.getElementById('loan-results'); if(!el) return;
+  var s=window._loanState;
+  var now=new Date();
+  var defaultDate=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-01';
 
   // Amortization calc
   var schedule=[];
