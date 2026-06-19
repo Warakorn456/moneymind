@@ -11042,6 +11042,29 @@ function renderLoan(){
         return '<button class="btn btn-ghost" style="padding:4px 10px;font-size:11px'+(s.months===m?';background:rgba(99,102,241,.2);color:var(--primary-l)':'')+'" onclick="updateLoan(\'months\','+m+');renderLoan()">'+m+' เดือน</button>';
       }).join('')
     +'</div>'
+    // ── โป๊ะเพิ่ม (ลดต้นลดดอก) ──
+    +'<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">'
+        +'<i class="fas fa-bolt" style="color:#fbbf24;font-size:12px"></i>'
+        +'<span style="font-size:13px;font-weight:700">โป๊ะเพิ่ม (ลดต้นลดดอก)</span>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-bottom:12px">จ่ายเกินค่างวด — เงินส่วนเกินตัดเงินต้นทั้งหมด ดอกเบี้ยงวดถัดไปลดทันที ผ่อนหมดเร็วขึ้น</div>'
+      +'<div class="frow" style="flex-wrap:wrap;gap:12px">'
+        +'<div class="fg"><label class="flabel">โป๊ะเพิ่มทุกเดือน (บาท)</label>'
+          +'<input type="number" class="finput" value="'+(s.extraMonthly||'')+'" placeholder="เช่น 3000" min="0" oninput="updateLoan(\'extraMonthly\',this.value)"></div>'
+        +'<div class="fg"><label class="flabel">โป๊ะก้อนครั้งเดียว (บาท)</label>'
+          +'<input type="number" class="finput" value="'+(s.lumpSum||'')+'" placeholder="เช่น 100000" min="0" oninput="updateLoan(\'lumpSum\',this.value)"></div>'
+        +'<div class="fg"><label class="flabel">โป๊ะก้อนที่งวด</label>'
+          +'<input type="number" class="finput" value="'+(s.lumpMonth||'')+'" placeholder="ว่าง = งวดแรก" min="1" oninput="updateLoan(\'lumpMonth\',this.value)"></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
+        +'<span style="font-size:12px;color:var(--muted);align-self:center">โป๊ะ/เดือน:</span>'
+        +[1000,2000,3000,5000,10000].map(function(m){
+          return '<button class="btn btn-ghost" style="padding:4px 10px;font-size:11px'+(s.extraMonthly===m?';background:rgba(251,191,36,.2);color:#fbbf24':'')+'" onclick="updateLoan(\'extraMonthly\','+m+');renderLoan()">+'+fmt(m)+'</button>';
+        }).join('')
+        +(s.extraMonthly||s.lumpSum?'<button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;color:#f87171" onclick="updateLoan(\'extraMonthly\',0);window._loanState.lumpSum=0;window._loanState.lumpMonth=0;renderLoan()"><i class="fas fa-times"></i> ล้าง</button>':'')
+      +'</div>'
+    +'</div>'
   +'</div>'
 
   // Results
