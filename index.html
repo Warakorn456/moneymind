@@ -12057,11 +12057,11 @@ function renderTravel(){
         +'</div>'
         +'<i class="fas fa-chevron-down" id="trav-chev-'+i+'" style="color:var(--muted);transition:transform .2s;flex-shrink:0"></i>'
       +'</div>'
-      +'<div id="trav-detail-'+i+'" style="display:none;padding:0 16px 14px;border-top:1px solid var(--border)">'+tripsHtml+'</div>'
+      +'<div id="trav-detail-'+i+'" style="display:none;padding:0 16px 14px;border-top:1px solid var(--border)">'+budgetHtml+tripsHtml+'</div>'
     +'</div>';
   }).join('');
 
-  el.innerHTML=head+placesSec+summary+cards;
+  el.innerHTML=head+placesSec+summary+countrySec+cards;
 }
 
 function _toggleTravelTrip(i){
