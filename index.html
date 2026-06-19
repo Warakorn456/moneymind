@@ -12278,6 +12278,7 @@ function travelGetMyLocation(){
   const btn=document.getElementById('travel-myloc-btn');
   if(!navigator.geolocation){ toast('เบราว์เซอร์นี้ไม่รองรับ GPS','error'); return; }
   if(btn){ btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> กำลังหาตำแหน่ง…'; btn.disabled=true; }
+  toast('กรุณาอนุญาต GPS ในเบราว์เซอร์','info');
   navigator.geolocation.getCurrentPosition(
     async pos=>{
       _myLocation={lat:pos.coords.latitude,lng:pos.coords.longitude};
