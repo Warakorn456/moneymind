@@ -10929,7 +10929,7 @@ function renderYTD(){
 // ══════════════════════════════════════════
 //  FEATURE: LOAN CALCULATOR
 // ══════════════════════════════════════════
-if(!window._loanState) window._loanState={principal:0,rate:0,months:0,startDate:'',showTable:false};
+if(!window._loanState) window._loanState={principal:0,rate:0,months:0,startDate:'',showTable:false,extraMonthly:0,lumpSum:0,lumpMonth:0,showAccTable:false};
 
 function renderLoan(){
   var el=document.getElementById('loan-content'); if(!el) return;
