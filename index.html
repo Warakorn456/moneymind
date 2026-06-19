@@ -12454,6 +12454,19 @@ function _haversine(lat1,lng1,lat2,lng2){
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
+// ประมาณค่าตั๋วเครื่องบินชั้นประหยัด เที่ยวเดียว (บาท) จากระยะทาง great-circle
+// ใช้ค่าครองชีพแบบขั้นบันได: ระยะยิ่งไกล บาท/กม. ยิ่งถูกลง + ค่าธรรมเนียมพื้นฐาน
+function _estFlightFare(dist){
+  let rateLow,rateHigh;
+  if(dist<700){ rateLow=2.8; rateHigh=5.5; }       // ในประเทศ/เพื่อนบ้าน
+  else if(dist<2500){ rateLow=2.2; rateHigh=4.2; } // ภูมิภาคเอเชีย
+  else if(dist<6000){ rateLow=1.7; rateHigh=3.2; } // ข้ามทวีปใกล้
+  else { rateLow=1.4; rateHigh=2.6; }              // ทางไกลข้ามโลก
+  const base=600;
+  const round=v=>Math.max(500,Math.round(v/100)*100);
+  return { low:round(base+dist*rateLow), high:round(base+dist*rateHigh) };
+}
+
 function _drawRoute(geometry,dashed,color){
   if(!_travelMap) return;
   _clearRouteLayer();
