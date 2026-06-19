@@ -11978,7 +11978,7 @@ function renderTravel(){
   }
 
   if(!txs.length){
-    el.innerHTML=head+placesSec
+    el.innerHTML=head+placesSec+_travelEstimatorHtml()
       +'<div class="empty"><i class="fas fa-plane-departure"></i>'
       +'<p>ยังไม่มีรายการท่องเที่ยว</p>'
       +'<p style="font-size:12px;color:var(--muted);max-width:380px;margin:6px auto 0;line-height:1.7">'
