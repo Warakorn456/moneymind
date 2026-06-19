@@ -12366,6 +12366,7 @@ async function travelRoute(){
     const dist=_haversine(from.lat,from.lng,to.lat,to.lng);
     const flightMin=Math.round(dist/880*60);         // cruise ~880 km/h
     const totalMin=flightMin+(dist<500?60:dist<2000?120:180); // airport overhead
+    const fare=_estFlightFare(dist);                  // ประมาณค่าตั๋ว economy (บาท)
     _drawRoute({type:'LineString',coordinates:[[from.lng,from.lat],[to.lng,to.lat]]},true,'#38bdf8');
     _fitTwo([from.lng,from.lat],[to.lng,to.lat],60);
     resEl.innerHTML=`<div style="border-top:1px solid var(--border);padding-top:10px">
@@ -12385,6 +12386,11 @@ async function travelRoute(){
           <div style="font-size:18px;font-weight:800;margin-top:4px">${_durStr(totalMin)}</div>
           <div style="font-size:11px;color:var(--muted)">รวมสนามบิน</div>
         </div>
+      </div>
+      <div style="margin-top:10px;text-align:center;background:linear-gradient(135deg,#38bdf81a,#a78bfa1a);border:1px solid #38bdf844;border-radius:12px;padding:12px 10px">
+        <div style="font-size:11px;color:var(--muted)"><i class="fas fa-ticket-alt" style="color:#38bdf8"></i> ประมาณค่าตั๋วเครื่องบิน (เที่ยวเดียว · ชั้นประหยัด)</div>
+        <div style="font-size:21px;font-weight:800;margin-top:5px;color:#38bdf8">${fmt(fare.low)} – ${fmt(fare.high)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">ไป-กลับ ราว ${fmt(fare.low*2)} – ${fmt(fare.high*2)} · เป็นค่าประมาณคร่าวๆ ราคาจริงขึ้นกับช่วงเวลา/สายการบิน</div>
       </div>
       <div style="margin-top:8px;background:#38bdf822;border:1px solid #38bdf855;border-radius:8px;padding:7px 10px;font-size:11px;color:#38bdf8">
         <i class="fas fa-info-circle"></i> ความเร็วเฉลี่ยเครื่องบิน ~880 กม./ชม. · เวลารวมรวม check-in/transit ประมาณ ${dist<500?'1 ชม.':dist<2000?'2 ชม.':'3 ชม.'}
