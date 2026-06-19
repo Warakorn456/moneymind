@@ -11194,8 +11194,9 @@ function updateLoan(key,val){
   var s=window._loanState;
   if(key==='startDate') s.startDate=val;
   else s[key]=parseFloat(val)||0;
+  // อัปเดตเฉพาะผลลัพธ์ (#loan-results) ไม่สร้าง input ใหม่ → focus ไม่หลุด พิมพ์ต่อได้
   clearTimeout(window._loanTimer);
-  window._loanTimer=setTimeout(function(){ renderLoan(); },400);
+  window._loanTimer=setTimeout(function(){ renderLoanResults(); },250);
 }
 
 // ── Fixed/Variable toggle helpers ──
