@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function authed() { return request.auth != null; }
+
+    // uid ที่ผูกกับ username นี้ใน members (คืน '' ถ้าไม่มี doc หรือไม่มี field uid)
+    function linkedUid(userId) {
+      return (exists(/databases/$(database)/documents/members/$(userId))
+              && ('uid' in get(/databases/$(database)/documents/members/$(userId)).data))
+        ? get(/databases/$(database)/documents/members/$(userId)).data.uid
+        : '';
+    }
+
+    // ผู้ใช้ที่ login แล้วและเป็นเจ้าของบัญชีนี้จริง (uid ตรงกับที่ผูกไว้)
+    function ownsAccount(userId) {
+      return authed() && linkedUid(userId) != '' && linkedUid(userId) == request.auth.uid;
+    }
+
+    // บัญชี legacy/ใหม่ที่ยังไม่ผูก uid → ให้ผู้ใช้ที่ login แล้ว claim ได้ครั้งแรก
+    function unclaimed(userId) {
+      return authed() && linkedUid(userId) == '';
+    }
+
+    // ── ข้อมูลการเงินรายคน (1 doc ต่อ 1 user, key = username) ──
+    match /userdata/{userId} {
+      // doc ของเจ้าของระบบเปิดไว้: GCP/Telegram/Gmail scripts เขียนผ่าน REST แบบไม่ auth
+      allow read, write: if userId == 'warakorn';
+      // คนอื่นทั้งหมด: เฉพาะ Firebase user ที่ผูกบัญชีนี้เท่านั้น
+      allow read, write: if ownsAccount(userId);
+    }
+
+    // ── โปรไฟล์ / mapping username↔uid (ไม่มีข้อมูลการเงิน) ──
+    match /members/{userId} {
+      // login ต้อง lookup username จาก email; admin (เจ้าของ ไม่ auth) list members
+      allow read: if true;
+      // เขียน: เจ้าของ doc, หรือ claim บัญชีที่ยังไม่ผูก uid
+      allow write: if userId == 'warakorn' || ownsAccount(userId) || unclaimed(userId);
+    }
+
+    // ── ทดสอบการเชื่อมต่อ ──
+    match /_ping/{doc} {
+      allow read, write: if true;
+    }
+
+    // ปฏิเสธทุกอย่างที่เหลือโดยปริยาย
+  }
+}
