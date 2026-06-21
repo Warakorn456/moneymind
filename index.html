@@ -2707,6 +2707,45 @@ function randB64(n){ const a=new Uint8Array(n); crypto.getRandomValues(a); retur
 function getUsers(){ try{ return JSON.parse(localStorage.getItem(USERS_KEY)||'[]'); }catch{ return []; } }
 function saveUsers(u){ localStorage.setItem(USERS_KEY,JSON.stringify(u)); }
 
+// ── Ensure a Firebase Auth session for username/password logins ──
+// ทำให้ทุก login มี request.auth เพื่อให้ผ่าน Firestore security rules
+// และผูก members/<username>.uid = auth.uid (claim) ให้ rule ตรวจสิทธิ์ได้
+// รองรับ legacy users ที่ไม่มี email จริง ผ่าน synthetic email (<username>@moneymind.local)
+async function ensureAuthForUser(username, email, pass){
+  if(!_auth || !_fs) return null;
+  // มี session ที่ถูกต้องอยู่แล้ว → แค่ผูก uid ให้ครบ
+  if(_auth.currentUser){
+    try{ await _fs.collection('members').doc(username).set({uid:_auth.currentUser.uid,username},{merge:true}); }catch(e){}
+    return _auth.currentUser;
+  }
+  // ดู uid/email เดิมใน members เพื่อกันการสร้างบัญชี synthetic ทับบัญชี email จริง
+  let existingUid='', memEmail='';
+  try{
+    const m=await _fs.collection('members').doc(username).get();
+    if(m.exists){ existingUid=(m.data().uid||''); memEmail=(m.data().email||''); }
+  }catch(e){}
+  const candidates=[];
+  if(email) candidates.push(email);
+  else if(memEmail) candidates.push(memEmail);
+  // ใช้ synthetic เฉพาะเมื่อยังไม่มี uid จริงผูกอยู่ (legacy แท้ ๆ)
+  if(!existingUid) candidates.push(username+'@moneymind.local');
+  let cred=null;
+  for(const em of candidates){
+    try{ cred=await _auth.signInWithEmailAndPassword(em,pass); break; }
+    catch(e){
+      if(['auth/user-not-found','auth/invalid-credential','auth/invalid-login-credentials'].includes(e.code)){
+        try{ cred=await _auth.createUserWithEmailAndPassword(em,pass); break; }
+        catch(e2){ /* email-already-in-use ด้วยรหัสอื่น → ลอง candidate ถัดไป */ }
+      }
+    }
+  }
+  if(cred){
+    const eml=email||memEmail;
+    try{ await _fs.collection('members').doc(username).set({uid:cred.user.uid,username,...(eml?{email:eml}:{})},{merge:true}); }catch(e){}
+  }
+  return cred;
+}
+
 async function recoverData(){
   const isEmpty = v => !v?.transactions?.length && !v?.savings?.length && !v?.debts?.length && !v?.investments?.length;
   if(!isEmpty(DB)) return false; // DB มีข้อมูลแล้ว ไม่ต้องกู้
