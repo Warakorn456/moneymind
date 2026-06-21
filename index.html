@@ -2876,6 +2876,7 @@ async function tryLogin(){
     currentUser=rec.username;
     DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
     loadDB();
+    await ensureAuthForUser(rec.username, rec.email, pass); // สร้าง Firebase Auth session ให้ผ่าน security rules + claim uid
     const _synced2=await fsLoad();
     enterApp();
     if(!_synced2) fsSave();
