@@ -73,9 +73,21 @@ DB = {
 | `localStorage` | `mm_users` | `[{username, salt, hash}]` — user list |
 | `localStorage` | `mm_session` | `{username, ts}` — session ปัจจุบัน |
 | `localStorage` | `mm_data_<username>` | DB object ของแต่ละ user |
-| Firebase Firestore | `users/<username>` | Cloud backup — sync 2 ทาง |
+| Firebase Firestore | `userdata/<username>` | Cloud backup (db = JSON ทั้งก้อน) — sync 2 ทาง |
+| Firebase Firestore | `members/<username>` | mapping `{username, email, uid, lastSeen}` (ไม่มีข้อมูลการเงิน) |
 
 ลำดับ sync: localStorage → Firestore (ถ้า login) → conflict resolution ด้วย `_savedAt`
+
+### Firestore Security Rules (locked 2026-06-21)
+ไฟล์ `firestore.rules` (deploy แล้วผ่าน Firebase Rules REST API):
+- **`userdata/warakorn`** = เปิด read/write public (GCP/Telegram/Gmail scripts เขียนผ่าน REST แบบ **ไม่ auth** — ห้ามล็อก)
+- **`userdata/<คนอื่น>`** = เฉพาะ Firebase user ที่ `members/<u>.uid == request.auth.uid` (เพื่อนอ่านข้อมูลกันไม่ได้)
+- **`members`** = read public (login lookup email→username + admin list), write เฉพาะเจ้าของ/`warakorn`/`unclaimed`
+- legacy ที่ยังไม่มี uid (เช่น yok07) → `unclaimed()` ให้ผู้ใช้ที่ **login แล้วเท่านั้น** claim ครั้งแรก (auto บน login ใหม่); unauth claim ไม่ได้
+- ทุก login ด้วย username เรียก `ensureAuthForUser()` → สร้าง Firebase Auth session (email จริง หรือ synthetic `<u>@moneymind.local` สำหรับ legacy) + เขียน `members.uid`
+- **ยังเปิดค้าง:** `userdata/warakorn` public เพราะ Python scripts ยังเขียน REST ไม่ auth — ถ้าจะปิดต้องให้ scripts auth ผ่าน Firebase ID token ก่อน (ยังไม่ทำ)
+- rollback: ruleset เก่า `0fa4eb71-c312-4c98-a5b7-36af71266e5f` (เปิด public ทั้งหมด)
+- redeploy: POST ruleset + PATCH release `cloud.firestore` ที่ `firebaserules.googleapis.com/v1/projects/moneymind-d97f3/...` ด้วย `gcloud auth print-access-token` + header `x-goog-user-project: moneymind-d97f3`
 
 ## Pages & Navigation
 
