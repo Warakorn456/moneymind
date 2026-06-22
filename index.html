@@ -3468,6 +3468,69 @@ function renderPage(p){
 }
 
 // ══════════════════════════════════════════
+//  AI USAGE — ค่า token/ค่า API ของ Gemini (ข้อมูลจริงจาก Cloud Monitoring)
+//  เขียนลง Firestore field `aiUsage` โดย gemini_usage_report.py --firestore (cron รายวัน)
+// ══════════════════════════════════════════
+function renderAiUsage(){
+  const el=document.getElementById('aiusage-content'); if(!el) return;
+  const u=_aiUsage;
+  if(!u||!Array.isArray(u.days)||!u.days.length){
+    el.innerHTML='<div class="card" style="padding:28px;text-align:center">'
+      +'<i class="fas fa-robot" style="font-size:34px;color:#10b981;margin-bottom:12px"></i>'
+      +'<div style="font-weight:700;margin-bottom:6px">ยังไม่มีข้อมูลการใช้ AI</div>'
+      +'<div style="color:var(--muted);font-size:13px;line-height:1.7">ข้อมูลอัปเดตอัตโนมัติทุกวันจาก Cloud Monitoring (Gemini API · project Best1)<br>'
+      +'หรือรัน <code>python gemini_usage_report.py --firestore</code> บน VM เพื่อดึงทันที</div></div>';
+    return;
+  }
+  const days=u.days, cap=u.cap_thb||100;
+  const nf=n=>Number(n||0).toLocaleString('en-US');
+  const last=days[days.length-1];
+  const ym=new Date().toISOString().slice(0,7);
+  const mtd=days.filter(d=>String(d.date).slice(0,7)===ym).reduce((s,d)=>s+(d.thb||0),0);
+  const proj=u.projected_month_thb||0;
+  const pct=cap>0?Math.min(100,Math.round(proj/cap*100)):0;
+  const over=proj>cap;
+  const upd=u.updatedAt?new Date(u.updatedAt).toLocaleString('th-TH'):'-';
+  const card=(label,val,sub,extra='')=>'<div class="card" style="padding:14px;'+extra+'">'
+    +'<div style="color:var(--muted);font-size:12px">'+label+'</div>'
+    +'<div style="font-size:22px;font-weight:800">'+val+'</div>'
+    +'<div style="font-size:11px;color:var(--muted)">'+sub+'</div></div>';
+  el.innerHTML=
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px">'
+    +card('วันนี้ ('+last.date+')','฿'+(last.thb||0).toFixed(2),nf(last.in_tokens)+' in · '+nf(last.out_tokens)+' out')
+    +card('เดือนนี้ (ถึงวันนี้)','฿'+mtd.toFixed(2),days.length+' วันที่มีข้อมูล')
+    +card('เฉลี่ย/วัน','฿'+(u.avg_thb_day||0).toFixed(2),'in '+nf(u.total_in)+' · out '+nf(u.total_out))
+    +card('คาดการณ์ทั้งเดือน','<span style="color:'+(over?'var(--red)':'var(--text)')+'">฿'+proj.toFixed(0)+'</span>','cap ฿'+cap,'border:1px solid '+(over?'var(--red)':'var(--border)'))
+    +'</div>'
+    +'<div class="card" style="padding:14px;margin-bottom:14px">'
+      +'<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>คาดการณ์เดือนนี้ vs spend cap</span>'
+      +'<span style="font-weight:700;color:'+(over?'var(--red)':'var(--text)')+'">฿'+proj.toFixed(0)+' / ฿'+cap+' ('+pct+'%)</span></div>'
+      +'<div class="pbar"><div class="pfill" style="width:'+pct+'%;background:'+(over?'var(--red)':'#10b981')+'"></div></div>'
+      +(over?'<div style="color:var(--red);font-size:12px;margin-top:6px"><i class="fas fa-triangle-exclamation"></i> คาดว่าจะเกิน cap — usage จะถูก pause เมื่อถึง ฿'+cap+'</div>':'')
+    +'</div>'
+    +'<div class="card" style="padding:14px;margin-bottom:14px"><div style="font-size:13px;font-weight:700;margin-bottom:10px">ค่าใช้จ่ายรายวัน (฿)</div><canvas id="aiusage-chart" height="120"></canvas></div>'
+    +'<div class="card" style="padding:14px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-size:13px;font-weight:700">รายละเอียดรายวัน</span><span style="font-size:11px;color:var(--muted)">อัปเดต: '+upd+'</span></div>'
+      +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'
+      +'<thead><tr style="color:var(--muted);text-align:right"><th style="text-align:left;padding:6px 4px">วันที่</th><th>req</th><th>in-tok</th><th>out-tok</th><th style="padding-left:8px">฿</th></tr></thead><tbody>'
+      +days.slice().reverse().map(d=>'<tr style="border-top:1px solid var(--border);text-align:right">'
+        +'<td style="text-align:left;padding:6px 4px">'+d.date+'</td><td>'+nf(d.requests)+'</td><td>'+nf(d.in_tokens)+'</td><td>'+nf(d.out_tokens)+'</td>'
+        +'<td style="font-weight:600;padding-left:8px">'+(d.thb||0).toFixed(2)+'</td></tr>').join('')
+      +'</tbody></table></div></div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-top:8px">* ข้อมูลจริงจาก Cloud Monitoring (Gemini API · project Best1) — ครอบคลุมทั้งเว็บ Maya + Telegram bot + ทุกสคริปต์ · ราคา flash $0.30/$2.50 ต่อ 1M tok, USDTHB='+(u.usdthb||36.5)+'</div>';
+  try{
+    if(_aiUsageChart){ _aiUsageChart.destroy(); _aiUsageChart=null; }
+    const cv=document.getElementById('aiusage-chart');
+    if(cv&&window.Chart){
+      _aiUsageChart=new Chart(cv,{type:'bar',
+        data:{labels:days.map(d=>String(d.date).slice(5)),datasets:[{label:'฿/วัน',data:days.map(d=>d.thb||0),backgroundColor:'#10b981',borderRadius:4}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+          scales:{y:{beginAtZero:true,ticks:{color:'#94a3b8'},grid:{color:'rgba(148,163,184,.1)'}},x:{ticks:{color:'#94a3b8'},grid:{display:false}}}}});
+    }
+  }catch(e){ console.error('aiusage chart',e); }
+}
+
+// ══════════════════════════════════════════
 //  SIDEBAR (mobile)
 // ══════════════════════════════════════════
 function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sb-overlay').classList.toggle('show'); }
