@@ -3274,6 +3274,18 @@ function lockLogout(){
 // ตรวจเมื่อ tab กลับมา active
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&currentUser&&!_appLocked) resetLockTimer(); if(!document.hidden&&currentUser&&_appLocked) lockApp(); });
 
+// รอให้ Firebase Auth คืน session ที่ persist ไว้ (async ตอนโหลดหน้า) — คืน true ถ้ามี user
+function _waitFbAuth(ms=5000){
+  return new Promise(res=>{
+    if(!_auth) return res(false);
+    if(_auth.currentUser) return res(true);
+    let done=false;
+    const fin=v=>{ if(done) return; done=true; try{unsub&&unsub();}catch(e){} res(v); };
+    const unsub=_auth.onAuthStateChanged(u=>fin(!!u));
+    setTimeout(()=>fin(!!(_auth&&_auth.currentUser)), ms);
+  });
+}
+
 function checkLogin(){
   // ตรวจ session
   try{
