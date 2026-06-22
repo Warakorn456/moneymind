@@ -3297,7 +3297,14 @@ function checkLogin(){
         if(adminNav) adminNav.style.display=(_ENC&&currentUser===_ENC.user)?'flex':'none';
         resetLockTimer();
         _startHeartbeat();
-        fsLoad().then(synced=>{ if(synced) renderPage(curPage); else fsSave(); fsListen(); });
+        // รอ Firebase restore auth session (persisted) ก่อน sync — กัน race ที่ fsLoad วิ่งก่อน auth พร้อม → 403
+        _waitFbAuth().then(authed=>{
+          if(!authed){
+            // ไม่มี Firebase Auth session ในเบราว์เซอร์นี้ (เช่น ยังไม่เคย login ใหม่หลังล็อกกฎ) → cloud อ่าน/เขียนไม่ได้
+            toast('โปรดออกจากระบบแล้วเข้าสู่ระบบใหม่ 1 ครั้ง เพื่อเปิดการซิงค์ข้อมูล (อัปเดตความปลอดภัย)','info');
+          }
+          fsLoad().then(synced=>{ if(synced) renderPage(curPage); else fsSave(); fsListen(); });
+        });
         return;
       }
     }
