@@ -118,6 +118,7 @@ Navigation ผ่าน `nav(page)` — routing อยู่ใน `renderPage(p
 | `profile` | ประวัติส่วนตัว | — |
 | `settings` | ตั้งค่า | `renderSettings()` |
 | `admin` | Admin Dashboard | `renderAdmin()` |
+| `aiusage` | AI Usage / ค่า Token | `renderAiUsage()` (nav ล่างใกล้ Settings, icon fa-robot) |
 | `forecast` | พยากรณ์กระแสเงินสด | `renderForecast()` (ไม่มีใน nav แต่ยังใช้งานได้) |
 
 **Sidebar nav** — items มี `data-nav="<key>"` และ `draggable="true"` รองรับ drag-and-drop reorder  
