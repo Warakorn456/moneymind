@@ -78,16 +78,20 @@ DB = {
 
 ลำดับ sync: localStorage → Firestore (ถ้า login) → conflict resolution ด้วย `_savedAt`
 
-### Firestore Security Rules (locked 2026-06-21)
+### Firestore Security Rules (locked สนิท 2026-06-22)
 ไฟล์ `firestore.rules` (deploy แล้วผ่าน Firebase Rules REST API):
-- **`userdata/warakorn`** = เปิด read/write public (GCP/Telegram/Gmail scripts เขียนผ่าน REST แบบ **ไม่ auth** — ห้ามล็อก)
-- **`userdata/<คนอื่น>`** = เฉพาะ Firebase user ที่ `members/<u>.uid == request.auth.uid` (เพื่อนอ่านข้อมูลกันไม่ได้)
+- **`userdata/{userId}` ทุกคน (รวม warakorn)** = อ่าน/เขียนได้เฉพาะ Firebase user ที่ `ownsAccount()` คือ `members/<u>.uid == request.auth.uid` — **ไม่มี public แล้ว** (unauth = 403)
 - **`members`** = read public (login lookup email→username + admin list), write เฉพาะเจ้าของ/`warakorn`/`unclaimed`
 - legacy ที่ยังไม่มี uid (เช่น yok07) → `unclaimed()` ให้ผู้ใช้ที่ **login แล้วเท่านั้น** claim ครั้งแรก (auto บน login ใหม่); unauth claim ไม่ได้
-- ทุก login ด้วย username เรียก `ensureAuthForUser()` → สร้าง Firebase Auth session (email จริง หรือ synthetic `<u>@moneymind.local` สำหรับ legacy) + เขียน `members.uid`
-- **ยังเปิดค้าง:** `userdata/warakorn` public เพราะ Python scripts ยังเขียน REST ไม่ auth — ถ้าจะปิดต้องให้ scripts auth ผ่าน Firebase ID token ก่อน (ยังไม่ทำ)
-- rollback: ruleset เก่า `0fa4eb71-c312-4c98-a5b7-36af71266e5f` (เปิด public ทั้งหมด)
+- ทุก login ด้วย username เรียก `ensureAuthForUser()` → สร้าง Firebase Auth session (email จริง หรือ synthetic `<u>@moneymind.local` สำหรับ legacy/owner) + เขียน `members.uid`; **owner branch (decrypt `_ENC`) ก็เรียก `ensureAuthForUser(_ENC.user,'',pass)` แล้ว** (เดิมไม่เรียก → warakorn ไม่มี Firebase session/uid; แก้ 2026-06-22 บรรทัด ~2832) — owner Firebase account = `warakorn@moneymind.local` uid `7oxtLgXJ...`
+- **GCP/Telegram/Gmail scripts (~31 ตัว) auth ผ่าน Service Account แล้ว** — ไม่ใช่ unauth REST อีกต่อไป:
+  - SA `firestore-rest@moneymind-d97f3` (roles/datastore.user) → access token **บายพาส security rules** (IAM admin); key = `firestore_sa.json` (gitignore, อยู่บน VM `/home/warakornbest6/moneymind/` + laptop `Documents/`)
+  - helper กลาง **`mm_firestore.py`**: `token()` (SA key → metadata → gcloud fallback, scope `datastore`) + `auth_header()`; ทุก call site แนบ `headers=mm_firestore.auth_header()` (requests.get/patch + urllib Request) — patch ด้วย `_apply_fs_auth.py` (one-time, ลบทิ้งได้)
+  - n8n 3 workflow ที่อ่าน Firestore (budget-alert-01/mm-gemini-monthly-01/mm-notebooklm-01) **deactivate แล้ว** (มี Python equivalent บน VM); ต้อง restart n8n ให้ cron in-memory หลุด
+- active ruleset: `f2d0d3a6-aa21-46eb-82be-d1f1c8d99a10` (deploy 2026-06-22 09:44 UTC)
+- rollback: ruleset เปิด public ทั้งหมด `0fa4eb71-c312-4c98-a5b7-36af71266e5f` หรือ public-warakorn `1391d585-7167-4265-b0f5-6b8c2df6318a` (2026-06-21)
 - redeploy: POST ruleset + PATCH release `cloud.firestore` ที่ `firebaserules.googleapis.com/v1/projects/moneymind-d97f3/...` ด้วย `gcloud auth print-access-token` + header `x-goog-user-project: moneymind-d97f3`
+- **เพิ่ม script ใหม่ที่แตะ Firestore:** ต้อง `import mm_firestore` + แนบ `headers=mm_firestore.auth_header()` ทุก get/patch ไม่งั้น 403
 
 ## Pages & Navigation
 
