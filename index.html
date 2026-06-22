@@ -2829,6 +2829,8 @@ async function tryLogin(){
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);
       const data=JSON.parse(new TextDecoder().decode(plain));
       currentUser=_ENC.user;
+      // owner ก็ต้องมี Firebase Auth session + ผูก uid เพื่อผ่าน locked rules (userdata/warakorn ไม่ public แล้ว)
+      await ensureAuthForUser(_ENC.user, '', pass);
       DB={...DB,...data};
       if(localStorage.getItem(userDataKey(currentUser))) loadDB();
       else saveLocalOnly();
