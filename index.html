@@ -3473,6 +3473,17 @@ function renderPage(p){
 // ══════════════════════════════════════════
 function renderAiUsage(){
   const el=document.getElementById('aiusage-content'); if(!el) return;
+  // ถ้ายังไม่มีข้อมูลในหน่วยความจำ → ดึงตรงจาก Firestore เอง (กันกรณี fsLoad ยังไม่ทัน/ไม่ได้รัน)
+  if((!_aiUsage||!Array.isArray(_aiUsage.days)||!_aiUsage.days.length) && !_aiUsageFetching && _fs && currentUser){
+    _aiUsageFetching=true;
+    el.innerHTML='<div class="card" style="padding:24px;text-align:center;color:var(--muted)"><i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูลการใช้ AI...</div>';
+    _fs.collection('userdata').doc(currentUser).get().then(doc=>{
+      try{ const au=doc.exists&&doc.data()&&doc.data().aiUsage; if(au) _aiUsage=JSON.parse(au); }catch(e){}
+      _aiUsageFetching=false;
+      if(curPage==='aiusage') renderAiUsage();
+    }).catch(()=>{ _aiUsageFetching=false; if(curPage==='aiusage') renderAiUsage(); });
+    return;
+  }
   const u=_aiUsage;
   if(!u||!Array.isArray(u.days)||!u.days.length){
     el.innerHTML='<div class="card" style="padding:28px;text-align:center">'
