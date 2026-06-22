@@ -2602,6 +2602,7 @@ async function fsSave(){
   }
 }
 
+let _aiUsage=null, _aiUsageChart=null;   // AI token/cost usage (เขียนโดย gemini_usage_report.py --firestore)
 async function fsLoad(){
   if(!currentUser||!_fs){ setSyncStatus('error'); return false; }
   try{
@@ -2610,6 +2611,7 @@ async function fsLoad(){
       _fs.collection('userdata').doc(currentUser).get(),
       _fsTimeout(8000)
     ]);
+    try{ const _au=doc.exists&&doc.data()&&doc.data().aiUsage; if(_au){ _aiUsage=JSON.parse(_au); if(curPage==='aiusage') renderAiUsage(); } }catch(e){}
     if(doc.exists&&doc.data()&&doc.data().db){
       const remote=JSON.parse(doc.data().db);
       const localTs=DB._savedAt||0;
