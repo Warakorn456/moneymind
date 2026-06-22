@@ -24,9 +24,8 @@ service cloud.firestore {
 
     // ── ข้อมูลการเงินรายคน (1 doc ต่อ 1 user, key = username) ──
     match /userdata/{userId} {
-      // doc ของเจ้าของระบบเปิดไว้: GCP/Telegram/Gmail scripts เขียนผ่าน REST แบบไม่ auth
-      allow read, write: if userId == 'warakorn';
-      // คนอื่นทั้งหมด: เฉพาะ Firebase user ที่ผูกบัญชีนี้เท่านั้น
+      // ทุกคน (รวม warakorn): เฉพาะ Firebase user ที่ผูกบัญชีนี้เท่านั้น
+      // GCP/Telegram/Gmail scripts ใช้ SA token (roles/datastore.user) บายพาส rules
       allow read, write: if ownsAccount(userId);
     }
 
