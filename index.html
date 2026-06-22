@@ -2643,6 +2643,7 @@ function fsListen(){
   _fsUnsub=_fs.collection('userdata').doc(currentUser).onSnapshot(snap=>{
     if(!snap.exists||snap.metadata.hasPendingWrites) return;
     const data=snap.data();
+    try{ if(data&&data.aiUsage){ _aiUsage=JSON.parse(data.aiUsage); if(curPage==='aiusage') renderAiUsage(); } }catch(e){}
     if(!data||!data.db) return;
     try{
       // guard เร็ว: ถ้าเพิ่ง save ไปไม่ถึง 2 วินาที ข้ามได้เลย
