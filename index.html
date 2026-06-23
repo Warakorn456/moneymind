@@ -13692,6 +13692,53 @@ setTimeout(function(){ if(typeof _gmailStartPoll==='function') _gmailStartPoll()
   </div>
 </div>
 
+<div id="m-ins" class="overlay">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title"><i class="fas fa-shield-heart" style="color:#10b981"></i> <span id="ins-m-title">เพิ่มประกัน</span></div>
+    <input type="hidden" id="ins-eid">
+    <div class="fgroup"><label class="flabel">ชื่อกรมธรรม์ / บริษัท</label><input id="ins-name" class="finput" placeholder="เช่น AIA สุขภาพ, เมืองไทยประกันชีวิต"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fgroup"><label class="flabel">ประเภท</label><select id="ins-type" class="fselect">
+        <option value="life">🛡️ ประกันชีวิต</option><option value="health">❤️ สุขภาพ</option>
+        <option value="accident">🚑 อุบัติเหตุ (PA)</option><option value="critical">🎗️ โรคร้ายแรง</option>
+        <option value="annuity">☂️ บำนาญ</option><option value="car">🚗 รถยนต์</option>
+        <option value="home">🏠 บ้าน/ทรัพย์สิน</option><option value="travel">✈️ เดินทาง</option>
+        <option value="other">📄 อื่นๆ</option></select></div>
+      <div class="fgroup"><label class="flabel">ผู้เอาประกัน</label><select id="ins-insured" class="fselect">
+        <option value="self">ตัวเอง</option><option value="spouse">คู่สมรส</option>
+        <option value="child">บุตร</option><option value="parent">พ่อ/แม่</option>
+        <option value="family">ครอบครัว (รวม)</option><option value="other">อื่นๆ</option></select></div>
+    </div>
+    <div class="fgroup"><label class="flabel">ชื่อผู้เอาประกัน (ถ้ามี)</label><input id="ins-insured-name" class="finput" placeholder="เช่น น้องเอ, คุณแม่"></div>
+    <div class="fgroup"><label class="flabel">คุ้มครองอะไรบ้าง</label><textarea id="ins-benefits" class="finput" rows="2" placeholder="เช่น ค่ารักษาผู้ป่วยใน, เสียชีวิตทุกกรณี, ชดเชยรายวัน"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fgroup"><label class="flabel">วงเงินคุ้มครอง (บาท)</label><input id="ins-coverage" type="number" class="finput" placeholder="0" min="0"></div>
+      <div class="fgroup"><label class="flabel">เบี้ยประกัน (บาท)</label><input id="ins-premium" type="number" class="finput" placeholder="0" min="0"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fgroup"><label class="flabel">รอบจ่ายเบี้ย</label><select id="ins-cycle" class="fselect">
+        <option value="monthly">รายเดือน</option><option value="yearly">รายปี</option>
+        <option value="quarterly">รายไตรมาส</option><option value="onetime">จ่ายครั้งเดียว</option></select></div>
+      <div class="fgroup"><label class="flabel">จ่ายเบี้ยถึง</label>
+        <div style="display:flex;gap:6px">
+          <select id="ins-payuntil-type" class="fselect" style="flex:0 0 44%" onchange="insPayUntilUI()">
+            <option value="lifetime">ตลอดชีพ</option><option value="age">อายุ</option>
+            <option value="years">จำนวนปี</option><option value="date">วันที่</option></select>
+          <input id="ins-payuntil" class="finput" style="flex:1" placeholder="ตลอดชีพ">
+        </div>
+      </div>
+    </div>
+    <div class="fgroup"><label class="flabel">วันสิ้นสุดความคุ้มครอง (ถ้ามี)</label><input id="ins-coveruntil" type="date" class="finput"></div>
+    <div class="fgroup"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="ins-taxdeduct"> <span style="font-size:13px">ใช้ลดหย่อนภาษีได้ (ชีวิต/สุขภาพ/บำนาญ)</span></label></div>
+    <div class="fgroup"><label class="flabel">หมายเหตุ</label><input id="ins-notes" class="finput" placeholder="เลขกรมธรรม์, ตัวแทน, ฯลฯ"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="ins-del-btn" style="display:none;color:#ef4444" onclick="deleteIns()">ลบ</button>
+      <button class="btn btn-ghost" onclick="closeM('m-ins')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveIns()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
 <!-- AI Chat FAB + Panel -->
 <button class="chat-fab" onclick="toggleChat()" title="ถามผู้ช่วย AI">
   <i class="fas fa-robot"></i>
