@@ -3526,6 +3526,26 @@ function renderAiUsage(){
     +'<div style="color:var(--muted);font-size:12px">'+label+'</div>'
     +'<div style="font-size:22px;font-weight:800">'+val+'</div>'
     +'<div style="font-size:11px;color:var(--muted)">'+sub+'</div></div>';
+  // แยกตามรุ่นโมเดล (ใช้มากสุดบนสุด)
+  const bm=Array.isArray(u.by_model)?u.by_model:[];
+  const maxMThb=bm.length?Math.max(...bm.map(m=>m.thb||0),0.0001):1;
+  const mColors=['#10b981','#3b82f6','#f59e0b','#a78bfa','#ef4444','#06b6d4'];
+  const modelSection=bm.length?(
+    '<div class="card" style="padding:14px;margin-bottom:14px">'
+    +'<div style="font-size:13px;font-weight:700;margin-bottom:12px">แยกตามรุ่นโมเดล (ใช้มากสุดบนสุด)</div>'
+    +bm.map(function(m,i){
+      const w=Math.max(2,Math.round((m.thb||0)/maxMThb*100));
+      const c=mColors[i%mColors.length];
+      return '<div style="margin-bottom:11px">'
+        +'<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">'
+        +'<span style="font-weight:600">'+(i===0?'🥇 ':'')+m.model+'</span>'
+        +'<span style="font-weight:700">฿'+(m.thb||0).toFixed(2)+'</span></div>'
+        +'<div class="pbar"><div class="pfill" style="width:'+w+'%;background:'+c+'"></div></div>'
+        +'<div style="font-size:10px;color:var(--muted);margin-top:2px">in '+nf(m.in_tokens)+' · out '+nf(m.out_tokens)+' tok</div>'
+        +'</div>';
+    }).join('')
+    +'</div>'
+  ):'';
   el.innerHTML=
     '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px">'
     +card('วันนี้ ('+last.date+')','฿'+(last.thb||0).toFixed(2),nf(last.in_tokens)+' in · '+nf(last.out_tokens)+' out')
