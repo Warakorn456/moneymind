@@ -2608,7 +2608,7 @@ async function fsSave(){
   }
 }
 
-let _aiUsage=null, _aiUsageChart=null, _aiUsageFetching=false;   // AI token/cost usage (เขียนโดย gemini_usage_report.py --firestore)
+let _aiUsage=null, _claudeUsage=null, _aiUsageChart=null, _aiUsageFetching=false, _aiUsageTab='gemini';   // AI token/cost usage (Gemini เขียนโดย gemini_usage_report.py, Claude โดย claude_usage_report.py)
 async function fsLoad(){
   if(!currentUser||!_fs){ setSyncStatus('error'); return false; }
   try{
