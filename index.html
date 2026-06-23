@@ -2736,8 +2736,9 @@ async function ensureAuthForUser(username, email, pass){
   const candidates=[];
   if(email) candidates.push(email);
   else if(memEmail) candidates.push(memEmail);
-  // ใช้ synthetic เฉพาะเมื่อยังไม่มี uid จริงผูกอยู่ (legacy แท้ ๆ)
-  if(!existingUid) candidates.push(username+'@moneymind.local');
+  // ไม่มี real email → ใช้ synthetic เสมอ (owner/legacy บัญชี = synthetic@moneymind.local;
+  // ต้องลอง sign-in บัญชีเดิมได้แม้ uid ผูกแล้ว ไม่งั้นเครื่องใหม่สร้าง Firebase session ไม่ได้ → sync 403)
+  else candidates.push(username+'@moneymind.local');
   let cred=null;
   for(const em of candidates){
     try{ cred=await _auth.signInWithEmailAndPassword(em,pass); break; }
