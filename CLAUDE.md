@@ -314,7 +314,7 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | **Gmail Body Parser** (ค่าบริการ/Shopping/ประกัน/สลิป HTML) | 08:30 ทุกวัน | `gmail_body_parser.py` → Firestore + topic 💰 |
 | ~~**RSS News Digest**~~ (MarketWatch/Yahoo/CNBC → Gemini → หุ้นในพอร์ต) | ~~08:30 จ.–ศ.~~ | ~~`rss_news.py`~~ ❌ ลบออก 2026-06-18 (ลด Gemini token) |
 | **Firestore → Google Sheets** (Transactions/Monthly/NW/Portfolio) | 23:00 ทุกวัน | `firestore_to_sheets.py` → Sheets (Looker Studio) |
-| **NotebookLM Export** (Q&A snapshot: NW, รายเดือน, หมวด, ออม, หนี้, พอร์ต, **ประกัน/ภาษี-ลดหย่อน/subscriptions**) | วันที่ 1 ของเดือน 00:00 | `notebooklm_export.py` → Drive `moneymind_qa_snapshot.md` + แจ้ง Telegram (อ่าน Firestore ผ่าน SA) |
+| **NotebookLM Export** (Q&A snapshot: NW, รายเดือน, หมวด, ออม, หนี้, พอร์ต, **ประกัน/ภาษี-ลดหย่อน/subscriptions**) | ทุกวันจันทร์ 00:00 (รายสัปดาห์) | `notebooklm_export.py` → Drive `moneymind_qa_snapshot.md` + แจ้ง Telegram (อ่าน Firestore ผ่าน SA) |
 | **Firestore Backup → Drive** (JSON snapshot, เก็บ 90 วัน) | 01:00 ทุกวัน | `firestore_backup.py` → Drive `Backups/` (แจ้ง TG จันทร์) |
 | **Proactive AI Insights** (anomaly detection) | เสาร์ 10:00 | `proactive_insights.py` → topic 💰 |
 | **Smart Advisor** (spending pace ทุก category → เตือนเฉพาะเมื่อ projected เกิน avg 30%) | 20:00 ทุกวัน | `smart_advisor.py` → personal + topic 💰 (เงียบถ้าปกติ) |
@@ -376,7 +376,7 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 | `ai_agent.py` | `ai_agent.py` | ✅ deploy แล้ว — **AI agent (tool calling)** AI chat ใน bot; entry point `ai_agent.chat(text)`; lazy-import `stock_bot` กัน circular; **provider สลับได้ (default gemini-2.5-flash, OpenRouter fallback)** |
 | `rss_news.py` | `rss_news.py` | ❌ cron ลบแล้ว 2026-06-18 (ลด Gemini token); ไฟล์ยังอยู่บน VM |
 | `firestore_to_sheets.py` | `firestore_to_sheets.py` | ✅ sync — ใหม่ 2026-06-15, cron `0 16 * * *` (23:00 Bangkok) |
-| `notebooklm_export.py` | `notebooklm_export.py` | ✅ sync — ใหม่ 2026-06-15, cron `0 17 1 * *` |
+| `notebooklm_export.py` | `notebooklm_export.py` | ✅ sync — ใหม่ 2026-06-15, cron `0 17 * * 0` (จันทร์) |
 | `sltp_alert.py` | `sltp_alert.py` | ✅ sync — ใหม่ 2026-06-01, cron ทุก 30 นาที US market |
 | `bill_reminder.py` | `bill_reminder.py` | ✅ sync — ใหม่ 2026-06-01, cron 09:00 ทุกวัน |
 | `earnings_calendar.py` | `earnings_calendar.py` | ✅ sync — cron `0 2 * * 1-5` (09:00 Bangkok จ.–ศ.) |
@@ -464,7 +464,7 @@ https://firestore.googleapis.com/v1/projects/moneymind-d97f3/databases/(default)
 | `stock_bot.py` | Interactive bot (systemd: moneymind-bot) — canonical version + **รับรูปสลิป → Gemini Vision → Firestore** (2026-06-15) |
 | ~~`rss_news.py`~~ | ~~RSS News Digest~~ — ❌ ลบออกจาก cron 2026-06-18 (ลด Gemini token, overlap กับ daily_briefing) |
 | `firestore_to_sheets.py` | Firestore → Google Sheets 4 tabs (Transactions/Monthly/NW/Portfolio) — cron `0 16 * * *` |
-| `notebooklm_export.py` | สร้าง Q&A snapshot .md → Drive → NotebookLM — cron `0 17 1 * *` |
+| `notebooklm_export.py` | สร้าง Q&A snapshot .md → Drive → NotebookLM — cron `0 17 * * 0` (จันทร์) |
 | `sltp_alert.py` | SL/TP alert — cron `*/30 13-21 * * 1-5` |
 | `bill_reminder.py` | Bill reminder — cron `0 2 * * *` (09:00 Bangkok) |
 | `earnings_calendar.py` | Earnings calendar — standalone (เทสได้ตรงๆ) |
