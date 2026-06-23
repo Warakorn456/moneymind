@@ -10332,6 +10332,91 @@ function renderTaxAdvisor(){
 }
 
 // ══════════════════════════════════════════
+//  FEATURE: TAX DEDUCTION OPTIMIZER (หน้าภาษี)
+//  "ซื้ออีกเท่าไหร่ถึงเพดาน + ประหยัดภาษีกี่บาท + ควรซื้ออะไรก่อน"
+// ══════════════════════════════════════════
+function _taxComputeFull(t){
+  const inc=(t.salary||0)+(t.freelance||0)+(t.otherInc||0);
+  const exp=Math.min(t.salary*0.5,100000)+Math.min(t.freelance*0.5,100000)+Math.min(t.otherInc*0.5,100000);
+  const dSelf=60000,dSpouse=t.spouse?60000:0,dChild=(t.children||0)*30000,dPar=(t.parents||0)*30000,dDis=(t.disabled||0)*60000;
+  const dLife=Math.min(t.lifeIns||0,100000),dHealth=Math.min(t.healthIns||0,25000),dLifeHealth=Math.min(dLife+dHealth,100000);
+  const dAnn=Math.min(t.annuityIns||0,200000),dParH=Math.min(t.parentHealthIns||0,15000),dSSO=Math.min(t.sso||0,9000);
+  const dPvd=Math.min(t.pvd||0,inc*0.15,500000),dSsf=Math.min(t.ssf||0,inc*0.30,200000),dRmf=Math.min(t.rmf||0,inc*0.30,500000),dEsg=Math.min(t.thaiEsg||0,inc*0.30,300000);
+  const invComb=Math.min(dSsf+dRmf+dPvd,500000),dHome=Math.min(t.homeLoan||0,100000);
+  const totalDed=dSelf+dSpouse+dChild+dPar+dDis+dLifeHealth+dAnn+dParH+dSSO+invComb+dEsg+dHome;
+  const netBefore=Math.max(0,inc-exp-totalDed);
+  const dDon=Math.min(t.donation||0,netBefore*0.10);
+  const net=Math.max(0,netBefore-dDon);
+  const curTax=calcTaxAmount(net).tax;
+  let marg=0; for(const b of TAX_BRACKETS){ if(net>b.min) marg=b.rate; }
+  return {inc,net,curTax,marg,dSsf,dRmf,dPvd,dEsg,dLifeHealth,dAnn,dHealth};
+}
+function taxOptimizer(){
+  const panel=document.getElementById('tax-result-panel'); if(!panel) return;
+  let box=document.getElementById('tax-optimizer');
+  if(!box){ box=document.createElement('div'); box.id='tax-optimizer'; box.style.marginTop='16px'; panel.parentNode.insertBefore(box,panel.nextSibling); }
+  const t=getTax(); const c=_taxComputeFull(t);
+  if(!c.inc){ box.innerHTML=''; return; }
+  // เงินสุทธิยังไม่ถึงเกณฑ์
+  if(c.marg<=0){
+    box.innerHTML='<div class="tax-card"><div class="set-title"><i class="fas fa-lightbulb" style="color:#10b981"></i> วางแผนลดหย่อน</div>'
+      +'<div style="font-size:13px;color:var(--muted);line-height:1.7">เงินได้สุทธิยังอยู่ในเกณฑ์<b>ยกเว้นภาษี</b> (ไม่เกิน ฿150,000) — การซื้อกองทุน/ประกันเพื่อลดหย่อน <b>ยังไม่ช่วยประหยัดภาษี</b>ตอนนี้ ค่อยพิจารณาเมื่อมีภาษีต้องจ่าย</div></div>';
+    return;
+  }
+  const groupUsed=c.dSsf+c.dRmf+c.dPvd, groupRemain=Math.max(0,500000-groupUsed);
+  const mk=(key,label,icon,color,used,cap,head,lock,note,order)=>({key,label,icon,color,used,cap,head:Math.max(0,Math.round(head)),lock,note,order});
+  let B=[
+    mk('health','ประกันสุขภาพ','fa-heartbeat','#f59e0b',c.dHealth,25000,25000-c.dHealth,'ไม่ล็อก (เบี้ยรายปี)','ได้ความคุ้มครองสุขภาพด้วย',1),
+    mk('life','ประกันชีวิต','fa-shield-heart','#10b981',c.dLifeHealth,100000,100000-c.dLifeHealth,'ตามกรมธรรม์','รวมกับสุขภาพไม่เกิน ฿100k · คุ้มครองชีวิต',2),
+    mk('esg','Thai ESG','fa-leaf','#34d399',c.dEsg,Math.min(c.inc*0.30,300000),Math.min(c.inc*0.30,300000)-c.dEsg,'ถือ 5 ปี (สั้นสุด)','ลงทุนหุ้นยั่งยืนไทย',3),
+    mk('ssf','กองทุน SSF','fa-chart-line','#a78bfa',c.dSsf,Math.min(c.inc*0.30,200000),Math.min(Math.min(c.inc*0.30,200000)-c.dSsf,groupRemain),'ถือ 10 ปี','อยู่ในเพดานรวมเกษียณ ฿500k',4),
+    mk('pvd','กองทุนสำรองเลี้ยงชีพ','fa-building','#06b6d4',c.dPvd,Math.min(c.inc*0.15,500000),Math.min(Math.min(c.inc*0.15,500000)-c.dPvd,groupRemain),'จนออกจากงาน','ปรับ % สะสมกับ HR',5),
+    mk('annuity','ประกันบำนาญ','fa-umbrella','#fbbf24',c.dAnn,200000,200000-c.dAnn,'จ่ายยาว','บำนาญหลังเกษียณ',6),
+    mk('rmf','กองทุน RMF','fa-piggy-bank','#3b82f6',c.dRmf,Math.min(c.inc*0.30,500000),Math.min(Math.min(c.inc*0.30,500000)-c.dRmf,groupRemain),'ถือถึงอายุ 55 (ยาวสุด)','อยู่ในเพดานรวมเกษียณ ฿500k',7),
+  ];
+  // ประหยัดภาษีถ้าซื้อช่องนี้เต็ม (marginal ที่สถานะปัจจุบัน)
+  B.forEach(b=>{ b.saving= b.head>0 ? (c.curTax-calcTaxAmount(c.net-b.head).tax) : 0; });
+  const active=B.filter(b=>b.head>1000).sort((a,b)=>a.order-b.order);
+  // ถ้าซื้อเต็มทุกช่อง (stack)
+  const totalHead=active.reduce((s,b)=>s+b.head,0);
+  const newTax=calcTaxAmount(Math.max(0,c.net-totalHead)).tax;
+  const totalSaving=c.curTax-newTax;
+  const fm=n=>'฿'+Math.round(n).toLocaleString('th-TH');
+
+  if(!active.length){
+    box.innerHTML='<div class="tax-card"><div class="set-title"><i class="fas fa-circle-check" style="color:#10b981"></i> วางแผนลดหย่อน</div>'
+      +'<div style="font-size:13px;color:#10b981;line-height:1.7">🎉 ใช้สิทธิลดหย่อนการลงทุน/ประกันเต็มเพดานแล้ว — ไม่มีช่องให้ซื้อเพิ่ม</div></div>';
+    return;
+  }
+  const top=active[0];
+  const rows=active.map((b,i)=>{
+    const pct=Math.min(100,Math.round(b.used/b.cap*100));
+    return '<div style="padding:11px 0;border-top:1px solid var(--border)">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+        +'<div style="display:flex;align-items:center;gap:7px"><i class="fas '+b.icon+'" style="color:'+b.color+';font-size:13px"></i><span style="font-weight:700;font-size:14px">'+(i===0?'🥇 ':'')+b.label+'</span></div>'
+        +'<span style="font-size:12px;color:var(--muted)">'+fm(b.used)+' / '+fm(b.cap)+'</span></div>'
+      +'<div class="pbar"><div class="pfill" style="width:'+pct+'%;background:'+b.color+'"></div></div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;flex-wrap:wrap;gap:6px">'
+        +'<span style="font-size:12px">ซื้อได้อีก <b>'+fm(b.head)+'</b> → ประหยัด <b style="color:#10b981">~'+fm(b.saving)+'</b></span>'
+        +'<span style="font-size:11px;color:var(--muted)"><i class="fas fa-lock" style="font-size:9px"></i> '+b.lock+'</span></div>'
+      +(b.note?'<div style="font-size:10px;color:var(--muted);margin-top:2px">'+b.note+'</div>':'')
+    +'</div>';
+  }).join('');
+  box.innerHTML='<div class="tax-card">'
+    +'<div class="set-title"><i class="fas fa-lightbulb" style="color:#fbbf24"></i> วางแผนลดหย่อน (ควรซื้ออะไรก่อน)</div>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px">'
+      +'<div style="flex:1;min-width:130px;background:var(--surface2);border-radius:10px;padding:11px"><div style="font-size:11px;color:var(--muted)">ฐานภาษีสูงสุดตอนนี้</div><div style="font-size:20px;font-weight:800">'+(c.marg*100).toFixed(0)+'%</div><div style="font-size:10px;color:var(--muted)">ลดหย่อน ฿100 → ประหยัด ฿'+(c.marg*100).toFixed(0)+'</div></div>'
+      +'<div style="flex:1;min-width:130px;background:rgba(16,185,129,.1);border:1px solid #10b981;border-radius:10px;padding:11px"><div style="font-size:11px;color:var(--muted)">ถ้าซื้อเต็มทุกช่อง ประหยัดได้</div><div style="font-size:20px;font-weight:800;color:#10b981">'+fm(totalSaving)+'</div><div style="font-size:10px;color:var(--muted)">ภาษี '+fm(c.curTax)+' → '+fm(newTax)+'</div></div>'
+    +'</div>'
+    +'<div style="font-size:12px;color:#fbbf24;margin:8px 0 2px"><i class="fas fa-medal"></i> แนะนำซื้อก่อน: <b>'+top.label+'</b> ('+top.lock+')</div>'
+    +rows
+    +'<div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.6">* "ประหยัด" คิดที่อัตราภาษีขั้นสูงสุดปัจจุบัน (ซื้อหลายช่องพร้อมกันตัวเลขจริงอาจลดลงเล็กน้อย ดูยอดรวมด้านบน) · กลุ่มเกษียณ (RMF+SSF+PVD) รวมไม่เกิน ฿500,000 · เรียงลำดับตามระยะล็อกสั้น→ยาว · ปรึกษาที่ปรึกษาภาษีก่อนตัดสินใจ</div>'
+  +'</div>';
+}
+const _origCalcTaxLive=calcTaxLive;
+calcTaxLive=function(){ _origCalcTaxLive(); try{ taxOptimizer(); }catch(e){ console.error('taxOptimizer',e); } };
+
+// ══════════════════════════════════════════
 //  FEATURE: PRINT MONTHLY REPORT
 // ══════════════════════════════════════════
 function printMonthlyReport(){
