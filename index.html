@@ -3539,7 +3539,7 @@ function renderAiUsage(){
       +'<div class="pbar"><div class="pfill" style="width:'+pct+'%;background:'+(over?'var(--red)':'#10b981')+'"></div></div>'
       +(over?'<div style="color:var(--red);font-size:12px;margin-top:6px"><i class="fas fa-triangle-exclamation"></i> คาดว่าจะเกิน cap — usage จะถูก pause เมื่อถึง ฿'+cap+'</div>':'')
     +'</div>'
-    +'<div class="card" style="padding:14px;margin-bottom:14px"><div style="font-size:13px;font-weight:700;margin-bottom:10px">ค่าใช้จ่ายรายวัน (฿)</div><canvas id="aiusage-chart" height="120"></canvas></div>'
+    +'<div class="card" style="padding:14px;margin-bottom:14px"><div style="font-size:13px;font-weight:700;margin-bottom:10px">ค่าใช้จ่ายรายวัน (฿)</div><div style="position:relative;height:180px;width:100%"><canvas id="aiusage-chart"></canvas></div></div>'
     +'<div class="card" style="padding:14px">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-size:13px;font-weight:700">รายละเอียดรายวัน</span><span style="font-size:11px;color:var(--muted)">อัปเดต: '+upd+'</span></div>'
       +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'
