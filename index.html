@@ -2617,7 +2617,7 @@ async function fsLoad(){
       _fs.collection('userdata').doc(currentUser).get(),
       _fsTimeout(8000)
     ]);
-    try{ const _au=doc.exists&&doc.data()&&doc.data().aiUsage; if(_au){ _aiUsage=JSON.parse(_au); if(curPage==='aiusage') renderAiUsage(); } }catch(e){}
+    try{ const _dd=doc.exists&&doc.data()||{}; if(_dd.aiUsage) _aiUsage=JSON.parse(_dd.aiUsage); if(_dd.claudeUsage) _claudeUsage=JSON.parse(_dd.claudeUsage); if((_dd.aiUsage||_dd.claudeUsage)&&curPage==='aiusage') renderAiUsage(); }catch(e){}
     if(doc.exists&&doc.data()&&doc.data().db){
       const remote=JSON.parse(doc.data().db);
       const localTs=DB._savedAt||0;
