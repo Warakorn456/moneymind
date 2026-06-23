@@ -3491,45 +3491,55 @@ function renderPage(p){
 //  AI USAGE — ค่า token/ค่า API ของ Gemini (ข้อมูลจริงจาก Cloud Monitoring)
 //  เขียนลง Firestore field `aiUsage` โดย gemini_usage_report.py --firestore (cron รายวัน)
 // ══════════════════════════════════════════
+function aiUsageTab(t){ _aiUsageTab=t; renderAiUsage(); }
 function renderAiUsage(){
   const el=document.getElementById('aiusage-content'); if(!el) return;
-  // ถ้ายังไม่มีข้อมูลในหน่วยความจำ → ดึงตรงจาก Firestore เอง (กันกรณี fsLoad ยังไม่ทัน/ไม่ได้รัน)
-  if((!_aiUsage||!Array.isArray(_aiUsage.days)||!_aiUsage.days.length) && !_aiUsageFetching && _fs && currentUser){
+  const sel=()=> _aiUsageTab==='claude'?_claudeUsage:_aiUsage;
+  // self-fetch ถ้า source ที่เลือกยังว่าง (ดึงทั้ง 2 field พร้อมกัน)
+  if((!sel()||!Array.isArray(sel().days)||!sel().days.length) && !_aiUsageFetching && _fs && currentUser){
     _aiUsageFetching=true;
     el.innerHTML='<div class="card" style="padding:24px;text-align:center;color:var(--muted)"><i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูลการใช้ AI...</div>';
     _fs.collection('userdata').doc(currentUser).get().then(doc=>{
-      try{ const au=doc.exists&&doc.data()&&doc.data().aiUsage; if(au) _aiUsage=JSON.parse(au); }catch(e){}
-      _aiUsageFetching=false;
-      if(curPage==='aiusage') renderAiUsage();
+      try{ const d=(doc.exists&&doc.data())||{}; if(d.aiUsage) _aiUsage=JSON.parse(d.aiUsage); if(d.claudeUsage) _claudeUsage=JSON.parse(d.claudeUsage); }catch(e){}
+      _aiUsageFetching=false; if(curPage==='aiusage') renderAiUsage();
     }).catch(()=>{ _aiUsageFetching=false; if(curPage==='aiusage') renderAiUsage(); });
     return;
   }
-  const u=_aiUsage;
+  const tabBtn=(id,label,icon,color)=>'<button onclick="aiUsageTab(\''+id+'\')" style="flex:1;padding:9px;border:1px solid var(--border);border-radius:10px;cursor:pointer;font-family:Sarabun,sans-serif;font-weight:700;font-size:13px;'
+    +(_aiUsageTab===id?('background:'+color+';color:#fff;border-color:'+color):'background:var(--surface2);color:var(--muted)')+'"><i class="fas '+icon+'"></i> '+label+'</button>';
+  const tabs='<div style="display:flex;gap:10px;margin-bottom:14px">'+tabBtn('gemini','Gemini','fa-wand-magic-sparkles','#10b981')+tabBtn('claude','Claude Code','fa-robot','#d97757')+'</div>';
+
+  const u=sel();
   if(!u||!Array.isArray(u.days)||!u.days.length){
-    el.innerHTML='<div class="card" style="padding:28px;text-align:center">'
-      +'<i class="fas fa-robot" style="font-size:34px;color:#10b981;margin-bottom:12px"></i>'
-      +'<div style="font-weight:700;margin-bottom:6px">ยังไม่มีข้อมูลการใช้ AI</div>'
-      +'<div style="color:var(--muted);font-size:13px;line-height:1.7">ข้อมูลอัปเดตอัตโนมัติทุกวันจาก Cloud Monitoring (Gemini API · project Best1)<br>'
-      +'หรือรัน <code>python gemini_usage_report.py --firestore</code> บน VM เพื่อดึงทันที</div></div>';
+    el.innerHTML=tabs+'<div class="card" style="padding:28px;text-align:center">'
+      +'<i class="fas fa-robot" style="font-size:34px;color:'+(_aiUsageTab==='claude'?'#d97757':'#10b981')+';margin-bottom:12px"></i>'
+      +'<div style="font-weight:700;margin-bottom:6px">ยังไม่มีข้อมูล'+(_aiUsageTab==='claude'?' Claude Code':' AI')+'</div>'
+      +'<div style="color:var(--muted);font-size:13px;line-height:1.7">'
+      +(_aiUsageTab==='claude'
+        ?'รัน <code>python claude_usage_report.py --firestore</code> บนโน้ตบุ๊ก (transcript อยู่ในเครื่อง ไม่ใช่ VM)'
+        :'อัปเดตทุกวันจาก Cloud Monitoring · หรือรัน <code>python gemini_usage_report.py --firestore</code> บน VM')
+      +'</div></div>';
     return;
   }
-  const days=u.days, cap=u.cap_thb||100;
+  const isClaude=u.source==='claude';
+  const accent=isClaude?'#d97757':'#10b981';
+  const days=u.days, cap=u.cap_thb||0;
   const nf=n=>Number(n||0).toLocaleString('en-US');
   const last=days[days.length-1];
   const ym=new Date().toISOString().slice(0,7);
   const mtd=days.filter(d=>String(d.date).slice(0,7)===ym).reduce((s,d)=>s+(d.thb||0),0);
   const proj=u.projected_month_thb||0;
   const pct=cap>0?Math.min(100,Math.round(proj/cap*100)):0;
-  const over=proj>cap;
+  const over=cap>0&&proj>cap;
   const upd=u.updatedAt?new Date(u.updatedAt).toLocaleString('th-TH'):'-';
   const card=(label,val,sub,extra='')=>'<div class="card" style="padding:14px;'+extra+'">'
     +'<div style="color:var(--muted);font-size:12px">'+label+'</div>'
     +'<div style="font-size:22px;font-weight:800">'+val+'</div>'
     +'<div style="font-size:11px;color:var(--muted)">'+sub+'</div></div>';
-  // แยกตามรุ่นโมเดล (ใช้มากสุดบนสุด)
+  // แยกตามรุ่นโมเดล
   const bm=Array.isArray(u.by_model)?u.by_model:[];
   const maxMThb=bm.length?Math.max(...bm.map(m=>m.thb||0),0.0001):1;
-  const mColors=['#10b981','#3b82f6','#f59e0b','#a78bfa','#ef4444','#06b6d4'];
+  const mColors=[accent,'#3b82f6','#f59e0b','#a78bfa','#ef4444','#06b6d4'];
   const modelSection=bm.length?(
     '<div class="card" style="padding:14px;margin-bottom:14px">'
     +'<div style="font-size:13px;font-weight:700;margin-bottom:12px">แยกตามรุ่นโมเดล (ใช้มากสุดบนสุด)</div>'
@@ -3546,19 +3556,26 @@ function renderAiUsage(){
     }).join('')
     +'</div>'
   ):'';
-  el.innerHTML=
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px">'
+  const capCard=cap>0?(
+    '<div class="card" style="padding:14px;margin-bottom:14px">'
+    +'<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>คาดการณ์เดือนนี้ vs spend cap</span>'
+    +'<span style="font-weight:700;color:'+(over?'var(--red)':'var(--text)')+'">฿'+proj.toFixed(0)+' / ฿'+cap+' ('+pct+'%)</span></div>'
+    +'<div class="pbar"><div class="pfill" style="width:'+pct+'%;background:'+(over?'var(--red)':accent)+'"></div></div>'
+    +(over?'<div style="color:var(--red);font-size:12px;margin-top:6px"><i class="fas fa-triangle-exclamation"></i> คาดว่าจะเกิน cap — usage จะถูก pause เมื่อถึง ฿'+cap+'</div>':'')
+    +'</div>'
+  ):'';
+  const claudeBanner=isClaude?'<div class="card" style="padding:11px 14px;margin-bottom:14px;border:1px solid #d97757;background:rgba(217,119,87,.08)"><div style="font-size:12px;color:#d97757"><i class="fas fa-circle-info"></i> เป็น<b>ประมาณการแบบ API</b> — คุณใช้ Pro/Max เหมารายเดือน ตัวเลขนี้ดูปริมาณการใช้ ไม่ใช่เงินที่จ่ายจริง</div></div>':'';
+  const footer=isClaude
+    ?'<div style="font-size:11px;color:var(--muted);margin-top:8px">* นับจาก transcript Claude Code ทุกโปรเจกต์ในเครื่องนี้ (~/.claude) · ราคา API opus $5/$25 · cache read 0.1× · USDTHB='+(u.usdthb||36.5)+'</div>'
+    :'<div style="font-size:11px;color:var(--muted);margin-top:8px">* ข้อมูลจริงจาก Cloud Monitoring (Gemini API · project Best1) — ครอบคลุมเว็บ Maya + Telegram bot + ทุกสคริปต์ · ราคา flash $0.30/$2.50 ต่อ 1M tok, USDTHB='+(u.usdthb||36.5)+'</div>';
+  el.innerHTML=tabs+claudeBanner
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px">'
     +card('วันนี้ ('+last.date+')','฿'+(last.thb||0).toFixed(2),nf(last.in_tokens)+' in · '+nf(last.out_tokens)+' out')
     +card('เดือนนี้ (ถึงวันนี้)','฿'+mtd.toFixed(2),days.length+' วันที่มีข้อมูล')
     +card('เฉลี่ย/วัน','฿'+(u.avg_thb_day||0).toFixed(2),'in '+nf(u.total_in)+' · out '+nf(u.total_out))
-    +card('คาดการณ์ทั้งเดือน','<span style="color:'+(over?'var(--red)':'var(--text)')+'">฿'+proj.toFixed(0)+'</span>','cap ฿'+cap,'border:1px solid '+(over?'var(--red)':'var(--border)'))
+    +card('คาดการณ์ทั้งเดือน','<span style="color:'+(over?'var(--red)':'var(--text)')+'">฿'+proj.toFixed(0)+'</span>',cap>0?('cap ฿'+cap):'ประมาณการ',cap>0&&over?'border:1px solid var(--red)':'')
     +'</div>'
-    +'<div class="card" style="padding:14px;margin-bottom:14px">'
-      +'<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>คาดการณ์เดือนนี้ vs spend cap</span>'
-      +'<span style="font-weight:700;color:'+(over?'var(--red)':'var(--text)')+'">฿'+proj.toFixed(0)+' / ฿'+cap+' ('+pct+'%)</span></div>'
-      +'<div class="pbar"><div class="pfill" style="width:'+pct+'%;background:'+(over?'var(--red)':'#10b981')+'"></div></div>'
-      +(over?'<div style="color:var(--red);font-size:12px;margin-top:6px"><i class="fas fa-triangle-exclamation"></i> คาดว่าจะเกิน cap — usage จะถูก pause เมื่อถึง ฿'+cap+'</div>':'')
-    +'</div>'
+    +capCard
     +modelSection
     +'<div class="card" style="padding:14px;margin-bottom:14px"><div style="font-size:13px;font-weight:700;margin-bottom:10px">ค่าใช้จ่ายรายวัน (฿)</div><div style="position:relative;height:180px;width:100%"><canvas id="aiusage-chart"></canvas></div></div>'
     +'<div class="card" style="padding:14px">'
@@ -3569,13 +3586,13 @@ function renderAiUsage(){
         +'<td style="text-align:left;padding:6px 4px">'+d.date+'</td><td>'+nf(d.requests)+'</td><td>'+nf(d.in_tokens)+'</td><td>'+nf(d.out_tokens)+'</td>'
         +'<td style="font-weight:600;padding-left:8px">'+(d.thb||0).toFixed(2)+'</td></tr>').join('')
       +'</tbody></table></div></div>'
-    +'<div style="font-size:11px;color:var(--muted);margin-top:8px">* ข้อมูลจริงจาก Cloud Monitoring (Gemini API · project Best1) — ครอบคลุมทั้งเว็บ Maya + Telegram bot + ทุกสคริปต์ · ราคา flash $0.30/$2.50 ต่อ 1M tok, USDTHB='+(u.usdthb||36.5)+'</div>';
+    +footer;
   try{
     if(_aiUsageChart){ _aiUsageChart.destroy(); _aiUsageChart=null; }
     const cv=document.getElementById('aiusage-chart');
     if(cv&&window.Chart){
       _aiUsageChart=new Chart(cv,{type:'bar',
-        data:{labels:days.map(d=>String(d.date).slice(5)),datasets:[{label:'฿/วัน',data:days.map(d=>d.thb||0),backgroundColor:'#10b981',borderRadius:4}]},
+        data:{labels:days.map(d=>String(d.date).slice(5)),datasets:[{label:'฿/วัน',data:days.map(d=>d.thb||0),backgroundColor:accent,borderRadius:4}]},
         options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
           scales:{y:{beginAtZero:true,ticks:{color:'#94a3b8'},grid:{color:'rgba(148,163,184,.1)'}},x:{ticks:{color:'#94a3b8'},grid:{display:false}}}}});
     }
