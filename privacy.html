@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>นโยบายความเป็นส่วนตัว — MoneyMind</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      line-height: 1.8;
+      padding: 0 1rem;
+    }
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 2.5rem;
+    }
+    .logo-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+    }
+    .logo-text { font-size: 1.4rem; font-weight: 700; color: #f1f5f9; }
+    h1 { font-size: 1.9rem; font-weight: 700; color: #f1f5f9; margin-bottom: 0.5rem; }
+    .updated { color: #64748b; font-size: 0.9rem; margin-bottom: 2.5rem; }
+    h2 {
+      font-size: 1.15rem; font-weight: 600; color: #a78bfa;
+      margin: 2.5rem 0 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid #1e293b;
+    }
+    p { color: #cbd5e1; margin-bottom: 0.9rem; }
+    ul { color: #cbd5e1; padding-left: 1.5rem; margin-bottom: 0.9rem; }
+    ul li { margin-bottom: 0.4rem; }
+    a { color: #818cf8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-top: 2.5rem;
+    }
+    .card p { margin: 0; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <div class="logo-icon">💰</div>
+    <span class="logo-text">MoneyMind</span>
+  </div>
+
+  <h1>นโยบายความเป็นส่วนตัว</h1>
+  <p class="updated">อัปเดตล่าสุด: 24 มิถุนายน 2569 (2026)</p>
+
+  <p>MoneyMind ("เรา") ให้ความสำคัญกับความเป็นส่วนตัวของผู้ใช้ทุกคน นโยบายนี้อธิบายว่าเราเก็บรวบรวม ใช้ และปกป้องข้อมูลของคุณอย่างไร เมื่อคุณใช้งานแอปพลิเคชัน MoneyMind ทั้งบนเว็บและอุปกรณ์มือถือ</p>
+
+  <h2>1. ข้อมูลที่เราเก็บรวบรวม</h2>
+  <p>MoneyMind เก็บข้อมูลที่คุณป้อนเองเท่านั้น ได้แก่:</p>
+  <ul>
+    <li>ข้อมูลบัญชีผู้ใช้ (ชื่อผู้ใช้ อีเมล รหัสผ่านในรูปแบบที่เข้ารหัสแล้ว)</li>
+    <li>ข้อมูลทางการเงิน เช่น รายรับ รายจ่าย เป้าหมายเงินออม หนี้สิน และพอร์ตลงทุน</li>
+    <li>การตั้งค่าและค่ากำหนดส่วนตัวภายในแอป</li>
+  </ul>
+  <p>เราไม่เก็บข้อมูลที่ระบุตัวตนได้โดยอัตโนมัติ เช่น ตำแหน่งที่ตั้ง, Cookies การติดตาม, หรือพฤติกรรมการใช้งาน</p>
+
+  <h2>2. วิธีที่เราใช้ข้อมูลของคุณ</h2>
+  <p>ข้อมูลของคุณถูกใช้เพื่อ:</p>
+  <ul>
+    <li>แสดงผลข้อมูลทางการเงินส่วนตัวของคุณเท่านั้น</li>
+    <li>ซิงค์ข้อมูลข้ามอุปกรณ์ผ่าน Firebase Firestore (เฉพาะบัญชีของคุณ)</li>
+    <li>ให้บริการฟีเจอร์ AI วิเคราะห์ข้อมูลการเงิน (ผ่าน Google Gemini API)</li>
+  </ul>
+  <p>เราไม่ขาย ไม่เช่า และไม่แบ่งปันข้อมูลส่วนตัวของคุณแก่บุคคลที่สามเพื่อวัตถุประสงค์ทางการตลาด</p>
+
+  <h2>3. การจัดเก็บข้อมูล</h2>
+  <ul>
+    <li><strong>ในอุปกรณ์:</strong> ข้อมูลถูกจัดเก็บใน Local Storage ของอุปกรณ์คุณ</li>
+    <li><strong>บนคลาวด์:</strong> ข้อมูลซิงค์ไปยัง Google Firebase Firestore ในบัญชีที่ปลอดภัยของคุณ (ต้องล็อกอินก่อนเข้าถึง)</li>
+    <li>ข้อมูลของคุณถูกป้องกันด้วย Firebase Security Rules — ผู้อื่นเข้าถึงข้อมูลของคุณไม่ได้</li>
+  </ul>
+
+  <h2>4. ความปลอดภัยของข้อมูล</h2>
+  <p>เราใช้มาตรการรักษาความปลอดภัย ดังนี้:</p>
+  <ul>
+    <li>รหัสผ่านถูก hash ด้วย PBKDF2 ก่อนจัดเก็บ — ไม่มีใครเห็นรหัสผ่านจริงของคุณ</li>
+    <li>การเชื่อมต่อทุกอย่างใช้ HTTPS</li>
+    <li>Firebase Authentication ปกป้องการเข้าถึงข้อมูลบนคลาวด์</li>
+  </ul>
+
+  <h2>5. บริการของบุคคลที่สาม</h2>
+  <p>MoneyMind ใช้บริการภายนอกดังนี้:</p>
+  <ul>
+    <li><strong>Google Firebase</strong> — จัดเก็บข้อมูลบนคลาวด์และการยืนยันตัวตน</li>
+    <li><strong>Google Gemini API</strong> — วิเคราะห์ข้อมูลการเงินด้วย AI (เฉพาะเมื่อคุณเปิดใช้งาน)</li>
+    <li><strong>CoinGecko API</strong> — ดึงราคาคริปโตเคอร์เรนซีแบบเรียลไทม์</li>
+  </ul>
+  <p>บริการเหล่านี้มีนโยบายความเป็นส่วนตัวของตัวเองซึ่งคุณสามารถตรวจสอบได้จากเว็บไซต์ของแต่ละบริษัท</p>
+
+  <h2>6. สิทธิ์ของคุณ</h2>
+  <p>คุณมีสิทธิ์:</p>
+  <ul>
+    <li>ดู แก้ไข และลบข้อมูลทั้งหมดของคุณได้ตลอดเวลาผ่านแอป</li>
+    <li>ส่งออกข้อมูลของคุณในรูปแบบ CSV</li>
+    <li>ลบบัญชีและข้อมูลทั้งหมดได้ตามต้องการ</li>
+  </ul>
+
+  <h2>7. ข้อมูลของเด็ก</h2>
+  <p>MoneyMind ไม่ได้ออกแบบมาสำหรับเด็กอายุต่ำกว่า 13 ปี และไม่ตั้งใจเก็บข้อมูลของเด็กโดยเฉพาะ</p>
+
+  <h2>8. การเปลี่ยนแปลงนโยบาย</h2>
+  <p>หากเราปรับปรุงนโยบายความเป็นส่วนตัว เราจะอัปเดตวันที่ "อัปเดตล่าสุด" ที่ด้านบนของหน้านี้ การใช้งานต่อเนื่องหลังจากการเปลี่ยนแปลงถือว่าคุณยอมรับนโยบายใหม่</p>
+
+  <h2>9. ติดต่อเรา</h2>
+  <p>หากมีคำถามเกี่ยวกับนโยบายความเป็นส่วนตัว กรุณาติดต่อ:</p>
+
+  <div class="card">
+    <p>📧 <strong>อีเมล:</strong> <a href="mailto:warakornbest6@gmail.com">warakornbest6@gmail.com</a><br>
+    🌐 <strong>เว็บไซต์:</strong> <a href="https://warakorn456.github.io/moneymind/">https://warakorn456.github.io/moneymind/</a></p>
+  </div>
+</div>
+</body>
+</html>
