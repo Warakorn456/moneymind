@@ -89,7 +89,7 @@ DB = {
   - SA `firestore-rest@moneymind-d97f3` (roles/datastore.user) → access token **บายพาส security rules** (IAM admin); key = `firestore_sa.json` (gitignore, อยู่บน VM `/home/warakornbest6/moneymind/` + laptop `Documents/`)
   - helper กลาง **`mm_firestore.py`**: `token()` (SA key → metadata → gcloud fallback, scope `datastore`) + `auth_header()`; ทุก call site แนบ `headers=mm_firestore.auth_header()` (requests.get/patch + urllib Request) — patch ด้วย `_apply_fs_auth.py` (one-time, ลบทิ้งได้)
   - n8n 3 workflow ที่อ่าน Firestore (budget-alert-01/mm-gemini-monthly-01/mm-notebooklm-01) **deactivate แล้ว** (มี Python equivalent บน VM); ต้อง restart n8n ให้ cron in-memory หลุด
-- active ruleset: `f2d0d3a6-aa21-46eb-82be-d1f1c8d99a10` (deploy 2026-06-22 09:44 UTC)
+- active ruleset: `ccdd8cc8-f3c6-4e4c-bffc-232582573bbd` (deploy 2026-06-26 — เพิ่ม `admin/{doc}`); ก่อนหน้า `f2d0d3a6-aa21-46eb-82be-d1f1c8d99a10` (2026-06-22 09:44 UTC)
 - rollback: ruleset เปิด public ทั้งหมด `0fa4eb71-c312-4c98-a5b7-36af71266e5f` หรือ public-warakorn `1391d585-7167-4265-b0f5-6b8c2df6318a` (2026-06-21)
 - redeploy: POST ruleset + PATCH release `cloud.firestore` ที่ `firebaserules.googleapis.com/v1/projects/moneymind-d97f3/...` ด้วย `gcloud auth print-access-token` + header `x-goog-user-project: moneymind-d97f3`
 - **เพิ่ม script ใหม่ที่แตะ Firestore:** ต้อง `import mm_firestore` + แนบ `headers=mm_firestore.auth_header()` ทุก get/patch ไม่งั้น 403
