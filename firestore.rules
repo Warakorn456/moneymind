@@ -37,6 +37,13 @@ service cloud.firestore {
       allow write: if userId == 'warakorn' || ownsAccount(userId) || unclaimed(userId);
     }
 
+    // ── สรุป usage หลังบ้าน (เขียนโดย admin_stats.py ผ่าน SA เท่านั้น) ──
+    // owner (warakorn) อ่านได้คนเดียว; client เขียนไม่ได้ (SA token บายพาส rules)
+    match /admin/{doc} {
+      allow read: if ownsAccount('warakorn');
+      allow write: if false;
+    }
+
     // ── ทดสอบการเชื่อมต่อ ──
     match /_ping/{doc} {
       allow read, write: if true;
