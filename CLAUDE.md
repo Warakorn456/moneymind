@@ -82,6 +82,7 @@ DB = {
 ไฟล์ `firestore.rules` (deploy แล้วผ่าน Firebase Rules REST API):
 - **`userdata/{userId}` ทุกคน (รวม warakorn)** = อ่าน/เขียนได้เฉพาะ Firebase user ที่ `ownsAccount()` คือ `members/<u>.uid == request.auth.uid` — **ไม่มี public แล้ว** (unauth = 403)
 - **`members`** = read public (login lookup email→username + admin list), write เฉพาะเจ้าของ/`warakorn`/`unclaimed`
+- **`admin/{doc}`** (เพิ่ม 2026-06-26) = `allow read: if ownsAccount('warakorn')` (owner อ่านคนเดียว), `allow write: if false` (client เขียนไม่ได้ — SA บายพาส); เก็บ `admin/summary` usage รวมหลังบ้านที่ `admin_stats.py` เขียนผ่าน SA
 - legacy ที่ยังไม่มี uid (เช่น yok07) → `unclaimed()` ให้ผู้ใช้ที่ **login แล้วเท่านั้น** claim ครั้งแรก (auto บน login ใหม่); unauth claim ไม่ได้
 - ทุก login ด้วย username เรียก `ensureAuthForUser()` → สร้าง Firebase Auth session (email จริง หรือ synthetic `<u>@moneymind.local` สำหรับ legacy/owner) + เขียน `members.uid`; **owner branch (decrypt `_ENC`) ก็เรียก `ensureAuthForUser(_ENC.user,'',pass)` แล้ว** (เดิมไม่เรียก → warakorn ไม่มี Firebase session/uid; แก้ 2026-06-22 บรรทัด ~2832) — owner Firebase account = `warakorn@moneymind.local` uid `7oxtLgXJ...`
 - **GCP/Telegram/Gmail scripts (~31 ตัว) auth ผ่าน Service Account แล้ว** — ไม่ใช่ unauth REST อีกต่อไป:
