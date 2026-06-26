@@ -10381,62 +10381,6 @@ function renderInsurance(){
 }
 
 // ══════════════════════════════════════════
-//  FEATURE: AI INBOX — รายการ auto-import รอตรวจ
-//  (สลิป Telegram, อีเมล, บอท) ที่ยังไม่ reviewed ใน 60 วันล่าสุด
-// ══════════════════════════════════════════
-var INBOX_SRC={'slip-scan':'📷 สลิป Telegram','quick-add':'⚡ Quick Add','image-import':'📧 รูปจากอีเมล','statement-import':'📊 Statement ธนาคาร','voice-add':'🎤 เสียง','ai-agent':'🤖 AI agent'};
-function _isAutoTx(t){ return Array.isArray(t.tags) && t.tags.some(function(x){ return INBOX_SRC[x]||/^email-/.test(x)||/import|scan/i.test(x); }); }
-function _inboxSrc(t){ var s='⚙️ อัตโนมัติ'; (t.tags||[]).some(function(x){ if(INBOX_SRC[x]){s=INBOX_SRC[x];return true;} if(/^email-/.test(x)){s='📧 อีเมล';return true;} return false; }); return s; }
-function inboxItems(){
-  var cut=new Date(); cut.setDate(cut.getDate()-60); var cutS=cut.toISOString().slice(0,10);
-  return (DB.transactions||[]).filter(function(t){ return _isAutoTx(t)&&!t.reviewed&&(t.date||'')>=cutS; })
-    .sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
-}
-function updateInboxBadge(){ var b=document.getElementById('inbox-badge'); if(!b) return; var n=inboxItems().length; b.textContent=n; b.style.display=n?'inline-block':'none'; }
-function confirmInbox(id){ var t=(DB.transactions||[]).find(function(x){return x.id===id;}); if(t) t.reviewed=true; saveDB(); renderInbox(); }
-function confirmAllInbox(){ if(!confirm('ยืนยันทุกรายการในกล่อง?')) return; inboxItems().forEach(function(t){t.reviewed=true;}); saveDB(); renderInbox(); toast('ยืนยันแล้ว','success'); }
-function delInboxTx(id){ if(!confirm('ลบรายการนี้?')) return; DB.transactions=(DB.transactions||[]).filter(function(x){return x.id!==id;}); saveDB(); renderInbox(); }
-function setInboxCat(id,cat){ var t=(DB.transactions||[]).find(function(x){return x.id===id;}); if(t) t.category=cat; saveDB(); }
-function renderInbox(){
-  var el=document.getElementById('inbox-content'); if(!el) return;
-  updateInboxBadge();
-  var items=inboxItems();
-  var fm=function(n){return '฿'+Math.round(n||0).toLocaleString('th-TH');};
-  var head='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:10px">'
-    +'<div><div style="font-size:18px;font-weight:800"><i class="fas fa-inbox" style="color:#3b82f6"></i> AI Inbox</div>'
-    +'<div style="font-size:12px;color:var(--muted)">รายการที่ระบบเพิ่มอัตโนมัติ (สลิป/อีเมล/บอท) รอคุณตรวจ — ยืนยัน/แก้/ลบ</div></div>'
-    +(items.length?'<button class="btn btn-primary" onclick="confirmAllInbox()"><i class="fas fa-check-double"></i> ยืนยันทั้งหมด ('+items.length+')</button>':'')
-    +'</div>';
-  if(!items.length){ el.innerHTML=head+'<div class="empty"><i class="fas fa-circle-check" style="color:#10b981"></i><p>เคลียร์หมดแล้ว 🎉 ไม่มีรายการรอตรวจ</p></div>'; return; }
-  var seen={}; items.forEach(function(t){ var k=t.date+'|'+t.amount; seen[k]=(seen[k]||0)+1; });
-  var show=items.slice(0,100), more=items.length-show.length;
-  var cards=show.map(function(t){
-    var inc=t.type==='income';
-    var c=(typeof getCat==='function')?getCat(t.category,t.type):{label:t.category,color:'#94a3b8'};
-    var dupe=seen[t.date+'|'+t.amount]>1;
-    var cats=(inc?INC_CATS:EXP_CATS);
-    var opts=cats.map(function(x){return '<option value="'+x.id+'"'+(x.id===t.category?' selected':'')+'>'+x.label+'</option>';}).join('');
-    return '<div class="card" style="padding:14px;margin-bottom:10px;border-left:3px solid '+(c.color||'#94a3b8')+'">'
-      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'
-        +'<div style="flex:1;min-width:0">'
-          +'<div style="font-size:11px;color:var(--muted)">'+_inboxSrc(t)+' · '+t.date+(dupe?' <span style="color:#fbbf24;font-weight:700">⚠ อาจซ้ำ</span>':'')+'</div>'
-          +'<div style="font-size:15px;font-weight:700;margin-top:2px">'+_escHtml(t.description||'(ไม่มีรายละเอียด)')+'</div>'
-          +'<select onchange="setInboxCat(\''+t.id+'\',this.value)" class="fselect" style="margin-top:8px;max-width:210px;font-size:12px;padding:5px 8px">'+opts+'</select>'
-        +'</div>'
-        +'<div style="text-align:right;flex-shrink:0"><div style="font-size:18px;font-weight:800;color:'+(inc?'#10b981':'#ef4444')+'">'+(inc?'+':'-')+fm(t.amount)+'</div></div>'
-      +'</div>'
-      +'<div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end">'
-        +'<button class="btn btn-ghost btn-sm" onclick="editTx(\''+t.id+'\')"><i class="fas fa-pen"></i> แก้</button>'
-        +'<button class="btn btn-ghost btn-sm" style="color:#ef4444" onclick="delInboxTx(\''+t.id+'\')"><i class="fas fa-trash"></i> ลบ</button>'
-        +'<button class="btn btn-primary btn-sm" onclick="confirmInbox(\''+t.id+'\')"><i class="fas fa-check"></i> ยืนยัน</button>'
-      +'</div></div>';
-  }).join('');
-  el.innerHTML=head+cards+(more>0?'<div style="text-align:center;color:var(--muted);font-size:12px;padding:8px">…และอีก '+more+' รายการ (กด "ยืนยันทั้งหมด" เพื่อเคลียร์)</div>':'');
-}
-var _origRenderDashInbox=renderDash;
-renderDash=function(){ _origRenderDashInbox(); try{ updateInboxBadge(); }catch(e){} };
-
-// ══════════════════════════════════════════
 //  FEATURE: PRINT MONTHLY REPORT
 // ══════════════════════════════════════════
 function printMonthlyReport(){
