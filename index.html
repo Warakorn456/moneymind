@@ -10683,7 +10683,7 @@ async function renderAdmin(){
 
     // ── Part C: usage รวมจากฝั่งเซิร์ฟเวอร์ (admin/summary เขียนโดย admin_stats.py ผ่าน SA) ──
     let summary=null;
-    try{ const sd=await _fs.collection('admin').doc('summary').get(); if(sd.exists) summary=sd.data(); }catch(e){}
+    try{ const sd=await _fs.collection('admin').doc('summary').get(); if(sd.exists){ const raw=sd.data()||{}; summary=raw.json?JSON.parse(raw.json):raw; } }catch(e){}
 
     const onlineMs=10*60*1000; // ออนไลน์ถ้า lastSeen ≤ 10 นาทีที่แล้ว
     const dayMs=24*3600*1000;
