@@ -3223,8 +3223,11 @@ function checkLogin(){
         const ui=document.getElementById('sidebar-user-info');
         const un=document.getElementById('sidebar-username');
         if(ui&&un){ un.textContent=currentUser; ui.style.display='flex'; }
+        const _isOwnerNav2=(_ENC&&currentUser===_ENC.user);
         const adminNav=document.getElementById('nav-admin');
-        if(adminNav) adminNav.style.display=(_ENC&&currentUser===_ENC.user)?'flex':'none';
+        if(adminNav) adminNav.style.display=_isOwnerNav2?'flex':'none';
+        const aiusageNav=document.getElementById('nav-aiusage');
+        if(aiusageNav) aiusageNav.style.display=_isOwnerNav2?'flex':'none';
         resetLockTimer();
         _startHeartbeat();
         // รอ Firebase restore auth session (persisted) ก่อน sync — กัน race ที่ fsLoad วิ่งก่อน auth พร้อม → 403
