@@ -382,6 +382,7 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 | `ai_agent.py` | `ai_agent.py` | ✅ deploy แล้ว — **AI agent (tool calling)** AI chat ใน bot; entry point `ai_agent.chat(text)`; lazy-import `stock_bot` กัน circular; **provider สลับได้ (default gemini-2.5-flash, OpenRouter fallback)** |
 | `rss_news.py` | `rss_news.py` | ❌ cron ลบแล้ว 2026-06-18 (ลด Gemini token); ไฟล์ยังอยู่บน VM |
 | `firestore_to_sheets.py` | `firestore_to_sheets.py` | ✅ sync — ใหม่ 2026-06-15, cron `0 16 * * *` (23:00 Bangkok) |
+| `admin_stats.py` | `admin_stats.py` | ✅ sync — ใหม่ 2026-06-26, cron `0 2 * * *` (09:00 Bangkok); อ่าน userdata ทุกคนผ่าน SA → `admin/summary` (หน้า Admin Dashboard อ่าน) |
 | `notebooklm_export.py` | `notebooklm_export.py` | ✅ sync — ใหม่ 2026-06-15, cron `0 17 * * 0` (จันทร์) |
 | `sltp_alert.py` | `sltp_alert.py` | ✅ sync — ใหม่ 2026-06-01, cron ทุก 30 นาที US market |
 | `bill_reminder.py` | `bill_reminder.py` | ✅ sync — ใหม่ 2026-06-01, cron 09:00 ทุกวัน |
