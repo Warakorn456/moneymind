@@ -13267,11 +13267,13 @@ setTimeout(function(){ if(typeof _gmailStartPoll==='function') _gmailStartPoll()
   if(!wrap) return;
   var _dragSrc=null;
 
-  // ── Admin nav sync (single source of truth) ──
+  // ── Admin nav + AI Usage nav sync (single source of truth) — owner เท่านั้น ──
   function _syncAdminNav(){
+    var isOwner=(_ENC&&currentUser&&currentUser===_ENC.user);
     var adminNav=document.getElementById('nav-admin');
-    if(!adminNav) return;
-    adminNav.style.display=(_ENC&&currentUser&&currentUser===_ENC.user)?'flex':'none';
+    if(adminNav) adminNav.style.display=isOwner?'flex':'none';
+    var aiusageNav=document.getElementById('nav-aiusage');
+    if(aiusageNav) aiusageNav.style.display=isOwner?'flex':'none';
   }
 
   function getItems(){ return Array.from(wrap.querySelectorAll('.nav-item[data-nav]')); }
