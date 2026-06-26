@@ -1,21 +1,24 @@
 {
   "expo": {
-    "name": "finance-app",
-    "slug": "finance-app",
-    "version": "1.0.0",
+    "name": "MoneyMind",
+    "slug": "moneymind",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0d0d1a"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "app.moneymind.th"
     },
     "android": {
+      "package": "app.moneymind.th",
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -24,7 +27,14 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7575ae4b-4dc3-4412-9ffa-f6e98893371c"
+      }
+    },
+    "owner": "warakorn456"
   }
 }
