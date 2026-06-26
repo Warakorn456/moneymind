@@ -102,7 +102,6 @@ Navigation ผ่าน `nav(page)` — routing อยู่ใน `renderPage(p
 |----------|------|----------------|
 | `dashboard` | Dashboard | `renderDash()` |
 | `transactions` | รายรับ-รายจ่าย | `renderTx()` |
-| `recurring` | รายการซ้ำ | `renderRecurring()` |
 | `ot` | คำนวณ OT | `renderOT()` |
 | `loan` | คำนวณสินเชื่อ | `renderLoan()` |
 | `subscriptions` | Subscriptions | `renderSubscriptions()` |
