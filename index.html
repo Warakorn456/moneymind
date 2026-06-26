@@ -10629,6 +10629,26 @@ async function doChangePassword(){
 // ══════════════════════════════════════════
 //  ADMIN DASHBOARD
 // ══════════════════════════════════════════
+let _adminChart=null;
+window._adminMembers=[];
+function exportAdminCsv(){
+  const ms=window._adminMembers||[]; if(!ms.length){ toast('ไม่มีข้อมูล','info'); return; }
+  const rows=[['username','email','platform','currentPlatform','isOwner','createdAt','lastSeen']];
+  ms.forEach(m=>rows.push([
+    m.username,m.email||'',m.platform||'',m.currentPlatform||'',m.isOwner?'yes':'',
+    m.createdAt?m.createdAt.toISOString():'',m.lastSeen?m.lastSeen.toISOString():''
+  ]));
+  const csv='﻿'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='moneymind_members_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+  toast('ส่งออก CSV แล้ว','success');
+}
+function filterAdminTable(q){
+  q=(q||'').toLowerCase().trim();
+  document.querySelectorAll('#admin-user-tbody tr[data-u]').forEach(tr=>{
+    tr.style.display=(!q||tr.getAttribute('data-u').includes(q))?'':'none';
+  });
+}
 async function renderAdmin(){
   const el=document.getElementById('admin-content');
   if(!el) return;
@@ -10659,17 +10679,29 @@ async function renderAdmin(){
     });
     // เรียงจากใหม่ → เก่า
     members.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    window._adminMembers=members;
+
+    // ── Part C: usage รวมจากฝั่งเซิร์ฟเวอร์ (admin/summary เขียนโดย admin_stats.py ผ่าน SA) ──
+    let summary=null;
+    try{ const sd=await _fs.collection('admin').doc('summary').get(); if(sd.exists) summary=sd.data(); }catch(e){}
 
     const onlineMs=10*60*1000; // ออนไลน์ถ้า lastSeen ≤ 10 นาทีที่แล้ว
+    const dayMs=24*3600*1000;
     const todayStart=new Date(); todayStart.setHours(0,0,0,0);
-    const weekStart=new Date(now-7*24*3600*1000);
+    const d7=now-7*dayMs, d30=now-30*dayMs;
 
     const total=members.length;
     const online=members.filter(m=>m.lastSeen&&(now-m.lastSeen.getTime())<onlineMs).length;
+    const dau=members.filter(m=>m.lastSeen&&m.lastSeen.getTime()>=todayStart.getTime()).length;
+    const wau=members.filter(m=>m.lastSeen&&m.lastSeen.getTime()>=d7).length;
+    const mau=members.filter(m=>m.lastSeen&&m.lastSeen.getTime()>=d30).length;
     const newToday=members.filter(m=>m.createdAt&&m.createdAt>=todayStart).length;
-    const activeWeek=members.filter(m=>m.lastSeen&&m.lastSeen>=weekStart).length;
+    const new7=members.filter(m=>m.createdAt&&m.createdAt.getTime()>=d7).length;
+    const churn=members.filter(m=>m.lastSeen&&m.lastSeen.getTime()<d30).length;
+    const never=members.filter(m=>!m.lastSeen).length;
+    const withEmail=members.filter(m=>m.email&&!/@moneymind\.local$/i.test(m.email)).length;
+    const stickiness=mau?Math.round(dau/mau*100):0;
 
-    const fmtDate=d=>d?d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'ไม่ทราบ';
     const fmtAgo=d=>{ if(!d) return '<span style="color:#475569">ไม่เคย</span>'; const s=Math.floor((now-d.getTime())/1000); if(s<60) return '<span style="color:#10b981">เมื่อกี้</span>'; if(s<3600) return `<span style="color:#10b981">${Math.floor(s/60)} นาทีที่แล้ว</span>`; if(s<86400) return `${Math.floor(s/3600)} ชม.ที่แล้ว`; return `${Math.floor(s/86400)} วันที่แล้ว`; };
     const onlineBadge=m=>{ if(!m.lastSeen) return ''; const ms=now-m.lastSeen.getTime(); if(ms<onlineMs) return '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:5px;box-shadow:0 0 6px #10b981"></span>'; return ''; };
     const platformIcon=p=>{ const mp={'web':'<i class="fas fa-globe" title="Web" style="color:#06b6d4"></i>','android':'<i class="fab fa-android" title="Android" style="color:#10b981"></i>','ios':'<i class="fab fa-apple" title="iOS" style="color:#94a3b8"></i>'}; return mp[p]||`<i class="fas fa-question-circle" style="color:#475569"></i>`; };
@@ -10679,12 +10711,26 @@ async function renderAdmin(){
     const webCount=members.filter(m=>m.platform==='web').length;
     const androidCount=members.filter(m=>m.platform==='android').length;
     const iosCount=members.filter(m=>m.platform==='ios').length;
+    const platMax=Math.max(webCount,androidCount,iosCount,1);
+    const platBar=(label,n,color,icon)=>`<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>${icon} ${label}</span><span style="color:var(--muted)">${n} (${total?Math.round(n/total*100):0}%)</span></div>
+      <div style="height:8px;background:rgba(255,255,255,.06);border-radius:6px;overflow:hidden"><div style="height:100%;width:${n/platMax*100}%;background:${color};border-radius:6px"></div></div></div>`;
+
+    // growth (สมัครรายวัน → สะสม)
+    const growth={};
+    members.forEach(m=>{ if(m.createdAt){ const k=m.createdAt.toISOString().slice(0,10); growth[k]=(growth[k]||0)+1; }});
+    const gkeys=Object.keys(growth).sort();
+    let cum=0; const gcum=gkeys.map(k=>{cum+=growth[k]; return cum;});
+
+    const statCard=(val,label,color,sub='')=>`<div style="background:var(--surface);border:1px solid ${color}33;border-radius:14px;padding:14px;text-align:center">
+      <div style="font-size:28px;font-weight:800;color:${color}">${val}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">${label}</div>${sub?`<div style="font-size:10px;color:#475569;margin-top:1px">${sub}</div>`:''}</div>`;
 
     const rows=members.map(m=>{
       const isOnline=m.lastSeen&&(now-m.lastSeen.getTime())<onlineMs;
       const curPlat=m.currentPlatform||m.platform||'web';
       return `
-      <tr style="border-bottom:1px solid rgba(255,255,255,.05);transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background=''">
+      <tr data-u="${(m.username+' '+(m.email||'')).toLowerCase()}" style="border-bottom:1px solid rgba(255,255,255,.05);transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background=''">
         <td style="padding:12px 16px;font-size:13px">
           ${onlineBadge(m)}<strong>${m.username}</strong>
           ${m.isOwner?'<span style="font-size:10px;background:rgba(245,158,11,.2);color:#f59e0b;padding:1px 6px;border-radius:10px;margin-left:4px">owner</span>':''}
@@ -10702,36 +10748,88 @@ async function renderAdmin(){
       </tr>`;
     }).join('');
 
+    // ── Part C usage section ──
+    let usageSection='';
+    if(summary && Array.isArray(summary.users)){
+      const t=summary.totals||{};
+      const su=summary.users.slice().sort((a,b)=>(b.txCount||0)-(a.txCount||0));
+      const fb=summary.totals&&summary.totals.byFeature||{};
+      const fmtB=n=>'฿'+Math.round(n||0).toLocaleString('en-US');
+      const upd=summary.updatedAt?new Date(summary.updatedAt).toLocaleString('th-TH'):'-';
+      const featChip=(on,label)=>`<span style="font-size:10px;padding:1px 6px;border-radius:8px;margin:1px;display:inline-block;${on?'background:rgba(16,185,129,.15);color:#10b981':'background:rgba(255,255,255,.04);color:#475569'}">${label}</span>`;
+      const urows=su.map(u=>{
+        const f=u.features||{};
+        return `<tr style="border-bottom:1px solid rgba(255,255,255,.05)">
+          <td style="padding:10px 14px;font-size:12px"><strong>${u.username}</strong></td>
+          <td style="padding:10px 14px;font-size:12px;text-align:right">${(u.txCount||0).toLocaleString()}</td>
+          <td style="padding:10px 14px;font-size:12px;text-align:right">${fmtB(u.netWorth)}</td>
+          <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${u.lastTxDate||'-'}</td>
+          <td style="padding:10px 14px;font-size:11px">${featChip(f.inv,'ลงทุน')}${featChip(f.debt,'หนี้')}${featChip(f.save,'ออม')}${featChip(f.insurance,'ประกัน')}${featChip(f.travel,'เที่ยว')}${featChip(f.sub,'subs')}</td>
+        </tr>`;
+      }).join('');
+      usageSection=`
+      <div style="margin:24px 0 10px;font-size:15px;font-weight:800"><i class="fas fa-database" style="color:#a78bfa"></i> Usage รวม (ฝั่งเซิร์ฟเวอร์)</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:14px">
+        ${statCard((t.txCount||0).toLocaleString(),'รายการรวม','#a78bfa')}
+        ${statCard(fmtB(t.netWorthSum),'Net Worth รวม','#10b981')}
+        ${statCard((t.activeUsers||0),'มีข้อมูลจริง','#06b6d4')}
+        ${statCard((t.avgTx||0).toLocaleString(),'รายการ/คน เฉลี่ย','#f59e0b')}
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:8px">
+        <div style="padding:14px 16px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span>การใช้งานต่อคน</span><span style="font-size:11px;color:var(--muted);font-weight:400">อัปเดต: ${upd}</span></div>
+        <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:rgba(255,255,255,.03)">
+            <th style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:left">ผู้ใช้</th>
+            <th style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:right">รายการ</th>
+            <th style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:right">Net Worth</th>
+            <th style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:left">รายการล่าสุด</th>
+            <th style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:left">ฟีเจอร์ที่ใช้</th>
+          </tr></thead><tbody>${urows}</tbody></table></div>
+      </div>`;
+    } else {
+      usageSection=`<div style="margin:24px 0;padding:16px;background:var(--surface);border:1px dashed var(--border);border-radius:14px;font-size:12px;color:var(--muted);line-height:1.7">
+        <i class="fas fa-circle-info" style="color:#a78bfa"></i> ยังไม่มี usage รวมฝั่งเซิร์ฟเวอร์ — รัน <code>admin_stats.py</code> บน VM (อ่าน userdata ทุกคนผ่าน Service Account → เขียน <code>admin/summary</code>) แล้วรีเฟรช</div>`;
+    }
+
     el.innerHTML=`
     <div style="margin-bottom:20px">
       <div style="font-size:20px;font-weight:800;margin-bottom:4px"><i class="fas fa-shield-alt" style="color:#f59e0b"></i> Admin Dashboard</div>
-      <div style="font-size:12px;color:var(--muted)">ข้อมูล ณ เวลานี้ — <button onclick="renderAdmin()" style="background:none;border:none;color:#a78bfa;cursor:pointer;font-size:12px;font-family:Sarabun,sans-serif;padding:0"><i class="fas fa-sync-alt"></i> รีเฟรช</button></div>
+      <div style="font-size:12px;color:var(--muted)">ข้อมูล ณ เวลานี้ — <button onclick="renderAdmin()" style="background:none;border:none;color:#a78bfa;cursor:pointer;font-size:12px;font-family:Sarabun,sans-serif;padding:0"><i class="fas fa-sync-alt"></i> รีเฟรช</button> · <button onclick="exportAdminCsv()" style="background:none;border:none;color:#10b981;cursor:pointer;font-size:12px;font-family:Sarabun,sans-serif;padding:0"><i class="fas fa-file-csv"></i> Export CSV</button></div>
     </div>
 
     <!-- Stats -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:24px">
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
-        <div style="font-size:32px;font-weight:800;color:#a78bfa">${total}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px">ผู้ใช้ทั้งหมด</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin-bottom:18px">
+      ${statCard(total,'ผู้ใช้ทั้งหมด','#a78bfa',new7?('+'+new7+' ใน 7 วัน'):'')}
+      ${statCard(online,'ออนไลน์อยู่','#10b981')}
+      ${statCard(dau,'DAU วันนี้','#06b6d4','stickiness '+stickiness+'%')}
+      ${statCard(wau,'WAU 7 วัน','#22d3ee')}
+      ${statCard(mau,'MAU 30 วัน','#818cf8')}
+      ${statCard(newToday,'สมัครวันนี้','#f59e0b')}
+      ${statCard(churn,'เงียบ >30 วัน','#ef4444',never?(never+' ไม่เคยล็อกอิน'):'')}
+      ${statCard(withEmail,'มี email จริง','#34d399',total?Math.round(withEmail/total*100)+'%':'')}
+    </div>
+
+    <!-- Growth + Platform -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:20px">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px">ผู้ใช้สะสม</div>
+        <div style="position:relative;height:170px;width:100%"><canvas id="admin-growth-chart"></canvas></div>
       </div>
-      <div style="background:var(--surface);border:1px solid rgba(16,185,129,.3);border-radius:14px;padding:16px;text-align:center">
-        <div style="font-size:32px;font-weight:800;color:#10b981">${online}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px">ออนไลน์อยู่</div>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
-        <div style="font-size:32px;font-weight:800;color:#06b6d4">${activeWeek}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px">ใช้งาน 7 วัน</div>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
-        <div style="font-size:32px;font-weight:800;color:#f59e0b">${newToday}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px">สมัครวันนี้</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px">แพลตฟอร์มที่สมัคร</div>
+        ${platBar('Web',webCount,'#06b6d4','<i class="fas fa-globe"></i>')}
+        ${platBar('Android',androidCount,'#10b981','<i class="fab fa-android"></i>')}
+        ${platBar('iOS',iosCount,'#94a3b8','<i class="fab fa-apple"></i>')}
       </div>
     </div>
 
+    ${usageSection}
+
     <!-- Table -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden">
-      <div style="padding:16px 16px 12px;font-size:14px;font-weight:700;border-bottom:1px solid var(--border)">
-        รายชื่อผู้ใช้ทั้งหมด
+      <div style="padding:16px 16px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:14px;font-weight:700">รายชื่อผู้ใช้ทั้งหมด (${total})</span>
+        <input type="text" oninput="filterAdminTable(this.value)" placeholder="ค้นหา ชื่อ/email..." class="finput" style="max-width:220px;font-size:12px;padding:6px 10px">
       </div>
       <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse">
@@ -10744,11 +10842,23 @@ async function renderAdmin(){
               <th style="padding:10px 16px;font-size:11px;color:var(--muted);font-weight:600;text-align:left">ใช้งานล่าสุด</th>
             </tr>
           </thead>
-          <tbody>${rows||'<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted)">ยังไม่มีข้อมูลใน members collection</td></tr>'}</tbody>
+          <tbody id="admin-user-tbody">${rows||'<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--muted)">ยังไม่มีข้อมูลใน members collection</td></tr>'}</tbody>
         </table>
       </div>
       ${total===0?'':'<div style="padding:10px 16px;font-size:11px;color:var(--muted);border-top:1px solid var(--border)">🟢 = ออนไลน์ภายใน 10 นาทีที่ผ่านมา</div>'}
     </div>`;
+
+    // growth chart
+    try{
+      if(_adminChart){ _adminChart.destroy(); _adminChart=null; }
+      const cv=document.getElementById('admin-growth-chart');
+      if(cv&&window.Chart&&gkeys.length){
+        _adminChart=new Chart(cv,{type:'line',
+          data:{labels:gkeys.map(k=>k.slice(5)),datasets:[{label:'ผู้ใช้สะสม',data:gcum,borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.15)',fill:true,tension:.3,pointRadius:2}]},
+          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+            scales:{y:{beginAtZero:true,ticks:{color:'#94a3b8',precision:0},grid:{color:'rgba(148,163,184,.1)'}},x:{ticks:{color:'#94a3b8',maxTicksLimit:8},grid:{display:false}}}}});
+      }
+    }catch(e){ console.error('admin chart',e); }
   }catch(e){
     el.innerHTML=`<div style="padding:20px;color:var(--red)"><i class="fas fa-exclamation-triangle"></i> โหลดข้อมูลไม่ได้: ${e.message}</div>`;
   }
