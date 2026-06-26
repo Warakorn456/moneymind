@@ -2708,9 +2708,12 @@ function enterApp(){
   if(typeof applyTheme==='function') applyTheme();
   setTimeout(()=>{ if(typeof applyRecurringTx==='function') applyRecurringTx(); },1500);
   setTimeout(()=>{ if(typeof checkNotifications==='function') checkNotifications(); },2000);
-  // แสดง Admin nav เฉพาะ owner
+  // แสดง Admin nav + AI Usage nav เฉพาะ owner
+  const _isOwnerNav=(_ENC&&currentUser===_ENC.user);
   const adminNav=document.getElementById('nav-admin');
-  if(adminNav) adminNav.style.display=(_ENC&&currentUser===_ENC.user)?'flex':'none';
+  if(adminNav) adminNav.style.display=_isOwnerNav?'flex':'none';
+  const aiusageNav=document.getElementById('nav-aiusage');
+  if(aiusageNav) aiusageNav.style.display=_isOwnerNav?'flex':'none';
   // Heartbeat — บันทึก lastSeen ทุก 5 นาที
   _startHeartbeat();
 }
