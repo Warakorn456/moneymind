@@ -2921,7 +2921,7 @@ async function handleNativeGoogleToken(idToken, email, displayName, photoUrl){
       await _fs.collection('members').doc(autoUser).set({
         username:autoUser, email:email, uid:fbUser.uid,
         displayName:displayName||'', photoURL:photoUrl||'',
-        createdAt:firebase.firestore.FieldValue.serverTimestamp(), platform:'google-android'
+        createdAt:firebase.firestore.FieldValue.serverTimestamp(), platform:'android'
       });
       const salt=randB64(16);
       const saltBytes=Uint8Array.from(atob(salt),c=>c.charCodeAt(0));
