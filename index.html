@@ -4389,7 +4389,7 @@ async function processStmtFile(file){
 
 async function uploadToGeminiFileAPI(bytes, mime, apiKey){
   const boundary='----GeminiBound'+Math.random().toString(36).slice(2);
-  const meta=JSON.stringify({file:{display_name:'bank_statement'}});
+  const meta=JSON.stringify({file:{display_name:'tax_doc'}});
   const enc=new TextEncoder();
   const head=enc.encode(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: ${mime}\r\n\r\n`);
   const tail=enc.encode(`\r\n--${boundary}--`);
@@ -4404,6 +4404,23 @@ async function uploadToGeminiFileAPI(bytes, mime, apiKey){
   const d=await res.json();
   if(!d.file?.uri) throw new Error('File API ไม่ส่ง URI กลับมา');
   return d.file.uri;
+}
+
+// รอให้ Gemini File API ประมวลผลเสร็จ (state=ACTIVE) ก่อนใช้งาน
+async function waitGeminiFile(uri, apiKey, maxWaitMs=20000){
+  const name=uri.split('/v1beta/')[1]; // "files/xxxxxx"
+  if(!name) return;
+  const end=Date.now()+maxWaitMs;
+  while(Date.now()<end){
+    await new Promise(r=>setTimeout(r,900));
+    try{
+      const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/${name}?key=${apiKey}`);
+      if(!r.ok) return; // ถ้าดึงไม่ได้ก็ลองใช้ URI เลย
+      const d=await r.json();
+      if(d.state==='ACTIVE') return;
+      if(d.state==='FAILED') throw new Error('ไฟล์ประมวลผลล้มเหลวใน File API'+(d.error?.message?' — '+d.error.message:''));
+    }catch(e){ if(e.message.includes('ล้มเหลว')) throw e; }
+  }
 }
 
 // โมเดลสำหรับ statement — 2.5-flash ปิด thinking ด้วย thinkingBudget:0
