@@ -4423,6 +4423,35 @@ async function waitGeminiFile(uri, apiKey, maxWaitMs=20000){
   }
 }
 
+// Lazy-load pdf.js จาก CDN เพื่อ render PDF เป็นรูป (ใช้กับ processTawi50)
+async function _loadPdfJs(){
+  if(window.pdfjsLib) return window.pdfjsLib;
+  await _loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  return window.pdfjsLib;
+}
+
+// Render ทุกหน้าของ PDF เป็น JPEG inline_data parts สำหรับส่ง Gemini
+async function _pdfToJpegParts(file, scale=2.0){
+  const lib=await _loadPdfJs();
+  const ab=await file.arrayBuffer();
+  const pdf=await lib.getDocument({data:new Uint8Array(ab)}).promise;
+  const parts=[];
+  const maxP=Math.min(pdf.numPages,4);
+  for(let i=1;i<=maxP;i++){
+    const page=await pdf.getPage(i);
+    const vp=page.getViewport({scale});
+    const canvas=document.createElement('canvas');
+    canvas.width=vp.width; canvas.height=vp.height;
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    await page.render({canvasContext:ctx,viewport:vp}).promise;
+    const b64=canvas.toDataURL('image/jpeg',0.88).split(',')[1];
+    parts.push({inline_data:{mime_type:'image/jpeg',data:b64}});
+  }
+  return parts;
+}
+
 // โมเดลสำหรับ statement — 2.5-flash ปิด thinking ด้วย thinkingBudget:0
 const STMT_MODEL_PREF=['gemini-2.5-flash','gemini-2.5-flash-preview','gemini-2.0-flash','gemini-2.0-flash-lite'];
 
