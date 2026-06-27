@@ -7693,26 +7693,35 @@ async function processTawi50(file){
     const dataURL=await readFileAsDataURL(file);
     const b64=dataURL.split(',')[1];
     const mime=dataURL.split(';')[0].split(':')[1];
-    // ทวิ50 อาจเป็น PDF ขนาดใหญ่ → ใช้ File API
+    // ทวิ50 อาจเป็น PDF → ใช้ File API แล้วรอ ACTIVE ก่อนส่ง
     let part;
     if(mime==='application/pdf'){
       const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
       const uri=await uploadToGeminiFileAPI(bytes,mime,DB.settings.apiKey);
+      await waitGeminiFile(uri,DB.settings.apiKey); // รอให้ประมวลผลเสร็จ
       part={file_data:{mime_type:'application/pdf',file_uri:uri}};
     } else {
       part={inline_data:{mime_type:mime,data:b64}};
     }
-    const prompt=`อ่านข้อมูลจากหนังสือรับรองการหักภาษี ณ ที่จ่าย (ทวิ 50) นี้ ตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น ไม่มี markdown
+    const prompt=`คุณคือผู้เชี่ยวชาญภาษีไทย อ่านข้อมูลจากหนังสือรับรองการหักภาษี ณ ที่จ่าย (ทวิ 50) นี้ให้ครบถ้วน
+ตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่น ห้ามมี markdown ห้ามมี code block:
 {"payer":"string","income_type":"string","total_income":number,"total_tax":number,"sso":number,"pvd":number,"year":number}
-- payer = ชื่อบริษัท/ผู้จ่ายเงิน
-- income_type = ประเภทเงินได้ เช่น "40(1)" หรือ "เงินเดือน"
-- total_income = รายได้รวมทั้งปีที่ระบุในเอกสาร
-- total_tax = ภาษีที่หักทั้งปีที่ระบุในเอกสาร
-- sso = ประกันสังคมทั้งปี (ถ้าระบุ ถ้าไม่มีใส่ 0)
-- pvd = กองทุนสำรองเลี้ยงชีพทั้งปี (ถ้าระบุ ถ้าไม่มีใส่ 0)
-- year = ปีภาษี ค.ศ. (ถ้าเห็น พ.ศ. ให้ลบ 543)
-ถ้าไม่พบข้อมูลใส่ 0 หรือ string ว่าง`;
-    const {data}=await callGemini([{parts:[part,{text:prompt}]}],{temperature:0.1,maxOutputTokens:512});
+
+คำอธิบายฟิลด์:
+- payer = ชื่อบริษัท/นายจ้าง/ผู้จ่ายเงิน
+- income_type = ประเภทเงินได้ (เช่น "40(1)" หรือ "เงินเดือนค่าจ้าง")
+- total_income = รายได้รวมทั้งปี (ตัวเลขล้วน ไม่มีเครื่องหมาย)
+- total_tax = ภาษีหัก ณ ที่จ่ายทั้งปี (ตัวเลขล้วน)
+- sso = ประกันสังคมทั้งปี (ถ้าไม่มีใส่ 0)
+- pvd = กองทุนสำรองเลี้ยงชีพทั้งปี (ถ้าไม่มีใส่ 0)
+- year = ปีภาษี ค.ศ. (ถ้าพบเป็น พ.ศ. ให้ลบ 543)
+ถ้าไม่พบฟิลด์ใดให้ใส่ 0 หรือ string ว่าง ห้ามละฟิลด์`;
+    const _tawi50ModelPref=['gemini-2.5-flash','gemini-2.0-flash','gemini-2.5-flash-preview','gemini-2.0-flash-lite'];
+    const {data}=await callGemini(
+      [{role:'user',parts:[part,{text:prompt}]}],
+      {temperature:0,maxOutputTokens:1024,thinkingConfig:{thinkingBudget:0}},
+      _tawi50ModelPref
+    );
     const _tp=data.candidates?.[0]?.content?.parts||[];
     const text=_tp.filter(p=>!p.thought).map(p=>p.text||'').join('')||_tp.map(p=>p.text||'').join('')||'';
     const m=text.match(/\{[\s\S]*\}/);
