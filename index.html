@@ -7656,10 +7656,12 @@ function showTaxPreview(title, color, icon, rows, onConfirm){
     <div style="font-size:14px;font-weight:700;margin-bottom:10px;color:${color}"><i class="${icon}"></i> ${title}</div>
     ${rowsHTML}
     <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn btn-primary" style="flex:1" onclick="(${onConfirm.toString()})()">✅ ใส่ข้อมูลลงช่อง</button>
+      <button class="btn btn-primary" id="_taxConfirmBtn" style="flex:1">✅ ใส่ข้อมูลลงช่อง</button>
       <button class="btn btn-ghost" onclick="document.getElementById('tax-doc-preview').innerHTML=''">ยกเลิก</button>
     </div>
   </div>`;
+  // ใช้ addEventListener แทน onclick string เพื่อให้ closure ยังอ่าน r ได้
+  document.getElementById('_taxConfirmBtn').onclick=onConfirm;
 }
 
 async function processPaySlip(file){
