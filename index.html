@@ -7650,7 +7650,11 @@ async function processPaySlip(file){
 - tax_withheld = ภาษีหัก ณ ที่จ่ายเดือนนี้
 - month = เดือน 1-12, year = ปี ค.ศ. (ถ้าเห็น พ.ศ. ให้ลบ 543)
 ถ้าไม่พบข้อมูลใส่ 0`;
-    const {data}=await callGemini([{parts:[{inline_data:{mime_type:mime,data:b64}},{text:prompt}]}],{temperature:0.1,maxOutputTokens:512});
+    const {data}=await callGemini(
+      [{role:'user',parts:[{inline_data:{mime_type:mime,data:b64}},{text:prompt}]}],
+      {temperature:0,maxOutputTokens:1024,thinkingConfig:{thinkingBudget:0}},
+      ['gemini-2.5-flash','gemini-2.0-flash','gemini-2.5-flash-preview','gemini-2.0-flash-lite']
+    );
     const _sp=data.candidates?.[0]?.content?.parts||[];
     const text=_sp.filter(p=>!p.thought).map(p=>p.text||'').join('')||_sp.map(p=>p.text||'').join('')||'';
     const m=text.match(/\{[\s\S]*\}/);
