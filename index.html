@@ -2863,7 +2863,7 @@ async function tryRegister(){
           email:email,
           uid:fbUid,
           createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-          platform:'web'
+          platform:(window._isAndroidApp?'android':'web')
         });
       }catch(e){ console.warn('[members] save error:',e.message); }
     }
