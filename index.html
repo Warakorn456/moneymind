@@ -13717,6 +13717,42 @@ function _renderWealthRank(){
   },{passive:true});
 })();
 
+// ── Welcome Onboarding Modal (แสดงครั้งเดียวหลัง register) ─────────────
+function _showWelcomeOnboard(){
+  var steps=[
+    {icon:'fa-plus-circle',color:'#10b981',title:'บันทึกรายการแรก',desc:'เพิ่มรายรับหรือรายจ่ายแรกของคุณ',page:'transactions'},
+    {icon:'fa-university',color:'#3b82f6',title:'เพิ่มธนาคาร/กระเป๋าเงิน',desc:'ตั้งบัญชีธนาคารเพื่อติดตามยอดเงิน',page:'banks'},
+    {icon:'fa-piggy-bank',color:'#f59e0b',title:'ตั้งเป้าหมายออมเงิน',desc:'สร้างเป้าหมายเพื่อเริ่มออมได้ทันที',page:'savings'},
+    {icon:'fa-robot',color:'#a78bfa',title:'ลอง AI มายา',desc:'ถามมายาเรื่องการเงินได้เลย (กดปุ่มวงกลมมุมขวา)',page:''},
+  ];
+  var stepsHtml=steps.map(function(s,i){
+    return '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);cursor:'+(s.page?'pointer':'default')+'" '+(s.page?'onclick="document.getElementById(\'_onboard-ov\').remove();nav(\''+s.page+'\')"':'')+' >'
+      +'<div style="width:36px;height:36px;border-radius:10px;background:'+s.color+'18;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        +'<i class="fas '+s.icon+'" style="color:'+s.color+';font-size:15px"></i>'
+      +'</div>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--text)">'+(i+1)+'. '+s.title+'</div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+s.desc+'</div>'
+      +'</div>'
+      +'<i class="fas fa-chevron-right" style="color:var(--muted);font-size:11px;opacity:.5"></i>'
+    +'</div>';
+  }).join('');
+
+  var ov=document.createElement('div');
+  ov.id='_onboard-ov';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99998;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
+  ov.innerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:28px 22px;max-width:400px;width:100%;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.5)">'
+    +'<div style="text-align:center;margin-bottom:22px">'
+      +'<div style="font-size:42px;margin-bottom:10px">🎉</div>'
+      +'<div style="font-size:20px;font-weight:900;color:var(--text)">ยินดีต้อนรับสู่ MoneyMind!</div>'
+      +'<div style="font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6">เริ่มต้น 4 ขั้นตอนนี้<br>เพื่อให้ได้ประโยชน์สูงสุด</div>'
+    +'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">'+stepsHtml+'</div>'
+    +'<button onclick="document.getElementById(\'_onboard-ov\').remove()" style="width:100%;padding:13px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#06b6d4);border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:Sarabun,sans-serif">เริ่มใช้งานได้เลย →</button>'
+    +'<div style="text-align:center;margin-top:12px;font-size:11px;color:var(--muted)">สามารถดูวิธีใช้งานได้ที่ เมนู ตั้งค่า</div>'
+  +'</div>';
+  document.body.appendChild(ov);
+}
+
 // ── Chat FAB Drag (snap to nearest edge, free Y/X along edge) ────────
 (function(){
   var MARGIN=16;
