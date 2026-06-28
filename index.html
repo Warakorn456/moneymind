@@ -13289,19 +13289,23 @@ const _WT_DATA={
 };
 let _wrankScope='th';
 
+window.setWrankScope=function(s){_wrankScope=s;_renderWealthRank();};
+
 function _renderWealthRank(){
   const wrap=document.getElementById('_wrankWrap');
   if(!wrap) return;
   const nw=calcNetWorth().netWorth;
   const mob=window.innerWidth<640;
+  const scopeData=_WT_DATA[_wrankScope]||_WT_DATA.th;
+  const tiers=scopeData.tiers;
 
   // หา tier + percentile
-  let tier=_WT[0], cumBelow=0;
-  for(let i=0;i<_WT.length;i++){
-    const t=_WT[i];
+  let tier=tiers[0], cumBelow=0;
+  for(let i=0;i<tiers.length;i++){
+    const t=tiers[i];
     if(nw>=t.min && nw<t.max){ tier=t; break; }
     cumBelow+=t.pct;
-    if(i===_WT.length-1) tier=t;
+    if(i===tiers.length-1) tier=t;
   }
   const range=Math.max(tier.max-tier.min,1);
   const frac=Math.min(Math.max((nw-tier.min)/range,0),1);
