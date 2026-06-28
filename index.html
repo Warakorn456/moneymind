@@ -13292,6 +13292,36 @@ const _WT_DATA={
 };
 let _wrankScope='th';
 
+// Tier system: Bronze → Silver → Gold → Platinum → Diamond
+const _RANK_TIERS=[
+  {name:'Bronze',   th:'บรอนซ์',   icon:'fa-shield',        color:'#cd7f32',glow:'rgba(205,127,50,.35)', lv:[1,2]},
+  {name:'Silver',   th:'ซิลเวอร์', icon:'fa-shield-halved', color:'#9ca3af',glow:'rgba(156,163,175,.35)',lv:[3,4]},
+  {name:'Gold',     th:'โกลด์',    icon:'fa-shield-halved', color:'#f59e0b',glow:'rgba(245,158,11,.35)', lv:[5,6]},
+  {name:'Platinum', th:'แพลตตินัม',icon:'fa-gem',            color:'#8b5cf6',glow:'rgba(139,92,246,.35)', lv:[7]},
+  {name:'Diamond',  th:'ไดมอนด์',  icon:'fa-crown',         color:'#06b6d4',glow:'rgba(6,182,212,.35)',  lv:[8]},
+];
+
+function _getRank(lv){
+  return _RANK_TIERS.find(r=>r.lv.includes(lv))||_RANK_TIERS[0];
+}
+
+function _renderTierBadge(){
+  const el=document.getElementById('_tierBadge');
+  if(!el) return;
+  try{
+    const nw=calcNetWorth().netWorth;
+    const tiers=_WT_DATA.th.tiers;
+    let tier=tiers[0];
+    for(const t of tiers){ if(nw>=t.min&&nw<t.max){tier=t;break;} }
+    const rank=_getRank(tier.lv);
+    el.innerHTML=`<div style="display:inline-flex;align-items:center;gap:5px;background:${rank.color}15;border:1px solid ${rank.color}45;border-radius:20px;padding:3px 9px;box-shadow:0 0 8px ${rank.glow}">
+      <i class="fas ${rank.icon}" style="font-size:9px;color:${rank.color}"></i>
+      <span style="font-size:10px;font-weight:800;color:${rank.color};letter-spacing:.3px">${rank.name}</span>
+      <span style="font-size:9px;color:${rank.color};opacity:.75">Lv.${tier.lv}</span>
+    </div>`;
+  }catch(e){ el.innerHTML=''; }
+}
+
 window.setWrankScope=function(s){_wrankScope=s;_renderWealthRank();};
 
 function _renderWealthRank(){
