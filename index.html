@@ -13959,6 +13959,231 @@ function _showWelcomeOnboard(){
 
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// ══════════════════════════════════════════
+//  1. PDPA CONSENT
+// ══════════════════════════════════════════
+(function(){
+  const KEY='mm_pdpa_v1';
+  function showPdpa(){
+    if(localStorage.getItem(KEY)) return;
+    const ov=document.createElement('div');
+    ov.id='pdpa-overlay';
+    ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;padding:0 0 0 0';
+    ov.innerHTML=`
+    <div style="background:#0f1117;border:1px solid rgba(167,139,250,.25);border-radius:24px 24px 0 0;padding:28px 24px 32px;max-width:560px;width:100%;box-shadow:0 -20px 60px rgba(0,0,0,.5)">
+      <div style="width:40px;height:4px;border-radius:4px;background:rgba(255,255,255,.15);margin:0 auto 20px"></div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:6px">🔒 นโยบายความเป็นส่วนตัว</div>
+      <div style="font-size:13px;color:#94a3b8;line-height:1.7;margin-bottom:20px">
+        MoneyMind เก็บข้อมูลการเงินส่วนตัวของคุณ (รายรับ-รายจ่าย, เงินออม, หนี้สิน ฯลฯ)
+        ไว้บน <strong style="color:#e2e8f0">Firebase Cloud</strong> ที่เข้ารหัสและเข้าถึงได้เฉพาะบัญชีของคุณเท่านั้น
+        เราไม่เปิดเผยข้อมูลให้บุคคลภายนอก ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล (PDPA) พ.ศ. 2562
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;font-size:11px;color:#64748b">
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px;text-align:center"><i class="fas fa-lock" style="color:#a78bfa;font-size:16px;margin-bottom:6px;display:block"></i>เข้ารหัสทั้งหมด</div>
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px;text-align:center"><i class="fas fa-user-shield" style="color:#10b981;font-size:16px;margin-bottom:6px;display:block"></i>เฉพาะบัญชีคุณ</div>
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px;text-align:center"><i class="fas fa-ban" style="color:#06b6d4;font-size:16px;margin-bottom:6px;display:block"></i>ไม่ขายข้อมูล</div>
+      </div>
+      <button id="pdpa-accept" style="width:100%;background:linear-gradient(135deg,#7c3aed,#6366f1);border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:Sarabun,sans-serif;transition:opacity .2s">
+        ยอมรับและดำเนินการต่อ
+      </button>
+      <div style="text-align:center;margin-top:12px;font-size:11px;color:#475569">การใช้งานถือว่าคุณยอมรับนโยบายฯ ดังกล่าว</div>
+    </div>`;
+    document.body.appendChild(ov);
+    document.getElementById('pdpa-accept').onclick=function(){
+      localStorage.setItem(KEY,'1');
+      ov.style.opacity='0';
+      ov.style.transition='opacity .3s';
+      setTimeout(()=>ov.remove(),300);
+    };
+  }
+  // แสดงหลัง DOM load เล็กน้อย
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(showPdpa,800));
+  else setTimeout(showPdpa,800);
+})();
+
+// ══════════════════════════════════════════
+//  2. EMPTY STATE — DASHBOARD
+// ══════════════════════════════════════════
+(function(){
+  const _origRD=typeof renderDash==='function'?renderDash:null;
+  if(!_origRD) return;
+  renderDash=function(){
+    _origRD();
+    // ถ้า DB ว่างเปล่า แสดง welcome guide
+    const hasData=(DB.transactions&&DB.transactions.length>0)||(DB.savings&&DB.savings.length>0)||(DB.debts&&DB.debts.length>0)||(DB.investments&&DB.investments.length>0);
+    if(hasData) return;
+    const cont=document.getElementById('page-dashboard');
+    if(!cont) return;
+    // ใส่ welcome card ด้านบนสุดของ page-dashboard
+    const guide=document.createElement('div');
+    guide.id='_emptyGuide';
+    guide.style.cssText='margin-bottom:20px';
+    guide.innerHTML=`
+    <div style="background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(99,102,241,.08));border:1px solid rgba(124,58,237,.3);border-radius:20px;padding:28px 24px;text-align:center">
+      <div style="font-size:48px;margin-bottom:12px">👋</div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:8px">ยินดีต้อนรับสู่ MoneyMind!</div>
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:24px;line-height:1.6">เริ่มต้นจัดการการเงินของคุณ<br>เลือกสิ่งที่อยากทำก่อนได้เลย</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:400px;margin:0 auto">
+        <button onclick="nav('transactions');setTxType('expense')" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:14px;padding:16px;cursor:pointer;font-family:Sarabun,sans-serif;color:#f87171;font-size:13px;font-weight:700;transition:all .2s" onmouseover="this.style.background='rgba(239,68,68,.22)'" onmouseout="this.style.background='rgba(239,68,68,.12)'">
+          <i class="fas fa-minus-circle" style="font-size:22px;display:block;margin-bottom:6px"></i>บันทึกรายจ่าย
+        </button>
+        <button onclick="nav('transactions');setTxType('income')" style="background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:14px;padding:16px;cursor:pointer;font-family:Sarabun,sans-serif;color:#10b981;font-size:13px;font-weight:700;transition:all .2s" onmouseover="this.style.background='rgba(16,185,129,.22)'" onmouseout="this.style.background='rgba(16,185,129,.12)'">
+          <i class="fas fa-plus-circle" style="font-size:22px;display:block;margin-bottom:6px"></i>บันทึกรายรับ
+        </button>
+        <button onclick="nav('savings')" style="background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.3);border-radius:14px;padding:16px;cursor:pointer;font-family:Sarabun,sans-serif;color:#06b6d4;font-size:13px;font-weight:700;transition:all .2s" onmouseover="this.style.background='rgba(6,182,212,.22)'" onmouseout="this.style.background='rgba(6,182,212,.12)'">
+          <i class="fas fa-piggy-bank" style="font-size:22px;display:block;margin-bottom:6px"></i>ตั้งเป้าออม
+        </button>
+        <button onclick="nav('banks')" style="background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.3);border-radius:14px;padding:16px;cursor:pointer;font-family:Sarabun,sans-serif;color:#a78bfa;font-size:13px;font-weight:700;transition:all .2s" onmouseover="this.style.background='rgba(167,139,250,.22)'" onmouseout="this.style.background='rgba(167,139,250,.12)'">
+          <i class="fas fa-university" style="font-size:22px;display:block;margin-bottom:6px"></i>เพิ่มบัญชีธนาคาร
+        </button>
+      </div>
+      <div style="margin-top:20px;font-size:12px;color:#475569">💡 กด <strong style="color:#a78bfa">AI Maya</strong> (ไอคอนวงกลมล่างขวา) ถ้าอยากให้ AI ช่วยแนะนำ</div>
+    </div>`;
+    if(!document.getElementById('_emptyGuide')){
+      cont.insertBefore(guide, cont.firstChild);
+    }
+  };
+})();
+
+// ══════════════════════════════════════════
+//  3. RATE LIMIT LOGIN (5 ครั้ง → ล็อก 5 นาที)
+// ══════════════════════════════════════════
+const _RL_KEY='mm_login_fail';
+const _RL_MAX=5;
+const _RL_LOCK_MS=5*60*1000;
+
+function _rlCheck(){
+  try{
+    const d=JSON.parse(localStorage.getItem(_RL_KEY)||'{}');
+    if(d.lockUntil&&Date.now()<d.lockUntil){
+      const sec=Math.ceil((d.lockUntil-Date.now())/1000);
+      const m=Math.floor(sec/60), s=sec%60;
+      return `กรุณารอ ${m}:${String(s).padStart(2,'0')} นาที (พยายามเข้าสู่ระบบผิดหลายครั้ง)`;
+    }
+  }catch(e){}
+  return null;
+}
+function _rlFail(){
+  try{
+    const d=JSON.parse(localStorage.getItem(_RL_KEY)||'{}');
+    const count=(d.count||0)+1;
+    const lockUntil=count>=_RL_MAX?Date.now()+_RL_LOCK_MS:(d.lockUntil||0);
+    localStorage.setItem(_RL_KEY,JSON.stringify({count,lockUntil}));
+    return count>=_RL_MAX?`ล็อกชั่วคราว 5 นาที (พยายามผิดถึง ${_RL_MAX} ครั้ง)`:null;
+  }catch(e){ return null; }
+}
+function _rlReset(){ try{ localStorage.removeItem(_RL_KEY); }catch(e){} }
+
+// monkey-patch tryLogin
+(function(){
+  const _orig=typeof tryLogin==='function'?tryLogin:null;
+  if(!_orig) return;
+  tryLogin=async function(){
+    const locked=_rlCheck();
+    if(locked){
+      const errEl=document.getElementById('login-err');
+      if(errEl) errEl.textContent=locked;
+      // อัปเดต countdown ทุก 1 วินาที
+      clearInterval(window._rlTimer);
+      window._rlTimer=setInterval(()=>{
+        const still=_rlCheck();
+        if(!still){ clearInterval(window._rlTimer); if(errEl) errEl.textContent=''; }
+        else if(errEl) errEl.textContent=still;
+      },1000);
+      return;
+    }
+    // hook: ดัก error แล้วนับ
+    const _origErr=document.getElementById('login-err');
+    const _before=_origErr?_origErr.textContent:'';
+    await _orig.apply(this,arguments);
+    const _after=_origErr?_origErr.textContent:'';
+    if(_after && _after!==_before && (_after.includes('ไม่ถูกต้อง')||_after.includes('ไม่พบ')||_after.includes('รหัสผ่าน'))){
+      const lockMsg=_rlFail();
+      if(lockMsg&&_origErr) _origErr.textContent=lockMsg;
+    } else if(!_after||_after===''){
+      _rlReset();
+    }
+  };
+})();
+
+// ══════════════════════════════════════════
+//  4. FEEDBACK BUTTON
+// ══════════════════════════════════════════
+(function(){
+  // เพิ่มปุ่ม feedback ใน sidebar
+  const foot=document.querySelector('.sidebar-foot');
+  if(foot){
+    const fbtn=document.createElement('button');
+    fbtn.id='feedback-btn';
+    fbtn.style.cssText='width:100%;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.25);border-radius:10px;padding:9px;font-size:12px;color:#06b6d4;cursor:pointer;font-family:Sarabun,sans-serif;margin-bottom:8px;transition:background .2s';
+    fbtn.innerHTML='<i class="fas fa-comment-dots"></i> แจ้งปัญหา / ขอฟีเจอร์';
+    fbtn.onmouseover=()=>fbtn.style.background='rgba(6,182,212,.2)';
+    fbtn.onmouseout=()=>fbtn.style.background='rgba(6,182,212,.1)';
+    fbtn.onclick=_showFeedbackModal;
+    foot.insertBefore(fbtn, foot.firstChild);
+  }
+
+  window._showFeedbackModal=function(){
+    if(document.getElementById('_feedbackModal')) return;
+    const ov=document.createElement('div');
+    ov.id='_feedbackModal';
+    ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px';
+    ov.innerHTML=`
+    <div style="background:#13141f;border:1px solid rgba(6,182,212,.25);border-radius:20px;padding:24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:16px;font-weight:800"><i class="fas fa-comment-dots" style="color:#06b6d4;margin-right:8px"></i>แจ้งปัญหา / ขอฟีเจอร์</div>
+        <button onclick="document.getElementById('_feedbackModal').remove()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:18px;line-height:1;padding:4px">✕</button>
+      </div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:12px">ส่งตรงถึงทีมพัฒนา — จะตอบกลับเร็วที่สุด</div>
+      <select id="_fbType" style="width:100%;background:#1e2030;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 12px;font-size:13px;color:#e2e8f0;font-family:Sarabun,sans-serif;margin-bottom:10px;outline:none">
+        <option value="🐛 บัก">🐛 แจ้งบัก / ปัญหา</option>
+        <option value="✨ ฟีเจอร์">✨ ขอฟีเจอร์ใหม่</option>
+        <option value="💬 อื่นๆ">💬 ความคิดเห็นอื่นๆ</option>
+      </select>
+      <textarea id="_fbText" rows="4" placeholder="อธิบายปัญหาหรือฟีเจอร์ที่ต้องการ..." style="width:100%;background:#1e2030;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 12px;font-size:13px;color:#e2e8f0;font-family:Sarabun,sans-serif;resize:vertical;outline:none;box-sizing:border-box;min-height:100px"></textarea>
+      <div id="_fbErr" style="font-size:12px;color:#f87171;margin-top:6px;min-height:16px"></div>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button onclick="document.getElementById('_feedbackModal').remove()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:11px;font-size:13px;color:#94a3b8;cursor:pointer;font-family:Sarabun,sans-serif">ยกเลิก</button>
+        <button id="_fbSend" onclick="_sendFeedback()" style="flex:2;background:linear-gradient(135deg,#0891b2,#06b6d4);border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:Sarabun,sans-serif"><i class="fas fa-paper-plane"></i> ส่ง</button>
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+    document.getElementById('_fbText').focus();
+  };
+
+  window._sendFeedback=async function(){
+    const type=document.getElementById('_fbType')?.value||'ไม่ระบุ';
+    const text=document.getElementById('_fbText')?.value?.trim()||'';
+    const errEl=document.getElementById('_fbErr');
+    const btn=document.getElementById('_fbSend');
+    if(!text){ if(errEl) errEl.textContent='กรุณาพิมพ์ข้อความก่อนส่ง'; return; }
+    if(errEl) errEl.textContent='';
+    btn.disabled=true; btn.textContent='กำลังส่ง...';
+    const user=currentUser||'(ไม่ได้ login)';
+    const ua=navigator.userAgent.slice(0,80);
+    const msg=`📬 <b>Feedback จาก MoneyMind</b>\n<b>ประเภท:</b> ${type}\n<b>ผู้ใช้:</b> ${user}\n<b>ข้อความ:</b>\n${text}\n<i>UA: ${ua}</i>`;
+    const TG_TOKEN='8841603911:AAFz0JrEZcMTc5nxtxmzSAmg5y4w7odwi5o';
+    const TG_CHAT='8172260229';
+    try{
+      const r=await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({chat_id:TG_CHAT,text:msg,parse_mode:'HTML'})
+      });
+      if(r.ok){
+        const ov=document.getElementById('_feedbackModal');
+        if(ov) ov.innerHTML=`<div style="background:#13141f;border:1px solid rgba(16,185,129,.3);border-radius:20px;padding:40px 24px;max-width:420px;width:100%;text-align:center"><div style="font-size:40px;margin-bottom:12px">✅</div><div style="font-size:16px;font-weight:800;margin-bottom:8px">ส่งเรียบร้อย!</div><div style="font-size:13px;color:#94a3b8;margin-bottom:20px">ขอบคุณสำหรับ feedback นะครับ ทีมพัฒนาจะดูและตอบกลับเร็วๆ นี้</div><button onclick="document.getElementById('_feedbackModal').remove()" style="background:linear-gradient(135deg,#10b981,#34d399);border:none;border-radius:10px;padding:11px 24px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:Sarabun,sans-serif">ปิด</button></div>`;
+      } else {
+        if(errEl) errEl.textContent='ส่งไม่สำเร็จ ลองใหม่อีกครั้ง';
+        btn.disabled=false; btn.textContent='ส่ง';
+      }
+    }catch(e){
+      if(errEl) errEl.textContent='ไม่มีการเชื่อมต่ออินเทอร์เน็ต';
+      btn.disabled=false; btn.textContent='ส่ง';
+    }
+  };
+})();
+
 
 // ══════════════════════════════════════════
 //  GMAIL BANK AUTO-IMPORT
