@@ -13243,19 +13243,51 @@ function _clearRoute(){
 }
 
 // ══════════════════════════════════════════
-//  WEALTH RANKING — อันดับความมั่งคั่งเทียบคนไทย
-//  ข้อมูลอ้างอิง: Credit Suisse Global Wealth Report + NESDC + BOT 2023
+//  WEALTH RANKING — อันดับความมั่งคั่ง 3 ฐาน
+//  ข้อมูลอ้างอิง: Credit Suisse Global Wealth Report 2023 + NESDC + BOT
 // ══════════════════════════════════════════
-const _WT=[
-  {lv:1,name:'ติดลบ',           icon:'fa-arrow-trend-down',color:'#ef4444',min:-9e15,   max:0,        pct:25,desc:'สินทรัพย์น้อยกว่าหนี้สิน'},
-  {lv:2,name:'เริ่มต้น',         icon:'fa-seedling',        color:'#f97316',min:0,       max:50000,    pct:20,desc:'เริ่มสะสมทรัพย์สิน'},
-  {lv:3,name:'กำลังสร้าง',       icon:'fa-hammer',          color:'#eab308',min:50000,   max:200000,   pct:18,desc:'อยู่ระหว่างสร้างฐานะ'},
-  {lv:4,name:'มั่นคง',           icon:'fa-shield-halved',   color:'#3b82f6',min:200000,  max:600000,   pct:15,desc:'มีความมั่นคงทางการเงิน'},
-  {lv:5,name:'ดีกว่าค่าเฉลี่ย',  icon:'fa-chart-line',      color:'#10b981',min:600000,  max:2000000,  pct:12,desc:'ดีกว่าคนไทยส่วนใหญ่'},
-  {lv:6,name:'มั่งมี',           icon:'fa-gem',             color:'#8b5cf6',min:2000000, max:10000000, pct:7, desc:'อยู่ใน Top 10% ของประเทศ'},
-  {lv:7,name:'ร่ำรวย',           icon:'fa-star',            color:'#f59e0b',min:10000000,max:50000000, pct:2, desc:'อยู่ใน Top 3% ของประเทศ'},
-  {lv:8,name:'เศรษฐี',           icon:'fa-crown',           color:'#ec4899',min:50000000,max:9e15,     pct:1, desc:'อยู่ใน Top 1% ของประเทศ'},
-];
+const _WT_DATA={
+  th:{
+    label:'🇹🇭 ไทย', pop:'55 ล้านคน',
+    tiers:[
+      {lv:1,name:'ติดลบ',          icon:'fa-arrow-trend-down',color:'#ef4444',min:-9e15,   max:0,         pct:25,desc:'สินทรัพย์น้อยกว่าหนี้สิน'},
+      {lv:2,name:'เริ่มต้น',        icon:'fa-seedling',        color:'#f97316',min:0,        max:50000,     pct:20,desc:'เริ่มสะสมทรัพย์สิน'},
+      {lv:3,name:'กำลังสร้าง',      icon:'fa-hammer',          color:'#eab308',min:50000,    max:200000,    pct:18,desc:'อยู่ระหว่างสร้างฐานะ'},
+      {lv:4,name:'มั่นคง',          icon:'fa-shield-halved',   color:'#3b82f6',min:200000,   max:600000,    pct:15,desc:'มีความมั่นคงทางการเงิน'},
+      {lv:5,name:'ดีกว่าค่าเฉลี่ย', icon:'fa-chart-line',      color:'#10b981',min:600000,   max:2000000,   pct:12,desc:'ดีกว่าคนไทยส่วนใหญ่'},
+      {lv:6,name:'มั่งมี',          icon:'fa-gem',             color:'#8b5cf6',min:2000000,  max:10000000,  pct:7, desc:'Top 10% ของประเทศ'},
+      {lv:7,name:'ร่ำรวย',          icon:'fa-star',            color:'#f59e0b',min:10000000, max:50000000,  pct:2, desc:'Top 3% ของประเทศ'},
+      {lv:8,name:'เศรษฐี',          icon:'fa-crown',           color:'#ec4899',min:50000000, max:9e15,      pct:1, desc:'Top 1% ของประเทศ'},
+    ]
+  },
+  asean:{
+    label:'🌏 อาเซียน', pop:'~700 ล้านคน',
+    tiers:[
+      {lv:1,name:'ติดลบ',          icon:'fa-arrow-trend-down',color:'#ef4444',min:-9e15,    max:0,          pct:10,desc:'สินทรัพย์น้อยกว่าหนี้สิน'},
+      {lv:2,name:'ต่ำมาก',         icon:'fa-seedling',        color:'#f97316',min:0,         max:70000,      pct:30,desc:'ต่ำกว่าค่าเฉลี่ยภูมิภาค'},
+      {lv:3,name:'ต่ำ',            icon:'fa-hammer',          color:'#eab308',min:70000,     max:350000,     pct:25,desc:'อยู่ระหว่างสร้างฐานะ'},
+      {lv:4,name:'ปานกลาง',        icon:'fa-shield-halved',   color:'#3b82f6',min:350000,    max:1750000,    pct:18,desc:'ใกล้เคียงค่าเฉลี่ยภูมิภาค'},
+      {lv:5,name:'สูงกว่าค่าเฉลี่ย',icon:'fa-chart-line',      color:'#10b981',min:1750000,   max:7000000,    pct:10,desc:'สูงกว่าค่าเฉลี่ยอาเซียน'},
+      {lv:6,name:'มั่งมี',          icon:'fa-gem',             color:'#8b5cf6',min:7000000,   max:35000000,   pct:5, desc:'Top 7% ในอาเซียน'},
+      {lv:7,name:'ร่ำรวย',          icon:'fa-star',            color:'#f59e0b',min:35000000,  max:175000000,  pct:1.5,desc:'Top 2.5% ในอาเซียน'},
+      {lv:8,name:'เศรษฐี',          icon:'fa-crown',           color:'#ec4899',min:175000000, max:9e15,       pct:0.5,desc:'Top 0.5% ในอาเซียน'},
+    ]
+  },
+  world:{
+    label:'🌍 โลก', pop:'~5,400 ล้านคน',
+    tiers:[
+      {lv:1,name:'ติดลบ',          icon:'fa-arrow-trend-down',color:'#ef4444',min:-9e15,    max:0,          pct:8, desc:'สินทรัพย์น้อยกว่าหนี้สิน'},
+      {lv:2,name:'ต่ำมาก',         icon:'fa-seedling',        color:'#f97316',min:0,         max:35000,      pct:30,desc:'ต่ำกว่าค่าเฉลี่ยโลก'},
+      {lv:3,name:'ต่ำ',            icon:'fa-hammer',          color:'#eab308',min:35000,     max:175000,     pct:22,desc:'อยู่ระหว่างสร้างฐานะ'},
+      {lv:4,name:'ปานกลาง',        icon:'fa-shield-halved',   color:'#3b82f6',min:175000,    max:875000,     pct:20,desc:'ใกล้เคียงค่าเฉลี่ยโลก'},
+      {lv:5,name:'สูงกว่าค่าเฉลี่ย',icon:'fa-chart-line',      color:'#10b981',min:875000,    max:4400000,    pct:10,desc:'สูงกว่าค่าเฉลี่ยโลก'},
+      {lv:6,name:'มั่งมี',          icon:'fa-gem',             color:'#8b5cf6',min:4400000,   max:22000000,   pct:6, desc:'Top 9% ของโลก'},
+      {lv:7,name:'ร่ำรวย',          icon:'fa-star',            color:'#f59e0b',min:22000000,  max:87500000,   pct:3, desc:'Top 4% ของโลก'},
+      {lv:8,name:'เศรษฐี',          icon:'fa-crown',           color:'#ec4899',min:87500000,  max:9e15,       pct:1, desc:'Top 1% ของโลก'},
+    ]
+  }
+};
+let _wrankScope='th';
 
 function _renderWealthRank(){
   const wrap=document.getElementById('_wrankWrap');
