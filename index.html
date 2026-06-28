@@ -11102,15 +11102,10 @@ async function renderAdmin(){
     }
 
     el.innerHTML=`
-    <style>
-      #adm-grid{display:grid;grid-template-columns:310px 1fr;gap:16px;align-items:start;margin-bottom:20px}
-      @media(max-width:900px){#adm-grid{grid-template-columns:1fr}}
-    </style>
-
     <!-- Header -->
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px">
       <div>
-        <div style="font-size:24px;font-weight:900;background:linear-gradient(135deg,#f59e0b,#fcd34d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.5px">⚡ Admin</div>
+        <div style="font-size:24px;font-weight:900;background:linear-gradient(135deg,#f59e0b,#fcd34d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.5px">⚡ Admin Dashboard</div>
         <div style="font-size:12px;color:var(--muted);margin-top:3px">
           <span style="color:#10b981;font-weight:700">${online} ออนไลน์</span>
           <span style="color:rgba(255,255,255,.15);margin:0 6px">·</span>
@@ -11125,64 +11120,58 @@ async function renderAdmin(){
       </div>
     </div>
 
-    <!-- Main 2-column grid -->
-    <div id="adm-grid">
+    <!-- Stats cards: 4 per row -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+      ${statCardSm(total,'ผู้ใช้ทั้งหมด','#a78bfa',new7?('+'+new7+' ใน 7 วัน'):'','fa-users')}
+      ${statCardSm(online,'ออนไลน์อยู่','#10b981','','fa-circle')}
+      ${statCardSm(dau,'DAU วันนี้','#06b6d4','stickiness '+stickiness+'%','fa-sun')}
+      ${statCardSm(wau,'WAU 7 วัน','#22d3ee','','fa-calendar-week')}
+      ${statCardSm(mau,'MAU 30 วัน','#818cf8','','fa-calendar')}
+      ${statCardSm(newToday,'สมัครวันนี้','#f59e0b','','fa-user-plus')}
+      ${statCardSm(churn,'เงียบ >30 วัน','#ef4444',never?(never+' ไม่เคยล็อกอิน'):'','fa-user-clock')}
+      ${statCardSm(withEmail,'มี email จริง','#34d399',total?Math.round(withEmail/total*100)+'%':'','fa-envelope')}
+    </div>
 
-      <!-- Left: stats + chart + platform -->
-      <div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-          ${statCardSm(total,'ผู้ใช้ทั้งหมด','#a78bfa',new7?('+'+new7+' ใน 7 วัน'):'','fa-users')}
-          ${statCardSm(online,'ออนไลน์อยู่','#10b981','','fa-circle')}
-          ${statCardSm(dau,'DAU วันนี้','#06b6d4','stickiness '+stickiness+'%','fa-sun')}
-          ${statCardSm(wau,'WAU 7 วัน','#22d3ee','','fa-calendar-week')}
-          ${statCardSm(mau,'MAU 30 วัน','#818cf8','','fa-calendar')}
-          ${statCardSm(newToday,'สมัครวันนี้','#f59e0b','','fa-user-plus')}
-          ${statCardSm(churn,'เงียบ >30 วัน','#ef4444',never?(never+' ไม่เคยล็อกอิน'):'','fa-user-clock')}
-          ${statCardSm(withEmail,'มี email จริง','#34d399',total?Math.round(withEmail/total*100)+'%':'','fa-envelope')}
+    <!-- Growth chart + Platform side by side -->
+    <div style="display:grid;grid-template-columns:1fr 260px;gap:14px;margin-bottom:16px">
+      <div style="background:linear-gradient(135deg,rgba(167,139,250,.1),rgba(99,102,241,.04));border:1px solid rgba(167,139,250,.22);border-radius:14px;padding:16px;box-shadow:0 4px 24px rgba(167,139,250,.1)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:10px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.6px"><i class="fas fa-chart-line" style="margin-right:5px"></i>ผู้ใช้สะสม</div>
+          <div style="font-size:20px;font-weight:900;color:#a78bfa">${total}</div>
         </div>
-
-        <!-- Growth chart -->
-        <div style="background:linear-gradient(135deg,rgba(167,139,250,.1),rgba(99,102,241,.04));border:1px solid rgba(167,139,250,.22);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 4px 24px rgba(167,139,250,.1)">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-            <div style="font-size:10px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.6px"><i class="fas fa-chart-line" style="margin-right:5px"></i>ผู้ใช้สะสม</div>
-            <div style="font-size:20px;font-weight:900;color:#a78bfa">${total}</div>
-          </div>
-          <div style="position:relative;height:120px;width:100%"><canvas id="admin-growth-chart"></canvas></div>
-        </div>
-
-        <!-- Platform -->
-        <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px">
-          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:13px"><i class="fas fa-mobile-alt" style="margin-right:5px"></i>แพลตฟอร์ม</div>
-          ${platRow('Web','fas fa-globe',webCount,'#06b6d4')}
-          ${platRow('Android','fab fa-android',androidCount,'#10b981')}
-          ${platRow('iOS','fab fa-apple',iosCount,'#94a3b8')}
-        </div>
+        <div style="position:relative;height:140px;width:100%"><canvas id="admin-growth-chart"></canvas></div>
       </div>
-
-      <!-- Right: user table -->
-      <div style="background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.25)">
-        <div style="padding:14px 16px;background:linear-gradient(135deg,rgba(167,139,250,.12),rgba(6,182,212,.07));border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
-          <div>
-            <span style="font-size:15px;font-weight:800">ผู้ใช้ทั้งหมด</span>
-            <span style="font-size:11px;color:var(--muted);margin-left:7px">${total} accounts</span>
-          </div>
-          <input type="text" oninput="filterAdminTable(this.value)" placeholder="🔍 ค้นหา..." class="finput" style="width:150px;font-size:12px;padding:5px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)">
-        </div>
-        <div style="overflow-x:auto;max-height:540px;overflow-y:auto">
-          <table style="width:100%;border-collapse:collapse">
-            <thead style="position:sticky;top:0;z-index:1">
-              <tr style="background:rgba(10,10,25,.85);backdrop-filter:blur(8px)">
-                <th style="padding:9px 14px;font-size:10px;color:var(--muted);font-weight:700;text-align:left;text-transform:uppercase;letter-spacing:.4px">ผู้ใช้</th>
-                <th style="padding:9px 14px;font-size:10px;color:var(--muted);font-weight:700;text-align:left;text-transform:uppercase;letter-spacing:.4px">Email</th>
-                <th style="padding:9px 14px;font-size:10px;color:var(--muted);font-weight:700;text-align:left;text-transform:uppercase;letter-spacing:.4px">แพลตฟอร์ม</th>
-                <th style="padding:9px 14px;font-size:10px;color:var(--muted);font-weight:700;text-align:left;text-transform:uppercase;letter-spacing:.4px">ล่าสุด</th>
-              </tr>
-            </thead>
-            <tbody id="admin-user-tbody">${rows||'<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--muted)">ยังไม่มีข้อมูล</td></tr>'}</tbody>
-          </table>
-        </div>
-        ${total===0?'':'<div style="padding:9px 16px;font-size:11px;color:var(--muted);border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 6px #10b981"></span> ออนไลน์ภายใน 10 นาที</div>'}
+      <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:16px">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px"><i class="fas fa-mobile-alt" style="margin-right:5px"></i>แพลตฟอร์ม</div>
+        ${platRow('Web','fas fa-globe',webCount,'#06b6d4')}
+        ${platRow('Android','fab fa-android',androidCount,'#10b981')}
+        ${platRow('iOS','fab fa-apple',iosCount,'#94a3b8')}
       </div>
+    </div>
+
+    <!-- User table full width -->
+    <div style="background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.25);margin-bottom:20px">
+      <div style="padding:14px 16px;background:linear-gradient(135deg,rgba(167,139,250,.12),rgba(6,182,212,.07));border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <div>
+          <span style="font-size:15px;font-weight:800">ผู้ใช้ทั้งหมด</span>
+          <span style="font-size:11px;color:var(--muted);margin-left:7px">${total} accounts</span>
+        </div>
+        <input type="text" oninput="filterAdminTable(this.value)" placeholder="🔍 ค้นหา..." class="finput" style="width:180px;font-size:12px;padding:5px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)">
+      </div>
+      <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead style="position:sticky;top:0;z-index:1">
+            <tr style="background:rgba(10,10,25,.85);backdrop-filter:blur(8px)">
+              <th style="padding:9px 14px;font-size:10px;color:var(--muted);font-weight:700;text-align:left;text-transform:uppercase;letter-spacing:.4px">ผู้ใช้</th>
+              <th style="padding:9px 14px;font-size:10px;color:var(--muted);font-weight:700;text-align:left;text-transform:uppercase;letter-spacing:.4px">Email</th>
+              <th style="padding:9px 14px;font-size:10px;color:var(--muted);font-weight:700;text-align:left;text-transform:uppercase;letter-spacing:.4px">แพลตฟอร์ม</th>
+              <th style="padding:9px 14px;font-size:10px;color:var(--muted);font-weight:700;text-align:left;text-transform:uppercase;letter-spacing:.4px">ล่าสุด</th>
+            </tr>
+          </thead>
+          <tbody id="admin-user-tbody">${rows||'<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--muted)">ยังไม่มีข้อมูล</td></tr>'}</tbody>
+        </table>
+      </div>
+      ${total===0?'':'<div style="padding:9px 16px;font-size:11px;color:var(--muted);border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 6px #10b981"></span> ออนไลน์ภายใน 10 นาที</div>'}
     </div>
 
     ${usageSection}`;
