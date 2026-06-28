@@ -11826,10 +11826,20 @@ function renderCalendarPage(){
   var daysInMonth=new Date(_calYear,_calMonth+1,0).getDate();
 
   var dowHdr='';
-  var dowLabels=['อา','จ','อ','พ','พฤ','ศ','ส'];
+  var dowLabels=[
+    {short:'อา',long:'อาทิตย์',cls:'sun-col'},
+    {short:'จ', long:'จันทร์',  cls:'weekday-col'},
+    {short:'อ', long:'อังคาร', cls:'weekday-col'},
+    {short:'พ', long:'พุธ',    cls:'weekday-col'},
+    {short:'พฤ',long:'พฤหัส',  cls:'weekday-col'},
+    {short:'ศ', long:'ศุกร์',  cls:'weekday-col'},
+    {short:'ส', long:'เสาร์',  cls:'sat-col'},
+  ];
   for(var di=0;di<7;di++){
-    dowHdr+='<div class="cal-dow'+(di===0?' sun-col':'')+'">'+dowLabels[di]+'</div>';
+    var dl=dowLabels[di];
+    dowHdr+='<div class="cal-dow '+dl.cls+'" title="'+dl.long+'">'+dl.short+'</div>';
   }
+  dowHdr='<div class="cal-dow-row">'+dowHdr+'</div>';
 
   var cells='';
   for(var bi=0;bi<firstDOW;bi++) cells+='<div></div>';
