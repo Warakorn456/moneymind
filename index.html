@@ -13696,6 +13696,132 @@ function _renderWealthRank(){
   },{passive:true});
 })();
 
+// ── Chat FAB Drag-to-corner ──────────────────────────────────────────
+(function(){
+  var FAB_MARGIN=18;
+  var fab=null, panel=null;
+  var dragging=false, didDrag=false;
+  var startX=0, startY=0, origLeft=0, origTop=0;
+
+  function getPos(){
+    var stored=null;
+    try{ stored=JSON.parse(localStorage.getItem('mm_fab_pos')); }catch(e){}
+    return stored||{side:'right',vert:'bottom'};
+  }
+  function savePos(p){ try{ localStorage.setItem('mm_fab_pos',JSON.stringify(p)); }catch(e){} }
+
+  function applyPos(x,y,animate){
+    if(!fab) return;
+    var W=window.innerWidth, H=window.innerHeight;
+    var fw=fab.offsetWidth||56, fh=fab.offsetHeight||56;
+    // clamp
+    x=Math.max(FAB_MARGIN, Math.min(W-fw-FAB_MARGIN, x));
+    y=Math.max(FAB_MARGIN, Math.min(H-fh-FAB_MARGIN, y));
+    if(animate){
+      fab.style.transition='left .3s cubic-bezier(.34,1.56,.64,1),top .3s cubic-bezier(.34,1.56,.64,1),transform .2s,box-shadow .2s,opacity .2s';
+    }
+    fab.style.left=x+'px';
+    fab.style.top=y+'px';
+    fab.style.right='auto';
+    fab.style.bottom='auto';
+    positionPanel(x,y,fw,fh);
+  }
+
+  function snapToCorner(x,y){
+    var W=window.innerWidth, H=window.innerHeight;
+    var fw=fab.offsetWidth||56, fh=fab.offsetHeight||56;
+    var cx=x+fw/2, cy=y+fh/2;
+    var sx=(cx<W/2)?FAB_MARGIN:W-fw-FAB_MARGIN;
+    var sy=(cy<H/2)?FAB_MARGIN:H-fh-FAB_MARGIN;
+    applyPos(sx,sy,true);
+    savePos({side:(cx<W/2?'left':'right'),vert:(cy<H/2?'top':'bottom'),x:sx,y:sy});
+    positionPanel(sx,sy,fw,fh);
+  }
+
+  function positionPanel(fx,fy,fw,fh){
+    if(!panel||panel.classList.contains('hidden')) return;
+    var W=window.innerWidth, H=window.innerHeight;
+    var pw=panel.offsetWidth||370, ph=panel.offsetHeight||520;
+    var px=fx+fw/2-pw/2;
+    var py=fy-ph-12;
+    if(fy+fh/2<H/2) py=fy+fh+12; // fab near top → panel below
+    px=Math.max(8,Math.min(W-pw-8,px));
+    py=Math.max(8,Math.min(H-ph-8,py));
+    panel.style.left=px+'px'; panel.style.top=py+'px';
+    panel.style.right='auto'; panel.style.bottom='auto';
+  }
+
+  function onDown(e){
+    fab=document.querySelector('.chat-fab');
+    panel=document.getElementById('chat-panel');
+    if(!fab) return;
+    dragging=true; didDrag=false;
+    fab.classList.add('dragging');
+    fab.style.transition='none';
+    var r=fab.getBoundingClientRect();
+    origLeft=r.left; origTop=r.top;
+    var pt=e.touches?e.touches[0]:e;
+    startX=pt.clientX; startY=pt.clientY;
+    e.preventDefault();
+  }
+
+  function onMove(e){
+    if(!dragging) return;
+    var pt=e.touches?e.touches[0]:e;
+    var dx=pt.clientX-startX, dy=pt.clientY-startY;
+    if(Math.abs(dx)+Math.abs(dy)>4) didDrag=true;
+    if(!didDrag) return;
+    applyPos(origLeft+dx, origTop+dy, false);
+    e.preventDefault();
+  }
+
+  function onUp(e){
+    if(!dragging) return;
+    dragging=false;
+    fab.classList.remove('dragging');
+    if(didDrag){
+      var r=fab.getBoundingClientRect();
+      snapToCorner(r.left, r.top);
+    }
+    // ถ้าไม่ได้ลาก = click → toggleChat
+    else toggleChat();
+  }
+
+  function init(){
+    fab=document.querySelector('.chat-fab');
+    panel=document.getElementById('chat-panel');
+    if(!fab){ setTimeout(init,300); return; }
+
+    // restore saved position
+    var saved=getPos();
+    if(saved.x!==undefined){
+      applyPos(saved.x, saved.y, false);
+    } else {
+      // default: bottom-right
+      var fw=fab.offsetWidth||56, fh=fab.offsetHeight||56;
+      var W=window.innerWidth, H=window.innerHeight;
+      applyPos(W-fw-FAB_MARGIN, H-fh-FAB_MARGIN, false);
+    }
+
+    // remove existing onclick (ย้ายไปใน onUp แทน)
+    fab.removeAttribute('onclick');
+
+    fab.addEventListener('mousedown', onDown, {passive:false});
+    fab.addEventListener('touchstart', onDown, {passive:false});
+    window.addEventListener('mousemove', onMove, {passive:false});
+    window.addEventListener('touchmove', onMove, {passive:false});
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchend', onUp);
+    window.addEventListener('resize', function(){
+      var r=fab.getBoundingClientRect();
+      snapToCorner(r.left,r.top);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+  setTimeout(init, 500);
+})();
+
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 
