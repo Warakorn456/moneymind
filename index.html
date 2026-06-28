@@ -759,7 +759,10 @@
     }
     .cal-cell.other-month{opacity:.38}
     .cal-cell.sunday .cal-day-num{color:#f87171}
-    .cal-cell.today.sunday .cal-day-num{color:#fff}
+    .cal-cell.saturday .cal-day-num{color:#c084fc}
+    .cal-cell.sunday{background:rgba(248,113,113,.04);border-color:rgba(248,113,113,.1)}
+    .cal-cell.saturday{background:rgba(192,132,252,.04);border-color:rgba(192,132,252,.1)}
+    .cal-cell.today.sunday .cal-day-num,.cal-cell.today.saturday .cal-day-num{color:#fff}
     .cal-day-badge{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:4px;flex-shrink:0}
     .cal-cell.today .cal-day-badge{background:linear-gradient(135deg,#7c3aed,#6366f1);box-shadow:0 2px 10px rgba(124,58,237,.5)}
     .cal-cell.selected:not(.today) .cal-day-badge{background:rgba(124,58,237,.25)}
