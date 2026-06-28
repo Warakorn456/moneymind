@@ -14152,11 +14152,12 @@ function _rlReset(){ try{ localStorage.removeItem(_RL_KEY); }catch(e){} }
     const ua=navigator.userAgent.slice(0,80);
     const msg=`📬 <b>Feedback จาก MoneyMind</b>\n<b>ประเภท:</b> ${type}\n<b>ผู้ใช้:</b> ${user}\n<b>ข้อความ:</b>\n${text}\n<i>UA: ${ua}</i>`;
     const TG_TOKEN='8841603911:AAFz0JrEZcMTc5nxtxmzSAmg5y4w7odwi5o';
-    const TG_CHAT='8172260229';
+    const TG_CHAT='-1004296300749';
+    const TG_THREAD=907;
     try{
       const r=await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`,{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({chat_id:TG_CHAT,text:msg,parse_mode:'HTML'})
+        body:JSON.stringify({chat_id:TG_CHAT,message_thread_id:TG_THREAD,text:msg,parse_mode:'HTML'})
       });
       if(r.ok){
         const ov=document.getElementById('_feedbackModal');
