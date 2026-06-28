@@ -1017,10 +1017,30 @@
 
 <!-- Login Screen -->
 <div id="login-screen">
-  <div class="login-box">
+  <!-- Feature carousel -->
+  <div id="login-features" style="position:absolute;top:0;left:0;right:0;padding:24px 20px 0;display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:1">
+    <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#a78bfa;text-transform:uppercase;margin-bottom:14px">จัดการเงินครบในที่เดียว</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;max-width:520px">
+      <div class="_feat-pill"><span>📊</span> ติดตามรายรับ-รายจ่าย</div>
+      <div class="_feat-pill"><span>🤖</span> AI มายา ช่วยวิเคราะห์</div>
+      <div class="_feat-pill"><span>📈</span> พอร์ตหุ้น &amp; ลงทุน</div>
+      <div class="_feat-pill"><span>☁️</span> Sync ทุกอุปกรณ์</div>
+      <div class="_feat-pill"><span>🎯</span> เป้าหมายเงินออม</div>
+      <div class="_feat-pill"><span>💳</span> จัดการหนี้สิน</div>
+      <div class="_feat-pill"><span>🗓️</span> ปฏิทินการเงิน</div>
+      <div class="_feat-pill"><span>🏆</span> อันดับความมั่งคั่ง</div>
+    </div>
+  </div>
+  <style>
+    ._feat-pill{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);font-size:12px;color:#c4b5fd;font-family:'Sarabun',sans-serif;font-weight:600}
+    #login-screen{flex-direction:column;justify-content:center;gap:0}
+    @media(max-height:640px){#login-features{display:none!important}}
+  </style>
+
+  <div class="login-box" style="margin-top:max(140px,22vh)">
     <div class="login-icon">💰</div>
     <div class="login-logo">MoneyMind</div>
-    <div class="login-sub" id="login-mode-sub">ระบบการเงินส่วนตัว</div>
+    <div class="login-sub" id="login-mode-sub">ระบบการเงินส่วนตัว · ฟรี 100%</div>
 
     <!-- Login form -->
     <div id="form-login">
