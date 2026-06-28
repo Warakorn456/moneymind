@@ -13242,6 +13242,124 @@ function _clearRoute(){
   if(r){ r.style.display='none'; r.innerHTML=''; }
 }
 
+// ══════════════════════════════════════════
+//  WEALTH RANKING — อันดับความมั่งคั่งเทียบคนไทย
+//  ข้อมูลอ้างอิง: Credit Suisse Global Wealth Report + NESDC + BOT 2023
+// ══════════════════════════════════════════
+const _WT=[
+  {lv:1,name:'ติดลบ',           icon:'fa-arrow-trend-down',color:'#ef4444',min:-9e15,   max:0,        pct:25,desc:'สินทรัพย์น้อยกว่าหนี้สิน'},
+  {lv:2,name:'เริ่มต้น',         icon:'fa-seedling',        color:'#f97316',min:0,       max:50000,    pct:20,desc:'เริ่มสะสมทรัพย์สิน'},
+  {lv:3,name:'กำลังสร้าง',       icon:'fa-hammer',          color:'#eab308',min:50000,   max:200000,   pct:18,desc:'อยู่ระหว่างสร้างฐานะ'},
+  {lv:4,name:'มั่นคง',           icon:'fa-shield-halved',   color:'#3b82f6',min:200000,  max:600000,   pct:15,desc:'มีความมั่นคงทางการเงิน'},
+  {lv:5,name:'ดีกว่าค่าเฉลี่ย',  icon:'fa-chart-line',      color:'#10b981',min:600000,  max:2000000,  pct:12,desc:'ดีกว่าคนไทยส่วนใหญ่'},
+  {lv:6,name:'มั่งมี',           icon:'fa-gem',             color:'#8b5cf6',min:2000000, max:10000000, pct:7, desc:'อยู่ใน Top 10% ของประเทศ'},
+  {lv:7,name:'ร่ำรวย',           icon:'fa-star',            color:'#f59e0b',min:10000000,max:50000000, pct:2, desc:'อยู่ใน Top 3% ของประเทศ'},
+  {lv:8,name:'เศรษฐี',           icon:'fa-crown',           color:'#ec4899',min:50000000,max:9e15,     pct:1, desc:'อยู่ใน Top 1% ของประเทศ'},
+];
+
+function _renderWealthRank(){
+  const wrap=document.getElementById('_wrankWrap');
+  if(!wrap) return;
+  const nw=calcNetWorth().netWorth;
+
+  // หา tier + percentile
+  let tier=_WT[0], cumBelow=0;
+  for(let i=0;i<_WT.length;i++){
+    const t=_WT[i];
+    if(nw>=t.min && nw<t.max){ tier=t; break; }
+    cumBelow+=t.pct;
+    if(i===_WT.length-1) tier=t;
+  }
+  const range=Math.max(tier.max-tier.min,1);
+  const frac=Math.min(Math.max((nw-tier.min)/range,0),1);
+  const percentile=Math.round(cumBelow+frac*tier.pct);
+  const topPct=100-percentile;
+
+  const fmtShort=n=>{
+    if(n>=1e9) return '฿'+(n/1e9).toFixed(0)+'B+';
+    if(n>=1e6) return '฿'+(n/1e6).toFixed(0)+'M+';
+    if(n>=1e3) return '฿'+(n/1000).toFixed(0)+'K+';
+    return '฿'+n;
+  };
+  const maxPct=25; // tier ที่มาก % สุด ใช้เป็น baseline bar
+
+  const rows=_WT.slice().reverse().map(t=>{
+    const isMe=t.lv===tier.lv;
+    const barW=Math.round(t.pct/maxPct*100);
+    const rangeLabel=t.lv===1?'< ฿0':t.lv===8?'฿50M+':fmtShort(t.min)+' – '+fmtShort(t.max);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;${isMe?`background:${t.color}15;border:1px solid ${t.color}35;`:'border:1px solid transparent;'}margin-bottom:3px">
+      <div style="width:26px;height:26px;border-radius:7px;background:${t.color}22;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="fas ${t.icon}" style="font-size:11px;color:${t.color}"></i>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
+          <span style="font-size:12px;font-weight:${isMe?700:500};color:${isMe?t.color:'var(--text)'}">${isMe?'▶ ':''}<b style="color:${t.color}">${t.lv}.</b> ${t.name}</span>
+          <span style="font-size:11px;color:var(--muted);white-space:nowrap;margin-left:6px">${rangeLabel}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;height:4px;background:var(--surface2);border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${barW}%;background:${t.color};border-radius:4px;opacity:${isMe?1:.45}"></div>
+          </div>
+          <span style="font-size:11px;font-weight:700;color:${t.color};width:30px;text-align:right">${t.pct}%</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  wrap.innerHTML=`
+  <div class="sec-hd" style="margin-bottom:14px">
+    <div class="sec-title"><i class="fas fa-ranking-star" style="color:${tier.color};margin-right:6px"></i>อันดับความมั่งคั่งเทียบคนไทย</div>
+    <span style="font-size:10px;color:var(--muted)">Credit Suisse / NESDC 2023</span>
+  </div>
+  <div style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start">
+    <!-- Left: badge + stats -->
+    <div>
+      <div style="background:linear-gradient(135deg,${tier.color}20,${tier.color}08);border:1px solid ${tier.color}40;border-radius:16px;padding:18px 14px;text-align:center;margin-bottom:10px">
+        <div style="width:56px;height:56px;border-radius:14px;background:${tier.color}22;border:2px solid ${tier.color}40;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+          <i class="fas ${tier.icon}" style="font-size:24px;color:${tier.color}"></i>
+        </div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">ระดับที่ ${tier.lv} จาก 8</div>
+        <div style="font-size:19px;font-weight:800;color:${tier.color};margin-bottom:4px">${tier.name}</div>
+        <div style="font-size:11px;color:var(--muted)">${tier.desc}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:900;color:${tier.color};line-height:1">${percentile}<span style="font-size:12px">th</span></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">Percentile</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:900;color:${tier.color};line-height:1">Top<span style="font-size:15px"> ${topPct}%</span></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">ของประเทศ</div>
+        </div>
+      </div>
+    </div>
+    <!-- Right: tier list (reversed: 8 → 1) -->
+    <div>
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;padding:0 10px">8 ระดับ · % ของคนไทย 55 ล้านคน</div>
+      ${rows}
+    </div>
+  </div>`;
+}
+
+// monkey-patch renderDash
+(function(){
+  const _orig=renderDash;
+  renderDash=function(){
+    _orig.apply(this,arguments);
+    // inject wrapper div ถ้ายังไม่มี
+    let wrap=document.getElementById('_wrankWrap');
+    if(!wrap){
+      wrap=document.createElement('div');
+      wrap.id='_wrankWrap';
+      wrap.className='card';
+      wrap.style.marginBottom='20px';
+      const sortable=document.getElementById('dash-sortable');
+      if(sortable) sortable.appendChild(wrap);
+    }
+    _renderWealthRank();
+  };
+})();
+
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 
