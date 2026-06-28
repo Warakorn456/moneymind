@@ -13318,9 +13318,9 @@ function _renderWealthRank(){
     if(n>=1e3) return '฿'+(n/1000).toFixed(0)+'K+';
     return '฿'+n;
   };
-  const maxPct=25;
+  const maxPct=Math.max(...tiers.map(t=>t.pct));
 
-  const rows=_WT.slice().reverse().map(t=>{
+  const rows=tiers.slice().reverse().map(t=>{
     const isMe=t.lv===tier.lv;
     const barW=Math.round(t.pct/maxPct*100);
     const rangeLabel=t.lv===1?'< ฿0':t.lv===8?'฿50M+':fmtShort(t.min)+'–'+fmtShort(t.max);
