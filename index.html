@@ -8029,6 +8029,16 @@ if(currentUser){
   initDate(); setTxType('income'); renderDash();
   setTimeout(checkDcaSchedule,2000);
 }
+// handle Google/Apple redirect result (เมื่อ signInWithRedirect กลับมา)
+if(!currentUser){
+  // รอ Firebase init ก่อน (firebase script โหลด async)
+  var _oauthRedirectTimer=setInterval(function(){
+    if(typeof firebase!=='undefined'&&firebase.auth){
+      clearInterval(_oauthRedirectTimer);
+      try{ _checkGoogleRedirectResult(); }catch(e){}
+    }
+  },200);
+}
 
 function buildFinanceContext(){
   const now=new Date();
