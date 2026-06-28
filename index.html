@@ -13367,7 +13367,7 @@ function _renderWealthRank(){
       wrap=document.createElement('div');
       wrap.id='_wrankWrap';
       wrap.className='card';
-      wrap.style.marginBottom='20px';
+      wrap.style.cssText='margin-bottom:20px;overflow:hidden;min-width:0;box-sizing:border-box;';
       const sortable=document.getElementById('dash-sortable');
       if(sortable) sortable.appendChild(wrap);
     }
