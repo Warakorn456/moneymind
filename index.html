@@ -13379,7 +13379,7 @@ function _renderWealthRank(){
     w=document.createElement('div');
     w.id='_wrankWrap';
     w.className='card';
-    w.style.marginBottom='20px';
+    w.style.cssText='margin-bottom:20px;overflow:hidden;min-width:0;box-sizing:border-box;';
     const s=document.getElementById('dash-sortable');
     if(s) s.appendChild(w);
   }
