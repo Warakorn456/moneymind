@@ -1281,68 +1281,24 @@
     <!-- ── Financial Health Score ── -->
     <div id="dash-health-section" style="margin-bottom:18px"></div>
 
-    <!-- ── Net Worth History ── -->
-    <div id="dash-nw-history-section" style="margin-bottom:18px"></div>
-
-    <!-- ── Spending Insights ── -->
+    <!-- sections ที่ถอดออก — เหลือ div ว่างกัน JS error -->
+    <div id="dash-nw-history-section" style="display:none"></div>
     <div id="dash-insights-section" style="margin-bottom:18px"></div>
-
-    <!-- ── Category Budget Progress ── -->
-    <div id="dash-catbud-section" style="margin-bottom:18px"></div>
-
-    <!-- ── Recurring vs Variable ── -->
-    <div id="dash-rvv-section" style="margin-bottom:18px"></div>
-
-    <!-- ── Spending Anomaly Alert ── -->
+    <div id="dash-catbud-section" style="display:none"></div>
+    <div id="dash-rvv-section" style="display:none"></div>
     <div id="dash-anomaly-section" style="margin-bottom:18px"></div>
-
-    <!-- ── Financial Calendar ── -->
-    <div id="dash-calendar-section" style="margin-bottom:18px"></div>
-
-    <!-- ── Subscription Tracker ── -->
+    <div id="dash-calendar-section" style="display:none"></div>
     <div id="dash-subscription-section" style="margin-bottom:18px"></div>
-
-    <!-- ── Tax Deduction Advisor ── -->
     <div id="dash-tax-advisor-section" style="margin-bottom:18px"></div>
-
-    <!-- ── Emergency Fund ── -->
     <div id="dash-emergency-section" style="margin-bottom:18px"></div>
-
-    <!-- ── 50/30/20 Rule ── -->
     <div id="dash-503020-section" style="margin-bottom:18px"></div>
-
-    <!-- ── Pay Yourself First ── -->
-    <div id="dash-pyf-section" style="margin-bottom:18px"></div>
+    <div id="dash-pyf-section" style="display:none"></div>
 
     </div><!-- /dash-sortable -->
 
-    <!-- ── Bottom Grid ── -->
-    <div class="bottom-grid">
-      <div class="card" style="border-top:2px solid rgba(16,185,129,.4)">
-        <div class="sec-hd">
-          <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center">
-              <i class="fas fa-receipt" style="color:#10b981;font-size:12px"></i>
-            </div>
-            <div class="sec-title">รายการล่าสุด</div>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="nav('transactions')">ดูทั้งหมด →</button>
-        </div>
-        <div id="recent-tx" class="tx-list"></div>
-      </div>
-      <div class="card" style="border-top:2px solid rgba(239,68,68,.4)">
-        <div class="sec-hd">
-          <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:30px;height:30px;border-radius:8px;background:rgba(239,68,68,.12);display:flex;align-items:center;justify-content:center">
-              <i class="fas fa-credit-card" style="color:#ef4444;font-size:12px"></i>
-            </div>
-            <div class="sec-title">ภาพรวมหนี้สิน</div>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="nav('debts')">ดูทั้งหมด →</button>
-        </div>
-        <div id="debt-summary"></div>
-      </div>
-    </div>
+    <!-- bottom stubs กัน JS error -->
+    <div id="recent-tx" style="display:none"></div>
+    <div id="debt-summary" style="display:none"></div>
   </div>
 
   <!-- ════ TRANSACTIONS ════ -->
