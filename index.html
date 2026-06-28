@@ -3097,72 +3097,116 @@ function setupAndroidGoogleBtn(){
   });
 }
 
+// helper: หา errEl จาก form ที่แสดงอยู่ตอนนี้
+function _activeLoginErr(){
+  const forms=['form-login','form-register','form-forgot'];
+  for(const id of forms){
+    const el=document.getElementById(id);
+    if(el&&el.style.display!=='none'){
+      return el.querySelector('.login-err')||document.getElementById('login-err');
+    }
+  }
+  return document.getElementById('login-err');
+}
+
+// helper: สร้าง/login ด้วย Firebase OAuth provider แล้ว sync ข้อมูล
+async function _handleOAuthResult(result, providerName){
+  const fbUser=result.user;
+  const email=fbUser.email||('no-email-'+fbUser.uid+'@'+providerName+'.local');
+  const snap=await _fs.collection('members').where('email','==',email).limit(1).get();
+  if(!snap.empty){
+    // มีบัญชีแล้ว — login
+    const memberData=snap.docs[0].data();
+    currentUser=memberData.username;
+    // อัปเดต lastSeen + provider
+    try{ await _fs.collection('members').doc(currentUser).update({lastSeen:firebase.firestore.FieldValue.serverTimestamp(),provider:providerName,platform:(window._isAndroidApp?'android':window._isIOSApp?'ios':'web')}); }catch(e){}
+    loadDB();
+    const _synced=await fsLoad();
+    enterApp();
+    if(!_synced) fsSave();
+    fsListen();
+  } else {
+    // ผู้ใช้ใหม่ — สร้างบัญชีอัตโนมัติ
+    let autoUser=((fbUser.displayName||email).split('@')[0]).toLowerCase().replace(/[^a-z0-9_]/g,'_').substring(0,16);
+    if(autoUser.length<3) autoUser='user'+Date.now().toString().slice(-5);
+    const existingUsers=getUsers();
+    if(existingUsers.find(u=>u.username===autoUser)||autoUser===(_ENC&&_ENC.user||'').toLowerCase()){
+      autoUser=autoUser.substring(0,13)+'_'+Date.now().toString().slice(-4);
+    }
+    await _fs.collection('members').doc(autoUser).set({
+      username:autoUser,
+      email:email,
+      uid:fbUser.uid,
+      displayName:fbUser.displayName||'',
+      photoURL:fbUser.photoURL||'',
+      provider:providerName,
+      platform:(window._isAndroidApp?'android':window._isIOSApp?'ios':'web'),
+      createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+      lastSeen:firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    const salt=randB64(16);
+    const saltBytes=Uint8Array.from(atob(salt),c=>c.charCodeAt(0));
+    const hash=await pbkdf2Hash(randB64(12),saltBytes);
+    existingUsers.push({username:autoUser,salt,hash,email,provider:providerName});
+    saveUsers(existingUsers);
+    currentUser=autoUser;
+    DB={ transactions:[],savings:[],debts:[],investments:[],settings:{apiKey:''},tax:{},plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]},profile:{} };
+    saveLocalOnly();
+    const _syncedNew=await fsLoad();
+    enterApp();
+    if(!_syncedNew) fsSave();
+    fsListen();
+    setTimeout(_showWelcomeOnboard, 600);
+  }
+}
+
 async function tryGoogleLogin(){
-  // ถ้าอยู่บน Android ให้ใช้ Native แทน
   if(window._isAndroidApp && window.AndroidBridge){ window.AndroidBridge.startGoogleSignIn(); return; }
-  const errEl=document.getElementById('login-err')||document.getElementById('reg-err');
-  const btns=[document.getElementById('google-login-btn'),document.getElementById('google-reg-btn')];
-  btns.forEach(b=>{ if(b){ b.disabled=true; b.style.opacity='.5'; } });
+  const errEl=_activeLoginErr();
+  const allBtns=[...document.querySelectorAll('.google-btn,.apple-btn')];
+  allBtns.forEach(b=>{ b.disabled=true; b.style.opacity='.5'; });
   if(errEl) errEl.textContent='';
-  if(!_auth||!_fs){ if(errEl) errEl.textContent='ระบบยังไม่พร้อม ลองใหม่'; btns.forEach(b=>{ if(b){ b.disabled=false; b.style.opacity=''; } }); return; }
+  if(!_auth||!_fs){
+    if(errEl) errEl.textContent='ระบบยังไม่พร้อม ลองใหม่';
+    allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
+    return;
+  }
   try{
     const provider=new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({prompt:'select_account'});
     const result=await _auth.signInWithPopup(provider);
-    const fbUser=result.user;
-    const email=fbUser.email;
-    // ตรวจสอบว่ามีบัญชีอยู่แล้วหรือไม่
-    const snap=await _fs.collection('members').where('email','==',email).limit(1).get();
-    if(!snap.empty){
-      // มีบัญชีแล้ว — login ทันที
-      const memberData=snap.docs[0].data();
-      currentUser=memberData.username;
-      DB={ transactions:[],savings:[],debts:[],investments:[],settings:{apiKey:''},tax:{},plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]},profile:{} };
-      loadDB();
-      const _synced=await fsLoad();
-      enterApp();
-      if(!_synced) fsSave();
-      fsListen();
-    } else {
-      // ผู้ใช้ใหม่ — สร้างบัญชีอัตโนมัติ
-      let autoUser=(email.split('@')[0]).toLowerCase().replace(/[^a-z0-9_]/g,'_').substring(0,16);
-      if(autoUser.length<3) autoUser='user'+Date.now().toString().slice(-5);
-      const existingUsers=getUsers();
-      if(existingUsers.find(u=>u.username===autoUser)||autoUser===(_ENC&&_ENC.user||'').toLowerCase()){
-        autoUser=autoUser.substring(0,14)+'_'+Date.now().toString().slice(-3);
-      }
-      // บันทึกลง Firestore members
-      await _fs.collection('members').doc(autoUser).set({
-        username:autoUser,
-        email:email,
-        uid:fbUser.uid,
-        displayName:fbUser.displayName||'',
-        photoURL:fbUser.photoURL||'',
-        createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-        platform:'google'
-      });
-      // บันทึกลง localStorage
-      const salt=randB64(16);
-      const saltBytes=Uint8Array.from(atob(salt),c=>c.charCodeAt(0));
-      const rndPass=randB64(12);
-      const hash=await pbkdf2Hash(rndPass,saltBytes);
-      existingUsers.push({username:autoUser,salt,hash,email,googleAuth:true});
-      saveUsers(existingUsers);
-      currentUser=autoUser;
-      DB={ transactions:[],savings:[],debts:[],investments:[],settings:{apiKey:''},tax:{},plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]},profile:{} };
-      saveLocalOnly();
-      const _syncedNew=await fsLoad();
-      enterApp();
-      if(!_syncedNew) fsSave();
-      fsListen();
-      setTimeout(()=>toast('ยินดีต้อนรับ! ชื่อผู้ใช้ของคุณคือ: '+autoUser+' 🎉','success'),800);
-    }
+    await _handleOAuthResult(result,'google');
   }catch(e){
-    const msgMap={'auth/popup-closed-by-user':'ยกเลิกการเข้าสู่ระบบ','auth/popup-blocked':'กรุณาอนุญาต Popup ในเบราว์เซอร์','auth/cancelled-popup-request':'','auth/network-request-failed':'ไม่มีการเชื่อมต่ออินเทอร์เน็ต'};
-    const msg=msgMap[e.code]||'เกิดข้อผิดพลาด ลองใหม่';
+    const msgMap={'auth/popup-closed-by-user':'ยกเลิก','auth/popup-blocked':'กรุณาอนุญาต Popup ในเบราว์เซอร์','auth/cancelled-popup-request':'','auth/network-request-failed':'ไม่มีการเชื่อมต่ออินเทอร์เน็ต'};
+    const msg=msgMap[e.code]||(e.message?'เกิดข้อผิดพลาด: '+e.code:'เกิดข้อผิดพลาด');
     if(errEl&&msg) errEl.textContent=msg;
   }
-  btns.forEach(b=>{ if(b){ b.disabled=false; b.style.opacity=''; } });
+  allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
+}
+
+async function tryAppleLogin(){
+  if(window._isIOSApp && window.webkit?.messageHandlers?.appleSignIn){ window.webkit.messageHandlers.appleSignIn.postMessage({}); return; }
+  const errEl=_activeLoginErr();
+  const allBtns=[...document.querySelectorAll('.google-btn,.apple-btn')];
+  allBtns.forEach(b=>{ b.disabled=true; b.style.opacity='.5'; });
+  if(errEl) errEl.textContent='';
+  if(!_auth||!_fs){
+    if(errEl) errEl.textContent='ระบบยังไม่พร้อม ลองใหม่';
+    allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
+    return;
+  }
+  try{
+    const provider=new firebase.auth.OAuthProvider('apple.com');
+    provider.addScope('email');
+    provider.addScope('name');
+    const result=await _auth.signInWithPopup(provider);
+    await _handleOAuthResult(result,'apple');
+  }catch(e){
+    const msgMap={'auth/popup-closed-by-user':'ยกเลิก','auth/popup-blocked':'กรุณาอนุญาต Popup ในเบราว์เซอร์','auth/cancelled-popup-request':'','auth/operation-not-supported-in-this-environment':'Apple Sign-In ยังไม่รองรับบนอุปกรณ์นี้'};
+    const msg=msgMap[e.code]||('Apple Sign-In: '+e.code);
+    if(errEl&&msg) errEl.textContent=msg;
+  }
+  allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
 }
 
 // ── Toggle login/register ──
