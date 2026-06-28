@@ -3020,6 +3020,7 @@ async function tryRegister(){
     enterApp();
     if(!_syncedReg) fsSave();
     fsListen();
+    setTimeout(_showWelcomeOnboard, 600);
   }catch{
     errEl.textContent='เกิดข้อผิดพลาด ลองใหม่';
     btn.disabled=false; btn.textContent='สมัครใช้งาน';
