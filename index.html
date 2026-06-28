@@ -13696,55 +13696,69 @@ function _renderWealthRank(){
   },{passive:true});
 })();
 
-// ── Chat FAB Drag-to-corner ──────────────────────────────────────────
+// ── Chat FAB Drag (snap to nearest edge, free Y/X along edge) ────────
 (function(){
-  var FAB_MARGIN=18;
+  var MARGIN=16;
   var fab=null, panel=null;
   var dragging=false, didDrag=false;
   var startX=0, startY=0, origLeft=0, origTop=0;
 
-  function getPos(){
-    var stored=null;
-    try{ stored=JSON.parse(localStorage.getItem('mm_fab_pos')); }catch(e){}
-    return stored||{side:'right',vert:'bottom'};
-  }
   function savePos(p){ try{ localStorage.setItem('mm_fab_pos',JSON.stringify(p)); }catch(e){} }
+  function loadPos(){ try{ return JSON.parse(localStorage.getItem('mm_fab_pos')); }catch(e){ return null; } }
 
-  function applyPos(x,y,animate){
+  function setPos(x,y,animate){
     if(!fab) return;
     var W=window.innerWidth, H=window.innerHeight;
     var fw=fab.offsetWidth||56, fh=fab.offsetHeight||56;
-    // clamp
-    x=Math.max(FAB_MARGIN, Math.min(W-fw-FAB_MARGIN, x));
-    y=Math.max(FAB_MARGIN, Math.min(H-fh-FAB_MARGIN, y));
-    if(animate){
-      fab.style.transition='left .3s cubic-bezier(.34,1.56,.64,1),top .3s cubic-bezier(.34,1.56,.64,1),transform .2s,box-shadow .2s,opacity .2s';
-    }
-    fab.style.left=x+'px';
-    fab.style.top=y+'px';
-    fab.style.right='auto';
-    fab.style.bottom='auto';
-    positionPanel(x,y,fw,fh);
+    x=Math.max(MARGIN, Math.min(W-fw-MARGIN, x));
+    y=Math.max(MARGIN, Math.min(H-fh-MARGIN, y));
+    fab.style.transition=animate
+      ?'left .28s cubic-bezier(.34,1.56,.64,1),top .28s cubic-bezier(.34,1.56,.64,1),transform .2s,box-shadow .2s'
+      :'none';
+    fab.style.left=x+'px'; fab.style.top=y+'px';
+    fab.style.right='auto'; fab.style.bottom='auto';
+    updatePanel(x,y,fw,fh);
   }
 
-  function snapToCorner(x,y){
+  // snap to nearest edge, keep position along that edge free
+  function snapToEdge(x,y){
     var W=window.innerWidth, H=window.innerHeight;
     var fw=fab.offsetWidth||56, fh=fab.offsetHeight||56;
     var cx=x+fw/2, cy=y+fh/2;
-    var sx=(cx<W/2)?FAB_MARGIN:W-fw-FAB_MARGIN;
-    var sy=(cy<H/2)?FAB_MARGIN:H-fh-FAB_MARGIN;
-    applyPos(sx,sy,true);
-    savePos({side:(cx<W/2?'left':'right'),vert:(cy<H/2?'top':'bottom'),x:sx,y:sy});
-    positionPanel(sx,sy,fw,fh);
+    var dLeft=cx, dRight=W-cx, dTop=cy, dBottom=H-cy;
+    var min=Math.min(dLeft,dRight,dTop,dBottom);
+    var nx=x, ny=y;
+    if(min===dLeft)       nx=MARGIN;
+    else if(min===dRight) nx=W-fw-MARGIN;
+    else if(min===dTop)   ny=MARGIN;
+    else                  ny=H-fh-MARGIN;
+    // clamp along the edge
+    nx=Math.max(MARGIN,Math.min(W-fw-MARGIN,nx));
+    ny=Math.max(MARGIN,Math.min(H-fh-MARGIN,ny));
+    setPos(nx,ny,true);
+    savePos({x:nx,y:ny});
+    updatePanel(nx,ny,fw,fh);
   }
 
-  function positionPanel(fx,fy,fw,fh){
+  function updatePanel(fx,fy,fw,fh){
     if(!panel||panel.classList.contains('hidden')) return;
     var W=window.innerWidth, H=window.innerHeight;
-    var pw=panel.offsetWidth||370, ph=panel.offsetHeight||520;
-    var px=fx+fw/2-pw/2;
-    var py=fy-ph-12;
-    if(fy+fh/2<H/2) py=fy+fh+12; // fab near top → panel below
+    var pw=Math.min(panel.offsetWidth||370, W-16);
+    var ph=panel.offsetHeight||520;
+    // panel opens away from nearest edge
+    var cx=fx+fw/2, cy=fy+fh/2;
+    var px, py;
+    var dLeft=cx, dRight=W-cx, dTop=cy, dBottom=H-cy;
+    var min=Math.min(dLeft,dRight,dTop,dBottom);
+    if(min===dLeft||min===dRight){
+      // left/right edge → panel above or below fab, centered vertically on fab
+      px=(min===dLeft)?(fx+fw+8):(fx-pw-8);
+      py=fy+fh/2-ph/2;
+    } else {
+      // top/bottom → panel left/right of center
+      px=fx+fw/2-pw/2;
+      py=(min===dTop)?(fy+fh+8):(fy-ph-8);
+    }
     px=Math.max(8,Math.min(W-pw-8,px));
     py=Math.max(8,Math.min(H-ph-8,py));
     panel.style.left=px+'px'; panel.style.top=py+'px';
@@ -13769,42 +13783,37 @@ function _renderWealthRank(){
     if(!dragging) return;
     var pt=e.touches?e.touches[0]:e;
     var dx=pt.clientX-startX, dy=pt.clientY-startY;
-    if(Math.abs(dx)+Math.abs(dy)>4) didDrag=true;
+    if(Math.abs(dx)+Math.abs(dy)>5) didDrag=true;
     if(!didDrag) return;
-    applyPos(origLeft+dx, origTop+dy, false);
+    setPos(origLeft+dx, origTop+dy, false);
     e.preventDefault();
   }
 
-  function onUp(e){
+  function onUp(){
     if(!dragging) return;
     dragging=false;
     fab.classList.remove('dragging');
     if(didDrag){
       var r=fab.getBoundingClientRect();
-      snapToCorner(r.left, r.top);
+      snapToEdge(r.left, r.top);
+    } else {
+      toggleChat();
     }
-    // ถ้าไม่ได้ลาก = click → toggleChat
-    else toggleChat();
   }
 
   function init(){
     fab=document.querySelector('.chat-fab');
     panel=document.getElementById('chat-panel');
-    if(!fab){ setTimeout(init,300); return; }
-
-    // restore saved position
-    var saved=getPos();
-    if(saved.x!==undefined){
-      applyPos(saved.x, saved.y, false);
-    } else {
-      // default: bottom-right
-      var fw=fab.offsetWidth||56, fh=fab.offsetHeight||56;
-      var W=window.innerWidth, H=window.innerHeight;
-      applyPos(W-fw-FAB_MARGIN, H-fh-FAB_MARGIN, false);
-    }
-
-    // remove existing onclick (ย้ายไปใน onUp แทน)
+    if(!fab){ setTimeout(init,400); return; }
     fab.removeAttribute('onclick');
+
+    var saved=loadPos();
+    if(saved&&saved.x!=null){
+      setPos(saved.x, saved.y, false);
+    } else {
+      var fw=fab.offsetWidth||56, fh=fab.offsetHeight||56;
+      setPos(window.innerWidth-fw-MARGIN, window.innerHeight-fh-MARGIN, false);
+    }
 
     fab.addEventListener('mousedown', onDown, {passive:false});
     fab.addEventListener('touchstart', onDown, {passive:false});
@@ -13814,7 +13823,7 @@ function _renderWealthRank(){
     window.addEventListener('touchend', onUp);
     window.addEventListener('resize', function(){
       var r=fab.getBoundingClientRect();
-      snapToCorner(r.left,r.top);
+      snapToEdge(r.left, r.top);
     });
   }
 
