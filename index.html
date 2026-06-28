@@ -14108,22 +14108,9 @@ function _rlReset(){ try{ localStorage.removeItem(_RL_KEY); }catch(e){} }
 })();
 
 // ══════════════════════════════════════════
-//  4. FEEDBACK BUTTON
+//  4. FEEDBACK MODAL
 // ══════════════════════════════════════════
 (function(){
-  // เพิ่มปุ่ม feedback ใน sidebar
-  const foot=document.querySelector('.sidebar-foot');
-  if(foot){
-    const fbtn=document.createElement('button');
-    fbtn.id='feedback-btn';
-    fbtn.style.cssText='width:100%;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.25);border-radius:10px;padding:9px;font-size:12px;color:#06b6d4;cursor:pointer;font-family:Sarabun,sans-serif;margin-bottom:8px;transition:background .2s';
-    fbtn.innerHTML='<i class="fas fa-comment-dots"></i> แจ้งปัญหา / ขอฟีเจอร์';
-    fbtn.onmouseover=()=>fbtn.style.background='rgba(6,182,212,.2)';
-    fbtn.onmouseout=()=>fbtn.style.background='rgba(6,182,212,.1)';
-    fbtn.onclick=_showFeedbackModal;
-    foot.insertBefore(fbtn, foot.firstChild);
-  }
-
   window._showFeedbackModal=function(){
     if(document.getElementById('_feedbackModal')) return;
     const ov=document.createElement('div');
