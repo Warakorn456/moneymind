@@ -3161,6 +3161,23 @@ async function _handleOAuthResult(result, providerName){
   }
 }
 
+// handle redirect result หลัง signInWithRedirect กลับมา
+async function _checkGoogleRedirectResult(){
+  if(!_auth||!_fs) return;
+  try{
+    const result=await _auth.getRedirectResult();
+    if(result&&result.user){
+      await _handleOAuthResult(result,'google');
+    }
+  }catch(e){
+    if(e.code&&e.code!=='auth/no-current-user'){
+      console.warn('[google redirect]',e.code,e.message);
+      const loginErr=document.getElementById('login-err');
+      if(loginErr) loginErr.textContent='Google Sign-In ล้มเหลว: '+e.code;
+    }
+  }
+}
+
 async function tryGoogleLogin(){
   if(window._isAndroidApp && window.AndroidBridge){ window.AndroidBridge.startGoogleSignIn(); return; }
   const errEl=_activeLoginErr();
@@ -3168,19 +3185,34 @@ async function tryGoogleLogin(){
   allBtns.forEach(b=>{ b.disabled=true; b.style.opacity='.5'; });
   if(errEl) errEl.textContent='';
   if(!_auth||!_fs){
-    if(errEl) errEl.textContent='ระบบยังไม่พร้อม ลองใหม่';
+    if(errEl) errEl.textContent='ระบบยังไม่พร้อม ลองใหม่อีกครั้ง';
     allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
     return;
   }
+  const provider=new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({prompt:'select_account'});
   try{
-    const provider=new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({prompt:'select_account'});
+    // ลอง popup ก่อน (desktop / browser ที่ allow popup)
     const result=await _auth.signInWithPopup(provider);
     await _handleOAuthResult(result,'google');
-  }catch(e){
-    const msgMap={'auth/popup-closed-by-user':'ยกเลิก','auth/popup-blocked':'กรุณาอนุญาต Popup ในเบราว์เซอร์','auth/cancelled-popup-request':'','auth/network-request-failed':'ไม่มีการเชื่อมต่ออินเทอร์เน็ต'};
-    const msg=msgMap[e.code]||(e.message?'เกิดข้อผิดพลาด: '+e.code:'เกิดข้อผิดพลาด');
-    if(errEl&&msg) errEl.textContent=msg;
+    return;
+  }catch(popupErr){
+    // popup ถูก block → ใช้ redirect แทน (WebView / mobile)
+    const redirectCodes=['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request','auth/operation-not-supported-in-this-environment'];
+    if(redirectCodes.includes(popupErr.code)){
+      try{
+        if(errEl) errEl.textContent='กำลังนำไปยัง Google...';
+        await _auth.signInWithRedirect(provider);
+        return; // หน้าจะ redirect ไป Google แล้วกลับมา
+      }catch(redirErr){
+        if(errEl) errEl.textContent='เกิดข้อผิดพลาด: '+redirErr.code;
+      }
+    } else if(popupErr.code==='auth/network-request-failed'){
+      if(errEl) errEl.textContent='ไม่มีการเชื่อมต่ออินเทอร์เน็ต';
+    } else if(popupErr.code&&popupErr.code!=='auth/cancelled-popup-request'){
+      if(errEl) errEl.textContent='เกิดข้อผิดพลาด: '+popupErr.code;
+      console.error('[google login]',popupErr.code,popupErr.message);
+    }
   }
   allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
 }
