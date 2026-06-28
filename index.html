@@ -13346,7 +13346,6 @@ function _renderWealthRank(){
   const _orig=renderDash;
   renderDash=function(){
     _orig.apply(this,arguments);
-    // inject wrapper div ถ้ายังไม่มี
     let wrap=document.getElementById('_wrankWrap');
     if(!wrap){
       wrap=document.createElement('div');
@@ -13358,6 +13357,17 @@ function _renderWealthRank(){
     }
     _renderWealthRank();
   };
+  // init ทันที เพราะ renderDash() ต้นทางวิ่งก่อน script block นี้แล้ว
+  let w=document.getElementById('_wrankWrap');
+  if(!w){
+    w=document.createElement('div');
+    w.id='_wrankWrap';
+    w.className='card';
+    w.style.marginBottom='20px';
+    const s=document.getElementById('dash-sortable');
+    if(s) s.appendChild(w);
+  }
+  _renderWealthRank();
 })();
 
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
