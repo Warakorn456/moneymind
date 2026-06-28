@@ -13368,11 +13368,17 @@ function _renderWealthRank(){
       </div>
     </div>`;
 
+  const tabs=Object.entries(_WT_DATA).map(([k,v])=>{
+    const active=k===_wrankScope;
+    return `<button onclick="setWrankScope('${k}')" style="padding:5px ${mob?9:12}px;border-radius:20px;border:1px solid ${active?tier.color+'60':'var(--border)'};background:${active?tier.color+'18':'transparent'};color:${active?tier.color:'var(--muted)'};font-size:${mob?11:12}px;font-weight:${active?700:500};cursor:pointer;white-space:nowrap;transition:.15s">${v.label}</button>`;
+  }).join('');
+
   wrap.innerHTML=`
-  <div class="sec-hd" style="margin-bottom:12px">
-    <div class="sec-title"><i class="fas fa-ranking-star" style="color:${tier.color};margin-right:6px"></i>อันดับความมั่งคั่งเทียบคนไทย</div>
-    <span style="font-size:10px;color:var(--muted)">Credit Suisse / NESDC 2023</span>
+  <div class="sec-hd" style="margin-bottom:10px">
+    <div class="sec-title"><i class="fas fa-ranking-star" style="color:${tier.color};margin-right:6px"></i>อันดับความมั่งคั่ง</div>
+    <span style="font-size:10px;color:var(--muted)">Credit Suisse 2023</span>
   </div>
+  <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">${tabs}</div>
   ${mob?`
   <!-- Mobile: badge row + stats + tier list stacked -->
   ${badge}
