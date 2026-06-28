@@ -702,8 +702,36 @@
       box-shadow:0 8px 32px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.06);
     }
     .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-    .cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:8px 0;letter-spacing:.8px;text-transform:uppercase}
-    .cal-dow.sun-col{color:#f87171}
+    .cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:6px}
+    .cal-dow{
+      text-align:center;font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;
+      padding:9px 4px;border-radius:12px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.09);
+      color:var(--muted);
+      backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+      transition:color .2s;
+    }
+    .cal-dow.sun-col{
+      color:#f87171;
+      background:rgba(248,113,113,.07);
+      border-color:rgba(248,113,113,.2);
+    }
+    .cal-dow.sat-col{
+      color:#c084fc;
+      background:rgba(192,132,252,.07);
+      border-color:rgba(192,132,252,.2);
+    }
+    .cal-dow.weekday-col{
+      color:#818cf8;
+      background:rgba(99,102,241,.06);
+      border-color:rgba(99,102,241,.15);
+    }
+    body.light-mode .cal-dow{background:rgba(255,255,255,.75);border-color:rgba(0,0,0,.08);color:var(--muted)}
+    body.light-mode .cal-dow.sun-col{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.2);color:#ef4444}
+    body.light-mode .cal-dow.sat-col{background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.2);color:#7c3aed}
+    body.light-mode .cal-dow.weekday-col{background:rgba(99,102,241,.06);border-color:rgba(99,102,241,.15);color:#4f46e5}
     .cal-cell{
       min-height:76px;border-radius:14px;padding:8px 4px 6px;cursor:pointer;
       border:1px solid rgba(255,255,255,.07);
