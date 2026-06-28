@@ -11043,7 +11043,7 @@ async function renderAdmin(){
   function saveDashOrder(){
     var c=getContainer(); if(!c) return;
     DB.settings.dashOrder=Array.from(c.children).map(function(el){return el.id;}).filter(Boolean);
-    saveLocalOnly();
+    saveDB();
   }
 
   function _addHandles(c){
