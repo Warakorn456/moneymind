@@ -13466,6 +13466,7 @@ function _renderWealthRank(){
     if(s) s.appendChild(w);
   }
   _renderWealthRank();
+  _renderTierBadge();
   // re-render เมื่อหมุนจอ / resize
   window.addEventListener('resize',()=>{
     if(document.getElementById('_wrankWrap')) _renderWealthRank();
