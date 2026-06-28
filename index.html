@@ -13375,9 +13375,16 @@ function _renderWealthRank(){
     return `<button onclick="setWrankScope('${k}')" style="padding:5px ${mob?9:12}px;border-radius:20px;border:1px solid ${active?tier.color+'60':'var(--border)'};background:${active?tier.color+'18':'transparent'};color:${active?tier.color:'var(--muted)'};font-size:${mob?11:12}px;font-weight:${active?700:500};cursor:pointer;white-space:nowrap;transition:.15s">${v.label}</button>`;
   }).join('');
 
+  wrap.style.position='relative';
   wrap.innerHTML=`
-  <div class="sec-hd" style="margin-bottom:10px">
-    <div class="sec-title"><i class="fas fa-ranking-star" style="color:${tier.color};margin-right:6px"></i>อันดับความมั่งคั่ง</div>
+  <!-- Level badge มุมซ้ายบน -->
+  <div style="position:absolute;top:14px;left:14px;display:flex;align-items:center;gap:5px;background:${tier.color}18;border:1px solid ${tier.color}40;border-radius:20px;padding:4px 10px;z-index:2">
+    <i class="fas ${tier.icon}" style="font-size:10px;color:${tier.color}"></i>
+    <span style="font-size:11px;font-weight:800;color:${tier.color}">Lv.${tier.lv}</span>
+    <span style="font-size:11px;font-weight:600;color:${tier.color}">${tier.name}</span>
+  </div>
+  <div class="sec-hd" style="margin-bottom:10px;padding-left:${mob?0:160}px">
+    <div style="flex:1"></div>
     <span style="font-size:10px;color:var(--muted)">Credit Suisse 2023</span>
   </div>
   <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">${tabs}</div>
