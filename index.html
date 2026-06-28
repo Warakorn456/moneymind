@@ -11846,10 +11846,12 @@ function renderCalendarPage(){
   for(var dn=1;dn<=daysInMonth;dn++){
     var dk=_calYear+'-'+String(_calMonth+1).padStart(2,'0')+'-'+String(dn).padStart(2,'0');
     var ddata=dayMap[dk]||{inc:[],exp:[],recur:[],notes:[]};
-    var isSun=(new Date(_calYear,_calMonth,dn).getDay()===0);
+    var dow=new Date(_calYear,_calMonth,dn).getDay();
+    var isSun=(dow===0);
+    var isSat=(dow===6);
     var isToday=(dk===todayStr);
     var isSel=(dk===_calSelDate);
-    var cls='cal-cell'+(isToday?' today':'')+(isSel?' selected':'')+(isSun?' sunday':'');
+    var cls='cal-cell'+(isToday?' today':'')+(isSel?' selected':'')+(isSun?' sunday':'')+(isSat?' saturday':'');
     var ddots='';
     if(ddata.inc.length) ddots+='<span class="cal-dot" style="background:#10b981"></span>';
     if(ddata.exp.length) ddots+='<span class="cal-dot" style="background:#ef4444"></span>';
