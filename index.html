@@ -13261,6 +13261,7 @@ function _renderWealthRank(){
   const wrap=document.getElementById('_wrankWrap');
   if(!wrap) return;
   const nw=calcNetWorth().netWorth;
+  const mob=window.innerWidth<640;
 
   // หา tier + percentile
   let tier=_WT[0], cumBelow=0;
@@ -13281,64 +13282,79 @@ function _renderWealthRank(){
     if(n>=1e3) return '฿'+(n/1000).toFixed(0)+'K+';
     return '฿'+n;
   };
-  const maxPct=25; // tier ที่มาก % สุด ใช้เป็น baseline bar
+  const maxPct=25;
 
   const rows=_WT.slice().reverse().map(t=>{
     const isMe=t.lv===tier.lv;
     const barW=Math.round(t.pct/maxPct*100);
-    const rangeLabel=t.lv===1?'< ฿0':t.lv===8?'฿50M+':fmtShort(t.min)+' – '+fmtShort(t.max);
-    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;${isMe?`background:${t.color}15;border:1px solid ${t.color}35;`:'border:1px solid transparent;'}margin-bottom:3px">
-      <div style="width:26px;height:26px;border-radius:7px;background:${t.color}22;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <i class="fas ${t.icon}" style="font-size:11px;color:${t.color}"></i>
+    const rangeLabel=t.lv===1?'< ฿0':t.lv===8?'฿50M+':fmtShort(t.min)+'–'+fmtShort(t.max);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:10px;${isMe?`background:${t.color}15;border:1px solid ${t.color}35;`:'border:1px solid transparent;'}margin-bottom:3px">
+      <div style="width:24px;height:24px;border-radius:6px;background:${t.color}22;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="fas ${t.icon}" style="font-size:10px;color:${t.color}"></i>
       </div>
       <div style="flex:1;min-width:0">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
-          <span style="font-size:12px;font-weight:${isMe?700:500};color:${isMe?t.color:'var(--text)'}">${isMe?'▶ ':''}<b style="color:${t.color}">${t.lv}.</b> ${t.name}</span>
-          <span style="font-size:11px;color:var(--muted);white-space:nowrap;margin-left:6px">${rangeLabel}</span>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;gap:4px">
+          <span style="font-size:${mob?11:12}px;font-weight:${isMe?700:500};color:${isMe?t.color:'var(--text)'};white-space:nowrap">${isMe?'▶ ':''}<b style="color:${t.color}">${t.lv}.</b> ${t.name}</span>
+          <span style="font-size:10px;color:var(--muted);white-space:nowrap;flex-shrink:0">${rangeLabel}</span>
         </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <div style="flex:1;height:4px;background:var(--surface2);border-radius:4px;overflow:hidden">
-            <div style="height:100%;width:${barW}%;background:${t.color};border-radius:4px;opacity:${isMe?1:.45}"></div>
+        <div style="display:flex;align-items:center;gap:5px">
+          <div style="flex:1;height:3px;background:var(--surface2);border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${barW}%;background:${t.color};border-radius:4px;opacity:${isMe?1:.4}"></div>
           </div>
-          <span style="font-size:11px;font-weight:700;color:${t.color};width:30px;text-align:right">${t.pct}%</span>
+          <span style="font-size:10px;font-weight:700;color:${t.color};width:26px;text-align:right">${t.pct}%</span>
         </div>
       </div>
     </div>`;
   }).join('');
 
+  // mobile: badge row แนวนอน, tier list ล่าง / desktop: 2 column
+  const badge=`
+    <div style="background:linear-gradient(135deg,${tier.color}20,${tier.color}08);border:1px solid ${tier.color}40;border-radius:14px;padding:${mob?'12px':'16px 14px'};${mob?'display:flex;align-items:center;gap:12px;':'text-align:center;margin-bottom:10px'}">
+      <div style="width:${mob?44:52}px;height:${mob?44:52}px;border-radius:${mob?10:13}px;background:${tier.color}22;border:2px solid ${tier.color}40;display:flex;align-items:center;justify-content:center;flex-shrink:0;${mob?'':'margin:0 auto 10px'}">
+        <i class="fas ${tier.icon}" style="font-size:${mob?18:22}px;color:${tier.color}"></i>
+      </div>
+      <div style="${mob?'':''}">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">ระดับที่ ${tier.lv} จาก 8</div>
+        <div style="font-size:${mob?16:19}px;font-weight:800;color:${tier.color};${mob?'':'margin-bottom:4px'}">${tier.name}</div>
+        ${mob?'':'<div style="font-size:11px;color:var(--muted)">'+tier.desc+'</div>'}
+      </div>
+    </div>`;
+
+  const stats=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;${mob?'':''}">
+      <div style="background:var(--surface2);border-radius:10px;padding:${mob?8:10}px;text-align:center">
+        <div style="font-size:${mob?20:22}px;font-weight:900;color:${tier.color};line-height:1">${percentile}<span style="font-size:11px">th</span></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">Percentile</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:${mob?8:10}px;text-align:center">
+        <div style="font-size:${mob?20:22}px;font-weight:900;color:${tier.color};line-height:1">Top <span style="font-size:${mob?14:15}px">${topPct}%</span></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">ของประเทศ</div>
+      </div>
+    </div>`;
+
   wrap.innerHTML=`
-  <div class="sec-hd" style="margin-bottom:14px">
+  <div class="sec-hd" style="margin-bottom:12px">
     <div class="sec-title"><i class="fas fa-ranking-star" style="color:${tier.color};margin-right:6px"></i>อันดับความมั่งคั่งเทียบคนไทย</div>
     <span style="font-size:10px;color:var(--muted)">Credit Suisse / NESDC 2023</span>
   </div>
-  <div style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start">
-    <!-- Left: badge + stats -->
-    <div>
-      <div style="background:linear-gradient(135deg,${tier.color}20,${tier.color}08);border:1px solid ${tier.color}40;border-radius:16px;padding:18px 14px;text-align:center;margin-bottom:10px">
-        <div style="width:56px;height:56px;border-radius:14px;background:${tier.color}22;border:2px solid ${tier.color}40;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
-          <i class="fas ${tier.icon}" style="font-size:24px;color:${tier.color}"></i>
-        </div>
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">ระดับที่ ${tier.lv} จาก 8</div>
-        <div style="font-size:19px;font-weight:800;color:${tier.color};margin-bottom:4px">${tier.name}</div>
-        <div style="font-size:11px;color:var(--muted)">${tier.desc}</div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:22px;font-weight:900;color:${tier.color};line-height:1">${percentile}<span style="font-size:12px">th</span></div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">Percentile</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:22px;font-weight:900;color:${tier.color};line-height:1">Top<span style="font-size:15px"> ${topPct}%</span></div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">ของประเทศ</div>
-        </div>
-      </div>
+  ${mob?`
+  <!-- Mobile: badge row + stats + tier list stacked -->
+  ${badge}
+  <div style="margin:10px 0">${stats}</div>
+  <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;padding:0 4px">8 ระดับ · % ของคนไทย 55 ล้านคน</div>
+  ${rows}
+  `:`
+  <!-- Desktop: 2 column -->
+  <div style="display:flex;gap:16px;align-items:start;flex-wrap:wrap">
+    <div style="flex:0 0 210px;min-width:0">
+      ${badge}${stats}
     </div>
-    <!-- Right: tier list (reversed: 8 → 1) -->
-    <div>
+    <div style="flex:1;min-width:260px">
       <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;padding:0 10px">8 ระดับ · % ของคนไทย 55 ล้านคน</div>
       ${rows}
     </div>
-  </div>`;
+  </div>
+  `}`;
 }
 
 // monkey-patch renderDash
