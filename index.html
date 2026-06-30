@@ -3096,10 +3096,16 @@ async function tryGoogleLogin(){
     await _handleOAuthResult(result,'google');
     return;
   }catch(popupErr){
-    // signInWithRedirect ไม่ใช้แล้ว — Chrome mobile v115+ มี storage partitioning
-    // ทำให้ sessionStorage หาย → "missing initial state" error หลัง redirect กลับมา
+    // popup-blocked หรือ not-supported → เกิดใน WebView ที่บล็อก window.open()
+    // ใช้ signInWithRedirect เป็น fallback (WebView ไม่มี storage partitioning ของ Chrome)
     if(popupErr.code==='auth/popup-blocked'||popupErr.code==='auth/operation-not-supported-in-this-environment'){
-      if(errEl) errEl.textContent='กรุณาอนุญาต Popup ในเบราว์เซอร์แล้วลองใหม่ หรือเปิดเว็บใน Chrome โดยตรง';
+      try{
+        if(errEl) errEl.textContent='กำลังนำไปยัง Google...';
+        await _auth.signInWithRedirect(provider);
+        return;
+      }catch(redirErr){
+        if(errEl) errEl.textContent='เกิดข้อผิดพลาด: '+(redirErr.code||redirErr.message);
+      }
     } else if(popupErr.code==='auth/popup-closed-by-user'||popupErr.code==='auth/cancelled-popup-request'){
       // user ปิด popup เอง — ไม่ต้องแสดง error
     } else if(popupErr.code==='auth/network-request-failed'){
@@ -3107,6 +3113,9 @@ async function tryGoogleLogin(){
     } else if(popupErr.code){
       if(errEl) errEl.textContent='เกิดข้อผิดพลาด: '+popupErr.code;
       console.error('[google login]',popupErr.code,popupErr.message);
+    } else {
+      if(errEl) errEl.textContent='เกิดข้อผิดพลาด กรุณาลองใหม่';
+      console.error('[google login]',popupErr);
     }
   }
   allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
