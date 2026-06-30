@@ -7933,7 +7933,15 @@ if(currentUser){
   initDate(); setTxType('income'); renderDash();
   setTimeout(checkDcaSchedule,2000);
 }
-// signInWithRedirect ถอดออกแล้ว — ไม่ต้อง check redirect result อีกต่อไป
+// ตรวจ redirect result เมื่อโหลดหน้า (สำหรับ WebView ที่ใช้ signInWithRedirect)
+if(!currentUser){
+  var _oauthRedirectTimer=setInterval(function(){
+    if(typeof firebase!=='undefined'&&firebase.auth){
+      clearInterval(_oauthRedirectTimer);
+      try{ _checkGoogleRedirectResult(); }catch(e){}
+    }
+  },200);
+}
 
 function buildFinanceContext(){
   const now=new Date();
