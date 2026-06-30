@@ -14059,75 +14059,7 @@ function _showWelcomeOnboard(){
   window._fcSvgG=_fcSVG;
 
   // ── Popup content ──────────────────────────────────────────
-  function _fcFillPopup(){
-    const p=document.getElementById('fc-popup'); if(!p) return;
-    const nwData=calcNetWorth(); const nw=nwData.netWorth;
-    const lv=_fcLv(nw); const prog=_fcProg(nw,lv);
-    const idx=_FC_LEVELS.indexOf(lv); const next=_FC_LEVELS[idx+1];
-    let score=0; try{ score=calcHealthScore().score; }catch(e){}
-    const rc=lv.color;
-    const RC={F:'#ef4444',E:'#f97316',D:'#eab308',C:'#22c55e',B:'#3b82f6',A:'#8b5cf6',S:'#f59e0b'};
-    p.innerHTML=`
-    <div style="background:linear-gradient(135deg,${lv.bg} 0%,#0d0d1a 100%);
-      border:1px solid ${rc}50;border-radius:16px;overflow:hidden;position:relative;">
-      <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;
-        background:radial-gradient(circle,${rc}22 0%,transparent 70%);pointer-events:none"></div>
-      <!-- header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;
-        padding:14px 18px 10px;border-bottom:1px solid ${rc}20;">
-        <div style="font-size:11px;color:${rc};letter-spacing:2px;font-weight:700">
-          <i class="fas fa-user-shield" style="margin-right:6px"></i>ตัวละครชนชั้นการเงิน</div>
-        <button onclick="window._fcTogglePopup()" style="background:none;border:none;
-          color:#64748b;font-size:18px;cursor:pointer;line-height:1;padding:0 2px">×</button>
-      </div>
-      <!-- body -->
-      <div style="padding:18px 18px 20px;display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;">
-        <!-- character figure -->
-        <div style="position:relative;flex-shrink:0;text-align:center;">
-          <div style="display:inline-flex;align-items:flex-end;justify-content:center;
-            width:116px;min-height:148px;
-            background:linear-gradient(180deg,${rc}1a,${rc}06);
-            border-radius:60px 60px 12px 12px;border:1.5px solid ${rc}30;
-            padding-top:8px;overflow:hidden;">
-            ${_fcSVG(lv.rank)}
-          </div>
-          <div style="position:absolute;top:-2px;left:50%;transform:translateX(-50%);
-            background:${rc};color:${lv.rank==='S'?'#000':'#fff'};font-weight:900;
-            font-size:11px;padding:3px 10px;border-radius:20px;
-            border:2px solid #0d0d1a;box-shadow:0 0 12px ${rc}99;white-space:nowrap;">
-            ⭐ Lv.${idx+1} · ${lv.rank}</div>
-        </div>
-        <!-- stats -->
-        <div style="flex:1;min-width:140px;">
-          <div style="font-size:22px;font-weight:800;color:#f1f5f9;margin-bottom:2px;">${lv.name}</div>
-          <div style="font-size:11px;color:#94a3b8;margin-bottom:12px;">${lv.desc}</div>
-          <div style="display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
-            <div><div style="font-size:16px;font-weight:800;color:${rc}">${fmt(nw)}</div>
-              <div style="font-size:10px;color:#64748b">Net Worth</div></div>
-            ${score>0?`<div><div style="font-size:16px;font-weight:800;color:${score>=70?'#22c55e':score>=40?'#eab308':'#ef4444'}">${score}<span style="font-size:10px;font-weight:400">/100</span></div>
-              <div style="font-size:10px;color:#64748b">Health Score</div></div>`:''}
-          </div>
-          ${next?`<div style="margin-bottom:12px;">
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:#64748b;margin-bottom:5px;">
-              <span>⬆️ สู่ <span style="color:${RC[next.rank]};font-weight:700">${next.name}</span></span>
-              <span style="color:${rc};font-weight:700">${prog.toFixed(0)}%</span>
-            </div>
-            <div style="background:#1e293b;border-radius:6px;height:9px;overflow:hidden;">
-              <div style="height:100%;width:${prog}%;background:linear-gradient(90deg,${rc},${RC[next.rank]||rc});
-                border-radius:6px;box-shadow:0 0 8px ${rc}66;transition:width 1s ease;"></div>
-            </div>
-            <div style="font-size:10px;color:#475569;margin-top:4px">
-              ต้องการอีก <span style="color:${rc};font-weight:600">${fmt(lv.max-nw)}</span>
-            </div>
-          </div>`:`<div style="font-size:12px;color:#f59e0b;font-weight:700;margin-bottom:12px;">🏆 ระดับสูงสุดแล้ว!</div>`}
-          <div style="padding:7px 10px;background:${rc}18;border-radius:8px;
-            border-left:3px solid ${rc};font-size:11px;color:#cbd5e1;">💡 ${lv.tip}</div>
-        </div>
-      </div>
-    </div>`;
-  }
-
-  // ── Avatar badge in sidebar (below _tierBadge) ────────────
+  // ── Avatar badge in sidebar (opens existing rank popup) ───
   function _fcRenderAvatar(){
     const nwData=calcNetWorth(); const nw=nwData.netWorth;
     const lv=_fcLv(nw); const idx=_FC_LEVELS.indexOf(lv);
@@ -14146,19 +14078,14 @@ function _showWelcomeOnboard(){
       if(!tbd) return;
       wrap=document.createElement('div');
       wrap.id='fc-avatar-wrap';
-      wrap.style.cssText='margin-top:6px;position:relative;';
+      wrap.style.cssText='margin-top:6px;';
       wrap.innerHTML=
-        `<button id="fc-avatar-btn" onclick="window._fcTogglePopup()"
+        `<button id="fc-avatar-btn" onclick="_showRankPopup()"
           style="background:none;border:none;cursor:pointer;padding:0;display:block;width:100%;text-align:left;"
           onmouseover="this.firstElementChild.style.opacity='.8'"
           onmouseout="this.firstElementChild.style.opacity='1'">
           <div id="fc-badge-inner" style="transition:.15s;display:inline-flex;align-items:center;gap:6px;"></div>
-        </button>
-        <div id="fc-popup-overlay" onclick="window._fcTogglePopup()"
-          style="display:none;position:fixed;inset:0;z-index:998;background:rgba(0,0,0,0.4);backdrop-filter:blur(2px)"></div>
-        <div id="fc-popup" data-open="0"
-          style="display:none;position:fixed;z-index:999;
-            box-shadow:0 24px 64px rgba(0,0,0,0.7);border-radius:16px;overflow:hidden;"></div>`;
+        </button>`;
       tbd.parentNode.insertBefore(wrap, tbd.nextSibling);
     }
 
