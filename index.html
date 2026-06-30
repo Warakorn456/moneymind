@@ -3062,22 +3062,8 @@ async function _handleOAuthResult(result, providerName){
   }
 }
 
-// handle redirect result หลัง signInWithRedirect กลับมา
-async function _checkGoogleRedirectResult(){
-  if(!_auth||!_fs) return;
-  try{
-    const result=await _auth.getRedirectResult();
-    if(result&&result.user){
-      await _handleOAuthResult(result,'google');
-    }
-  }catch(e){
-    if(e.code&&e.code!=='auth/no-current-user'){
-      console.warn('[google redirect]',e.code,e.message);
-      const loginErr=document.getElementById('login-err');
-      if(loginErr) loginErr.textContent='Google Sign-In ล้มเหลว: '+e.code;
-    }
-  }
-}
+// _checkGoogleRedirectResult ถอดออกแล้ว — signInWithRedirect ใช้ sessionStorage
+// ซึ่ง Chrome mobile v115+ partitioned storage ทำให้ "missing initial state" error
 
 async function tryGoogleLogin(){
   if(window._isAndroidApp && window.AndroidBridge){ window.AndroidBridge.startGoogleSignIn(); return; }
