@@ -203,6 +203,7 @@ _escHtml(s)              // escape HTML string (บรรทัด ~11428)
 | Dashboard | โหมด "รายจ่ายจริง" — toggle `hideMoneyMove` (default on) ตัด transfer/cash ออกจากรายจ่าย/งบ/กราฟ; helper `isRealExp()`, `isMoneyMove()`, ปุ่มในการ์ดกราฟหมวด |
 | Dashboard | คลิกหมวดในกราฟ pie → `openCatDrill()` modal `m-catdrill` แสดงรายการในหมวดนั้น |
 | Transactions | กรองตามหมวด (`tx-cat-filter`) + bulk select (`toggleBulkMode`): ติ๊กหลายรายการ → เปลี่ยนหมวด (`applyBulkCat`)/ลบ (`bulkDelete`) ทีเดียว; floating `bulk-bar` |
+| Dashboard | **Finance Character** (`renderFinanceChar`, `#dash-char-section`) — ตัวละคร SVG 7 ระดับ (F→S) แสดง Net Worth ชนชั้น + progress bar + Health Score + คำแนะนำ; monkey-patch บน renderDash |
 | Dashboard | Health Score, NW History, Monthly Comparison, Spending Heatmap, YTD Summary |
 | Dashboard | RVV (Fixed vs Variable), 50/30/20, Emergency Fund, Pay Yourself First |
 | Dashboard | Drag-and-drop reorder sections (DB.settings.dashOrder) |
