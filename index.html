@@ -3086,7 +3086,7 @@ async function tryGoogleLogin(){
   if(errEl) errEl.textContent='';
   if(!_auth||!_fs){
     if(errEl) errEl.textContent='ระบบยังไม่พร้อม ลองใหม่อีกครั้ง';
-    allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''); });
+    allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
     return;
   }
   const provider=new firebase.auth.GoogleAuthProvider();
