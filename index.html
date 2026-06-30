@@ -13485,28 +13485,35 @@ function _buildRankPopupBody(nw, scope){
     </div>`;
   }).join('');
 
-  // Finance Character integration
-  const _fcL=window._fcLvG?window._fcLvG(nw):null;
-  const _fcS=_fcL&&window._fcSvgG?window._fcSvgG(_fcL.rank):'';
-  const _fcC=_fcL?_fcL.color:rank.color;
+  // Sprite character — image 1536×1024, 8 cols (Iron→Legend) × 2 rows (F/M)
+  // Display 110×210px; scale=110/192=0.573; full scaled=880×587; cell scaled=110×293
+  const _col=tier.lv-1;                     // 0=Iron … 7=Legend
+  if(typeof window._fcGender==='undefined') window._fcGender=parseInt(localStorage.getItem('_fcGender')||'0');
+  const _row=window._fcGender;              // 0=female, 1=male
+  const _bx=-(110*_col);
+  const _by=-(293*_row+52);                 // skip ~52px scaled = ~91px original (tier header text)
+  const _gBtn=(g,lbl,em)=>{
+    const a=window._fcGender===g;
+    return `<button onclick="window._fcGender=${g};localStorage.setItem('_fcGender','${g}');_setRankPopupScope('${scope}')" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:${a?700:500};border:1.5px solid ${a?rank.color+'80':'var(--border)'};background:${a?rank.color+'22':'transparent'};color:${a?rank.color:'var(--muted)'};cursor:pointer;transition:.15s">${em} ${lbl}</button>`;
+  };
 
   return `
   <button onclick="document.getElementById('_rankPopupOv').remove()" style="position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--muted);font-size:15px;display:flex;align-items:center;justify-content:center">✕</button>
   <!-- header -->
   <div style="text-align:center;margin-bottom:16px">
-    ${_fcS?`
-    <div style="display:inline-flex;align-items:flex-end;justify-content:center;
-      width:100px;min-height:${_fcL.rank==='S'?'162':'148'}px;overflow:hidden;
-      background:linear-gradient(180deg,${_fcC}20,${_fcC}06);
-      border-radius:50px 50px 14px 14px;border:1.5px solid ${_fcC}40;
-      margin:0 auto 10px;box-shadow:0 0 24px ${rank.glow};">
-      ${_fcS}
+    <div style="display:flex;justify-content:center;gap:8px;margin-bottom:10px">
+      ${_gBtn(0,'หญิง','♀')}${_gBtn(1,'ชาย','♂')}
     </div>
-    <div style="font-size:11px;color:${_fcC};margin-bottom:6px;font-weight:700">
-      ${_fcL.name} · ${_fcL.desc}</div>
-    `:`<div style="width:68px;height:68px;border-radius:18px;background:${rank.color}18;border:2px solid ${rank.color}50;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 0 24px ${rank.glow}">
-      <i class="fas ${rank.icon}" style="font-size:28px;color:${rank.color}"></i>
-    </div>`}
+    <div style="width:110px;height:210px;overflow:hidden;border-radius:14px 14px 10px 10px;
+      margin:0 auto 10px;box-shadow:0 4px 24px ${rank.glow},0 0 0 1.5px ${rank.color}35;
+      position:relative">
+      <div style="position:absolute;inset:0;
+        background-image:url('./chars.png');
+        background-size:880px 587px;
+        background-position:${_bx}px ${_by}px;
+        background-repeat:no-repeat">
+      </div>
+    </div>
     <div style="font-size:24px;font-weight:900;color:${rank.color}">${rank.name}</div>
     <div style="font-size:12px;color:var(--muted);margin-top:3px">${rank.th} · Lv.${tier.lv}/8 · ${sm.label} (${sm.pop})</div>
     <div style="margin-top:10px;display:flex;justify-content:center;gap:16px">
@@ -14151,162 +14158,6 @@ function _showWelcomeOnboard(){
 </svg>`;
   }
 
-  // ── OLD C config placeholder ── (removed — replaced above)
-  const _fcOld={
-    F:{b:'#78716c',bD:'#57534e',p:'#44403c',pD:'#3c3834',sh:'#57534e',h:'#78350f',f:'sad'},
-    E:{b:'#4ade80',bD:'#22c55e',p:'#1e40af',pD:'#1d4ed8',sh:'#374151',h:'#92400e',f:'nervous'},
-      D:{b:'#f0f9ff',bD:'#e0f2fe',p:'#1e293b',pD:'#334155',sh:'#0f172a',h:'#1e293b',f:'neutral',t:'#ef4444'},
-      C:{b:'#3b82f6',bD:'#2563eb',p:'#374151',pD:'#4b5563',sh:'#1e293b',h:'#1e293b',f:'smile'},
-      B:{b:'#1e3a5f',bD:'#1e40af',p:'#111827',pD:'#1f2937',sh:'#030712',h:'#0f172a',f:'happy',  t:'#f59e0b'},
-      A:{b:'#0f172a',bD:'#1e293b',p:'#030712',pD:'#111827',sh:'#030712',h:'#0a0a0a',f:'veryhappy',t:'#8b5cf6'},
-      S:{b:'#111827',bD:'#030712',p:'#030712',pD:'#1f2937',sh:'#d97706',h:'#0f172a',f:'ecstatic'},
-    };
-    const c=C[rank]||C.D;
-    const isS=rank==='S';
-    const vb=isS?'0 -20 100 168':'0 0 100 148';
-    const svgH=isS?'155':'148';
-
-    const FACE={
-      sad:`<circle cx="40" cy="44" r="3.5" fill="white"/><circle cx="60" cy="44" r="3.5" fill="white"/>
-           <circle cx="40" cy="45" r="2" fill="#1e293b"/><circle cx="60" cy="45" r="2" fill="#1e293b"/>
-           <path d="M34 35 Q40 31 46 35" stroke="#78350f" stroke-width="2" fill="none"/>
-           <path d="M54 35 Q60 31 66 35" stroke="#78350f" stroke-width="2" fill="none"/>
-           <path d="M36 57 Q50 51 64 57" stroke="#1e293b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-           <ellipse cx="38" cy="51" rx="2" ry="3.5" fill="#93c5fd" opacity="0.85"/>`,
-      nervous:`<circle cx="40" cy="44" r="4" fill="white"/><circle cx="60" cy="44" r="4" fill="white"/>
-               <circle cx="40" cy="45" r="2.5" fill="#1e293b"/><circle cx="60" cy="45" r="2.5" fill="#1e293b"/>
-               <path d="M37 57 Q43 53 50 57 Q57 53 63 57" stroke="#1e293b" stroke-width="2.5" fill="none" stroke-linecap="round"/>`,
-      neutral:`<circle cx="40" cy="44" r="4" fill="white"/><circle cx="60" cy="44" r="4" fill="white"/>
-               <circle cx="40" cy="45" r="2.5" fill="#1e293b"/><circle cx="60" cy="45" r="2.5" fill="#1e293b"/>
-               <circle cx="41.5" cy="43.5" r="1" fill="white"/><circle cx="61.5" cy="43.5" r="1" fill="white"/>
-               <line x1="37" y1="57" x2="63" y2="57" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>`,
-      smile:`<circle cx="40" cy="43" r="4" fill="white"/><circle cx="60" cy="43" r="4" fill="white"/>
-             <circle cx="40" cy="44" r="2.5" fill="#1e293b"/><circle cx="60" cy="44" r="2.5" fill="#1e293b"/>
-             <circle cx="41.5" cy="43" r="1" fill="white"/><circle cx="61.5" cy="43" r="1" fill="white"/>
-             <path d="M36 55 Q50 65 64 55" stroke="#1e293b" stroke-width="2.5" fill="none" stroke-linecap="round"/>`,
-      happy:`<circle cx="40" cy="42" r="4.5" fill="white"/><circle cx="60" cy="42" r="4.5" fill="white"/>
-             <circle cx="40" cy="43" r="3" fill="#1e293b"/><circle cx="60" cy="43" r="3" fill="#1e293b"/>
-             <circle cx="41.5" cy="41.5" r="1.2" fill="white"/><circle cx="61.5" cy="41.5" r="1.2" fill="white"/>
-             <path d="M34 55 Q50 67 66 55" stroke="#1e293b" stroke-width="2.5" fill="#fde68a" stroke-linecap="round"/>
-             <ellipse cx="30" cy="52" rx="6" ry="3.5" fill="#fda4af" opacity="0.5"/>
-             <ellipse cx="70" cy="52" rx="6" ry="3.5" fill="#fda4af" opacity="0.5"/>`,
-      veryhappy:`<circle cx="39" cy="41" r="5" fill="white"/><circle cx="61" cy="41" r="5" fill="white"/>
-                 <circle cx="39" cy="42" r="3.5" fill="#1e293b"/><circle cx="61" cy="42" r="3.5" fill="#1e293b"/>
-                 <circle cx="40.5" cy="41" r="1.5" fill="white"/><circle cx="62.5" cy="41" r="1.5" fill="white"/>
-                 <path d="M32 55 Q50 69 68 55" stroke="#1e293b" stroke-width="3" fill="#fef9c3" stroke-linecap="round"/>
-                 <ellipse cx="27" cy="51" rx="7" ry="4" fill="#fda4af" opacity="0.6"/>
-                 <ellipse cx="73" cy="51" rx="7" ry="4" fill="#fda4af" opacity="0.6"/>`,
-      ecstatic:`<circle cx="38" cy="40" r="5.5" fill="white"/><circle cx="62" cy="40" r="5.5" fill="white"/>
-                <circle cx="38" cy="41" r="4" fill="#1e293b"/><circle cx="62" cy="41" r="4" fill="#1e293b"/>
-                <circle cx="40" cy="39.5" r="1.5" fill="white"/><circle cx="64" cy="39.5" r="1.5" fill="white"/>
-                <path d="M30 55 Q50 72 70 55" stroke="#1e293b" stroke-width="3" fill="#fef9c3" stroke-linecap="round"/>
-                <ellipse cx="26" cy="51" rx="8" ry="4.5" fill="#fda4af" opacity="0.7"/>
-                <ellipse cx="74" cy="51" rx="8" ry="4.5" fill="#fda4af" opacity="0.7"/>
-                <text x="4" y="25" font-size="13">⭐</text><text x="74" y="18" font-size="11">✨</text>`,
-    };
-
-    const OUTFIT={
-      F:`<rect x="22" y="72" width="56" height="42" rx="5" fill="${c.b}"/>
-         <polygon points="22,106 28,114 22,114" fill="${c.b}"/>
-         <polygon points="78,106 72,114 78,114" fill="${c.b}"/>
-         <rect x="28" y="78" width="12" height="9" rx="2" fill="${c.bD}"/>
-         <rect x="54" y="88" width="12" height="8" rx="2" fill="${c.bD}"/>
-         <path d="M35 82 L39 86 M33 87 L37 83" stroke="#3c3834" stroke-width="1.5"/>
-         <rect x="24" y="110" width="21" height="27" rx="3" fill="${c.p}"/>
-         <rect x="55" y="110" width="21" height="27" rx="3" fill="${c.p}"/>
-         <polygon points="24,131 32,137 24,137" fill="${c.pD}"/>
-         <polygon points="76,131 68,137 76,137" fill="${c.pD}"/>`,
-      E:`<rect x="20" y="72" width="60" height="42" rx="6" fill="${c.b}"/>
-         <path d="M38 72 Q50 79 62 72" stroke="${c.bD}" stroke-width="7" stroke-linecap="round" fill="none"/>
-         <rect x="23" y="110" width="22" height="27" rx="4" fill="${c.p}"/>
-         <rect x="55" y="110" width="22" height="27" rx="4" fill="${c.p}"/>
-         <line x1="34" y1="110" x2="34" y2="137" stroke="${c.pD}" stroke-width="1.5"/>
-         <line x1="66" y1="110" x2="66" y2="137" stroke="${c.pD}" stroke-width="1.5"/>`,
-      D:`<rect x="20" y="72" width="60" height="42" rx="6" fill="${c.b}"/>
-         <polygon points="44,72 56,72 60,86 50,92 40,86" fill="#e2e8f0"/>
-         <polygon points="47,74 53,74 56,104 50,110 44,104" fill="${c.t||'#ef4444'}"/>
-         <polygon points="47,74 53,74 50,82" fill="#dc2626"/>
-         <circle cx="50" cy="97" r="1.8" fill="#cbd5e1"/>
-         <circle cx="50" cy="105" r="1.8" fill="#cbd5e1"/>
-         <rect x="23" y="110" width="22" height="27" rx="4" fill="${c.p}"/>
-         <rect x="55" y="110" width="22" height="27" rx="4" fill="${c.p}"/>
-         <rect x="21" y="108" width="58" height="5" rx="2" fill="#1e293b"/>`,
-      C:`<rect x="20" y="72" width="60" height="42" rx="6" fill="${c.b}"/>
-         <polygon points="44,72 56,72 57,90 50,94 43,90" fill="${c.bD}"/>
-         <circle cx="50" cy="78" r="2" fill="#93c5fd"/>
-         <circle cx="50" cy="86" r="2" fill="#93c5fd"/>
-         <rect x="23" y="110" width="22" height="27" rx="4" fill="${c.p}"/>
-         <rect x="55" y="110" width="22" height="27" rx="4" fill="${c.p}"/>
-         <rect x="21" y="108" width="58" height="5" rx="2" fill="#92400e"/>
-         <rect x="46" y="107" width="8" height="7" rx="1" fill="#d97706"/>`,
-      B:`<rect x="18" y="70" width="64" height="44" rx="6" fill="${c.b}"/>
-         <polygon points="33,70 50,70 50,96 37,85" fill="${c.bD}"/>
-         <polygon points="67,70 50,70 50,96 63,85" fill="${c.bD}"/>
-         <polygon points="44,70 56,70 55,96 50,99 45,96" fill="white"/>
-         <polygon points="47,72 53,72 55,100 50,107 45,100" fill="${c.t||'#f59e0b'}"/>
-         <polygon points="47,72 53,72 50,80" fill="#d97706"/>
-         <polygon points="18,76 25,73 24,82" fill="#fbbf24" opacity="0.9"/>
-         <rect x="23" y="112" width="21" height="25" rx="4" fill="${c.p}"/>
-         <rect x="56" y="112" width="21" height="25" rx="4" fill="${c.p}"/>`,
-      A:`<rect x="17" y="68" width="66" height="46" rx="7" fill="${c.b}"/>
-         <polygon points="30,68 50,68 50,97 35,84" fill="${c.bD}"/>
-         <polygon points="70,68 50,68 50,97 65,84" fill="${c.bD}"/>
-         <polygon points="43,68 57,68 56,97 50,101 44,97" fill="white"/>
-         <polygon points="46,70 54,70 56,100 50,107 44,100" fill="${c.t||'#8b5cf6'}"/>
-         <polygon points="17,74 24,71 23,80" fill="#f59e0b"/>
-         <rect x="22" y="112" width="22" height="25" rx="4" fill="${c.p}"/>
-         <rect x="56" y="112" width="22" height="25" rx="4" fill="${c.p}"/>
-         <rect x="15" y="96" width="11" height="7" rx="2" fill="#d97706"/>
-         <circle cx="20.5" cy="99.5" r="3" fill="#fbbf24" stroke="#d97706" stroke-width="1"/>
-         <rect x="63" y="110" width="19" height="10" rx="2" fill="#15803d" opacity="0.9"/>
-         <text x="65" y="119" font-size="9" fill="#86efac" font-weight="bold">฿฿฿</text>`,
-      S:`<rect x="21" y="-17" width="58" height="28" rx="3" fill="#111827"/>
-         <rect x="21" y="7" width="58" height="4" fill="#d97706"/>
-         <rect x="11" y="10" width="78" height="7" rx="3" fill="#1f2937"/>
-         <rect x="16" y="66" width="68" height="48" rx="7" fill="${c.b}"/>
-         <polygon points="28,66 50,66 50,97 33,84" fill="#1f2937"/>
-         <polygon points="72,66 50,66 50,97 67,84" fill="#1f2937"/>
-         <polygon points="43,66 57,66 56,97 50,101 44,97" fill="white"/>
-         <line x1="48" y1="72" x2="48" y2="96" stroke="#e2e8f0" stroke-width="1"/>
-         <line x1="52" y1="72" x2="52" y2="96" stroke="#e2e8f0" stroke-width="1"/>
-         <polygon points="42,74 50,79 42,84" fill="#1f2937"/>
-         <polygon points="58,74 50,79 58,84" fill="#1f2937"/>
-         <circle cx="50" cy="79" r="3.5" fill="#374151"/>
-         <circle cx="50" cy="90" r="2" fill="#f59e0b"/>
-         <circle cx="50" cy="98" r="2" fill="#f59e0b"/>
-         <rect x="13" y="95" width="9" height="6" rx="2" fill="#f59e0b"/>
-         <rect x="78" y="95" width="9" height="6" rx="2" fill="#f59e0b"/>
-         <rect x="21" y="112" width="22" height="25" rx="4" fill="${c.p}"/>
-         <rect x="57" y="112" width="22" height="25" rx="4" fill="${c.p}"/>
-         <line x1="32" y1="112" x2="32" y2="137" stroke="#374151" stroke-width="2"/>
-         <line x1="68" y1="112" x2="68" y2="137" stroke="#374151" stroke-width="2"/>
-         <circle cx="73" cy="118" r="10" fill="#15803d"/>
-         <text x="69" y="122" font-size="11" fill="#86efac" font-weight="bold">฿</text>`,
-    };
-
-    const HAIR={
-      F:`<ellipse cx="50" cy="13" rx="29" ry="13" fill="${c.h}"/>
-         <path d="M24 13 Q21 4 27 7" stroke="${c.h}" stroke-width="4" fill="none" stroke-linecap="round"/>
-         <path d="M76 13 Q79 4 73 7" stroke="${c.h}" stroke-width="4" fill="none" stroke-linecap="round"/>`,
-      default:`<ellipse cx="50" cy="12" rx="28" ry="12" fill="${c.h}"/>`,
-    };
-
-    const hair=isS?'':(HAIR[rank]||HAIR.default);
-
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" width="110" height="${svgH}">
-      <ellipse cx="50" cy="145" rx="28" ry="4" fill="rgba(0,0,0,0.2)"/>
-      <rect x="5" y="74" width="14" height="38" rx="7" fill="${SK}"/>
-      <rect x="81" y="74" width="14" height="38" rx="7" fill="${SK}"/>
-      <ellipse cx="34" cy="140" rx="13" ry="4.5" fill="${c.sh}"/>
-      <ellipse cx="66" cy="140" rx="13" ry="4.5" fill="${c.sh}"/>
-      ${OUTFIT[rank]||OUTFIT.D}
-      <circle cx="50" cy="40" r="29" fill="${SK}"/>
-      <ellipse cx="19" cy="40" rx="6" ry="8" fill="${SK}"/>
-      <ellipse cx="81" cy="40" rx="6" ry="8" fill="${SK}"/>
-      ${hair}
-      ${FACE[c.f]||FACE.neutral}
-    </svg>`;
-  }
 
   // ── expose globals so _buildRankPopupBody can use them ────
   function _fcEmoji(r){return{F:'😰',E:'😐',D:'🙂',C:'😊',B:'😎',A:'🤩',S:'👑'}[r]||'😐';}
