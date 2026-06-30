@@ -13485,13 +13485,28 @@ function _buildRankPopupBody(nw, scope){
     </div>`;
   }).join('');
 
+  // Finance Character integration
+  const _fcL=window._fcLvG?window._fcLvG(nw):null;
+  const _fcS=_fcL&&window._fcSvgG?window._fcSvgG(_fcL.rank):'';
+  const _fcC=_fcL?_fcL.color:rank.color;
+
   return `
   <button onclick="document.getElementById('_rankPopupOv').remove()" style="position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--muted);font-size:15px;display:flex;align-items:center;justify-content:center">✕</button>
   <!-- header -->
   <div style="text-align:center;margin-bottom:16px">
-    <div style="width:68px;height:68px;border-radius:18px;background:${rank.color}18;border:2px solid ${rank.color}50;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 0 24px ${rank.glow}">
-      <i class="fas ${rank.icon}" style="font-size:28px;color:${rank.color}"></i>
+    ${_fcS?`
+    <div style="display:inline-flex;align-items:flex-end;justify-content:center;
+      width:100px;min-height:${_fcL.rank==='S'?'162':'148'}px;overflow:hidden;
+      background:linear-gradient(180deg,${_fcC}20,${_fcC}06);
+      border-radius:50px 50px 14px 14px;border:1.5px solid ${_fcC}40;
+      margin:0 auto 10px;box-shadow:0 0 24px ${rank.glow};">
+      ${_fcS}
     </div>
+    <div style="font-size:11px;color:${_fcC};margin-bottom:6px;font-weight:700">
+      ${_fcL.name} · ${_fcL.desc}</div>
+    `:`<div style="width:68px;height:68px;border-radius:18px;background:${rank.color}18;border:2px solid ${rank.color}50;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 0 24px ${rank.glow}">
+      <i class="fas ${rank.icon}" style="font-size:28px;color:${rank.color}"></i>
+    </div>`}
     <div style="font-size:24px;font-weight:900;color:${rank.color}">${rank.name}</div>
     <div style="font-size:12px;color:var(--muted);margin-top:3px">${rank.th} · Lv.${tier.lv}/8 · ${sm.label} (${sm.pop})</div>
     <div style="margin-top:10px;display:flex;justify-content:center;gap:16px">
