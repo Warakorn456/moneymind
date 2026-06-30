@@ -203,7 +203,8 @@ _escHtml(s)              // escape HTML string (บรรทัด ~11428)
 | Dashboard | โหมด "รายจ่ายจริง" — toggle `hideMoneyMove` (default on) ตัด transfer/cash ออกจากรายจ่าย/งบ/กราฟ; helper `isRealExp()`, `isMoneyMove()`, ปุ่มในการ์ดกราฟหมวด |
 | Dashboard | คลิกหมวดในกราฟ pie → `openCatDrill()` modal `m-catdrill` แสดงรายการในหมวดนั้น |
 | Transactions | กรองตามหมวด (`tx-cat-filter`) + bulk select (`toggleBulkMode`): ติ๊กหลายรายการ → เปลี่ยนหมวด (`applyBulkCat`)/ลบ (`bulkDelete`) ทีเดียว; floating `bulk-bar` |
-| Dashboard | **Finance Character** (`renderFinanceChar`, `#dash-char-section`) — ตัวละคร SVG 7 ระดับ (F→S) แสดง Net Worth ชนชั้น + progress bar + Health Score + คำแนะนำ; monkey-patch บน renderDash |
+| Dashboard | **Finance Character** (`renderFinanceChar`, `#dash-char-section`) — ตัวละคร SVG chibi **8 ระดับ** (Iron→Legend, lv 1–8) แสดง Net Worth ชนชั้น + progress bar + Health Score + คำแนะนำ; monkey-patch บน renderDash |
+| Dashboard | **Rank Popup Character** — ใน `_buildRankPopupBody` แสดงตัวละคร chibi แบบ **SVG vector** (ไม่ใช่ sprite image); ฟังก์ชัน `_fcSVG(lv, gender)` อยู่ใน IIFE ที่ expose เป็น `window._fcSvgG`; `_buildRankPopupBody` ต้องเรียกผ่าน `window._fcSvgG` ไม่ใช่ `_fcSVG` ตรงๆ; gender toggle `window._fcGender` 0=หญิง 1=ชาย; K array index 1–8 (null placeholder ที่ 0) |
 | Dashboard | Health Score, NW History, Monthly Comparison, Spending Heatmap, YTD Summary |
 | Dashboard | RVV (Fixed vs Variable), 50/30/20, Emergency Fund, Pay Yourself First |
 | Dashboard | Drag-and-drop reorder sections (DB.settings.dashOrder) |
