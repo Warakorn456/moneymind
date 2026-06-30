@@ -13485,13 +13485,7 @@ function _buildRankPopupBody(nw, scope){
     </div>`;
   }).join('');
 
-  // Sprite character — image 1536×1024, 8 cols (Iron→Legend) × 2 rows (F/M)
-  // Display 110×210px; scale=110/192=0.573; full scaled=880×587; cell scaled=110×293
-  const _col=tier.lv-1;                     // 0=Iron … 7=Legend
   if(typeof window._fcGender==='undefined') window._fcGender=parseInt(localStorage.getItem('_fcGender')||'0');
-  const _row=window._fcGender;              // 0=female, 1=male
-  const _bx=-(110*_col);
-  const _by=-(293*_row+52);                 // skip ~52px scaled = ~91px original (tier header text)
   const _gBtn=(g,lbl,em)=>{
     const a=window._fcGender===g;
     return `<button onclick="window._fcGender=${g};localStorage.setItem('_fcGender','${g}');_setRankPopupScope('${scope}')" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:${a?700:500};border:1.5px solid ${a?rank.color+'80':'var(--border)'};background:${a?rank.color+'22':'transparent'};color:${a?rank.color:'var(--muted)'};cursor:pointer;transition:.15s">${em} ${lbl}</button>`;
