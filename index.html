@@ -13918,16 +13918,23 @@ function _showWelcomeOnboard(){
     const K=[null,
       // 1 Iron
       {sk1:'#FFCBA4',sk2:'#C8865A',h1:'#7c5c40',h2:'#3b2214',o1:'#a1a1aa',o2:'#52525b',p1:'#57534e',p2:'#3c3834',sh:'#1c1a18',e1:'#94a3b8',e2:'#64748b',ch:'#ffb3c1',ex:'sad',messy:true},
-      E:{sk1:'#FFD9B0',sk2:'#CC8050',h1:'#a16207',h2:'#78350f',o1:'#4ade80',o2:'#15803d',p1:'#1d4ed8',p2:'#1e3a8a',sh:'#1e3a5f',e1:'#ca8a04',e2:'#92400e',mx:'nervous',ch:'#ffb3c1'},
-      D:{sk1:'#FFD9B0',sk2:'#CC8050',h1:'#334155',h2:'#0f172a',o1:'#f8fafc',o2:'#e2e8f0',p1:'#1e293b',p2:'#0f172a',sh:'#0f172a',e1:'#64748b',e2:'#334155',mx:'neutral',ch:'#ffb3c1',tie:'#ef4444'},
-      C:{sk1:'#FFD9B0',sk2:'#CC8050',h1:'#334155',h2:'#0f172a',o1:'#60a5fa',o2:'#2563eb',p1:'#1e293b',p2:'#0f172a',sh:'#0f172a',e1:'#3b82f6',e2:'#1d4ed8',mx:'smile',ch:'#ffb3c1'},
-      B:{sk1:'#FFD9B0',sk2:'#CC8050',h1:'#1e293b',h2:'#030712',o1:'#1e3a5f',o2:'#1e40af',p1:'#111827',p2:'#030712',sh:'#030712',e1:'#60a5fa',e2:'#2563eb',mx:'happy',ch:'#ffaabb',tie:'#f59e0b'},
-      A:{sk1:'#FFD9B0',sk2:'#CC8050',h1:'#1e293b',h2:'#030712',o1:'#1a1a2e',o2:'#0a0a1a',p1:'#0f0f1a',p2:'#030712',sh:'#030712',e1:'#a855f7',e2:'#7c3aed',mx:'veryhappy',ch:'#ffaabb',tie:'#8b5cf6'},
-      S:{sk1:'#FFD9B0',sk2:'#CC8050',h1:'#1a1a1a',h2:'#000000',o1:'#1a1a2e',o2:'#030712',p1:'#0a0a1a',p2:'#030712',sh:'#030712',e1:'#fbbf24',e2:'#d97706',mx:'ecstatic',ch:'#ffaabb',tie:'#f59e0b',hat:true},
-    };
-    const c=K[R]||K.D;
-    const vb=c.hat?'0 -72 200 352':'0 0 200 280';
-    const W=120,H=c.hat?192:168;
+      // 2 Bronze
+      {sk1:'#FFD9B0',sk2:'#CC8050',h1:'#a16207',h2:'#78350f',o1:'#c07830',o2:'#8b4513',p1:'#5c3010',p2:'#3a1a00',sh:'#1e3a5f',e1:'#ca8a04',e2:'#92400e',ch:'#ffb3c1',ex:'slight',bun:true},
+      // 3 Silver
+      {sk1:'#FFD9B0',sk2:'#CC8050',h1:'#6e7580',h2:'#3a4048',o1:'#f0ede8',o2:'#c8c5c0',p1:'#606878',p2:'#3c4450',sh:'#2a3040',e1:'#8090b0',e2:'#5868a0',ch:'#ffb3c1',ex:'smile',hband:true},
+      // 4 Gold
+      {sk1:'#FFD9B0',sk2:'#CC8050',h1:'#c07820',h2:'#8b4500',o1:'#f5c030',o2:'#d49000',p1:'#8b5e00',p2:'#5a3800',sh:'#2a1a00',e1:'#c08800',e2:'#8b5e00',ch:'#ffb3c1',ex:'happy',wavy:true},
+      // 5 Platinum
+      {sk1:'#FFD9B0',sk2:'#CC8050',h1:'#bcc8e0',h2:'#7080a8',o1:'#b0c8f0',o2:'#6080c8',p1:'#304878',p2:'#102050',sh:'#0a1030',e1:'#6090d0',e2:'#3060b0',ch:'#ffb3c1',ex:'happy',long:true},
+      // 6 Sapphire
+      {sk1:'#FFD9B0',sk2:'#CC8050',h1:'#1a2040',h2:'#080c20',o1:'#1030b8',o2:'#082080',p1:'#081040',p2:'#040820',sh:'#040818',e1:'#4080e0',e2:'#2050c0',ch:'#ffb3c1',ex:'cool',long:true,sapBlue:true},
+      // 7 Diamond
+      {sk1:'#FFD9B0',sk2:'#CC8050',h1:'#0a0810',h2:'#040408',o1:'#f0f4ff',o2:'#c8d8f0',p1:'#8090a8',p2:'#505868',sh:'#283040',e1:'#80c0ff',e2:'#4090d0',ch:'#ffb3c1',ex:'regal',long:true,tiara:true},
+      // 8 Legend
+      {sk1:'#FFD9B0',sk2:'#CC8050',h1:'#1a0830',h2:'#080018',o1:'#5008a8',o2:'#280058',p1:'#180040',p2:'#0c0028',sh:'#080018',e1:'#c060ff',e2:'#8030e0',ch:'#ffaabb',ex:'regal',long:true,crown:true},
+    ];
+    const c=K[lv]||K[4];
+    const vb=c.crown||c.tiara?'0 -20 200 300':'0 0 200 280';
 
     const outfit=R==='F'?`
       <rect x="58" y="161" width="84" height="72" rx="18" fill="url(#ot${R})"/>
