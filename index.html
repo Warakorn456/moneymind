@@ -3093,24 +3093,19 @@ async function tryGoogleLogin(){
   const provider=new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({prompt:'select_account'});
   try{
-    // ลอง popup ก่อน (desktop / browser ที่ allow popup)
     const result=await _auth.signInWithPopup(provider);
     await _handleOAuthResult(result,'google');
     return;
   }catch(popupErr){
-    // popup ถูก block → ใช้ redirect แทน (WebView / mobile)
-    const redirectCodes=['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request','auth/operation-not-supported-in-this-environment'];
-    if(redirectCodes.includes(popupErr.code)){
-      try{
-        if(errEl) errEl.textContent='กำลังนำไปยัง Google...';
-        await _auth.signInWithRedirect(provider);
-        return; // หน้าจะ redirect ไป Google แล้วกลับมา
-      }catch(redirErr){
-        if(errEl) errEl.textContent='เกิดข้อผิดพลาด: '+redirErr.code;
-      }
+    // signInWithRedirect ไม่ใช้แล้ว — Chrome mobile v115+ มี storage partitioning
+    // ทำให้ sessionStorage หาย → "missing initial state" error หลัง redirect กลับมา
+    if(popupErr.code==='auth/popup-blocked'||popupErr.code==='auth/operation-not-supported-in-this-environment'){
+      if(errEl) errEl.textContent='กรุณาอนุญาต Popup ในเบราว์เซอร์แล้วลองใหม่ หรือเปิดเว็บใน Chrome โดยตรง';
+    } else if(popupErr.code==='auth/popup-closed-by-user'||popupErr.code==='auth/cancelled-popup-request'){
+      // user ปิด popup เอง — ไม่ต้องแสดง error
     } else if(popupErr.code==='auth/network-request-failed'){
       if(errEl) errEl.textContent='ไม่มีการเชื่อมต่ออินเทอร์เน็ต';
-    } else if(popupErr.code&&popupErr.code!=='auth/cancelled-popup-request'){
+    } else if(popupErr.code){
       if(errEl) errEl.textContent='เกิดข้อผิดพลาด: '+popupErr.code;
       console.error('[google login]',popupErr.code,popupErr.message);
     }
