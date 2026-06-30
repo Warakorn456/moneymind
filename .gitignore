@@ -1,5 +1,6 @@
 # Test screenshots (Playwright/manual captures)
 *.png
+!chars.png
 
 # Playwright MCP artifacts
 .playwright-mcp/
