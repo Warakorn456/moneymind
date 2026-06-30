@@ -14053,29 +14053,10 @@ function _showWelcomeOnboard(){
     </svg>`;
   }
 
-  // ── emoji per rank ────────────────────────────────────────
+  // ── expose globals so _buildRankPopupBody can use them ────
   function _fcEmoji(r){return{F:'😰',E:'😐',D:'🙂',C:'😊',B:'😎',A:'🤩',S:'👑'}[r]||'😐';}
-
-  // ── Toggle popup (position right of sidebar) ───────────────
-  window._fcTogglePopup=function(){
-    const p=document.getElementById('fc-popup');
-    const ov=document.getElementById('fc-popup-overlay');
-    if(!p) return;
-    const open=p.dataset.open==='1';
-    if(!open){
-      const sb=document.getElementById('sidebar');
-      const sbR=sb?sb.getBoundingClientRect().right:240;
-      if(window.innerWidth>700){
-        p.style.cssText+='left:'+(sbR+10)+'px;top:80px;right:auto;width:min(400px,calc(100vw - '+(sbR+20)+'px));';
-      } else {
-        p.style.cssText+='left:16px;right:16px;top:70px;width:calc(100vw - 32px);';
-      }
-      _fcFillPopup();
-    }
-    p.dataset.open=open?'0':'1';
-    p.style.display=open?'none':'block';
-    if(ov) ov.style.display=open?'none':'block';
-  };
+  window._fcLvG=_fcLv;
+  window._fcSvgG=_fcSVG;
 
   // ── Popup content ──────────────────────────────────────────
   function _fcFillPopup(){
