@@ -3086,18 +3086,29 @@ async function tryGoogleLogin(){
   if(errEl) errEl.textContent='';
   if(!_auth||!_fs){
     if(errEl) errEl.textContent='ระบบยังไม่พร้อม ลองใหม่อีกครั้ง';
-    allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
+    allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''); });
     return;
   }
   const provider=new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({prompt:'select_account'});
+  // Android WebView: Firebase v9 ใช้ gapi.iframes สื่อสารใน popup ซึ่งไม่ทำงานข้าม WebView instances
+  // ใช้ signInWithRedirect แทน — navigation อยู่ใน WebView เดิมทั้งสาย ไม่ออก Chrome
+  if(window._isAndroidApp){
+    try{
+      if(errEl) errEl.textContent='กำลังนำไปยัง Google...';
+      await _auth.signInWithRedirect(provider);
+      return;
+    }catch(redirErr){
+      if(errEl) errEl.textContent='เกิดข้อผิดพลาด: '+(redirErr.code||redirErr.message);
+      allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
+      return;
+    }
+  }
   try{
     const result=await _auth.signInWithPopup(provider);
     await _handleOAuthResult(result,'google');
     return;
   }catch(popupErr){
-    // popup-blocked หรือ not-supported → เกิดใน WebView ที่บล็อก window.open()
-    // ใช้ signInWithRedirect เป็น fallback (WebView ไม่มี storage partitioning ของ Chrome)
     if(popupErr.code==='auth/popup-blocked'||popupErr.code==='auth/operation-not-supported-in-this-environment'){
       try{
         if(errEl) errEl.textContent='กำลังนำไปยัง Google...';
