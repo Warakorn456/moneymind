@@ -3081,12 +3081,28 @@ async function _checkGoogleRedirectResult(){
   }
 }
 
+// ตรวจว่าเป็น in-app browser ที่ Google บล็อก OAuth (disallowed_useragent)
+function _isInAppBrowser(){
+  const ua=navigator.userAgent;
+  if(/\(wv\)/.test(ua)) return true; // Android WebView flag
+  if(/FBAN|FB_IAB|FBAV|Instagram|Twitter|Line\/|MicroMessenger|Snapchat|WhatsApp|Telegram/.test(ua)) return true;
+  // Android browser ที่ไม่ใช่ Chrome จริงๆ
+  if(/Android/.test(ua)&&!/Chrome\//.test(ua)&&!window._isAndroidApp) return true;
+  return false;
+}
+
 async function tryGoogleLogin(){
   if(window._isAndroidApp && window.AndroidBridge){ window.AndroidBridge.startGoogleSignIn(); return; }
   const errEl=_activeLoginErr();
   const allBtns=[...document.querySelectorAll('.google-btn,.apple-btn')];
   allBtns.forEach(b=>{ b.disabled=true; b.style.opacity='.5'; });
   if(errEl) errEl.textContent='';
+  // บล็อกก่อน OAuth — in-app browser จะโดน Google ปฏิเสธ (disallowed_useragent)
+  if(_isInAppBrowser()){
+    if(errEl) errEl.innerHTML='⚠️ กรุณาเปิดลิงก์นี้ใน <b>Chrome</b> หรือ <b>Safari</b> โดยตรง<br><span style="font-size:12px;color:var(--muted)">Google ไม่อนุญาต login ใน browser ของแอปอื่น</span>';
+    allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
+    return;
+  }
   if(!_auth||!_fs){
     if(errEl) errEl.textContent='ระบบยังไม่พร้อม ลองใหม่อีกครั้ง';
     allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
@@ -3094,8 +3110,7 @@ async function tryGoogleLogin(){
   }
   const provider=new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({prompt:'select_account'});
-  // Mobile browser (Android/iOS Chrome) — popup ไม่ return result กลับมาได้ (white screen)
-  // ต้องใช้ signInWithRedirect เสมอสำหรับ mobile (ทั้ง WebView และ mobile browser)
+  // Mobile Chrome — popup ไม่ return result กลับมาได้ (white screen) ใช้ redirect แทน
   const _isMobileBrowser=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)&&!window._isAndroidApp&&!window._isIOSApp;
   if(window._isAndroidApp||_isMobileBrowser){
     try{
