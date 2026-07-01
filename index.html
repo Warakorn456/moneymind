@@ -13913,14 +13913,13 @@ function _showWelcomeOnboard(){
     lv=Math.max(1,Math.min(8,parseInt(lv)||4));
     const gm=(gender===1);
     const cw=192;
-    // Character art vertical bounds within each 512px card row
-    const ryF=108, ryM=620, rh=292;
-    const extra=lv===8?35:0; // Legend crown extends higher
+    // New chars.png: 8 ranks × 2 genders, each cell 192×512px
+    // Female row (top 512px): character body Y≈115–415; Male row (bottom 512px): Y≈627–912
+    const ryF=115, ryM=627, rh=300;
     const sx=(lv-1)*cw;
-    const sy=(gm?ryM:ryF)-extra;
-    const sh=rh+extra;
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${sx} ${sy} ${cw} ${sh}"
-      width="140" height="184" style="display:block;overflow:hidden">
+    const sy=gm?ryM:ryF;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${sx} ${sy} ${cw} ${rh}"
+      width="130" height="196" style="display:block;overflow:hidden">
       <image href="chars.png" x="0" y="0" width="1536" height="1024" preserveAspectRatio="none"/>
     </svg>`;
   }
