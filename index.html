@@ -3074,8 +3074,11 @@ async function _checkGoogleRedirectResult(){
       await _handleOAuthResult(result,'google');
     }
   }catch(e){
-    // ละเว้น error ทั้งหมดจาก getRedirectResult — ถ้าไม่มี pending redirect จะ return null
-    if(e.code&&e.code!=='auth/no-current-user'){
+    if(e.code==='auth/web-storage-unsupported'||e.code==='auth/operation-not-supported-in-this-environment'||(e.message&&e.message.includes('disallowed_useragent'))){
+      // WebView บล็อก — แสดง error ในหน้า login ถ้ายังแสดงอยู่
+      const errEl=_activeLoginErr?_activeLoginErr():null;
+      if(errEl) errEl.innerHTML='⚠️ Google Sign-In ไม่รองรับใน browser นี้<br><span style="font-size:12px;color:var(--muted)">กรุณาเปิด <b>Chrome</b> แล้วไปที่ลิงก์แอปโดยตรง หรือใช้ Username/Password แทน</span>';
+    } else if(e.code&&e.code!=='auth/no-current-user'){
       console.warn('[redirect result]',e.code,e.message);
     }
   }
