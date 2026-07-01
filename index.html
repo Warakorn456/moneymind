@@ -14098,10 +14098,9 @@ function _showWelcomeOnboard(){
     // Female row (top 512px): body Y≈168–415, Legend crown from Y≈125
     // Male row (bottom 512px): body Y≈678–898, Legend crown from Y≈640
     // bullet text female Y≈453, male Y≈950 — start crop inside character to avoid header text
-    // crop windows measured from chars.png (full head→feet, excludes header/bullet text)
-    const isLeg=(lv===8);
-    const ryF=isLeg?96:108, ryM=isLeg?612:624;
-    const rhF=isLeg?337:325, rhM=isLeg?312:300;
+    // crop windows measured from chars.png (full head→feet incl. crown, excludes range/bullet text)
+    const ryF=150, ryM=662;
+    const rhF=285, rhM=262;
     const sx=(lv-1)*cw;
     const sy=gm?ryM:ryF;
     const rh=gm?rhM:rhF;
