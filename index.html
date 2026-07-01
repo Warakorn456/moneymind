@@ -3101,9 +3101,9 @@ async function tryGoogleLogin(){
   const allBtns=[...document.querySelectorAll('.google-btn,.apple-btn')];
   allBtns.forEach(b=>{ b.disabled=true; b.style.opacity='.5'; });
   if(errEl) errEl.textContent='';
-  // บล็อกก่อน OAuth — in-app browser จะโดน Google ปฏิเสธ (disallowed_useragent)
-  if(_isInAppBrowser()){
-    if(errEl) errEl.innerHTML='⚠️ กรุณาเปิดลิงก์นี้ใน <b>Chrome</b> หรือ <b>Safari</b> โดยตรง<br><span style="font-size:12px;color:var(--muted)">Google ไม่อนุญาต login ใน browser ของแอปอื่น</span>';
+  // บล็อกก่อน OAuth — WebView / in-app browser โดน Google ปฏิเสธ (disallowed_useragent)
+  if(window._isAndroidApp||window._isIOSApp||_isInAppBrowser()){
+    if(errEl) errEl.innerHTML='⚠️ Google Sign-In ไม่รองรับใน browser นี้<br><span style="font-size:12px;color:var(--muted)">กรุณาเปิด <b>Chrome</b> แล้วเข้าลิงก์แอปโดยตรง<br>หรือใช้ <b>Username / Password</b> แทนได้เลย</span>';
     allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
     return;
   }
