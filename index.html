@@ -3087,12 +3087,24 @@ async function _checkGoogleRedirectResult(){
 // ตรวจว่าเป็น in-app browser / WebView ที่ Google บล็อก OAuth (disallowed_useragent)
 function _isInAppBrowser(){
   const ua=navigator.userAgent;
-  if(/\(wv\)/.test(ua)) return true;                          // Android WebView explicit flag
+  if(/\(wv\)/.test(ua)) return true;
   if(/FBAN|FB_IAB|FBAV|Instagram|Twitter|Line\/|MicroMessenger|Snapchat|WhatsApp|Telegram/.test(ua)) return true;
-  if(/Android/.test(ua)&&!/Chrome\//.test(ua)) return true;  // Android ไม่ใช่ Chrome
-  // standalone PWA / WebView ที่ไม่มี navigation UI
-  try{ if(window.navigator.standalone||window.matchMedia('(display-mode: standalone)').matches) return false; }catch(e){}
+  if(/Android/.test(ua)&&!/Chrome\//.test(ua)) return true;
+  // Chrome บน Android แต่ไม่มี userAgentData = likely WebView (real Chrome 90+ มี)
+  if(/Android/.test(ua)&&typeof navigator.userAgentData==='undefined') return true;
   return false;
+}
+function _showGoogleWebViewMsg(errEl,allBtns){
+  const appUrl=window.location.href.split('#')[0];
+  const chromeIntent='intent://'+appUrl.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
+  if(errEl) errEl.innerHTML=''
+    +'<div style="background:#1e1a2e;border:1px solid #ef444455;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.7">'
+    +'⚠️ <b>Google Sign-In ไม่รองรับในแอปนี้</b><br>'
+    +'Google บล็อก OAuth ใน WebView — ทางเลือก:<br>'
+    +'<a href="'+chromeIntent+'" style="color:#60a5fa;font-weight:700">📌 เปิดใน Chrome แล้วสมัคร</a>'
+    +' &nbsp;|&nbsp; ใช้ <b>Username/Password</b> ด้านบน'
+    +'</div>';
+  if(allBtns) allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
 }
 
 async function tryGoogleLogin(){
