@@ -8025,7 +8025,7 @@ if(currentUser){
   initDate(); setTxType('income'); renderDash();
   setTimeout(checkDcaSchedule,2000);
 }
-// ตรวจ redirect result เมื่อโหลดหน้า (สำหรับ WebView ที่ใช้ signInWithRedirect)
+// ตรวจ redirect result เมื่อโหลดหน้า (สำหรับ mobile Chrome redirect flow)
 if(!currentUser){
   var _oauthRedirectTimer=setInterval(function(){
     if(typeof firebase!=='undefined'&&firebase.auth){
@@ -8033,6 +8033,24 @@ if(!currentUser){
       try{ _checkGoogleRedirectResult(); }catch(e){}
     }
   },200);
+  // pageshow fires เมื่อ browser restore จาก BFCache (กด back กลับจาก Google)
+  // จำเป็นเพราะ BFCache ไม่รัน JS ใหม่ — ต้องตรวจ pending flag เอง
+  window.addEventListener('pageshow',function(ev){
+    if(ev.persisted&&!currentUser&&sessionStorage.getItem('_googleRedirectPending')){
+      sessionStorage.removeItem('_googleRedirectPending');
+      var errEl=_activeLoginErr?_activeLoginErr():null;
+      if(errEl){
+        var appUrl=window.location.href.split('#')[0];
+        var ci='intent://'+appUrl.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
+        errEl.innerHTML='<div style="background:#1e1a2e;border:1px solid #ef444455;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.7">'
+          +'⚠️ <b>Google Sign-In ไม่รองรับในแอปนี้</b><br>'
+          +'Google บล็อก OAuth ใน WebView — ทางเลือก:<br>'
+          +'<a href="'+ci+'" style="color:#60a5fa;font-weight:700">📌 เปิดใน Chrome แล้วสมัคร</a>'
+          +' &nbsp;|&nbsp; ใช้ <b>Username/Password</b> ด้านบน'
+          +'</div>';
+      }
+    }
+  });
 }
 
 function buildFinanceContext(){
