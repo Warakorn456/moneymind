@@ -13914,12 +13914,15 @@ function _showWelcomeOnboard(){
     const gm=(gender===1);
     const cw=192;
     // chars.png: 8 ranks × 2 genders, each cell 192×512px
-    // Female row (top 512px): character body Y≈168–415, Legend crown from Y≈125
-    // Male row (bottom 512px): body Y≈680–908, Legend crown from Y≈640
+    // Female row (top 512px): body Y≈168–415, Legend crown from Y≈125
+    // Male row (bottom 512px): body Y≈680–898, Legend crown from Y≈640
+    // bullet text female Y≈453, male Y≈950 — crop well before those
     const isLeg=(lv===8);
-    const ryF=isLeg?122:162, ryM=isLeg?634:674, rh=isLeg?296:255;
+    const ryF=isLeg?122:162, ryM=isLeg?634:674;
+    const rhF=isLeg?298:258, rhM=isLeg?270:228;
     const sx=(lv-1)*cw;
     const sy=gm?ryM:ryF;
+    const rh=gm?rhM:rhF;
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${sx} ${sy} ${cw} ${rh}"
       width="130" height="196" style="display:block;overflow:hidden">
       <image href="chars.png" x="0" y="0" width="1536" height="1024" preserveAspectRatio="none"/>
