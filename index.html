@@ -3147,10 +3147,22 @@ async function tryAppleLogin(){
     allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
     return;
   }
+  const provider=new firebase.auth.OAuthProvider('apple.com');
+  provider.addScope('email');
+  provider.addScope('name');
+  const _isMobileBrA=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)&&!window._isAndroidApp&&!window._isIOSApp;
+  if(_isMobileBrA){
+    try{
+      if(errEl) errEl.textContent='กำลังนำไปยัง Apple...';
+      await _auth.signInWithRedirect(provider);
+      return;
+    }catch(re){
+      if(errEl) errEl.textContent='เกิดข้อผิดพลาด: '+(re.code||re.message);
+      allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
+      return;
+    }
+  }
   try{
-    const provider=new firebase.auth.OAuthProvider('apple.com');
-    provider.addScope('email');
-    provider.addScope('name');
     const result=await _auth.signInWithPopup(provider);
     await _handleOAuthResult(result,'apple');
   }catch(e){
