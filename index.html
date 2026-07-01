@@ -13915,11 +13915,11 @@ function _showWelcomeOnboard(){
     const cw=192;
     // chars.png: 8 ranks × 2 genders, each cell 192×512px
     // Female row (top 512px): body Y≈168–415, Legend crown from Y≈125
-    // Male row (bottom 512px): body Y≈680–898, Legend crown from Y≈640
-    // bullet text female Y≈453, male Y≈950 — crop well before those
+    // Male row (bottom 512px): body Y≈678–898, Legend crown from Y≈640
+    // bullet text female Y≈453, male Y≈950 — start crop inside character to avoid header text
     const isLeg=(lv===8);
-    const ryF=isLeg?122:162, ryM=isLeg?634:674;
-    const rhF=isLeg?298:258, rhM=isLeg?270:228;
+    const ryF=isLeg?122:173, ryM=isLeg?638:697;
+    const rhF=isLeg?296:244, rhM=isLeg?264:208;
     const sx=(lv-1)*cw;
     const sy=gm?ryM:ryF;
     const rh=gm?rhM:rhF;
