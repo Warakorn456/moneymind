@@ -13554,49 +13554,47 @@ function _showRankPopup(){
 }
 
 window._showAllRanksDetail=function(){
-  const ex=document.getElementById('_allRankDetailOv');
-  if(ex){ex.remove();return;}
-  const g=typeof window._fcGender!=='undefined'?window._fcGender:0;
-  const cards=_RANK_TIERS.map(r=>{
-    let inner='';
-    if(window._fcSvgG){
-      const svgRaw=window._fcSvgG(r.lv,g);
-      const vbM=svgRaw.match(/viewBox="[\d.]+ [\d.]+ ([\d.]+) ([\d.]+)"/);
-      const vbW=vbM?parseFloat(vbM[1]):192,vbH=vbM?parseFloat(vbM[2]):244;
-      const sw=66,sh=Math.round(sw/vbW*vbH);
-      inner=svgRaw.replace(/width="\d+" height="\d+"/,`width="${sw}" height="${sh}"`);
-    }
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px">
-      <div style="position:relative;padding:2.5px;border-radius:13px;background:linear-gradient(145deg,${r.color}cc,${r.color}33 50%,${r.color}99);box-shadow:0 0 16px ${r.glow}">
-        <div style="border-radius:11px;overflow:hidden;line-height:0;background:#0d0b1e;position:relative">
-          ${inner}
-          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 110%,transparent 28%,rgba(8,6,22,.72) 86%);pointer-events:none"></div>
-        </div>
-        <div style="position:absolute;top:-2px;left:-2px;width:9px;height:9px;border-top:2px solid ${r.color};border-left:2px solid ${r.color};border-radius:2px 0 0 0"></div>
-        <div style="position:absolute;top:-2px;right:-2px;width:9px;height:9px;border-top:2px solid ${r.color};border-right:2px solid ${r.color};border-radius:0 2px 0 0"></div>
-        <div style="position:absolute;bottom:-2px;left:-2px;width:9px;height:9px;border-bottom:2px solid ${r.color};border-left:2px solid ${r.color};border-radius:0 0 0 2px"></div>
-        <div style="position:absolute;bottom:-2px;right:-2px;width:9px;height:9px;border-bottom:2px solid ${r.color};border-right:2px solid ${r.color};border-radius:0 0 2px 0"></div>
-      </div>
-      <div style="font-size:10px;font-weight:800;color:${r.color};letter-spacing:.3px">${r.name}</div>
-      <div style="font-size:9px;color:var(--muted)">${r.th}</div>
-    </div>`;
-  }).join('');
-  const ov=document.createElement('div');
-  ov.id='_allRankDetailOv';
-  ov.style.cssText='position:fixed;inset:0;z-index:10001;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);box-sizing:border-box';
-  ov.onclick=e=>{if(e.target===ov)ov.remove();};
-  ov.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:22px 18px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;position:relative">
-    <button onclick="document.getElementById('_allRankDetailOv').remove()" style="position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--muted);font-size:15px;display:flex;align-items:center;justify-content:center">✕</button>
-    <div style="font-size:17px;font-weight:900;color:var(--text);margin-bottom:2px">👥 ตัวละครทั้งหมด</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:18px">8 อันดับความมั่งคั่ง · ${g===0?'♀ หญิง':'♂ ชาย'}</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px 8px">
-      ${cards}
-    </div>
-    <div style="margin-top:16px;padding:10px 12px;background:var(--surface2);border-radius:10px;font-size:11px;color:var(--muted);line-height:1.6">
-      💡 เปลี่ยนเพศตัวละครได้ที่ปุ่ม ♀/♂ ในหน้าแรงค์ หน้านี้จะแสดงตามที่เลือกไว้
-    </div>
-  </div>`;
-  document.body.appendChild(ov);
+  try{
+    const g=typeof window._fcGender!=='undefined'?window._fcGender:0;
+    const nw=calcNetWorth().netWorth;
+    const myLv=(function(){
+      const t=(_WT_DATA.th.tiers||[]).find(function(t){return nw>=t.min&&nw<t.max;});
+      return t?t.lv:1;
+    })();
+    const cards=_RANK_TIERS.map(function(r){
+      var inner='';
+      if(window._fcSvgG){
+        var svgRaw=window._fcSvgG(r.lv,g);
+        var vbM=svgRaw.match(/viewBox="[\d.]+ [\d.]+ ([\d.]+) ([\d.]+)"/);
+        var vbW=vbM?parseFloat(vbM[1]):192,vbH=vbM?parseFloat(vbM[2]):244;
+        var sw=62,sh=Math.round(sw/vbW*vbH);
+        inner=svgRaw.replace(/width="\d+" height="\d+"/,'width="'+sw+'" height="'+sh+'"');
+      }
+      var isMe=(r.lv===myLv);
+      return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px">'
+        +'<div style="position:relative;padding:2px;border-radius:12px;background:linear-gradient(145deg,'+r.color+'cc,'+r.color+'33 50%,'+r.color+'99);box-shadow:0 0 14px '+r.glow+(isMe?';outline:2px solid '+r.color+';outline-offset:2px':'')+'">'
+        +'<div style="border-radius:10px;overflow:hidden;line-height:0;background:#0d0b1e;position:relative">'
+        +inner
+        +'<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 110%,transparent 28%,rgba(8,6,22,.7) 86%);pointer-events:none"></div>'
+        +'</div>'
+        +(isMe?'<div style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:'+r.color+';color:#fff;font-size:8px;font-weight:900;padding:1px 6px;border-radius:8px;white-space:nowrap">▶ คุณ</div>':'')
+        +'</div>'
+        +'<div style="margin-top:'+(isMe?'10':'4')+'px;font-size:10px;font-weight:800;color:'+r.color+';letter-spacing:.3px">'+r.name+'</div>'
+        +'<div style="font-size:9px;color:var(--muted)">'+r.th+'</div>'
+        +'</div>';
+    }).join('');
+    var body=document.getElementById('_rankPopupBody');
+    if(!body)return;
+    body.innerHTML=''
+      +'<button onclick="window._setRankPopupScope(\''+_rankPopupScope+'\')" style="position:absolute;top:12px;left:12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;cursor:pointer;color:var(--muted);font-size:12px">← ย้อนกลับ</button>'
+      +'<button onclick="document.getElementById(\'_rankPopupOv\').remove()" style="position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--muted);font-size:15px;display:flex;align-items:center;justify-content:center">✕</button>'
+      +'<div style="font-size:17px;font-weight:900;color:var(--text);margin:8px 0 2px;text-align:center">👥 ตัวละครทั้งหมด</div>'
+      +'<div style="font-size:12px;color:var(--muted);margin-bottom:18px;text-align:center">8 อันดับความมั่งคั่ง · '+(g===0?'♀ หญิง':'♂ ชาย')+'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px 8px">'+cards+'</div>'
+      +'<div style="margin-top:18px;padding:10px 12px;background:var(--surface2);border-radius:10px;font-size:11px;color:var(--muted);line-height:1.6">'
+      +'💡 เปลี่ยนเพศตัวละครได้ที่ปุ่ม ♀/♂ ในหน้าแรงค์ · ตัวที่มี <b style="color:var(--text)">▶ คุณ</b> = ระดับของคุณตอนนี้'
+      +'</div>';
+  }catch(e){console.error('allRanks',e);}
 };
 
 function _renderTierBadge(){
