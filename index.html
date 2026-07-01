@@ -3101,11 +3101,9 @@ async function tryGoogleLogin(){
   const allBtns=[...document.querySelectorAll('.google-btn,.apple-btn')];
   allBtns.forEach(b=>{ b.disabled=true; b.style.opacity='.5'; });
   if(errEl) errEl.textContent='';
-  // บล็อกก่อน OAuth — WebView / in-app browser โดน Google ปฏิเสธ (disallowed_useragent)
+  // บล็อกก่อน — native app (ไม่มี bridge) หรือ in-app browser โดน Google ปฏิเสธ
   if(window._isAndroidApp||window._isIOSApp||_isInAppBrowser()){
-    if(errEl) errEl.innerHTML='⚠️ Google Sign-In ไม่รองรับใน browser นี้<br><span style="font-size:12px;color:var(--muted)">กรุณาเปิด <b>Chrome</b> แล้วเข้าลิงก์แอปโดยตรง<br>หรือใช้ <b>Username / Password</b> แทนได้เลย</span>';
-    allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
-    return;
+    _showGoogleWebViewMsg(errEl,allBtns); return;
   }
   if(!_auth||!_fs){
     if(errEl) errEl.textContent='ระบบยังไม่พร้อม ลองใหม่อีกครั้ง';
@@ -3114,25 +3112,18 @@ async function tryGoogleLogin(){
   }
   const provider=new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({prompt:'select_account'});
-  // Mobile Chrome — popup ไม่ return result กลับมาได้ (white screen) ใช้ redirect แทน
-  const _isMobileBrowser=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)&&!window._isAndroidApp&&!window._isIOSApp;
-  if(window._isAndroidApp||_isMobileBrowser){
-    try{
-      if(errEl) errEl.textContent='กำลังนำไปยัง Google...';
-      await _auth.signInWithRedirect(provider);
-      return;
-    }catch(redirErr){
-      if(errEl) errEl.textContent='เกิดข้อผิดพลาด: '+(redirErr.code||redirErr.message);
-      allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
-      return;
-    }
-  }
+  const _isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  // ใช้ popup ทุกกรณี (popup ล้มเหลวแล้วกลับแอปได้ ต่างจาก redirect ที่ user ค้างอยู่ Google error page)
   try{
     const result=await _auth.signInWithPopup(provider);
     await _handleOAuthResult(result,'google');
     return;
   }catch(popupErr){
     if(popupErr.code==='auth/popup-blocked'||popupErr.code==='auth/operation-not-supported-in-this-environment'){
+      if(_isMobile){
+        // Mobile popup blocked = น่าจะเป็น WebView ที่ detect ไม่เจอ
+        _showGoogleWebViewMsg(errEl,allBtns); return;
+      }
       try{
         if(errEl) errEl.textContent='กำลังนำไปยัง Google...';
         await _auth.signInWithRedirect(provider);
@@ -3141,7 +3132,11 @@ async function tryGoogleLogin(){
         if(errEl) errEl.textContent='เกิดข้อผิดพลาด: '+(redirErr.code||redirErr.message);
       }
     } else if(popupErr.code==='auth/popup-closed-by-user'||popupErr.code==='auth/cancelled-popup-request'){
-      // user ปิด popup เอง — ไม่ต้องแสดง error
+      if(_isMobile){
+        // Mobile popup closed = อาจโดน WebView บล็อก (Google error page แล้วกลับมา)
+        _showGoogleWebViewMsg(errEl,allBtns); return;
+      }
+      // Desktop: user ปิด popup เอง ไม่ต้อง error
     } else if(popupErr.code==='auth/network-request-failed'){
       if(errEl) errEl.textContent='ไม่มีการเชื่อมต่ออินเทอร์เน็ต';
     } else if(popupErr.code){
