@@ -13564,7 +13564,10 @@ function _renderTierBadge(){
       const vbM=svgRaw.match(/viewBox="[\d.]+ [\d.]+ ([\d.]+) ([\d.]+)"/);
       const vbW=vbM?parseFloat(vbM[1]):192,vbH=vbM?parseFloat(vbM[2]):244;
       const sw=62,sh=Math.round(sw/vbW*vbH);
-      charHtml=`<div style="pointer-events:none;line-height:0;margin-bottom:1px">${svgRaw.replace(/width="\d+" height="\d+"/,`width="${sw}" height="${sh}"`)}</div>`;
+      charHtml=`<div style="pointer-events:none;line-height:0;margin-bottom:4px;position:relative;border-radius:14px;overflow:hidden;border:1.5px solid ${rank.color}60;box-shadow:0 0 20px ${rank.glow},0 4px 18px rgba(0,0,0,.5)">
+        ${svgRaw.replace(/width="\d+" height="\d+"/,`width="${sw}" height="${sh}"`)}
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 108%,transparent 30%,rgba(10,8,26,.75) 88%);pointer-events:none"></div>
+      </div>`;
     }
     el.innerHTML=`<div onclick="_showRankPopup()" style="display:inline-flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
       ${charHtml}
