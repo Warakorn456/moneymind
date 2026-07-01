@@ -3081,13 +3081,14 @@ async function _checkGoogleRedirectResult(){
   }
 }
 
-// ตรวจว่าเป็น in-app browser ที่ Google บล็อก OAuth (disallowed_useragent)
+// ตรวจว่าเป็น in-app browser / WebView ที่ Google บล็อก OAuth (disallowed_useragent)
 function _isInAppBrowser(){
   const ua=navigator.userAgent;
-  if(/\(wv\)/.test(ua)) return true; // Android WebView flag
+  if(/\(wv\)/.test(ua)) return true;                          // Android WebView explicit flag
   if(/FBAN|FB_IAB|FBAV|Instagram|Twitter|Line\/|MicroMessenger|Snapchat|WhatsApp|Telegram/.test(ua)) return true;
-  // Android browser ที่ไม่ใช่ Chrome จริงๆ
-  if(/Android/.test(ua)&&!/Chrome\//.test(ua)&&!window._isAndroidApp) return true;
+  if(/Android/.test(ua)&&!/Chrome\//.test(ua)) return true;  // Android ไม่ใช่ Chrome
+  // standalone PWA / WebView ที่ไม่มี navigation UI
+  try{ if(window.navigator.standalone||window.matchMedia('(display-mode: standalone)').matches) return false; }catch(e){}
   return false;
 }
 
