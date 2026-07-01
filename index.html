@@ -3162,6 +3162,11 @@ async function tryAppleLogin(){
     allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
     return;
   }
+  if(_isInAppBrowser()){
+    if(errEl) errEl.innerHTML='⚠️ กรุณาเปิดลิงก์นี้ใน <b>Chrome</b> หรือ <b>Safari</b> โดยตรง<br><span style="font-size:12px;color:var(--muted)">Google/Apple ไม่อนุญาต login ใน browser ของแอปอื่น</span>';
+    allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
+    return;
+  }
   const provider=new firebase.auth.OAuthProvider('apple.com');
   provider.addScope('email');
   provider.addScope('name');
