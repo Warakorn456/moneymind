@@ -13488,7 +13488,7 @@ function _buildRankPopupBody(nw, scope){
   if(typeof window._fcGender==='undefined') window._fcGender=parseInt(localStorage.getItem('_fcGender')||'0');
   const _gBtn=(g,lbl,em)=>{
     const a=window._fcGender===g;
-    return `<button onclick="window._fcGender=${g};localStorage.setItem('_fcGender','${g}');_setRankPopupScope('${scope}')" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:${a?700:500};border:1.5px solid ${a?rank.color+'80':'var(--border)'};background:${a?rank.color+'22':'transparent'};color:${a?rank.color:'var(--muted)'};cursor:pointer;transition:.15s">${em} ${lbl}</button>`;
+    return `<button onclick="window._fcGender=${g};localStorage.setItem('_fcGender','${g}');_setRankPopupScope('${scope}');if(typeof _renderTierBadge==='function')_renderTierBadge()" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:${a?700:500};border:1.5px solid ${a?rank.color+'80':'var(--border)'};background:${a?rank.color+'22':'transparent'};color:${a?rank.color:'var(--muted)'};cursor:pointer;transition:.15s">${em} ${lbl}</button>`;
   };
 
   return `
