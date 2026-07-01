@@ -13602,12 +13602,14 @@ function _buildRankPopupBody(nw, scope){
     <div style="display:flex;justify-content:center;gap:8px;margin-bottom:10px">
       ${_gBtn(0,'หญิง','♀')}${_gBtn(1,'ชาย','♂')}
     </div>
-    <div style="width:130px;height:196px;display:flex;align-items:center;justify-content:center;
-      margin:0 auto 10px;border-radius:14px;
-      box-shadow:0 4px 24px ${rank.glow},0 0 0 1.5px ${rank.color}35;
-      background:radial-gradient(ellipse at 50% 30%,${rank.color}22,${rank.color}08);
+    <div style="width:158px;height:250px;display:flex;align-items:flex-end;justify-content:center;
+      margin:0 auto 12px;border-radius:22px;
+      box-shadow:0 10px 32px ${rank.glow},inset 0 0 0 1.5px ${rank.color}45;
+      background:radial-gradient(ellipse at 50% 24%,${rank.color}2e,${rank.color}06 72%);
       overflow:hidden;position:relative">
-      ${(window._fcSvgG||window._fcSVG||function(){return '';})(tier.lv, window._fcGender||0)}
+      <div style="position:absolute;top:12%;left:50%;transform:translateX(-50%);width:62%;height:52%;background:radial-gradient(circle,${rank.color}4d,transparent 70%);filter:blur(10px)"></div>
+      <div style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);width:50%;height:10px;background:radial-gradient(ellipse,rgba(0,0,0,.55),transparent 75%)"></div>
+      <div style="position:relative;line-height:0">${(window._fcSvgG||window._fcSVG||function(){return '';})(tier.lv, window._fcGender||0)}</div>
     </div>
     <div style="font-size:24px;font-weight:900;color:${rank.color}">${rank.name}</div>
     <div style="font-size:12px;color:var(--muted);margin-top:3px">${rank.th} · Lv.${tier.lv}/8 · ${sm.label} (${sm.pop})</div>
