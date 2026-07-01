@@ -13732,12 +13732,12 @@ function _renderTierBadge(){
         </div>
       </div>`;
     }
-    el.innerHTML=`<div onclick="_showRankPopup()" style="display:inline-flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+    el.innerHTML=`<div onclick="_showRankPopup()" style="display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;width:100%;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
       ${charHtml}
-      <div style="display:inline-flex;align-items:center;gap:5px;background:${rank.color}15;border:1px solid ${rank.color}45;border-radius:20px;padding:4px 10px;box-shadow:0 0 10px ${rank.glow}">
+      <div style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,${rank.color}24,${rank.color}12);border:1px solid ${rank.color}55;border-radius:20px;padding:4px 12px;box-shadow:0 3px 12px ${rank.glow},inset 0 1px 0 rgba(255,255,255,.08)">
         <i class="fas ${rank.icon}" style="font-size:9px;color:${rank.color}"></i>
-        <span style="font-size:10px;font-weight:800;color:${rank.color};letter-spacing:.3px">${rank.name}</span>
-        <span style="font-size:9px;color:${rank.color};opacity:.7">Lv.${tier.lv}/8</span>
+        <span style="font-size:10.5px;font-weight:800;color:${rank.color};letter-spacing:.4px">${rank.name}</span>
+        <span style="font-size:9px;color:${rank.color};opacity:.65;font-weight:600">Lv.${tier.lv}/8</span>
       </div>
     </div>`;
   }catch(e){ el.innerHTML=''; }
