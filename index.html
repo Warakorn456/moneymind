@@ -13913,9 +13913,11 @@ function _showWelcomeOnboard(){
     lv=Math.max(1,Math.min(8,parseInt(lv)||4));
     const gm=(gender===1);
     const cw=192;
-    // New chars.png: 8 ranks × 2 genders, each cell 192×512px
-    // Female row (top 512px): character body Y≈115–415; Male row (bottom 512px): Y≈627–912
-    const ryF=115, ryM=627, rh=300;
+    // chars.png: 8 ranks × 2 genders, each cell 192×512px
+    // Female row (top 512px): character body Y≈168–415, Legend crown from Y≈125
+    // Male row (bottom 512px): body Y≈680–908, Legend crown from Y≈640
+    const isLeg=(lv===8);
+    const ryF=isLeg?122:162, ryM=isLeg?634:674, rh=isLeg?296:255;
     const sx=(lv-1)*cw;
     const sy=gm?ryM:ryF;
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${sx} ${sy} ${cw} ${rh}"
