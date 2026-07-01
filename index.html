@@ -13947,6 +13947,8 @@ function _showWelcomeOnboard(){
   function _fcEmoji(r){return{F:'😰',E:'😐',D:'🙂',C:'😊',B:'😎',A:'🤩',S:'👑'}[r]||'😐';}
   window._fcLvG=_fcLv;
   window._fcSvgG=_fcSVG;
+  // re-render badge now that _fcSvgG is available (initial call at 13712 ran before this)
+  if(typeof _renderTierBadge==='function') _renderTierBadge();
 
   // ── Popup content ──────────────────────────────────────────
   // ── Avatar badge in sidebar (opens existing rank popup) ───
