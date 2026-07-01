@@ -3065,7 +3065,7 @@ async function _handleOAuthResult(result, providerName){
   }
 }
 
-// handle redirect result สำหรับ WebView ที่ใช้ signInWithRedirect (ไม่ใช่ Chrome browser)
+// handle redirect result — ทั้ง mobile Chrome redirect flow และ WebView ที่หลุดผ่านมา
 async function _checkGoogleRedirectResult(){
   if(!_auth||!_fs) return;
   try{
@@ -3074,10 +3074,19 @@ async function _checkGoogleRedirectResult(){
       await _handleOAuthResult(result,'google');
     }
   }catch(e){
-    if(e.code==='auth/web-storage-unsupported'||e.code==='auth/operation-not-supported-in-this-environment'||(e.message&&e.message.includes('disallowed_useragent'))){
-      // WebView บล็อก — แสดง error ในหน้า login ถ้ายังแสดงอยู่
+    if(e.code==='auth/web-storage-unsupported'||e.code==='auth/operation-not-supported-in-this-environment'||(e.message&&(e.message.includes('disallowed_useragent')||e.message.includes('403')))){
+      // WebView บล็อก — แสดง error + Chrome intent link
       const errEl=_activeLoginErr?_activeLoginErr():null;
-      if(errEl) errEl.innerHTML='⚠️ Google Sign-In ไม่รองรับใน browser นี้<br><span style="font-size:12px;color:var(--muted)">กรุณาเปิด <b>Chrome</b> แล้วไปที่ลิงก์แอปโดยตรง หรือใช้ Username/Password แทน</span>';
+      if(errEl){
+        const appUrl=window.location.href.split('#')[0];
+        const chromeIntent='intent://'+appUrl.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
+        errEl.innerHTML='<div style="background:#1e1a2e;border:1px solid #ef444455;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.7">'
+          +'⚠️ <b>Google Sign-In ไม่รองรับในแอปนี้</b><br>'
+          +'Google บล็อก OAuth ใน WebView — ทางเลือก:<br>'
+          +'<a href="'+chromeIntent+'" style="color:#60a5fa;font-weight:700">📌 เปิดใน Chrome แล้วสมัคร</a>'
+          +' &nbsp;|&nbsp; ใช้ <b>Username/Password</b> ด้านบน'
+          +'</div>';
+      }
     } else if(e.code&&e.code!=='auth/no-current-user'){
       console.warn('[redirect result]',e.code,e.message);
     }
