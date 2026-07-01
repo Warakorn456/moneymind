@@ -3125,17 +3125,27 @@ async function tryGoogleLogin(){
   const provider=new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({prompt:'select_account'});
   const _isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  // ใช้ popup ทุกกรณี (popup ล้มเหลวแล้วกลับแอปได้ ต่างจาก redirect ที่ user ค้างอยู่ Google error page)
+  if(_isMobile){
+    // Mobile: ใช้ redirect — popup บน Android Chrome เปิด tab ใหม่แทน popup จริง
+    // ทำให้ Firebase handler ไม่มี window.opener → ส่งผลกลับไม่ได้ → หน้าขาว
+    // Redirect flow: app ไป Google → กลับมา app → getRedirectResult() จัดการ
+    try{
+      if(errEl) errEl.textContent='กำลังนำไปยัง Google...';
+      await _auth.signInWithRedirect(provider);
+      return;
+    }catch(redirErr){
+      if(errEl) errEl.textContent='เกิดข้อผิดพลาด: '+(redirErr.code||redirErr.message);
+      allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
+      return;
+    }
+  }
+  // Desktop: popup ก่อน → fallback redirect ถ้าถูกบล็อก
   try{
     const result=await _auth.signInWithPopup(provider);
     await _handleOAuthResult(result,'google');
     return;
   }catch(popupErr){
     if(popupErr.code==='auth/popup-blocked'||popupErr.code==='auth/operation-not-supported-in-this-environment'){
-      if(_isMobile){
-        // Mobile popup blocked = น่าจะเป็น WebView ที่ detect ไม่เจอ
-        _showGoogleWebViewMsg(errEl,allBtns); return;
-      }
       try{
         if(errEl) errEl.textContent='กำลังนำไปยัง Google...';
         await _auth.signInWithRedirect(provider);
@@ -3144,10 +3154,6 @@ async function tryGoogleLogin(){
         if(errEl) errEl.textContent='เกิดข้อผิดพลาด: '+(redirErr.code||redirErr.message);
       }
     } else if(popupErr.code==='auth/popup-closed-by-user'||popupErr.code==='auth/cancelled-popup-request'){
-      if(_isMobile){
-        // Mobile popup closed = อาจโดน WebView บล็อก (Google error page แล้วกลับมา)
-        _showGoogleWebViewMsg(errEl,allBtns); return;
-      }
       // Desktop: user ปิด popup เอง ไม่ต้อง error
     } else if(popupErr.code==='auth/network-request-failed'){
       if(errEl) errEl.textContent='ไม่มีการเชื่อมต่ออินเทอร์เน็ต';
