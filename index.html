@@ -3114,6 +3114,8 @@ function _isInAppBrowser(){
   if(/\(wv\)/.test(ua)) return true;
   if(/FBAN|FB_IAB|FBAV|Instagram|Twitter|Line\/|MicroMessenger|Snapchat|WhatsApp|Telegram/.test(ua)) return true;
   if(/Android/.test(ua)&&!/Chrome\//.test(ua)) return true;
+  // Android WebView มักมี "Version/X.X" ก่อน "Chrome" — real Android Chrome ไม่มี
+  if(/Android/.test(ua)&&/Version\/\d+\.\d+\s+Chrome/.test(ua)) return true;
   // Chrome บน Android แต่ไม่มี userAgentData = likely WebView (real Chrome 90+ มี)
   if(/Android/.test(ua)&&typeof navigator.userAgentData==='undefined') return true;
   return false;
