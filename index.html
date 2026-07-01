@@ -13556,10 +13556,23 @@ function _renderTierBadge(){
     let tier=tiers[0];
     for(const t of tiers){ if(nw>=t.min&&nw<t.max){tier=t;break;} }
     const rank=_getRank(tier.lv);
-    el.innerHTML=`<div onclick="_showRankPopup()" style="display:inline-flex;align-items:center;gap:5px;background:${rank.color}15;border:1px solid ${rank.color}45;border-radius:20px;padding:4px 10px;cursor:pointer;box-shadow:0 0 10px ${rank.glow};transition:.15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
-      <i class="fas ${rank.icon}" style="font-size:9px;color:${rank.color}"></i>
-      <span style="font-size:10px;font-weight:800;color:${rank.color};letter-spacing:.3px">${rank.name}</span>
-      <span style="font-size:9px;color:${rank.color};opacity:.7">Lv.${tier.lv}/8</span>
+    // chibi character above badge
+    let charHtml='';
+    if(window._fcSvgG){
+      const g=typeof window._fcGender!=='undefined'?window._fcGender:0;
+      const svgRaw=window._fcSvgG(tier.lv,g);
+      const vbM=svgRaw.match(/viewBox="[\d.]+ [\d.]+ ([\d.]+) ([\d.]+)"/);
+      const vbW=vbM?parseFloat(vbM[1]):192,vbH=vbM?parseFloat(vbM[2]):244;
+      const sw=62,sh=Math.round(sw/vbW*vbH);
+      charHtml=`<div style="pointer-events:none;line-height:0;margin-bottom:1px">${svgRaw.replace(/width="\d+" height="\d+"/,`width="${sw}" height="${sh}"`)}</div>`;
+    }
+    el.innerHTML=`<div onclick="_showRankPopup()" style="display:inline-flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+      ${charHtml}
+      <div style="display:inline-flex;align-items:center;gap:5px;background:${rank.color}15;border:1px solid ${rank.color}45;border-radius:20px;padding:4px 10px;box-shadow:0 0 10px ${rank.glow}">
+        <i class="fas ${rank.icon}" style="font-size:9px;color:${rank.color}"></i>
+        <span style="font-size:10px;font-weight:800;color:${rank.color};letter-spacing:.3px">${rank.name}</span>
+        <span style="font-size:9px;color:${rank.color};opacity:.7">Lv.${tier.lv}/8</span>
+      </div>
     </div>`;
   }catch(e){ el.innerHTML=''; }
 }
