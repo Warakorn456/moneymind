@@ -3094,9 +3094,10 @@ async function tryGoogleLogin(){
   }
   const provider=new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({prompt:'select_account'});
-  // Android WebView: Firebase v9 ใช้ gapi.iframes สื่อสารใน popup ซึ่งไม่ทำงานข้าม WebView instances
-  // ใช้ signInWithRedirect แทน — navigation อยู่ใน WebView เดิมทั้งสาย ไม่ออก Chrome
-  if(window._isAndroidApp){
+  // Mobile browser (Android/iOS Chrome) — popup ไม่ return result กลับมาได้ (white screen)
+  // ต้องใช้ signInWithRedirect เสมอสำหรับ mobile (ทั้ง WebView และ mobile browser)
+  const _isMobileBrowser=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)&&!window._isAndroidApp&&!window._isIOSApp;
+  if(window._isAndroidApp||_isMobileBrowser){
     try{
       if(errEl) errEl.textContent='กำลังนำไปยัง Google...';
       await _auth.signInWithRedirect(provider);
