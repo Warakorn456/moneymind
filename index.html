@@ -3071,7 +3071,22 @@ async function _checkGoogleRedirectResult(){
   try{
     const result=await _auth.getRedirectResult();
     if(result&&result.user){
+      sessionStorage.removeItem('_googleRedirectPending');
       await _handleOAuthResult(result,'google');
+    } else if(sessionStorage.getItem('_googleRedirectPending')){
+      // redirect ถูกส่งออกไปแต่กลับมาโดยไม่มีผล = Google บล็อก (WebView 403 แล้วกด back)
+      sessionStorage.removeItem('_googleRedirectPending');
+      const errEl=_activeLoginErr?_activeLoginErr():null;
+      if(errEl){
+        const appUrl=window.location.href.split('#')[0];
+        const chromeIntent='intent://'+appUrl.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
+        errEl.innerHTML='<div style="background:#1e1a2e;border:1px solid #ef444455;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.7">'
+          +'⚠️ <b>Google Sign-In ไม่รองรับในแอปนี้</b><br>'
+          +'Google บล็อก OAuth ใน WebView — ทางเลือก:<br>'
+          +'<a href="'+chromeIntent+'" style="color:#60a5fa;font-weight:700">📌 เปิดใน Chrome แล้วสมัคร</a>'
+          +' &nbsp;|&nbsp; ใช้ <b>Username/Password</b> ด้านบน'
+          +'</div>';
+      }
     }
   }catch(e){
     if(e.code==='auth/web-storage-unsupported'||e.code==='auth/operation-not-supported-in-this-environment'||(e.message&&(e.message.includes('disallowed_useragent')||e.message.includes('403')))){
