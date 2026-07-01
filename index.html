@@ -3140,9 +3140,11 @@ async function tryGoogleLogin(){
     // Redirect flow: app ไป Google → กลับมา app → getRedirectResult() จัดการ
     try{
       if(errEl) errEl.textContent='กำลังนำไปยัง Google...';
+      sessionStorage.setItem('_googleRedirectPending','1');
       await _auth.signInWithRedirect(provider);
       return;
     }catch(redirErr){
+      sessionStorage.removeItem('_googleRedirectPending');
       if(errEl) errEl.textContent='เกิดข้อผิดพลาด: '+(redirErr.code||redirErr.message);
       allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
       return;
