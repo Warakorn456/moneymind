@@ -13934,45 +13934,9 @@ function _showWelcomeOnboard(){
   // ── Popup content ──────────────────────────────────────────
   // ── Avatar badge in sidebar (opens existing rank popup) ───
   function _fcRenderAvatar(){
-    const nwData=calcNetWorth(); const nw=nwData.netWorth;
-    const lv=_fcLv(nw); const idx=_FC_LEVELS.indexOf(lv);
-    const rc=lv.color;
-
-    // Clean up old topbar version if any
+    // Remove legacy fc-avatar-wrap if present
     const oldWrap=document.getElementById('fc-avatar-wrap');
-    if(oldWrap && oldWrap.parentElement && oldWrap.parentElement.classList.contains('topbar-right')){
-      oldWrap.remove();
-    }
-
-    // Inject into sidebar under _tierBadge
-    let wrap=document.getElementById('fc-avatar-wrap');
-    if(!wrap){
-      const tbd=document.getElementById('_tierBadge');
-      if(!tbd) return;
-      wrap=document.createElement('div');
-      wrap.id='fc-avatar-wrap';
-      wrap.style.cssText='margin-top:6px;';
-      wrap.innerHTML=
-        `<button id="fc-avatar-btn" onclick="_showRankPopup()"
-          style="background:none;border:none;cursor:pointer;padding:0;display:block;width:100%;text-align:left;"
-          onmouseover="this.firstElementChild.style.opacity='.8'"
-          onmouseout="this.firstElementChild.style.opacity='1'">
-          <div id="fc-badge-inner" style="transition:.15s;display:inline-flex;align-items:center;gap:6px;"></div>
-        </button>`;
-      tbd.parentNode.insertBefore(wrap, tbd.nextSibling);
-    }
-
-    // Update badge inner (styled like tier badge)
-    const inner=document.getElementById('fc-badge-inner');
-    if(inner){
-      inner.style.cssText=`display:inline-flex;align-items:center;gap:5px;
-        background:${rc}15;border:1px solid ${rc}45;border-radius:20px;
-        padding:4px 10px;box-shadow:0 0 10px ${rc}40;transition:.15s;`;
-      inner.innerHTML=`
-        <span style="font-size:14px;line-height:1">${_fcEmoji(lv.rank)}</span>
-        <span style="font-size:10px;font-weight:800;color:${rc}">${lv.name}</span>
-        <span style="font-size:9px;color:${rc};opacity:.65">Lv.${idx+1}/7</span>`;
-    }
+    if(oldWrap) oldWrap.remove();
 
     // clear old card section
     const card=document.getElementById('dash-char-section');
