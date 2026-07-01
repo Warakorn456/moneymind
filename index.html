@@ -13493,6 +13493,7 @@ function _buildRankPopupBody(nw, scope){
 
   return `
   <button onclick="document.getElementById('_rankPopupOv').remove()" style="position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--muted);font-size:15px;display:flex;align-items:center;justify-content:center">✕</button>
+  <button onclick="_showAllRanksDetail()" title="ดูตัวละครทุกแรงค์" style="position:absolute;top:12px;left:12px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">👥</button>
   <!-- header -->
   <div style="text-align:center;margin-bottom:16px">
     <div style="display:flex;justify-content:center;gap:8px;margin-bottom:10px">
