@@ -13416,7 +13416,7 @@ async function travelFly(name){
     return;
   }
   const geo=await _geocode(name,true);
-  if(!geo){ toast('ไม่พบพิกัดของ '+name,'error'); return; }
+  if(!geo){ toast(tr('travel_coords_not_found')+' '+name,'error'); return; }
   if(p){ p.lat=geo.lat; p.lng=geo.lng; p.label=geo.label; p.type=geo.type; p.bbox=geo.bbox; saveDB(); _refreshTravelGlobe(); }
   if(!_flyToBbox(geo.bbox,[geo.lng,geo.lat])) _flyToPlace(geo.lat,geo.lng,_altForType(geo.type));
 }
