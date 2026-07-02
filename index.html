@@ -9018,7 +9018,7 @@ function calcHealthScore(){
 function renderHealthScore(){
   const el=document.getElementById('dash-health-section'); if(!el) return;
   const {score,metrics}=calcHealthScore();
-  const grade=score>=80?{label:'ดีเยี่ยม',color:'#10b981'}:score>=60?{label:'ดี',color:'#06b6d4'}:score>=40?{label:'พอใช้',color:'#f59e0b'}:{label:'ต้องปรับปรุง',color:'#ef4444'};
+  const grade=score>=80?{label:t('hs_excellent'),color:'#10b981'}:score>=60?{label:t('hs_good'),color:'#06b6d4'}:score>=40?{label:t('hs_fair'),color:'#f59e0b'}:{label:t('hs_needs_work'),color:'#ef4444'};
   const circ=2*Math.PI*36; const dash=(score/100)*circ;
   el.innerHTML=`
     <div class="health-card">
