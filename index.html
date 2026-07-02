@@ -8967,7 +8967,7 @@ function renderPinSettings(){
   const status=document.getElementById('pin-status');
   const form=document.getElementById('pin-inline-form');
   if(clearBtn) clearBtn.style.display=hasPin?'inline-flex':'none';
-  if(status) status.textContent=hasPin?'✅ ตั้ง PIN แล้ว — ใช้ปลดล็อกแทนรหัสผ่านได้':'ยังไม่ได้ตั้ง PIN';
+  if(status) status.textContent=hasPin?t('set_pin_active'):t('set_pin_none');
   if(form) form.style.display=hasPin?'none':'block';
 }
 
