@@ -2817,7 +2817,7 @@ async function tryLogin(){
   const errEl=document.getElementById('login-err');
   const btn=document.getElementById('login-btn');
   if(!user||!pass){ errEl.textContent='กรุณากรอกข้อมูลให้ครบ'; return; }
-  errEl.textContent=''; btn.disabled=true; btn.textContent=t('login_checking');
+  errEl.textContent=''; btn.disabled=true; btn.textContent=tr('login_checking');
 
   // ── Owner (warakorn) — decrypt _ENC blob ──
   if(user===_ENC.user.toLowerCase()){
@@ -2842,18 +2842,18 @@ async function tryLogin(){
       fsListen();
     }catch{
       errEl.textContent='รหัสผ่านไม่ถูกต้อง';
-      btn.disabled=false; btn.textContent=t('login_btn');
+      btn.disabled=false; btn.textContent=tr('login_btn');
     }
     return;
   }
 
   // ── Email login via Firebase Auth ──
   if(user.includes('@')){
-    if(!_auth){ errEl.textContent='ระบบ Auth ยังไม่พร้อม ลองใหม่'; btn.disabled=false; btn.textContent=t('login_btn'); return; }
+    if(!_auth){ errEl.textContent='ระบบ Auth ยังไม่พร้อม ลองใหม่'; btn.disabled=false; btn.textContent=tr('login_btn'); return; }
     try{
       await _auth.signInWithEmailAndPassword(user,pass);
       const snap=await _fs.collection('members').where('email','==',user).limit(1).get();
-      if(snap.empty){ errEl.textContent='ไม่พบบัญชีที่ใช้ Email นี้'; btn.disabled=false; btn.textContent=t('login_btn'); return; }
+      if(snap.empty){ errEl.textContent='ไม่พบบัญชีที่ใช้ Email นี้'; btn.disabled=false; btn.textContent=tr('login_btn'); return; }
       const memberData=snap.docs[0].data();
       currentUser=memberData.username;
       DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
@@ -2864,7 +2864,7 @@ async function tryLogin(){
       fsListen();
     }catch(e){
       const msg=e.code==='auth/wrong-password'||e.code==='auth/invalid-credential'?'Email หรือรหัสผ่านไม่ถูกต้อง':e.code==='auth/user-not-found'?'ไม่พบบัญชีนี้':'เกิดข้อผิดพลาด ลองใหม่';
-      errEl.textContent=msg; btn.disabled=false; btn.textContent=t('login_btn');
+      errEl.textContent=msg; btn.disabled=false; btn.textContent=tr('login_btn');
     }
     return;
   }
@@ -2872,11 +2872,11 @@ async function tryLogin(){
   // ── Other users — hash compare ──
   const users=getUsers();
   const rec=users.find(u=>u.username===user);
-  if(!rec){ errEl.textContent='ไม่พบชื่อผู้ใช้นี้'; btn.disabled=false; btn.textContent=t('login_btn'); return; }
+  if(!rec){ errEl.textContent='ไม่พบชื่อผู้ใช้นี้'; btn.disabled=false; btn.textContent=tr('login_btn'); return; }
   try{
     const saltBytes=Uint8Array.from(atob(rec.salt),c=>c.charCodeAt(0));
     const hash=await pbkdf2Hash(pass,saltBytes);
-    if(hash!==rec.hash){ errEl.textContent='รหัสผ่านไม่ถูกต้อง'; btn.disabled=false; btn.textContent=t('login_btn'); return; }
+    if(hash!==rec.hash){ errEl.textContent='รหัสผ่านไม่ถูกต้อง'; btn.disabled=false; btn.textContent=tr('login_btn'); return; }
     currentUser=rec.username;
     DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
     loadDB();
@@ -2887,7 +2887,7 @@ async function tryLogin(){
     fsListen();
   }catch{
     errEl.textContent='เกิดข้อผิดพลาด ลองใหม่';
-    btn.disabled=false; btn.textContent=t('login_btn');
+    btn.disabled=false; btn.textContent=tr('login_btn');
   }
 }
 
@@ -2915,7 +2915,7 @@ async function tryRegister(){
   if(user===_ENC.user.toLowerCase()){ errEl.textContent='ชื่อนี้ถูกใช้งานแล้ว'; return; }
   const users=getUsers();
   if(users.find(u=>u.username===user)){ errEl.textContent='ชื่อผู้ใช้นี้ถูกใช้งานแล้ว'; return; }
-  errEl.textContent=''; btn.disabled=true; btn.textContent=t('register_creating');
+  errEl.textContent=''; btn.disabled=true; btn.textContent=tr('register_creating');
   try{
     // สร้าง Firebase Auth account
     let fbUid='';
@@ -2925,8 +2925,8 @@ async function tryRegister(){
         fbUid=fbCred.user.uid;
         try{ await fbCred.user.sendEmailVerification({url:location.href}); }catch(ve){ console.warn('[verify email]',ve.message); }
       }catch(e){
-        if(e.code==='auth/email-already-in-use'){ errEl.textContent='Email นี้ถูกใช้งานแล้ว'; btn.disabled=false; btn.textContent=t('register_btn'); return; }
-        if(e.code==='auth/invalid-email'){ errEl.textContent='รูปแบบ Email ไม่ถูกต้อง'; btn.disabled=false; btn.textContent=t('register_btn'); return; }
+        if(e.code==='auth/email-already-in-use'){ errEl.textContent='Email นี้ถูกใช้งานแล้ว'; btn.disabled=false; btn.textContent=tr('register_btn'); return; }
+        if(e.code==='auth/invalid-email'){ errEl.textContent='รูปแบบ Email ไม่ถูกต้อง'; btn.disabled=false; btn.textContent=tr('register_btn'); return; }
       }
     }
     // บันทึก hash ลง localStorage (offline support)
@@ -2957,7 +2957,7 @@ async function tryRegister(){
     setTimeout(_showWelcomeOnboard, 600);
   }catch{
     errEl.textContent='เกิดข้อผิดพลาด ลองใหม่';
-    btn.disabled=false; btn.textContent=t('register_btn');
+    btn.disabled=false; btn.textContent=tr('register_btn');
   }
 }
 
@@ -3285,7 +3285,7 @@ async function tryAppleLogin(){
 function switchToRegister(){
   document.getElementById('form-login').style.display='none';
   document.getElementById('form-register').style.display='block';
-  document.getElementById('login-mode-sub').textContent=t('register_sub');
+  document.getElementById('login-mode-sub').textContent=tr('register_sub');
   document.getElementById('reg-err').textContent='';
   window._regFormShownAt=Date.now(); // กันบอทสมัครเร็วเกินคน (ใช้คู่กับ honeypot ใน tryRegister)
 }
@@ -3293,14 +3293,14 @@ function switchToLogin(){
   document.getElementById('form-login').style.display='block';
   document.getElementById('form-register').style.display='none';
   document.getElementById('form-forgot').style.display='none';
-  document.getElementById('login-mode-sub').textContent=t('login_sub');
+  document.getElementById('login-mode-sub').textContent=tr('login_sub');
   document.getElementById('login-err').textContent='';
 }
 function switchToForgot(){
   document.getElementById('form-login').style.display='none';
   document.getElementById('form-register').style.display='none';
   document.getElementById('form-forgot').style.display='block';
-  document.getElementById('login-mode-sub').textContent=t('forgot_sub');
+  document.getElementById('login-mode-sub').textContent=tr('forgot_sub');
   document.getElementById('forgot-err').textContent='';
 }
 
@@ -3312,7 +3312,7 @@ async function doForgotEmail(){
   if(!email){ errEl.textContent='กรุณากรอก Email'; return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent='รูปแบบ Email ไม่ถูกต้อง'; return; }
   if(!_auth){ errEl.textContent='ระบบ Auth ยังไม่พร้อม ลองใหม่'; return; }
-  btn.disabled=true; btn.textContent=t('sending');
+  btn.disabled=true; btn.textContent=tr('sending');
   try{
     await _auth.sendPasswordResetEmail(email,{url:location.href});
     document.getElementById('forgot-email').value='';
@@ -3323,7 +3323,7 @@ async function doForgotEmail(){
     const msg=e.code==='auth/user-not-found'||e.code==='auth/invalid-credential'?'ไม่พบบัญชีที่ใช้ Email นี้':e.code==='auth/invalid-email'?'รูปแบบ Email ไม่ถูกต้อง':'เกิดข้อผิดพลาด: '+e.message;
     errEl.textContent=msg;
   }
-  btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane"></i> '+t('forgot_send_btn');
+  btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane"></i> '+tr('forgot_send_btn');
 }
 
 // ══════════════════════════════════════════
@@ -3603,7 +3603,8 @@ const I18N = {
     set_data_title:'จัดการข้อมูล',set_export_json:'ส่งออก JSON',set_export_csv:'ส่งออก CSV',set_print_report:'พิมพ์รายงาน',set_shareable:'สรุปแชร์ได้',set_import_json:'นำเข้า JSON',set_clear_all:'ล้างข้อมูลทั้งหมด',
     dh_networth:'ความมั่งคั่งสุทธิ (Net Worth)',dh_assets_minus_debts:'สินทรัพย์ − หนี้สิน',dh_income:'รายรับ',dh_expense:'รายจ่าย',dh_this_month:'เดือนนี้',dh_saving:'ออม',dh_remaining:'คงเหลือ',dh_remaining_formula:'รายรับ − รายจ่าย − ออม',dh_portfolio:'พอร์ตลงทุน',dh_current_value:'มูลค่าปัจจุบัน',dh_exp_by_cat:'รายจ่ายแยกหมวด',dh_hide_transfer:'ซ่อนเงินโอน/ถอน',dh_income_vs_exp:'รายรับ vs รายจ่าย 6 เดือน',
     vs_month:'เทียบกับ',budget_per_month:'งบ/เดือน',baht_per_month:'฿/เดือน',budget_by_cat:'งบประมาณแยกหมวด',over_budget:'เกิน!',
-    hs_savings_rate:'อัตราการออม',hs_of_income:'ของรายรับ',hs_debt_burden:'ภาระหนี้',hs_debt:'หนี้',hs_no_debt:'ไม่มีหนี้',hs_emergency_fund:'เงินสำรองฉุกเฉิน',hs_months:'เดือน',hs_investment:'การลงทุน',hs_portfolio:'พอร์ต',hs_excellent:'ดีเยี่ยม',hs_good:'ดี',hs_fair:'พอใช้',hs_needs_work:'ต้องปรับปรุง',hs_calc_note:'คำนวณจากค่าเฉลี่ย 6 เดือนย้อนหลัง'},
+    hs_savings_rate:'อัตราการออม',hs_of_income:'ของรายรับ',hs_debt_burden:'ภาระหนี้',hs_debt:'หนี้',hs_no_debt:'ไม่มีหนี้',hs_emergency_fund:'เงินสำรองฉุกเฉิน',hs_months:'เดือน',hs_investment:'การลงทุน',hs_portfolio:'พอร์ต',hs_excellent:'ดีเยี่ยม',hs_good:'ดี',hs_fair:'พอใช้',hs_needs_work:'ต้องปรับปรุง',hs_calc_note:'คำนวณจากค่าเฉลี่ย 6 เดือนย้อนหลัง',
+    target:'เป้า',other:'อื่นๆ',top5_exp_month:'Top 5 รายจ่ายเดือนนี้'},
   en: {dashboard:'Dashboard',transactions:'Income & Expenses',ot:'Overtime Calculator',loan:'Loan Calculator',subscriptions:'Subscriptions',calendar:'Calendar',savings:'Savings',banks:'Bank Accounts',debts:'Debts',investments:'Investment Portfolio',tax:'Income Tax',balance:'Balance Sheet & Financial Plan',retire:'Retirement Plan',profile:'Profile',settings:'Settings',admin:'Admin Dashboard',forecast:'Cash Flow Forecast',travel:'Travel',aiusage:'AI Usage / Token Cost',insurance:'Insurance',app_tagline:'Personal Finance',
     login_sub:'Personal Finance System',ph_login_user:'Username or Email',ph_login_pass:'Password',login_btn:'Log In',login_checking:'Checking...',login_divider:'Or log in with',
     no_account:"Don't have an account?",register_link:'Sign up',forgot_pass:'Forgot password?',reset_pass_link:'Reset password',
@@ -3621,7 +3622,7 @@ const I18N = {
     hs_savings_rate:'Savings Rate',hs_of_income:'of income',hs_debt_burden:'Debt Burden',hs_debt:'Debt',hs_no_debt:'No debt',hs_emergency_fund:'Emergency Fund',hs_months:'months',hs_investment:'Investment',hs_portfolio:'Portfolio',hs_excellent:'Excellent',hs_good:'Good',hs_fair:'Fair',hs_needs_work:'Needs Work',hs_calc_note:'Calculated from 6-month average'},
 };
 let currentLang=(function(){ try{ return localStorage.getItem('mm_lang')||'th'; }catch(e){ return 'th'; } })();
-function t(key){ return (I18N[currentLang]||I18N.th)[key] || (I18N.th[key]||key); }
+function tr(key){ return (I18N[currentLang]||I18N.th)[key] || (I18N.th[key]||key); }
 function setLang(lang){
   currentLang=(lang==='en')?'en':'th';
   try{ localStorage.setItem('mm_lang',currentLang); }catch(e){}
@@ -3638,14 +3639,14 @@ function monthShortArr(){ return currentLang==='en'?MN_SHORT_EN:MN_SHORT_TH; }
 function monthFullArr(){ return currentLang==='en'?MN_FULL_EN:MN_FULL_TH; }
 function beYear(y){ return currentLang==='en'?y:beYear(y); } // พ.ศ. เฉพาะภาษาไทย, อังกฤษใช้ ค.ศ. ตรงๆ
 function applyLang(){
-  document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')); });
-  document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ el.placeholder=t(el.getAttribute('data-i18n-ph')); });
-  document.querySelectorAll('[data-i18n-html]').forEach(function(el){ el.innerHTML=t(el.getAttribute('data-i18n-html')); });
-  const pt=document.getElementById('page-title'); if(pt&&typeof curPage!=='undefined') pt.textContent=t(curPage);
+  document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=tr(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ el.placeholder=tr(el.getAttribute('data-i18n-ph')); });
+  document.querySelectorAll('[data-i18n-html]').forEach(function(el){ el.innerHTML=tr(el.getAttribute('data-i18n-html')); });
+  const pt=document.getElementById('page-title'); if(pt&&typeof curPage!=='undefined') pt.textContent=tr(curPage);
   const langBtn=document.getElementById('lang-btn'); if(langBtn) langBtn.textContent=currentLang==='th'?'EN':'TH';
-  const tagline=document.getElementById('app-tagline'); if(tagline) tagline.textContent=t('app_tagline');
+  const tagline=document.getElementById('app-tagline'); if(tagline) tagline.textContent=tr('app_tagline');
 }
-const PAGE_TITLE = new Proxy({},{get:function(_,page){ return t(page); }}); // เก็บชื่อเดิมไว้ให้โค้ดเก่าที่เรียก PAGE_TITLE[page] ยังทำงานได้
+const PAGE_TITLE = new Proxy({},{get:function(_,page){ return tr(page); }}); // เก็บชื่อเดิมไว้ให้โค้ดเก่าที่เรียก PAGE_TITLE[page] ยังทำงานได้
 let curPage='dashboard', txFilter='all';
 
 function nav(page){
@@ -8725,7 +8726,7 @@ function renderSpendingInsights(){
           <div style="width:30px;height:30px;border-radius:8px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-lightbulb" style="color:var(--amber);font-size:12px"></i></div>
           <div class="sec-title">Spending Insights</div>
         </div>
-        <div style="font-size:12px;color:var(--muted)">${t('vs_month')} ${MN[prevM]}</div>
+        <div style="font-size:12px;color:var(--muted)">${tr('vs_month')} ${MN[prevM]}</div>
       </div>
       ${sorted.map(x=>{
         const cat=getCat(x.id,'expense');
@@ -8824,8 +8825,8 @@ function renderCatBudgetSettings(){
     return `<div class="catbud-row">
       <div class="catbud-label" title="${c.label}"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${c.color};margin-right:6px"></span>${c.label}</div>
       <input type="number" class="catbud-inp" value="${budgeted||''}" placeholder="0" min="0" step="100"
-        onchange="saveCatBudget('${c.id}',this.value)" title="${t('budget_per_month')}">
-      <div style="font-size:11px;color:var(--muted);margin-left:4px">${t('baht_per_month')}</div>
+        onchange="saveCatBudget('${c.id}',this.value)" title="${tr('budget_per_month')}">
+      <div style="font-size:11px;color:var(--muted);margin-left:4px">${tr('baht_per_month')}</div>
     </div>`;
   }).join('');
 }
@@ -8857,16 +8858,16 @@ function renderCatBudgetProgress(){
       <div class="sec-hd" style="margin-bottom:14px">
         <div style="display:flex;align-items:center;gap:8px">
           <div style="width:30px;height:30px;border-radius:8px;background:rgba(6,182,212,.1);display:flex;align-items:center;justify-content:center"><i class="fas fa-sliders-h" style="color:var(--cyan);font-size:12px"></i></div>
-          <div class="sec-title">${t('budget_by_cat')}</div>
+          <div class="sec-title">${tr('budget_by_cat')}</div>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="nav('settings')">${t('settings')} →</button>
+        <button class="btn btn-ghost btn-sm" onclick="nav('settings')">${tr('settings')} →</button>
       </div>
       ${rows.map(r=>`
         <div class="catbud-row">
           <div class="catbud-label"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${r.cat.color};margin-right:6px"></span>${r.cat.label}</div>
           <div class="catbud-bar-bg"><div class="catbud-bar" style="width:${r.pct.toFixed(1)}%;background:${r.barColor}"></div></div>
           <div class="catbud-nums">${fmt(r.spent)}/${fmt(r.bud)}</div>
-          ${r.pct>=100?`<span style="font-size:11px;color:var(--red);flex-shrink:0">${t('over_budget')}</span>`:r.pct>=80?`<span style="font-size:11px;color:var(--amber);flex-shrink:0">${r.pct.toFixed(0)}%</span>`:`<span style="font-size:11px;color:var(--muted);flex-shrink:0">${r.pct.toFixed(0)}%</span>`}
+          ${r.pct>=100?`<span style="font-size:11px;color:var(--red);flex-shrink:0">${tr('over_budget')}</span>`:r.pct>=80?`<span style="font-size:11px;color:var(--amber);flex-shrink:0">${r.pct.toFixed(0)}%</span>`:`<span style="font-size:11px;color:var(--muted);flex-shrink:0">${r.pct.toFixed(0)}%</span>`}
         </div>`).join('')}
     </div>`;
 }
@@ -8991,7 +8992,7 @@ function renderPinSettings(){
   const status=document.getElementById('pin-status');
   const form=document.getElementById('pin-inline-form');
   if(clearBtn) clearBtn.style.display=hasPin?'inline-flex':'none';
-  if(status) status.textContent=hasPin?t('set_pin_active'):t('set_pin_none');
+  if(status) status.textContent=hasPin?tr('set_pin_active'):tr('set_pin_none');
   if(form) form.style.display=hasPin?'none':'block';
 }
 
@@ -9010,10 +9011,10 @@ function calcHealthScore(){
   const port=DB.investments.reduce((s,i)=>s+i.value,0);
   const invScore=avgInc>0?Math.min(100,(port/(avgInc*12))*100):0;
   const metrics=[
-    {label:t('hs_savings_rate'),val:Math.max(0,savingsRate),desc:`${savingsRate.toFixed(1)}% ${t('hs_of_income')}`,icon:'fa-piggy-bank',color:'#10b981',weight:30},
-    {label:t('hs_debt_burden'),val:Math.max(0,100-dti),desc:totalDebt>0?`${t('hs_debt')} ${fmt(totalDebt)}`:t('hs_no_debt'),icon:'fa-credit-card',color:'#06b6d4',weight:25},
-    {label:t('hs_emergency_fund'),val:Math.min(100,emergencyFund),desc:`${(banks/Math.max(avgExp,1)).toFixed(1)} ${t('hs_months')}`,icon:'fa-shield-alt',color:'#a78bfa',weight:25},
-    {label:t('hs_investment'),val:Math.min(100,invScore),desc:`${t('hs_portfolio')} ${fmt(port)}`,icon:'fa-chart-line',color:'#f59e0b',weight:20},
+    {label:tr('hs_savings_rate'),val:Math.max(0,savingsRate),desc:`${savingsRate.toFixed(1)}% ${tr('hs_of_income')}`,icon:'fa-piggy-bank',color:'#10b981',weight:30},
+    {label:tr('hs_debt_burden'),val:Math.max(0,100-dti),desc:totalDebt>0?`${tr('hs_debt')} ${fmt(totalDebt)}`:tr('hs_no_debt'),icon:'fa-credit-card',color:'#06b6d4',weight:25},
+    {label:tr('hs_emergency_fund'),val:Math.min(100,emergencyFund),desc:`${(banks/Math.max(avgExp,1)).toFixed(1)} ${tr('hs_months')}`,icon:'fa-shield-alt',color:'#a78bfa',weight:25},
+    {label:tr('hs_investment'),val:Math.min(100,invScore),desc:`${tr('hs_portfolio')} ${fmt(port)}`,icon:'fa-chart-line',color:'#f59e0b',weight:20},
   ];
   const score=Math.round(metrics.reduce((s,m)=>s+(m.val*m.weight/100),0));
   return {score,metrics};
@@ -9022,7 +9023,7 @@ function calcHealthScore(){
 function renderHealthScore(){
   const el=document.getElementById('dash-health-section'); if(!el) return;
   const {score,metrics}=calcHealthScore();
-  const grade=score>=80?{label:t('hs_excellent'),color:'#10b981'}:score>=60?{label:t('hs_good'),color:'#06b6d4'}:score>=40?{label:t('hs_fair'),color:'#f59e0b'}:{label:t('hs_needs_work'),color:'#ef4444'};
+  const grade=score>=80?{label:tr('hs_excellent'),color:'#10b981'}:score>=60?{label:tr('hs_good'),color:'#06b6d4'}:score>=40?{label:tr('hs_fair'),color:'#f59e0b'}:{label:tr('hs_needs_work'),color:'#ef4444'};
   const circ=2*Math.PI*36; const dash=(score/100)*circ;
   el.innerHTML=`
     <div class="health-card">
@@ -9031,7 +9032,7 @@ function renderHealthScore(){
           <div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-heartbeat" style="color:#10b981;font-size:12px"></i></div>
           <div class="sec-title">Financial Health Score</div>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="toast(t('hs_calc_note'),'info')"><i class="fas fa-info-circle"></i></button>
+        <button class="btn btn-ghost btn-sm" onclick="toast(tr('hs_calc_note'),'info')"><i class="fas fa-info-circle"></i></button>
       </div>
       <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
         <div class="health-score-ring" style="background:conic-gradient(${grade.color} ${score*3.6}deg, rgba(255,255,255,.08) 0deg)">
@@ -9852,9 +9853,9 @@ function renderSavingsRate(){
   var srColor=curSR>=target?'#10b981':curSR>=target*0.7?'#f59e0b':'#ef4444';
   el.innerHTML='<div class="sr-card">'
     +'<div class="sec-hd" style="margin-bottom:10px">'
-    +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-percentage" style="color:#10b981;font-size:12px"></i></div><div class="sec-title">'+t('hs_savings_rate')+'</div></div>'
+    +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-percentage" style="color:#10b981;font-size:12px"></i></div><div class="sec-title">'+tr('hs_savings_rate')+'</div></div>'
     +'<div style="display:flex;align-items:center;gap:8px">'
-    +'<span style="font-size:12px;color:var(--muted)">'+t('target')+':</span>'
+    +'<span style="font-size:12px;color:var(--muted)">'+tr('target')+':</span>'
     +'<input type="number" value="'+target+'" style="width:50px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:2px 6px;color:var(--text);font-size:13px;font-family:Sarabun,sans-serif;text-align:center" onchange="DB.settings.srTarget=this.value;saveDB();renderSavingsRate()" min="1" max="100">%'
     +'<span style="font-size:22px;font-weight:800;color:'+srColor+'">'+curSR+'%</span>'
     +'</div></div>'
@@ -9867,8 +9868,8 @@ function renderSavingsRate(){
   _srChart=new Chart(ctx,{
     type:'bar',
     data:{labels:labels,datasets:[
-      {label:t('hs_savings_rate')+' %',data:srData,backgroundColor:srData.map(function(v){return v>=target?'rgba(16,185,129,.7)':v>=target*0.7?'rgba(245,158,11,.7)':'rgba(239,68,68,.7)';}),borderRadius:5,borderSkipped:false},
-      {label:t('target'),data:targetArr,type:'line',borderColor:'rgba(255,255,255,.4)',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false}
+      {label:tr('hs_savings_rate')+' %',data:srData,backgroundColor:srData.map(function(v){return v>=target?'rgba(16,185,129,.7)':v>=target*0.7?'rgba(245,158,11,.7)':'rgba(239,68,68,.7)';}),borderRadius:5,borderSkipped:false},
+      {label:tr('target'),data:targetArr,type:'line',borderColor:'rgba(255,255,255,.4)',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false}
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'rgba(255,255,255,.6)',font:{family:'Sarabun',size:11},boxWidth:12}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.raw+'%';}}}},scales:{x:{ticks:{color:'rgba(255,255,255,.6)',font:{family:'Sarabun',size:11}},grid:{display:false}},y:{ticks:{color:'rgba(255,255,255,.6)',font:{family:'Sarabun',size:11},callback:function(v){return v+'%';}},grid:{color:'rgba(255,255,255,.05)'}}}}
   });
@@ -9886,7 +9887,7 @@ function renderTopMerchants(){
   var preMo=mo-1<0?11:mo-1, preYr=mo-1<0?yr-1:yr;
   var txsPre=monthTx(preMo,preYr).filter(function(t){return t.type==='expense';});
   var map={}, mapPre={};
-  var _otherLabel=t('other');
+  var _otherLabel=tr('other');
   txsCur.forEach(function(tx){ var k=tx.description||tx.category||_otherLabel; map[k]=(map[k]||0)+tx.amount; });
   txsPre.forEach(function(tx){ var k=tx.description||tx.category||_otherLabel; mapPre[k]=(mapPre[k]||0)+tx.amount; });
   var sorted=Object.entries(map).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
@@ -14397,7 +14398,7 @@ function _rlReset(){ try{ localStorage.removeItem(_RL_KEY); }catch(e){} }
     const btn=document.getElementById('_fbSend');
     if(!text){ if(errEl) errEl.textContent='กรุณาพิมพ์ข้อความก่อนส่ง'; return; }
     if(errEl) errEl.textContent='';
-    btn.disabled=true; btn.textContent=t('sending');
+    btn.disabled=true; btn.textContent=tr('sending');
     const ok=await _sendReport({kind:'feedback',feedbackType:type,text:text});
     if(ok){
       const ov=document.getElementById('_feedbackModal');
