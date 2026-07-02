@@ -15112,8 +15112,8 @@ function _requestPushTokenIfNative(){
 // ══════════════════════════════════════════
 //  OFFLINE DETECTION
 // ══════════════════════════════════════════
-window.addEventListener('offline',function(){ toast('ขาดการเชื่อมต่ออินเทอร์เน็ต — ข้อมูลจะยังบันทึกในเครื่อง','error',4000); });
-window.addEventListener('online',function(){ toast('เชื่อมต่ออินเทอร์เน็ตแล้ว','success'); });
+window.addEventListener('offline',function(){ toast(tr('offline_msg'),'error',4000); });
+window.addEventListener('online',function(){ toast(tr('online_msg'),'success'); });
 
 </script>
 
