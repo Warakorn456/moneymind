@@ -7977,7 +7977,7 @@ function saveEduEntry(){
   const id=document.getElementById('edu-edit-id').value||('e'+Date.now());
   const p=getProfile();
   const entry={id,degree:document.getElementById('edu-degree').value,field:document.getElementById('edu-field').value.trim(),inst:document.getElementById('edu-inst').value.trim(),from:document.getElementById('edu-from').value,to:document.getElementById('edu-to').value,gpa:document.getElementById('edu-gpa').value.trim()};
-  if(!entry.inst){toast('กรุณาใส่ชื่อสถาบัน','error');return;}
+  if(!entry.inst){toast(tr('prof_need_institution'),'error');return;}
   const idx=p.edu.findIndex(e=>e.id===id);
   if(idx>=0) p.edu[idx]=entry; else p.edu.unshift(entry);
   saveDB(); closeModal('edu-modal-bg'); renderProfile();
