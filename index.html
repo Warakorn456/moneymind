@@ -6001,25 +6001,25 @@ function saveDcaPlan(){
   if(id){
     const i=plans.findIndex(p=>p.id===id);
     if(i>=0) plans[i]={...plans[i],...obj};
-    toast('แก้ไขแผนแล้ว','success');
+    toast(tr('dca_plan_edited'),'success');
   } else {
     plans.push({id:uid(),...obj,records:[]});
-    toast('สร้างแผน DCA แล้ว','success');
+    toast(tr('dca_plan_created'),'success');
   }
   saveDB(); closeM('m-dca-plan'); renderDcaView();
 }
 
 function deleteDcaPlan(id){
-  if(!confirm('ลบแผน DCA นี้? ประวัติการซื้อทั้งหมดจะหายไป')) return;
+  if(!confirm(tr('dca_confirm_delete'))) return;
   DB.dcaPlans=getDcaPlans().filter(p=>p.id!==id);
-  saveDB(); renderDcaView(); toast('ลบแผนแล้ว','info');
+  saveDB(); renderDcaView(); toast(tr('dca_plan_deleted'),'info');
 }
 
 function openDcaBuyModal(planId){
   const plan=getDcaPlans().find(p=>p.id===planId); if(!plan) return;
   document.getElementById('dca-buy-plan-id').value=planId;
   document.getElementById('dca-buy-record-id').value='';
-  document.getElementById('dca-buy-plan-name').textContent='บันทึกซื้อ — '+plan.name;
+  document.getElementById('dca-buy-plan-name').textContent=tr('dca_record_buy')+' — '+plan.name;
   document.getElementById('dca-buy-date').value=new Date().toISOString().slice(0,10);
   document.getElementById('dca-buy-amount').value=plan.amount||'';
   document.getElementById('dca-buy-units').value='';
