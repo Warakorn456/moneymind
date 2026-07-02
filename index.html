@@ -7773,7 +7773,7 @@ function savePlanItem(){
   const plan=getPlan();
   plan.items.push({id:'p'+Date.now(),name,amount,type,cat,color:catObj.color,recur,from,to:to||''});
   saveDB(); closePlanModal(); renderBalance();
-  toast('เพิ่มรายการแล้ว','success');
+  toast(tr('tx_add_item'),'success');
 }
 
 function deletePlanItem(id){
