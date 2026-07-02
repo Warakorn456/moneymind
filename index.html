@@ -3632,7 +3632,7 @@ const MN_FULL_TH=monthFullArr();
 const MN_FULL_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 function monthShortArr(){ return currentLang==='en'?MN_SHORT_EN:MN_SHORT_TH; }
 function monthFullArr(){ return currentLang==='en'?MN_FULL_EN:MN_FULL_TH; }
-function beYear(y){ return currentLang==='en'?y:y+543; } // พ.ศ. เฉพาะภาษาไทย, อังกฤษใช้ ค.ศ. ตรงๆ
+function beYear(y){ return currentLang==='en'?y:beYear(y); } // พ.ศ. เฉพาะภาษาไทย, อังกฤษใช้ ค.ศ. ตรงๆ
 function applyLang(){
   document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')); });
   document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ el.placeholder=t(el.getAttribute('data-i18n-ph')); });
@@ -3811,7 +3811,7 @@ function initDate(){
   if(ms&&ys){
     const MN=monthFullArr();
     MN.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=m; if(i===selMonth) o.selected=true; ms.appendChild(o); });
-    for(let y=now.getFullYear()-4;y<=now.getFullYear()+1;y++){ const o=document.createElement('option'); o.value=y; o.textContent=y+543; if(y===selYear) o.selected=true; ys.appendChild(o); }
+    for(let y=now.getFullYear()-4;y<=now.getFullYear()+1;y++){ const o=document.createElement('option'); o.value=y; o.textContent=beYear(y); if(y===selYear) o.selected=true; ys.appendChild(o); }
   }
 }
 
@@ -4149,7 +4149,7 @@ function renderTxChart(year,month){
         data:[...getMonths(year,'expense',cat.id)]}))
     ];
     hasAny=(type,cat)=>getMonths(year,type,cat).some(v=>v>0);
-    title=`รายละเอียดปี ${year} (${year+543})`;
+    title=`รายละเอียดปี ${year} (${beYear(year)})`;
     hint='<div style="font-size:11px;color:var(--muted);margin-top:6px"><i class="fas fa-hand-pointer"></i> คลิกที่แท่งกราฟเพื่อดูรายละเอียดรายวัน</div>';
     backBtn=`<button onclick="renderTxChart(null)" style="background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);color:#a78bfa;border-radius:8px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:Sarabun,sans-serif"><i class="fas fa-arrow-left"></i> กลับภาพรวม</button>`;
     onClickFn=(e,els)=>{ if(els.length) renderTxChart(year,els[0].index); };
@@ -5066,7 +5066,7 @@ function renderDebts(){
     let cy=sy,cm=sm;
     while(cy<ey||(cy===ey&&cm<=em)){
       const ym=`${cy}-${String(cm).padStart(2,'0')}`;
-      months.push({ym,label:MN[cm-1]+'\''+String(cy+543).slice(2),isCur:cy===nowY&&cm===nowM});
+      months.push({ym,label:MN[cm-1]+'\''+String(beYear(cy)).slice(2),isCur:cy===nowY&&cm===nowM});
       cm++; if(cm>12){cm=1;cy++;}
       if(months.length>600) break;
     }
@@ -6673,7 +6673,7 @@ function renderTax(){
   if(ySel){
     if(!ySel.options.length){
       for(let y=curYear;y>=curYear-4;y--){
-        const o=document.createElement('option'); o.value=y; o.textContent=`ปี ${y} (${y+543})`; ySel.appendChild(o);
+        const o=document.createElement('option'); o.value=y; o.textContent=`ปี ${y} (${beYear(y)})`; ySel.appendChild(o);
       }
     }
     ySel.value=t.year||curYear;
@@ -6857,7 +6857,7 @@ function updateBsDebt(id,field,val){ const d=(getPlan().extraDebts||[]).find(x=>
 
 function ymStr(y,m){ return `${y}-${String(m).padStart(2,'0')}`; }
 function ymAdd(ym,n){ let [y,m]=ym.split('-').map(Number); m+=n; while(m>12){m-=12;y++;} while(m<1){m+=12;y--;} return ymStr(y,m); }
-function ymLabel(ym){ const MN=monthShortArr(); const [y,m]=ym.split('-').map(Number); return `${MN[m-1]} ${y+543}`; }
+function ymLabel(ym){ const MN=monthShortArr(); const [y,m]=ym.split('-').map(Number); return `${MN[m-1]} ${beYear(y)}`; }
 
 function planItemApplies(item, ym){
   if(ym < item.from) return false;
@@ -6916,7 +6916,7 @@ function renderPlanChart(year){
     const sy=new Date().getFullYear();
     const endY=getPlanEndYear();
     const numYears=Math.max(20,endY-sy+1);
-    if(titleEl) titleEl.innerHTML=`<i class="fas fa-chart-bar" style="color:var(--primary-l)"></i> ภาพรวมรายปี (ถึงปี ${endY} / พ.ศ. ${endY+543})`;
+    if(titleEl) titleEl.innerHTML=`<i class="fas fa-chart-bar" style="color:var(--primary-l)"></i> ภาพรวมรายปี (ถึงปี ${endY} / พ.ศ. ${beYear(endY)})`;
     if(backBtn) backBtn.style.display='none';
     const nw0=calcNetWorth(); let cumNW=nw0.netWorth;
     const labels=[],inc=[],exp=[],nwArr=[];
@@ -6949,7 +6949,7 @@ function renderPlanChart(year){
     });
   } else {
     // ── Monthly view (12 เดือนของปีนั้น) ──
-    if(titleEl) titleEl.innerHTML=`<i class="fas fa-calendar" style="color:var(--cyan)"></i> รายละเอียดรายเดือน ปี ${year} (${year+543})`;
+    if(titleEl) titleEl.innerHTML=`<i class="fas fa-calendar" style="color:var(--cyan)"></i> รายละเอียดรายเดือน ปี ${year} (${beYear(year)})`;
     if(backBtn) backBtn.style.display='inline-flex';
     const plan=getPlan();
     const MN=monthShortArr();
@@ -7411,7 +7411,7 @@ function renderBalance(){
     // year header row
     planRows+=`<tr class="yr-hdr${isCur?' yr-cur':''}" onclick="togglePlanYear(${yr})">
       <td style="text-align:center"><span class="yr-arrow">${isExp?'▼':'▶'}</span>${yr}</td>
-      <td style="text-align:center">${yr+543}</td>
+      <td style="text-align:center">${beYear(yr)}</td>
       ${hasAge?`<td style="text-align:center;color:${age>=60?'#f59e0b':age>=80?'#ef4444':'inherit'}">${age}</td>`:''}
       <td style="color:#10b981">${fmt(ys.income)}</td>
       <td style="color:#f87171">${fmt(ys.expense)}</td>
@@ -7433,7 +7433,7 @@ function renderBalance(){
         const isNow=ym===curYM;
         const chips=mitems.map(it=>`<span style="display:inline-flex;align-items:center;gap:3px;background:${it.type==='income'?'rgba(16,185,129,.15)':'rgba(239,68,68,.12)'};color:${it.type==='income'?'#10b981':'#f87171'};border-radius:6px;padding:2px 8px;font-size:11px;white-space:nowrap">${it.name} ${it.type==='income'?'+':'−'}${fmt(it.amount)}${it.auto?'':`<span onclick="event.stopPropagation();deletePlanItem('${it.id}')" style="cursor:pointer;margin-left:3px;opacity:.7;font-size:13px;line-height:1">×</span>`}</span>`).join('');
         planRows+=`<tr class="mo-row${isNow?' mo-cur':''}">
-          <td style="text-align:left;padding-left:22px;white-space:nowrap;font-size:12px">${isNow?'<span style="color:#a78bfa;margin-right:4px">●</span>':''}<span style="color:${isNow?'#a78bfa':'#cbd5e1'}">${MN[m-1]} ${yr+543}</span></td>
+          <td style="text-align:left;padding-left:22px;white-space:nowrap;font-size:12px">${isNow?'<span style="color:#a78bfa;margin-right:4px">●</span>':''}<span style="color:${isNow?'#a78bfa':'#cbd5e1'}">${MN[m-1]} ${beYear(yr)}</span></td>
           <td></td>
           ${hasAge?'<td></td>':''}
           <td style="color:#10b981;font-size:12px">${fmt(mInc)}</td>
@@ -7548,7 +7548,7 @@ function renderBalance(){
 
   <!-- Plan Accordion -->
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
-    <div style="font-size:15px;font-weight:700"><i class="fas fa-chart-line" style="color:var(--primary-l)"></i> แผนการเงิน (ถึงปี ${endYear} / พ.ศ. ${endYear+543})</div>
+    <div style="font-size:15px;font-weight:700"><i class="fas fa-chart-line" style="color:var(--primary-l)"></i> แผนการเงิน (ถึงปี ${endYear} / พ.ศ. ${beYear(endYear)})</div>
     <button class="btn btn-primary" onclick="openPlanModal()"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
   </div>
   <div style="font-size:12px;color:var(--muted);margin-bottom:10px"><i class="fas fa-hand-pointer"></i> คลิกที่แถวปีเพื่อขยาย/ย่อดูรายเดือน — กด <b style="color:#a78bfa">+ เพิ่ม</b> ในเดือนนั้นเพื่อใส่รายรับ/รายจ่าย</div>
@@ -7663,7 +7663,7 @@ function uploadProfilePhoto(inp){
 }
 
 function calcAge(dob){ if(!dob) return ''; const d=new Date(dob),now=new Date(); let a=now.getFullYear()-d.getFullYear(); if(now<new Date(now.getFullYear(),d.getMonth(),d.getDate())) a--; return a+' ปี'; }
-function ymLabelWork(ym){ if(!ym) return 'ปัจจุบัน'; const [y,m]=ym.split('-').map(Number); const MN=monthShortArr(); return `${MN[m-1]} ${y+543}`; }
+function ymLabelWork(ym){ if(!ym) return 'ปัจจุบัน'; const [y,m]=ym.split('-').map(Number); const MN=monthShortArr(); return `${MN[m-1]} ${beYear(y)}`; }
 function workDuration(from,to){ if(!from) return ''; const f=new Date(from+'-01'), t=to?new Date(to+'-01'):new Date(); const months=Math.max(0,Math.round((t-f)/2592000000)); if(months<12) return months+'เดือน'; return Math.floor(months/12)+'ปี '+(months%12?months%12+'เดือน':''); }
 
 function famSave(member,field,val){ getProfile().family[member][field]=val; saveDB(); if(field==='dob') renderProfile(); }
@@ -8721,7 +8721,7 @@ function renderSpendingInsights(){
           <div style="width:30px;height:30px;border-radius:8px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-lightbulb" style="color:var(--amber);font-size:12px"></i></div>
           <div class="sec-title">Spending Insights</div>
         </div>
-        <div style="font-size:12px;color:var(--muted)">เทียบกับ ${MN[prevM]}</div>
+        <div style="font-size:12px;color:var(--muted)">${t('vs_month')} ${MN[prevM]}</div>
       </div>
       ${sorted.map(x=>{
         const cat=getCat(x.id,'expense');
@@ -8773,7 +8773,7 @@ function openShareModal(){
   const debts=(DB.debts||[]).reduce((s,d)=>s+(d.remaining||d.total||0),0);
   const networth=banks+port-debts;
   const MN=monthFullArr();
-  document.getElementById('share-period').textContent=`${MN[selMonth]} ${selYear+543}`;
+  document.getElementById('share-period').textContent=`${MN[selMonth]} ${beYear(selYear)}`;
   document.getElementById('share-networth').textContent=fmt(networth);
   document.getElementById('share-inc').textContent=fmt(inc);
   document.getElementById('share-exp').textContent=fmt(exp);
@@ -9542,7 +9542,7 @@ function printMonthlyReport(){
   });
   const catRows=Object.entries(catMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${k}</td><td style="text-align:right">${fmt(v)}</td></tr>`).join('');
   const txRows=txs.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(t=>`<tr><td>${t.date}</td><td>${t.description}</td><td style="color:${t.type==='income'?'green':'red'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</td><td>${getCat(t.category,t.type).label}</td></tr>`).join('');
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>MoneyMind รายงาน ${MN[selMonth]} ${selYear+543}</title><style>
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>MoneyMind รายงาน ${MN[selMonth]} ${beYear(selYear)}</title><style>
     body{font-family:Sarabun,sans-serif;padding:24px;color:#000;font-size:14px}
     h1{color:#7c3aed;margin-bottom:4px}h2{color:#333;margin:20px 0 10px}
     .sum{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
@@ -9554,7 +9554,7 @@ function printMonthlyReport(){
     @media print{button{display:none}}
   </style></head><body>
     <h1>💰 MoneyMind</h1>
-    <p>รายงานการเงิน ${MN[selMonth]} ${selYear+543} &nbsp;|&nbsp; ผู้ใช้: ${currentUser}</p>
+    <p>รายงานการเงิน ${MN[selMonth]} ${beYear(selYear)} &nbsp;|&nbsp; ผู้ใช้: ${currentUser}</p>
     <div class="sum">
       <div class="sum-box"><div style="font-size:11px;color:#666">รายรับ</div><div class="val" style="color:green">${fmt(inc)}</div></div>
       <div class="sum-box"><div style="font-size:11px;color:#666">รายจ่าย</div><div class="val" style="color:red">${fmt(exp)}</div></div>
@@ -9973,7 +9973,7 @@ function renderMonthComparison(){
     var inc=txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
     var exp=txs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
     var thMonth=monthShortArr()[mo];
-    labels.push(thMonth+' '+String(yr+543).slice(2));
+    labels.push(thMonth+' '+String(beYear(yr)).slice(2));
     incData.push(Math.round(inc));
     expData.push(Math.round(exp));
     netData.push(Math.round(inc-exp));
@@ -10064,10 +10064,10 @@ function renderOT(){
   var monthOpts='';
   for(var mi=0;mi<12;mi++) monthOpts+='<option value="'+mi+'"'+(mi===_otMonth?' selected':'')+'>'+TH_MON_FULL[mi]+'</option>';
   var yearOpts='';
-  for(var yi=now.getFullYear()-2;yi<=now.getFullYear()+1;yi++) yearOpts+='<option value="'+yi+'"'+(yi===_otYear?' selected':'')+'>'+(yi+543)+'</option>';
+  for(var yi=now.getFullYear()-2;yi<=now.getFullYear()+1;yi++) yearOpts+='<option value="'+yi+'"'+(yi===_otYear?' selected':'')+'>'+(beYear(yi))+'</option>';
 
-  var periodStr=pStart.getDate()+' '+TH_MON[pStart.getMonth()]+' '+(pStart.getFullYear()+543)
-    +' — '+pEnd.getDate()+' '+TH_MON[pEnd.getMonth()]+' '+(pEnd.getFullYear()+543);
+  var periodStr=pStart.getDate()+' '+TH_MON[pStart.getMonth()]+' '+(beYear(pStart.getFullYear()))
+    +' — '+pEnd.getDate()+' '+TH_MON[pEnd.getMonth()]+' '+(beYear(pEnd.getFullYear()));
 
   // Log rows
   var logRows=logs.length?logs.map(function(l,i){
@@ -10165,7 +10165,7 @@ function renderOT(){
   +'<div class="card" style="border-top:2px solid var(--primary)">'
     +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">'
       +'<div style="width:30px;height:30px;border-radius:8px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-calculator" style="color:var(--primary-l);font-size:13px"></i></div>'
-      +'<div class="sec-title">สรุปรอบ '+TH_MON_FULL[_otMonth]+' '+(pEnd.getFullYear()+543)+'</div>'
+      +'<div class="sec-title">สรุปรอบ '+TH_MON_FULL[_otMonth]+' '+(beYear(pEnd.getFullYear()))+'</div>'
     +'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
       +'<div style="padding:12px;background:var(--surface2);border-radius:10px">'
@@ -10749,7 +10749,7 @@ function printMonthlyReport(){
     var c=getCat(t.category,t.type);
     return '<tr><td>'+t.date+'</td><td>'+c.label+'</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(t.description||'')+'</td><td style="text-align:right;color:'+(t.type==='income'?'#059669':'#dc2626')+';">'+(t.type==='income'?'+':'-')+fmt(t.amount)+'</td></tr>';
   }).join('');
-  var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>รายงาน '+TH_MON[m]+' '+(y+543)+'</title>'
+  var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>รายงาน '+TH_MON[m]+' '+(beYear(y))+'</title>'
     +'<style>@import url(\'https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap\');'
     +'*{box-sizing:border-box;margin:0;padding:0}body{font-family:Sarabun,sans-serif;font-size:13px;color:#1e293b;padding:32px;max-width:800px;margin:0 auto}'
     +'h1{font-size:22px;font-weight:700;color:#3730a3;margin-bottom:4px}'
@@ -10764,7 +10764,7 @@ function printMonthlyReport(){
     +'h2{font-size:15px;font-weight:700;margin-bottom:10px;color:#1e293b}'
     +'@media print{body{padding:16px}}'
     +'</style></head><body>'
-    +'<h1>รายงานการเงิน — '+TH_MON[m]+' '+(y+543)+'</h1>'
+    +'<h1>รายงานการเงิน — '+TH_MON[m]+' '+(beYear(y))+'</h1>'
     +'<div class="sub">สร้างเมื่อ: '+now.toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})+' • Net Worth: '+fmt(nw)+'</div>'
     +'<div class="summary">'
       +'<div class="scard"><div class="scard-label">รายรับ</div><div class="scard-val" style="color:#059669">'+fmt(inc)+'</div></div>'
@@ -11627,7 +11627,7 @@ function renderYTD(){
         +'<div style="width:30px;height:30px;border-radius:8px;background:rgba(6,182,212,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-calendar-check" style="color:#06b6d4;font-size:12px"></i></div>'
         +'<div>'
           +'<div class="sec-title">สรุปปีนี้ (YTD)</div>'
-          +'<div style="font-size:11px;color:var(--muted)">'+periodStr+' '+( curY+543)+'</div>'
+          +'<div style="font-size:11px;color:var(--muted)">'+periodStr+' '+( beYear(curY))+'</div>'
         +'</div>'
       +'</div>'
       +(srCur!==0?'<div style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(16,185,129,.12);color:#10b981">ออม '+srCur+'%</div>':'')
@@ -11779,7 +11779,7 @@ function renderLoanResults(){
     var rows=schedule.map(function(r){
       return '<tr style="border-bottom:1px solid var(--border);font-size:12px">'
         +'<td style="padding:7px 8px;color:var(--muted)">'+r.month+'</td>'
-        +'<td style="padding:7px 8px;color:var(--muted)">'+r.date.getDate()+' '+TH_MON[r.date.getMonth()]+' '+(r.date.getFullYear()+543)+'</td>'
+        +'<td style="padding:7px 8px;color:var(--muted)">'+r.date.getDate()+' '+TH_MON[r.date.getMonth()]+' '+(r.beYear(date.getFullYear()))+'</td>'
         +'<td style="padding:7px 8px;text-align:right;font-weight:600">'+fmt(Math.round(r.payment))+'</td>'
         +'<td style="padding:7px 8px;text-align:right;color:#a78bfa">'+fmt(Math.round(r.principal))+'</td>'
         +'<td style="padding:7px 8px;text-align:right;color:#f87171">'+fmt(Math.round(r.interest))+'</td>'
@@ -11813,7 +11813,7 @@ function renderLoanResults(){
       var isLump=(s.lumpSum>0&&((s.lumpMonth>0&&r.month===s.lumpMonth)||(s.lumpMonth<=0&&r.month===1)));
       return '<tr style="border-bottom:1px solid var(--border);font-size:12px'+(isLump?';background:rgba(251,191,36,.08)':'')+'">'
         +'<td style="padding:7px 8px;color:var(--muted)">'+r.month+(isLump?' <i class="fas fa-bolt" style="color:#fbbf24;font-size:9px"></i>':'')+'</td>'
-        +'<td style="padding:7px 8px;color:var(--muted)">'+r.date.getDate()+' '+TH_MON[r.date.getMonth()]+' '+(r.date.getFullYear()+543)+'</td>'
+        +'<td style="padding:7px 8px;color:var(--muted)">'+r.date.getDate()+' '+TH_MON[r.date.getMonth()]+' '+(r.beYear(date.getFullYear()))+'</td>'
         +'<td style="padding:7px 8px;text-align:right;font-weight:600">'+fmt(Math.round(r.payment))+'</td>'
         +'<td style="padding:7px 8px;text-align:right;color:#a78bfa">'+fmt(Math.round(r.principal))+'</td>'
         +'<td style="padding:7px 8px;text-align:right;color:#f87171">'+fmt(Math.round(r.interest))+'</td>'
@@ -11884,7 +11884,7 @@ function renderLoanResults(){
     var savedStr=monthsSaved>0?((yrs>0?yrs+' ปี ':'')+(mos>0?mos+' เดือน':(yrs>0?'':'0 เดือน'))):'—';
     var baseEnd=schedule.length?schedule[schedule.length-1].date:null;
     var accEnd=accSchedule[accSchedule.length-1].date;
-    var fmtD=function(d){ return d?(TH_MON[d.getMonth()]+' '+(d.getFullYear()+543)):'-'; };
+    var fmtD=function(d){ return d?(TH_MON[d.getMonth()]+' '+(beYear(d.getFullYear()))):'-'; };
     var intPct=totalInterest>0?Math.round(interestSaved/totalInterest*100):0;
     return '<div class="card" style="margin-bottom:16px;border-top:2px solid #fbbf24">'
       +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">'
@@ -12093,7 +12093,7 @@ function renderCalendarPage(){
         +'<div style="display:flex;align-items:flex-start;justify-content:space-between">'
           +'<div>'
             +'<div style="font-size:20px;font-weight:800;line-height:1.2">'+selDate.getDate()+' '+CAL_MON_FULL[selDate.getMonth()]+'</div>'
-            +'<div style="font-size:12px;color:var(--muted);margin-top:2px">วัน'+dowNames[selDate.getDay()]+' · '+(selDate.getFullYear()+543)+'</div>'
+            +'<div style="font-size:12px;color:var(--muted);margin-top:2px">วัน'+dowNames[selDate.getDay()]+' · '+(beYear(selDate.getFullYear()))+'</div>'
           +'</div>'
           +(sIncAmt||sExpAmt?'<div style="text-align:right">'
             +(sIncAmt?'<div style="font-size:13px;font-weight:700;color:#34d399">+'+fmt(Math.round(sIncAmt))+'</div>':'')
@@ -12123,7 +12123,7 @@ function renderCalendarPage(){
   var pickerHTML='';
   if(_calPickerOpen){
     if(_calPickerYear<0) _calPickerYear=_calYear;
-    var pyDisp=_calPickerYear+543;
+    var pyDisp=beYear(_calPickerYear);
     var pickerBody='';
 
     if(_calPickerMode==='year'){
@@ -12134,7 +12134,7 @@ function renderCalendarPage(){
         var yr=pageStart+yi;
         var isSelYr=(yr===_calYear);
         var isCurPicker=(yr===_calPickerYear);
-        yrBtns+='<button onclick="calPickYear('+yr+')" style="padding:10px 4px;border-radius:8px;border:1px solid '+(isSelYr?'var(--primary-l)':(isCurPicker?'var(--border)':'transparent'))+';background:'+(isSelYr?'var(--primary)':'var(--surface2)')+';color:'+(isSelYr?'#fff':'var(--text)')+';font-size:14px;font-weight:'+(isCurPicker?'700':'400')+';cursor:pointer;font-family:inherit">'+(yr+543)+'</button>';
+        yrBtns+='<button onclick="calPickYear('+yr+')" style="padding:10px 4px;border-radius:8px;border:1px solid '+(isSelYr?'var(--primary-l)':(isCurPicker?'var(--border)':'transparent'))+';background:'+(isSelYr?'var(--primary)':'var(--surface2)')+';color:'+(isSelYr?'#fff':'var(--text)')+';font-size:14px;font-weight:'+(isCurPicker?'700':'400')+';cursor:pointer;font-family:inherit">'+(beYear(yr))+'</button>';
       }
       pickerBody='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
         +'<button class="btn btn-ghost" style="padding:6px 10px" onclick="calPickerPageNav(-1)"><i class="fas fa-chevron-left"></i></button>'
@@ -12166,7 +12166,7 @@ function renderCalendarPage(){
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">'
       +'<div style="display:flex;align-items:center;gap:6px">'
         +'<button class="btn btn-ghost" style="padding:8px 12px;border-radius:10px" onclick="calNav(-1)"><i class="fas fa-chevron-left"></i></button>'
-        +'<button style="font-size:19px;font-weight:800;min-width:172px;text-align:center;padding:7px 14px;border-radius:12px;border:1.5px solid '+(  _calPickerOpen?'var(--primary-l)':'var(--border)')+';background:'+(  _calPickerOpen?'rgba(124,58,237,.12)':'var(--surface2)')+';color:'+(  _calPickerOpen?'var(--primary-l)':'var(--text)')+';cursor:pointer;font-family:inherit;transition:all .18s" onclick="calTogglePicker()">'+CAL_MON_FULL[_calMonth]+' '+(_calYear+543)+'&thinsp;<i class="fas fa-caret-'+(  _calPickerOpen?'up':'down')+'" style="font-size:12px;opacity:.6"></i></button>'
+        +'<button style="font-size:19px;font-weight:800;min-width:172px;text-align:center;padding:7px 14px;border-radius:12px;border:1.5px solid '+(  _calPickerOpen?'var(--primary-l)':'var(--border)')+';background:'+(  _calPickerOpen?'rgba(124,58,237,.12)':'var(--surface2)')+';color:'+(  _calPickerOpen?'var(--primary-l)':'var(--text)')+';cursor:pointer;font-family:inherit;transition:all .18s" onclick="calTogglePicker()">'+CAL_MON_FULL[_calMonth]+' '+(beYear(_calYear))+'&thinsp;<i class="fas fa-caret-'+(  _calPickerOpen?'up':'down')+'" style="font-size:12px;opacity:.6"></i></button>'
         +'<button class="btn btn-ghost" style="padding:8px 12px;border-radius:10px" onclick="calNav(1)"><i class="fas fa-chevron-right"></i></button>'
       +'</div>'
       +'<button class="btn btn-ghost" style="font-size:13px;padding:7px 14px;border-radius:10px" onclick="calGoToday()"><i class="fas fa-crosshairs" style="color:var(--primary-l);margin-right:6px"></i>วันนี้</button>'
@@ -12779,7 +12779,7 @@ function travelSetBudget(name){
 function _travelFmtDate(s){
   if(!s) return '';
   const d=new Date(s); if(isNaN(d)) return s;
-  return d.getDate()+' '+_TH_MON[d.getMonth()]+' '+(d.getFullYear()+543).toString().slice(-2);
+  return d.getDate()+' '+_TH_MON[d.getMonth()]+' '+(beYear(d.getFullYear())).toString().slice(-2);
 }
 function _travelRange(first,last){
   if(!first) return '';
