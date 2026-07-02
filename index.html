@@ -1664,9 +1664,9 @@
       <div style="font-size:13px;color:var(--muted);margin-bottom:10px" data-i18n="set_cloud_desc">ซิงค์ข้อมูลข้ามอุปกรณ์ผ่าน Firebase Firestore</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="fsTest()"><i class="fas fa-plug"></i> <span data-i18n="set_test_conn">ทดสอบการเชื่อมต่อ</span></button>
-        <button class="btn btn-ghost" onclick="fsSave().then(()=>toast('อัปโหลดแล้ว','success'))"><i class="fas fa-upload"></i> <span data-i18n="set_upload_cloud">อัปโหลดขึ้น Cloud</span></button>
-        <button class="btn btn-ghost" onclick="fsLoad().then(s=>{ if(s){renderPage(curPage);toast('โหลดจาก Cloud แล้ว','success');} else toast('ไม่มีข้อมูลใน Cloud','info'); })"><i class="fas fa-download"></i> <span data-i18n="set_load_cloud">โหลดจาก Cloud</span></button>
-        <button class="btn btn-ghost" style="border-color:#f59e0b;color:#f59e0b" onclick="recoverData().then(r=>{ if(!r) toast('ไม่พบข้อมูลที่กู้คืนได้','info'); })"><i class="fas fa-life-ring"></i> <span data-i18n="set_recover">กู้คืนข้อมูล</span></button>
+        <button class="btn btn-ghost" onclick="fsSave().then(()=>toast(tr('uploaded'),'success'))"><i class="fas fa-upload"></i> <span data-i18n="set_upload_cloud">อัปโหลดขึ้น Cloud</span></button>
+        <button class="btn btn-ghost" onclick="fsLoad().then(s=>{ if(s){renderPage(curPage);toast(tr('loaded_from_cloud'),'success');} else toast(tr('no_cloud_data'),'info'); })"><i class="fas fa-download"></i> <span data-i18n="set_load_cloud">โหลดจาก Cloud</span></button>
+        <button class="btn btn-ghost" style="border-color:#f59e0b;color:#f59e0b" onclick="recoverData().then(r=>{ if(!r) toast(tr('no_recoverable_data'),'info'); })"><i class="fas fa-life-ring"></i> <span data-i18n="set_recover">กู้คืนข้อมูล</span></button>
       </div>
     </div>
     <div class="set-card">
