@@ -7851,7 +7851,7 @@ function renderProfile(){
       <span style="font-size:11px;color:var(--muted)">${skillLevels[s.level]||''}</span>
       <button class="tag-chip" style="background:none;border:none;padding:0;margin:0" onclick="deleteProfileEntry('skills','${s.id}')"><i class="fas fa-times" style="font-size:10px;color:#64748b"></i></button>
       <div class="skill-bar-wrap" style="position:absolute;display:none"></div>
-    </div>`).join('')||'<div style="font-size:13px;color:var(--muted)">ยังไม่มีทักษะ</div>';
+    </div>`).join('')||'<div style="font-size:13px;color:var(--muted)">'+tr('prof_no_skills')+'</div>';
 
   // Interests & Hobbies
   const tagHTML=(arr,key)=>(arr||[]).map((t,i)=>`<span class="tag-chip">${t}<button onclick="deleteProfileTag('${key}',${i})"><i class="fas fa-times"></i></button></span>`).join('');
