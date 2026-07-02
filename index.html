@@ -10495,21 +10495,21 @@ function renderTaxAdvisor(){
   // SSF
   var ssfMax=Math.min(totalInc*0.30,200000);
   var ssfUsed=t.ssf||0;
-  if(ssfUsed<ssfMax) tips.push({label:'กองทุน SSF',used:ssfUsed,max:Math.round(ssfMax),icon:'fa-chart-line',color:'#a78bfa',hint:'ลดหย่อนได้อีก '+fmt(ssfMax-ssfUsed)});
+  if(ssfUsed<ssfMax) tips.push({label:tr('fund_ssf'),used:ssfUsed,max:Math.round(ssfMax),icon:'fa-chart-line',color:'#a78bfa',hint:tr('deduct_more')+' '+fmt(ssfMax-ssfUsed)});
   // RMF
   var rmfMax=Math.min(totalInc*0.30,500000);
   var rmfUsed=t.rmf||0;
-  if(rmfUsed<rmfMax&&(ssfUsed+rmfUsed)<500000) tips.push({label:'กองทุน RMF',used:rmfUsed,max:Math.round(rmfMax),icon:'fa-piggy-bank',color:'#06b6d4',hint:'ลดหย่อนได้อีก '+fmt(Math.min(rmfMax-rmfUsed,500000-ssfUsed-rmfUsed))});
+  if(rmfUsed<rmfMax&&(ssfUsed+rmfUsed)<500000) tips.push({label:tr('fund_rmf'),used:rmfUsed,max:Math.round(rmfMax),icon:'fa-piggy-bank',color:'#06b6d4',hint:tr('deduct_more')+' '+fmt(Math.min(rmfMax-rmfUsed,500000-ssfUsed-rmfUsed))});
   // Life Insurance
   var lifeMax=100000, lifeUsed=t.lifeIns||0;
-  if(lifeUsed<lifeMax) tips.push({label:'ประกันชีวิต',used:lifeUsed,max:lifeMax,icon:'fa-shield-alt',color:'#10b981',hint:'ลดหย่อนได้อีก '+fmt(lifeMax-lifeUsed)});
+  if(lifeUsed<lifeMax) tips.push({label:tr('life_insurance'),used:lifeUsed,max:lifeMax,icon:'fa-shield-alt',color:'#10b981',hint:tr('deduct_more')+' '+fmt(lifeMax-lifeUsed)});
   // Health Insurance
   var healthMax=25000, healthUsed=t.healthIns||0;
-  if(healthUsed<healthMax) tips.push({label:'ประกันสุขภาพ',used:healthUsed,max:healthMax,icon:'fa-heartbeat',color:'#f59e0b',hint:'ลดหย่อนได้อีก '+fmt(healthMax-healthUsed)});
+  if(healthUsed<healthMax) tips.push({label:tr('health_insurance'),used:healthUsed,max:healthMax,icon:'fa-heartbeat',color:'#f59e0b',hint:tr('deduct_more')+' '+fmt(healthMax-healthUsed)});
   // Thai ESG
   var esgMax=Math.min(totalInc*0.30,300000);
   var esgUsed=t.thaiEsg||0;
-  if(esgUsed<esgMax) tips.push({label:'Thai ESG',used:esgUsed,max:Math.round(esgMax),icon:'fa-leaf',color:'#34d399',hint:'ลดหย่อนได้อีก '+fmt(esgMax-esgUsed)});
+  if(esgUsed<esgMax) tips.push({label:'Thai ESG',used:esgUsed,max:Math.round(esgMax),icon:'fa-leaf',color:'#34d399',hint:tr('deduct_more')+' '+fmt(esgMax-esgUsed)});
   // filter only meaningful (remain > 1000)
   tips=tips.filter(function(x){ return x.max-x.used>1000; }).slice(0,4);
   if(!tips.length){ el.innerHTML=''; return; }
