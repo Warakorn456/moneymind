@@ -112,9 +112,12 @@ DB = {
 | **ไม่มีลิงก์ privacy/terms จากในแอป + ไม่มี Terms of Service** | ✅ แก้แล้ว | เพิ่ม `terms.html` (ใหม่, สไตล์เดียวกับ `privacy.html`, มี disclaimer "ไม่ใช่ที่ปรึกษาการเงิน/ภาษี") + ลิงก์จาก PDPA consent modal และ footer หน้า login เสมอ — **`terms.html` ควรให้คนมีความรู้กฎหมายช่วยรีวิวก่อนถือว่าเป็นทางการ** |
 | **ไม่มี error/crash tracking** | ✅ แก้แล้ว | เพิ่ม `window.addEventListener('error'/'unhandledrejection')` ส่งเข้า Firestore `reports` เดียวกับ feedback (`kind:'error'`) มี dedupe กันยิงซ้ำ error เดิมในเซสชันเดียว — **ก็ต้องรอ deploy rule + relay script เหมือนกันถึงจะเห็นจริง**
 
-**สิ่งที่ยังค้างอยู่ (แค่ 1 อย่าง ต้องทำเองผ่าน Telegram เท่านั้น):**
-1. Rotate Telegram bot token ผ่าน @BotFather → ได้ token ใหม่แล้วอัปเดต `MM_TG_TOKEN` ใน `.env` **2 ที่**: `C:\Users\warakorn\Documents\.env` (โน้ตบุ๊ก) และ `/home/warakornbest6/moneymind/.env` (VM, ต้อง `sudo systemctl restart moneymind-bot` ด้วยหลังแก้) — ห้ามจด token ใหม่ลง CLAUDE.md ตรงๆ (ดู "Firestore Security Rules" ด้านบน — token เก่าที่เคยจดไว้ตรงๆ ในไฟล์นี้ตอนนี้ต้องถือว่ารั่วแล้วเพราะ repo public)
-2. ไฟล์อื่นที่ยังมี token เก่า hardcode (เจอตอนตรวจ 2026-07-02, ยังไม่ได้แก้เพราะไม่ใช่ระบบที่รันจริง): `C:\Users\warakorn\Documents\refactor_secrets.py` (search pattern ในสคริปต์ migrate, ไม่ได้รันประจำ), `C:\Users\warakorn\Documents\stock_bot_remote.py` (โค้ดสำรอง ไม่มี cron/task เรียก), `C:\Users\warakorn\Documents\vm_setup.sh` (สคริปต์ bootstrap VM ตอนตั้งเครื่องใหม่ครั้งแรก ไม่ได้รันซ้ำ) — อัปเดตทีหลังได้เมื่อสะดวก ไม่กระทบระบบที่ใช้งานจริงตอนนี้
+**สถานะ token rotation: ✅ เสร็จสมบูรณ์แล้ว (2026-07-02)**
+- Revoke token เก่า + ได้ token ใหม่ผ่าน @BotFather (`/mybots` → `moneymind_alert_bot` → API Token → Revoke current token) แล้ว
+- อัปเดต `MM_TG_TOKEN` ใน `.env` ครบ 2 ที่: `C:\Users\warakorn\Documents\.env` (โน้ตบุ๊ก) + `/home/warakornbest6/moneymind/.env` (VM)
+- `sudo systemctl restart moneymind-bot` แล้ว — ทดสอบ `getMe` คืน `ok:true` username `moneymind_alert_bot` ยืนยัน token ใหม่ทำงานจริง
+- อัปเดต token ในไฟล์ dormant ที่เจอด้วย: `C:\Users\warakorn\Documents\stock_bot_remote.py`, `C:\Users\warakorn\Documents\vm_setup.sh` (ไม่ได้แตะ `refactor_secrets.py` เพราะเป็น search-pattern ของ tool migrate ครั้งเดียว ไม่ใช่ credential ที่ใช้จริง)
+- **token ใหม่จดไว้แค่ใน `.env` เท่านั้น ไม่จดใน CLAUDE.md ตรงๆ** (บรรทัดด้านบนในตาราง Infrastructure เปลี่ยนเป็น "ดูใน `.env`" แล้ว) — ป้องกันปัญหาเดิมซ้ำ
 
 **บทเรียนจากรอบนี้ (2026-07-02):** อย่า `sed -i` แก้ text ภาษาไทยบนไฟล์ remote ผ่าน `gcloud compute ssh --command="..."` — การ escape ผ่านหลายชั้น (bash local → gcloud/plink → bash remote) ทำให้ UTF-8 byte เพี้ยน (`cron_health.py` เจอ `UnicodeDecodeError` หลัง sed ครั้งหนึ่ง) **วิธีที่ปลอดภัย:** แก้ไฟล์ local (source of truth ใน `Documents/`) ด้วย Edit tool ปกติ เช็ค syntax ผ่านก่อน แล้วค่อย `gcloud compute scp` ทับของเดิมทั้งไฟล์ — ไม่ใช้ sed ผ่าน SSH กับไฟล์ที่มีภาษาไทยเด็ดขาด
 
