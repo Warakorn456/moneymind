@@ -7697,9 +7697,9 @@ function savePlanItem(){
   const recur=document.getElementById('pm-recur').value;
   const from=document.getElementById('pm-from').value;
   const to=document.getElementById('pm-to').value;
-  if(!name){ toast('กรุณาใส่ชื่อรายการ','error'); return; }
-  if(!amount){ toast('กรุณาใส่จำนวนเงิน','error'); return; }
-  if(!from){ toast('กรุณาเลือกเดือน','error'); return; }
+  if(!name){ toast(tr('pm_need_name'),'error'); return; }
+  if(!amount){ toast(tr('scan_need_amount'),'error'); return; }
+  if(!from){ toast(tr('pm_need_month'),'error'); return; }
   const cats=type==='income'?INC_CATS:EXP_CATS;
   const catObj=cats.find(c=>c.id===cat)||{color:'#94a3b8'};
   const plan=getPlan();
