@@ -9849,7 +9849,7 @@ function undoLastTx(){
 // ══════════════════════════════════════════
 function openTransferModal(){
   var banks=getBanks().filter(function(b){ return b.type!=='บัตรเครดิต'; });
-  if(banks.length<2){ toast('ต้องมีบัญชีอย่างน้อย 2 บัญชี','error'); return; }
+  if(banks.length<2){ toast(tr('transfer_need_2_accounts'),'error'); return; }
   var fromSel=document.getElementById('transfer-from');
   var toSel=document.getElementById('transfer-to');
   fromSel.innerHTML=banks.map(function(b){ return '<option value="'+b.id+'">'+b.name+' ('+fmt(b.balance)+')</option>'; }).join('');
