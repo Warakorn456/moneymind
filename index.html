@@ -6526,36 +6526,36 @@ function saveLockTimeout(val){
   DB.settings.lockTimeout=parseInt(val,10);
   saveDB();
   resetLockTimer();
-  toast(val==='0'?'ปิดการล็อกอัตโนมัติ':`ล็อกอัตโนมัติหลัง ${val} นาที`,'success');
+  toast(val==='0'?tr('lock_auto_off'):tr('lock_auto_after').replace('{n}',val),'success');
 }
 
 function saveKey(){
   const k=document.getElementById('api-key-in').value.trim();
-  DB.settings.apiKey=k; _geminiModel=null; _failedModels.clear(); saveDB(); renderSettings(); toast('บันทึก API Key แล้ว','success');
+  DB.settings.apiKey=k; _geminiModel=null; _failedModels.clear(); saveDB(); renderSettings(); toast(tr('apikey_saved'),'success');
 }
 
 function saveModel(){
   const m=document.getElementById('model-in').value.trim();
   DB.settings.geminiModel=m; _geminiModel=null; _failedModels.clear(); saveDB(); renderSettings();
-  toast(m?'ตั้ง model: '+m:'รีเซ็ต — ระบบจะเลือกอัตโนมัติ','success');
+  toast(m?tr('model_set')+': '+m:tr('model_reset_auto'),'success');
 }
 
 function exportData(){
   const b=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
   const fn='moneymind_'+new Date().toISOString().split('T')[0]+'.json';
   if(_nativeSaveFile(b,fn,'application/json')) return;
-  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=fn; a.click(); toast('ส่งออกข้อมูลแล้ว','success');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=fn; a.click(); toast(tr('data_exported'),'success');
 }
 
 function importData(){
   const inp=document.createElement('input'); inp.type='file'; inp.accept='.json';
-  inp.onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>{ try{ const d=JSON.parse(ev.target.result); DB={...DB,...d}; saveDB(); renderPage(curPage); toast('นำเข้าข้อมูลสำเร็จ','success'); }catch{ toast('ไฟล์ไม่ถูกต้อง','error'); } }; r.readAsText(f); };
+  inp.onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>{ try{ const d=JSON.parse(ev.target.result); DB={...DB,...d}; saveDB(); renderPage(curPage); toast(tr('data_imported'),'success'); }catch{ toast(tr('invalid_file'),'error'); } }; r.readAsText(f); };
   inp.click();
 }
 
 function clearAll(){
-  if(!confirm('ต้องการล้างข้อมูลทั้งหมด? ไม่สามารถย้อนกลับได้')) return;
-  if(!confirm('ยืนยันอีกครั้ง: ลบข้อมูลทั้งหมด?')) return;
+  if(!confirm(tr('clear_all_confirm1'))) return;
+  if(!confirm(tr('clear_all_confirm2'))) return;
   DB={transactions:[],savings:[],debts:[],investments:[],settings:{apiKey:''}};
   saveDB(); renderPage(curPage); toast('ล้างข้อมูลแล้ว','info');
 }
