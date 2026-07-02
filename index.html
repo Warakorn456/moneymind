@@ -4741,8 +4741,8 @@ async function waitGeminiFile(uri, apiKey, maxWaitMs=20000){
       if(!r.ok) return; // ถ้าดึงไม่ได้ก็ลองใช้ URI เลย
       const d=await r.json();
       if(d.state==='ACTIVE') return;
-      if(d.state==='FAILED') throw new Error(tr('stmt_processing_failed')+(d.error?.message?' — '+d.error.message:''));
-    }catch(e){ if(e.message.includes(tr('stmt_processing_failed_kw'))) throw e; }
+      if(d.state==='FAILED'){ const fe=new Error(tr('stmt_processing_failed')+(d.error?.message?' — '+d.error.message:'')); fe._fileFailed=true; throw fe; }
+    }catch(e){ if(e._fileFailed) throw e; }
   }
 }
 
