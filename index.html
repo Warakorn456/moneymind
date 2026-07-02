@@ -2535,13 +2535,24 @@ function setSyncStatus(s){
 
 const _fsTimeout=ms=>new Promise((_,r)=>setTimeout(()=>r(new Error('หมดเวลา — ตรวจสอบว่าสร้าง Firestore Database แล้วหรือยัง')),ms));
 
+let _sizeWarnedThisSession=false;
+// Firestore มีลิมิตเอกสาร ~1MiB — DB ทั้งก้อนเก็บเป็น string เดียวในฟิลด์ db เดียว
+// เตือนก่อนถึงขีดจำกัดแทนที่จะปล่อยให้ sync ล้มเหลวแบบไม่มีคำอธิบาย
+const _FS_DOC_WARN_BYTES=900000; // เผื่อ headroom ก่อนชน 1,048,576 bytes จริง
+function _checkDbSizeWarn(dbJson){
+  if(dbJson.length<=_FS_DOC_WARN_BYTES || _sizeWarnedThisSession) return;
+  _sizeWarnedThisSession=true;
+  toast('⚠️ ข้อมูลของคุณใกล้เต็มขีดจำกัดระบบ (Firestore 1MB/บัญชี) แนะนำ Export ข้อมูลเก่าเก็บไว้ แล้วลบรายการที่ไม่จำเป็นในหน้าตั้งค่า ไม่งั้น sync ข้ามอุปกรณ์อาจล้มเหลว','error',8000);
+}
 async function fsSave(){
   if(!currentUser||!_fs){ setSyncStatus('error'); return; }
   try{
     setSyncStatus('syncing');
+    const dbJson=JSON.stringify(DB);
+    _checkDbSizeWarn(dbJson);
     await Promise.race([
       _fs.collection('userdata').doc(currentUser).set({
-        db:JSON.stringify(DB),
+        db:dbJson,
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       },{merge:true}),
       _fsTimeout(8000)
@@ -2550,7 +2561,8 @@ async function fsSave(){
   }catch(e){
     console.error('[Firebase] save:',e.message);
     setSyncStatus('error');
-    toast('☁️ Sync ไม่ได้: '+e.message,'error');
+    const sizeErr=/exceeds the maximum|longer than.*bytes|maximum.*byte/i.test(e.message||'');
+    toast(sizeErr?'☁️ Sync ไม่ได้: ข้อมูลใหญ่เกินขีดจำกัดของระบบ (1MB) — กรุณา Export ข้อมูลแล้วลบรายการเก่าในหน้าตั้งค่า':'☁️ Sync ไม่ได้: '+e.message,'error');
   }
 }
 
