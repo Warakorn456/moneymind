@@ -14891,7 +14891,11 @@ function _requestPushTokenIfNative(){
   // (บรรทัด ~8019) ซึ่งมาก่อนโค้ดนี้ในไฟล์ — patch checkLogin ตรงนี้ "ไม่ทัน" การเรียกครั้งนั้น
   // (เคย patch ผิดมาก่อน ทำให้ token ไม่ถูกขอเลยตอนเปิดแอปซ้ำ) เช็ค currentUser ตรงๆ แทน:
   // ถ้า checkLogin() เจอ session ที่ยังไม่หมดอายุ มันตั้ง currentUser ให้แล้วตอนนี้ (synchronous)
-  if(currentUser){ _requestPushTokenIfNative(); }
+  if(currentUser){
+    _requestPushTokenIfNative();
+    if(DB.settings&&DB.settings.lang) currentLang=DB.settings.lang;
+    applyLang();
+  }
 })();
 
 // ══════════════════════════════════════════
