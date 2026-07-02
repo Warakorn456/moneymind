@@ -3019,7 +3019,7 @@ async function handleNativeGoogleToken(idToken, email, displayName, photoUrl){
       enterApp();
       if(!_syncedNew) fsSave();
       fsListen();
-      setTimeout(()=>toast('ยินดีต้อนรับ! ชื่อผู้ใช้: '+autoUser+' 🎉','success'),800);
+      setTimeout(()=>toast(tr('welcome_username')+': '+autoUser+' 🎉','success'),800);
     }
   }catch(e){
     if(errEl) errEl.textContent='เกิดข้อผิดพลาด: '+e.message;
