@@ -95,6 +95,27 @@ DB = {
 - rollback: ruleset เปิด public ทั้งหมด `0fa4eb71-c312-4c98-a5b7-36af71266e5f` หรือ public-warakorn `1391d585-7167-4265-b0f5-6b8c2df6318a` (2026-06-21)
 - redeploy: POST ruleset + PATCH release `cloud.firestore` ที่ `firebaserules.googleapis.com/v1/projects/moneymind-d97f3/...` ด้วย `gcloud auth print-access-token` + header `x-goog-user-project: moneymind-d97f3`
 - **เพิ่ม script ใหม่ที่แตะ Firestore:** ต้อง `import mm_firestore` + แนบ `headers=mm_firestore.auth_header()` ทุก get/patch ไม่งั้น 403
+- **`reports/{doc}` (เพิ่มใน `firestore.rules` local 2026-07-02, ยังไม่ deploy จริง)** — `allow create: if authed()`, `allow read/update/delete: if false` — เก็บ feedback ผู้ใช้ + client error report (ดู "Security Audit" ด้านล่าง); **ต้อง deploy rule นี้ก่อน** ฟีเจอร์ feedback/error-report ถึงจะใช้งานได้จริง (deploy ตามขั้นตอน redeploy ด้านบน)
+
+## Security Audit & Fixes (2026-07-02)
+
+ตรวจพบตอนเริ่มมีผู้ใช้หลายคน (ไม่ใช่แค่ owner คนเดียวอีกต่อไป) — แก้แล้วในโค้ด ยกเว้นที่ระบุว่า "รอ deploy":
+
+| ปัญหา | สถานะ | รายละเอียด |
+|-------|-------|-----------|
+| **ตั้งรหัสผ่านใหม่โดยตรงไม่ต้องยืนยันตัวตน** (`doResetPassword`, tab "ตั้งรหัสใหม่โดยตรง") | ✅ **ลบออกแล้ว** | เดิมพิมพ์แค่ username (ไม่ต้องรู้รหัสเดิม/ไม่ต้อง verify email) ก็ตั้งรหัสใหม่ทับ `mm_users` (localStorage) ได้ — เสี่ยงกับเครื่องที่ใช้ร่วมกัน (username เคย login ไว้ก่อน) เหลือแค่ทาง "ส่งอีเมลรีเซ็ต" (Firebase `sendPasswordResetEmail`, ปลอดภัยอยู่แล้ว) ไม่มี email → ให้กด "ติดต่อทีมงาน" (feedback modal) แทน |
+| **Telegram Bot Token hardcode ใน client JS** (feedback modal เดิมยิง `api.telegram.org` ตรงด้วย token ในซอร์ส) | ✅ **ย้ายออกจาก client แล้ว** (แต่ **รอ deploy rule + สร้าง VM relay script**) | เปลี่ยนเป็นเขียนลง Firestore collection **`reports`** (`_sendReport()`) แทน — ต้อง (1) deploy `firestore.rules` ที่แก้ไว้แล้ว (2) สร้าง VM script (เช่น `report_relay.py`, auth ผ่าน SA เหมือน script อื่นๆ) polling `reports` collection ส่งต่อ Telegram แล้ว mark ว่าส่งแล้ว/ลบทิ้ง (3) **ควร rotate token ผ่าน @BotFather** เพราะ token เดิมโชว์อยู่ใน git history/CLAUDE.md มานาน (public repo) แล้วอัปเดตใน `.env`/`mm_secrets.py` บน VM |
+| **Firestore เอกสาร 1MB ไม่มีการเช็คขนาด** | ✅ แก้แล้ว | `fsSave()` เช็คขนาด JSON ก่อน save เตือน toast ที่ ~900KB (`_checkDbSizeWarn`) + จับ error message ที่บ่งชี้ชนขีดจำกัดแล้วขึ้นข้อความอธิบายแทน error ดิบ |
+| **Sync หลายอุปกรณ์ทับกันทั้งก้อน (last-write-wins)** | ✅ แก้แล้ว | เพิ่ม `_mergeDbSnapshot()` merge แบบ union-by-id สำหรับ array หลัก (`transactions`,`savings`,`debts`,`investments`,`subscriptions`,`insurance`,`dcaPlans`) ใน `fsLoad()`/`fsListen()` — item ที่มีแค่ฝั่งเดียว (ยังไม่ทัน sync) ไม่หายอีกต่อไป; item ชนกัน (id ซ้ำ) remote ยังชนะเหมือนเดิม (ยังไม่ใช่ CRDT เต็มรูปแบบ) |
+| **Privacy policy ไม่บอกเรื่อง admin เห็นสรุปข้อมูลผู้ใช้ทุกคน** | ✅ แก้แล้ว | เพิ่ม section 4 "การเข้าถึงข้อมูลโดยผู้ดูแลระบบ" ใน `privacy.html` อธิบายว่า admin เห็นสรุป (txCount/net worth/ฟีเจอร์ที่ใช้) ไม่เห็นรายละเอียดรายการ |
+| **สมัครสมาชิกไม่มีการกันสแปม** | ✅ แก้บางส่วน | เพิ่ม honeypot field (`#reg-hp`) + เช็คเวลาขั้นต่ำ 1.5 วิ ก่อน submit ใน `tryRegister()` — กันบอทพื้นฐาน ไม่ใช่ CAPTCHA เต็มรูปแบบ (ของจริงต้อง Firebase App Check ซึ่งต้อง config เพิ่มใน Firebase Console) |
+| **ไม่มีลิงก์ privacy/terms จากในแอป + ไม่มี Terms of Service** | ✅ แก้แล้ว | เพิ่ม `terms.html` (ใหม่, สไตล์เดียวกับ `privacy.html`, มี disclaimer "ไม่ใช่ที่ปรึกษาการเงิน/ภาษี") + ลิงก์จาก PDPA consent modal และ footer หน้า login เสมอ — **`terms.html` ควรให้คนมีความรู้กฎหมายช่วยรีวิวก่อนถือว่าเป็นทางการ** |
+| **ไม่มี error/crash tracking** | ✅ แก้แล้ว | เพิ่ม `window.addEventListener('error'/'unhandledrejection')` ส่งเข้า Firestore `reports` เดียวกับ feedback (`kind:'error'`) มี dedupe กันยิงซ้ำ error เดิมในเซสชันเดียว — **ก็ต้องรอ deploy rule + relay script เหมือนกันถึงจะเห็นจริง**
+
+**สิ่งที่ยังค้างอยู่ (ต้องทำต่อ ไม่ใช่แค่แก้โค้ด):**
+1. Deploy `firestore.rules` ที่มี `reports/{doc}` เข้า live project (ตามขั้นตอน "redeploy" ด้านบน)
+2. เขียน + deploy VM script ใหม่ (เช่น `report_relay.py`) ดึง `reports` collection ส่ง Telegram + เพิ่มเข้า `cron_health.py` REGISTRY
+3. Rotate Telegram bot token ผ่าน @BotFather (ต้องทำเองผ่าน Telegram) แล้วอัปเดต `.env`/`mm_secrets.py` บน VM + ลบ token เก่าออกจาก **CLAUDE.md ไฟล์นี้เองด้วย** (ยังมี token เก่าอยู่ในหลายจุดของเอกสารนี้จากก่อนหน้า — ต้องเช็คว่า token เก่าไม่ได้ใช้จริงแล้วค่อยลบทิ้ง)
 
 ## Pages & Navigation
 
