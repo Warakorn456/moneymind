@@ -44,6 +44,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Feedback + client error reports (สร้างได้อย่างเดียว อ่านคืนไม่ได้จาก client) ──
+    // แทนที่การส่ง Telegram ตรงจาก client ด้วย hardcode bot token (เดิม view-source เห็น token ได้)
+    // สคริปต์ฝั่ง VM (auth ผ่าน SA) เป็นคนอ่าน collection นี้แล้วส่งต่อ Telegram แทน
+    match /reports/{doc} {
+      allow create: if authed();
+      allow read, update, delete: if false;
+    }
+
     // ── ทดสอบการเชื่อมต่อ ──
     match /_ping/{doc} {
       allow read, write: if true;
