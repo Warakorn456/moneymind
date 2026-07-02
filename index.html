@@ -6334,14 +6334,14 @@ function renderDashBanks(){
         <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
           <div>
             <span style="font-size:13px;font-weight:600">${b.name}</span>
-            <span style="font-size:11px;color:var(--muted);margin-left:6px">บัตรเครดิต</span>
+            <span style="font-size:11px;color:var(--muted);margin-left:6px">${tr('credit_card')}</span>
           </div>
-          <span style="font-size:14px;font-weight:700;color:#ef4444;white-space:nowrap;margin-left:8px">ค้าง ${fmt(used)}</span>
+          <span style="font-size:14px;font-weight:700;color:#ef4444;white-space:nowrap;margin-left:8px">${tr('owed')} ${fmt(used)}</span>
         </div>
         ${limit>0?`<div style="height:4px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden">
           <div style="height:100%;width:${pct.toFixed(1)}%;background:${barColor};border-radius:99px;transition:width .4s"></div>
         </div>
-        <div style="font-size:10px;color:var(--muted);margin-top:3px">ใช้ ${pct.toFixed(0)}% จากวงเงิน ${fmt(limit)}</div>`:''}
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">${tr('used_of_limit').replace('{pct}',pct.toFixed(0)).replace('{limit}',fmt(limit))}</div>`:''}
       </div>
     </div>`;
   });
