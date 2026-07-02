@@ -8820,8 +8820,8 @@ function renderCatBudgetSettings(){
     return `<div class="catbud-row">
       <div class="catbud-label" title="${c.label}"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${c.color};margin-right:6px"></span>${c.label}</div>
       <input type="number" class="catbud-inp" value="${budgeted||''}" placeholder="0" min="0" step="100"
-        onchange="saveCatBudget('${c.id}',this.value)" title="งบ/เดือน">
-      <div style="font-size:11px;color:var(--muted);margin-left:4px">฿/เดือน</div>
+        onchange="saveCatBudget('${c.id}',this.value)" title="${t('budget_per_month')}">
+      <div style="font-size:11px;color:var(--muted);margin-left:4px">${t('baht_per_month')}</div>
     </div>`;
   }).join('');
 }
