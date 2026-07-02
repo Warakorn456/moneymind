@@ -4030,17 +4030,17 @@ function renderDashNetWorth(){
   if(uncat.length){
     const uVal=uncat.reduce((s,i)=>s+i.value,0);
     assetRows+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-      <span style="font-size:13px;color:var(--muted)">ไม่ระบุพอร์ต</span>
+      <span style="font-size:13px;color:var(--muted)">${tr('no_portfolio')}</span>
       <span style="font-size:13px;font-weight:700;color:#10b981">${fmt(uVal)}</span>
     </div>`;
   }
   (plan.extraAssets||[]).forEach(a=>{
     assetRows+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-      <span style="font-size:13px;color:var(--muted)">${a.name||'สินทรัพย์อื่น'}</span>
+      <span style="font-size:13px;color:var(--muted)">${a.name||tr('other_asset')}</span>
       <span style="font-size:13px;font-weight:700;color:#10b981">${fmt(a.amount)}</span>
     </div>`;
   });
-  if(!assetRows) assetRows=`<div style="font-size:12px;color:var(--muted);padding:10px 0;text-align:center">ยังไม่มีข้อมูล</div>`;
+  if(!assetRows) assetRows=`<div style="font-size:12px;color:var(--muted);padding:10px 0;text-align:center">${tr('no_data_yet')}</div>`;
 
   // build debt rows
   let debtRows='';
@@ -4052,11 +4052,11 @@ function renderDashNetWorth(){
   });
   (plan.extraDebts||[]).forEach(d=>{
     debtRows+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-      <span style="font-size:13px;color:var(--muted)">${d.name||'หนี้อื่น'}</span>
+      <span style="font-size:13px;color:var(--muted)">${d.name||tr('other_debt')}</span>
       <span style="font-size:13px;font-weight:700;color:#ef4444">${fmt(d.amount)}</span>
     </div>`;
   });
-  if(!debtRows) debtRows=`<div style="font-size:12px;color:var(--green);padding:10px 0;text-align:center"><i class="fas fa-check-circle"></i> ไม่มีหนี้สิน</div>`;
+  if(!debtRows) debtRows=`<div style="font-size:12px;color:var(--green);padding:10px 0;text-align:center"><i class="fas fa-check-circle"></i> ${tr('no_debt_msg')}</div>`;
 
   const nwColor=nw.netWorth>=0?'#a78bfa':'#ef4444';
   const el=document.getElementById('dash-bs-section');
