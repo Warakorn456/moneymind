@@ -5695,19 +5695,19 @@ async function calcInvTotals(){
 async function fetchCurrentPrice(){
   const name=document.getElementById('inv-name').value.trim();
   const type=document.getElementById('inv-type').value;
-  if(!name){ toast('กรุณาใส่ชื่อ/Ticker ก่อน','error'); return; }
+  if(!name){ toast(tr('inv_need_name_first'),'error'); return; }
   const btn=document.getElementById('fetch-price-btn');
-  btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> กำลังดึง...'; btn.disabled=true;
+  btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> '+tr('inv_fetching')+'...'; btn.disabled=true;
   try{
     const price=await getPriceFor(name,type);
     document.getElementById('inv-curprice').value=price;
     document.getElementById('inv-updated').value=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
     calcInvTotals();
-    toast(`ราคา ${name}: ${fmt(price)}`,  'success');
+    toast(`${tr('inv_price')} ${name}: ${fmt(price)}`,  'success');
   } catch(e){
-    toast('ดึงราคาไม่ได้: '+e.message,'error');
+    toast(tr('inv_fetch_price_failed')+': '+e.message,'error');
   } finally{
-    btn.innerHTML='<i class="fas fa-sync-alt"></i> ดึงราคา'; btn.disabled=false;
+    btn.innerHTML='<i class="fas fa-sync-alt"></i> '+tr('inv_fetch_price'); btn.disabled=false;
   }
 }
 
