@@ -7678,15 +7678,15 @@ function closePlanModal(){ document.getElementById('plan-modal-bg').classList.re
 function onPmTypeChange(){
   const type=document.getElementById('pm-type').value;
   const cats=type==='income'?INC_CATS:EXP_CATS;
-  document.getElementById('pm-cat').innerHTML=cats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  document.getElementById('pm-cat').innerHTML=cats.map(c=>`<option value="${c.id}">${catLabel(c)}</option>`).join('');
 }
 function onPmRecurChange(){
   const r=document.getElementById('pm-recur').value;
   const toWrap=document.getElementById('pm-to-wrap');
   const fromLabel=document.getElementById('pm-from-label');
-  if(r==='once'){ toWrap.style.display='none'; fromLabel.textContent='เดือนที่เกิดรายการ'; }
-  else if(r==='yearly'){ toWrap.style.display='block'; fromLabel.textContent='เดือนแรกที่เกิด (ใช้เดือนเป็นเดือนประจำปี)'; }
-  else{ toWrap.style.display='block'; fromLabel.textContent='เริ่มตั้งแต่เดือน'; }
+  if(r==='once'){ toWrap.style.display='none'; fromLabel.textContent=tr('pm_month_occurred'); }
+  else if(r==='yearly'){ toWrap.style.display='block'; fromLabel.textContent=tr('pm_first_month_yearly'); }
+  else{ toWrap.style.display='block'; fromLabel.textContent=tr('pm_start_month'); }
 }
 
 function savePlanItem(){
