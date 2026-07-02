@@ -12020,7 +12020,7 @@ function renderLoanResults(){
   // การ์ดเปรียบเทียบผลโป๊ะเพิ่ม
   +((monthly>0&&hasExtra&&accSchedule.length)?(function(){
     var yrs=Math.floor(monthsSaved/12), mos=monthsSaved%12;
-    var savedStr=monthsSaved>0?((yrs>0?yrs+' ปี ':'')+(mos>0?mos+' เดือน':(yrs>0?'':'0 เดือน'))):'—';
+    var savedStr=monthsSaved>0?((yrs>0?yrs+' '+tr('year_short')+' ':'')+(mos>0?mos+' '+tr('month_short'):(yrs>0?'':'0 '+tr('month_short')))):'—';
     var baseEnd=schedule.length?schedule[schedule.length-1].date:null;
     var accEnd=accSchedule[accSchedule.length-1].date;
     var fmtD=function(d){ return d?(TH_MON[d.getMonth()]+' '+(beYear(d.getFullYear()))):'-'; };
@@ -12028,14 +12028,14 @@ function renderLoanResults(){
     return '<div class="card" style="margin-bottom:16px;border-top:2px solid #fbbf24">'
       +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">'
         +'<div style="width:30px;height:30px;border-radius:8px;background:rgba(251,191,36,.14);display:flex;align-items:center;justify-content:center"><i class="fas fa-bolt" style="color:#fbbf24;font-size:13px"></i></div>'
-        +'<div class="sec-title">ผลเมื่อโป๊ะเพิ่ม (ลดต้นลดดอก)</div>'
+        +'<div class="sec-title">'+tr('loan_prepay_result')+'</div>'
       +'</div>'
       +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px">'
         +[
-          {label:'ผ่อนหมดเร็วขึ้น',val:savedStr,sub:monthsSaved+' งวด',color:'#10b981',icon:'fa-clock'},
-          {label:'ประหยัดดอกเบี้ย',val:fmt(Math.round(interestSaved)),sub:'ลดลง '+intPct+'%',color:'#10b981',icon:'fa-piggy-bank'},
-          {label:'ผ่อนหมดใน',val:accSchedule.length+' งวด',sub:'เดิม '+schedule.length+' งวด',color:'#fbbf24',icon:'fa-flag-checkered'},
-          {label:'ดอกเบี้ยรวมใหม่',val:fmt(Math.round(accInterest)),sub:'เดิม '+fmt(Math.round(totalInterest)),color:'#f87171',icon:'fa-percentage'},
+          {label:tr('loan_faster_payoff'),val:savedStr,sub:monthsSaved+' '+tr('loan_installment_unit'),color:'#10b981',icon:'fa-clock'},
+          {label:tr('loan_interest_saved'),val:fmt(Math.round(interestSaved)),sub:tr('loan_reduced_by')+' '+intPct+'%',color:'#10b981',icon:'fa-piggy-bank'},
+          {label:tr('loan_payoff_in'),val:accSchedule.length+' '+tr('loan_installment_unit'),sub:tr('loan_originally')+' '+schedule.length+' '+tr('loan_installment_unit'),color:'#fbbf24',icon:'fa-flag-checkered'},
+          {label:tr('loan_new_total_interest'),val:fmt(Math.round(accInterest)),sub:tr('loan_originally')+' '+fmt(Math.round(totalInterest)),color:'#f87171',icon:'fa-percentage'},
         ].map(function(x){
           return '<div style="padding:12px;background:var(--surface2);border-radius:12px">'
             +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="fas '+x.icon+'" style="color:'+x.color+';font-size:11px"></i><span style="font-size:11px;color:var(--muted)">'+x.label+'</span></div>'
@@ -12045,11 +12045,11 @@ function renderLoanResults(){
         }).join('')
       +'</div>'
       +'<div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border-radius:10px;padding:10px 14px;font-size:12px;margin-bottom:6px">'
-        +'<span style="color:var(--muted)"><i class="fas fa-calendar-check"></i> ผ่อนหมด</span>'
+        +'<span style="color:var(--muted)"><i class="fas fa-calendar-check"></i> '+tr('loan_payoff_date')+'</span>'
         +'<span><span style="color:var(--muted);text-decoration:line-through">'+fmtD(baseEnd)+'</span> <i class="fas fa-arrow-right" style="font-size:10px;color:#10b981"></i> <span style="color:#10b981;font-weight:700">'+fmtD(accEnd)+'</span></span>'
       +'</div>'
       +'<button class="btn '+(s.showAccTable?'btn-primary':'btn-ghost')+'" style="font-size:13px;margin-top:8px" onclick="window._loanState.showAccTable=!window._loanState.showAccTable;renderLoan()">'
-        +'<i class="fas fa-table"></i> '+(s.showAccTable?'ซ่อนตารางผ่อนแบบโป๊ะ':'ดูตารางผ่อนแบบโป๊ะ')+' ('+accSchedule.length+' งวด)'
+        +'<i class="fas fa-table"></i> '+(s.showAccTable?tr('loan_hide_prepay_table'):tr('loan_view_prepay_table'))+' ('+accSchedule.length+' '+tr('loan_installment_unit')+')'
       +'</button>'
       +accTableHtml
     +'</div>';
