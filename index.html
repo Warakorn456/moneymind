@@ -8195,19 +8195,19 @@ async function processTawi50(file){
     const _tp=data.candidates?.[0]?.content?.parts||[];
     const text=_tp.filter(p=>!p.thought).map(p=>p.text||'').join('')||_tp.map(p=>p.text||'').join('')||'';
     const m=text.match(/\{[\s\S]*\}/);
-    if(!m) throw new Error('ไม่พบข้อมูล — ลองใช้รูปที่ชัดขึ้น');
+    if(!m) throw new Error(tr('taxdoc_no_data_found'));
     const r=JSON.parse(m[0]);
     setZoneLoading('tawi-zone',false);
     const fmt=n=>n?'฿'+Math.round(n).toLocaleString('th-TH'):'–';
     showTaxPreview(
-      `ทวิ 50 ${r.year?`ปี ${r.year}`:''} — ${r.payer||''}`, '#06b6d4', 'fas fa-file-invoice',
+      `${tr('taxdoc_tawi50')} ${r.year?`${tr('tax_year')} ${r.year}`:''} — ${r.payer||''}`, '#06b6d4', 'fas fa-file-invoice',
       [
-        ['ผู้จ่ายเงิน', r.payer||'–'],
-        ['ประเภทเงินได้', r.income_type||'–'],
-        ['รายได้รวมทั้งปี', fmt(r.total_income)],
-        ['ภาษีที่ถูกหักทั้งปี', fmt(r.total_tax)],
-        ['ประกันสังคม', fmt(r.sso)],
-        ['กองทุนสำรองเลี้ยงชีพ', fmt(r.pvd)],
+        [tr('taxdoc_payer'), r.payer||'–'],
+        [tr('taxdoc_income_type'), r.income_type||'–'],
+        [tr('taxdoc_total_income_yr'), fmt(r.total_income)],
+        [tr('taxdoc_total_tax_yr'), fmt(r.total_tax)],
+        [tr('tax_sso'), fmt(r.sso)],
+        [tr('tax_pvd'), fmt(r.pvd)],
       ],
       function(){
         const t=getTax();
@@ -8217,7 +8217,7 @@ async function processTawi50(file){
         if(r.pvd)          t.pvd=Math.round(r.pvd);
         if(r.year)         t.year=r.year;
         saveDB(); renderTax();
-        toast('ใส่ข้อมูล ทวิ 50 แล้ว','success');
+        toast(tr('taxdoc_tawi50_filled'),'success');
       }
     );
   }catch(e){
