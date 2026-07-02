@@ -3990,13 +3990,13 @@ function renderTrendChart(){
 function renderRecentTx(){
   const el=document.getElementById('recent-tx');
   const txs=[...DB.transactions].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
-  if(!txs.length){ el.innerHTML='<div class="empty"><i class="fas fa-receipt"></i><p>ยังไม่มีรายการ</p></div>'; return; }
+  if(!txs.length){ el.innerHTML='<div class="empty"><i class="fas fa-receipt"></i><p>'+tr('no_items_yet')+'</p></div>'; return; }
   el.innerHTML=txs.map(t=>txHTML(t,false)).join('');
 }
 
 function renderDebtSummary(){
   const el=document.getElementById('debt-summary');
-  if(!DB.debts.length){ el.innerHTML='<div class="empty"><i class="fas fa-check-circle"></i><p>ไม่มีหนี้สิน ยอดเยี่ยม!</p></div>'; return; }
+  if(!DB.debts.length){ el.innerHTML='<div class="empty"><i class="fas fa-check-circle"></i><p>'+tr('no_debt_excellent')+'</p></div>'; return; }
   const total=DB.debts.reduce((s,d)=>s+d.remaining,0);
   el.innerHTML=`<div style="text-align:center;margin-bottom:14px"><div style="font-size:26px;font-weight:800;color:var(--red)">${fmt(total)}</div><div style="font-size:12px;color:var(--muted)">ยอดหนี้คงเหลือรวม</div></div>`
     +DB.debts.slice(0,3).map(d=>{const pct=Math.min(100,((d.total-d.remaining)/d.total)*100);return`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>${d.name}</span><span style="color:var(--muted)">${fmt(d.remaining)}</span></div><div class="pbar"><div class="pfill" style="width:${pct}%;background:var(--red)"></div></div></div>`;}).join('');
