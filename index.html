@@ -5466,7 +5466,7 @@ function renderPortChart(){
   const wrap=document.getElementById('port-chart-wrap');
   if(!wrap) return;
   if(chPort) chPort.destroy();
-  if(!DB.investments.length){ wrap.innerHTML='<div class="empty"><i class="fas fa-chart-pie"></i><p>ยังไม่มีการลงทุน</p></div>'; return; }
+  if(!DB.investments.length){ wrap.innerHTML='<div class="empty"><i class="fas fa-chart-pie"></i><p>'+tr('inv_none_yet')+'</p></div>'; return; }
   if(!wrap.querySelector('canvas')){ const c=document.createElement('canvas'); c.id='ch-port'; wrap.innerHTML=''; wrap.appendChild(c); }
   const ports=getPortfolios();
   let labels,data,colors;
