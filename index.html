@@ -10684,26 +10684,31 @@ calcTaxLive=function(){ _origCalcTaxLive(); try{ taxOptimizer(); }catch(e){ cons
 // ══════════════════════════════════════════
 function getIns(){ if(!DB.insurance) DB.insurance=[]; return DB.insurance; }
 function insMonthly(p){ var v=p.premium||0; if(p.cycle==='yearly')return v/12; if(p.cycle==='quarterly')return v/3; if(p.cycle==='onetime')return 0; return v; }
-var INS_TYPE={life:{l:'ประกันชีวิต',i:'fa-shield-halved',c:'#10b981'},health:{l:'สุขภาพ',i:'fa-heart-pulse',c:'#ef4444'},accident:{l:'อุบัติเหตุ',i:'fa-truck-medical',c:'#f59e0b'},critical:{l:'โรคร้ายแรง',i:'fa-ribbon',c:'#ec4899'},annuity:{l:'บำนาญ',i:'fa-umbrella',c:'#fbbf24'},car:{l:'รถยนต์',i:'fa-car',c:'#3b82f6'},home:{l:'บ้าน/ทรัพย์สิน',i:'fa-house',c:'#06b6d4'},travel:{l:'เดินทาง',i:'fa-plane',c:'#a78bfa'},other:{l:'อื่นๆ',i:'fa-file-shield',c:'#94a3b8'}};
+var INS_TYPE={life:{l:'ประกันชีวิต',le:'Life',i:'fa-shield-halved',c:'#10b981'},health:{l:'สุขภาพ',le:'Health',i:'fa-heart-pulse',c:'#ef4444'},accident:{l:'อุบัติเหตุ',le:'Accident',i:'fa-truck-medical',c:'#f59e0b'},critical:{l:'โรคร้ายแรง',le:'Critical Illness',i:'fa-ribbon',c:'#ec4899'},annuity:{l:'บำนาญ',le:'Annuity',i:'fa-umbrella',c:'#fbbf24'},car:{l:'รถยนต์',le:'Car',i:'fa-car',c:'#3b82f6'},home:{l:'บ้าน/ทรัพย์สิน',le:'Home/Property',i:'fa-house',c:'#06b6d4'},travel:{l:'เดินทาง',le:'Travel',i:'fa-plane',c:'#a78bfa'},other:{l:'อื่นๆ',le:'Other',i:'fa-file-shield',c:'#94a3b8'}};
+Object.keys(INS_TYPE).forEach(function(k){ Object.defineProperty(INS_TYPE[k],'l',{get:function(){ return (typeof currentLang!=='undefined'&&currentLang==='en')?this._le:this._l; },set:function(v){ this._l=v; }}); INS_TYPE[k].l=INS_TYPE[k].l; INS_TYPE[k]._le=INS_TYPE[k].le; });
 var INS_INSURED={self:'ตัวเอง',spouse:'คู่สมรส',child:'บุตร',parent:'พ่อ/แม่',family:'ครอบครัว',other:'อื่นๆ'};
+var INS_INSURED_EN={self:'Self',spouse:'Spouse',child:'Child',parent:'Parent',family:'Family',other:'Other'};
+function insInsuredLabel(k){ return (typeof currentLang!=='undefined'&&currentLang==='en'&&INS_INSURED_EN[k])?INS_INSURED_EN[k]:(INS_INSURED[k]||k); }
 var INS_CYCLE={monthly:'เดือน',yearly:'ปี',quarterly:'ไตรมาส',onetime:'ครั้งเดียว'};
+var INS_CYCLE_EN={monthly:'month',yearly:'year',quarterly:'quarter',onetime:'one-time'};
+function insCycleLabel(k){ return (typeof currentLang!=='undefined'&&currentLang==='en'&&INS_CYCLE_EN[k])?INS_CYCLE_EN[k]:(INS_CYCLE[k]||k); }
 function insPayUntilUI(){
   var t=document.getElementById('ins-payuntil-type').value, inp=document.getElementById('ins-payuntil');
-  if(t==='lifetime'){ inp.value=''; inp.disabled=true; inp.type='text'; inp.placeholder='ตลอดชีพ'; }
+  if(t==='lifetime'){ inp.value=''; inp.disabled=true; inp.type='text'; inp.placeholder=tr('ins_lifetime'); }
   else if(t==='date'){ inp.disabled=false; inp.type='date'; }
-  else { inp.disabled=false; inp.type='number'; inp.placeholder=(t==='age'?'เช่น 60':'เช่น 10'); }
+  else { inp.disabled=false; inp.type='number'; inp.placeholder=(t==='age'?tr('ins_age_ph'):tr('ins_years_ph')); }
 }
 function insPayUntilText(p){
-  if(!p.payUntilType||p.payUntilType==='lifetime') return 'ตลอดชีพ';
-  if(p.payUntilType==='age') return 'ถึงอายุ '+(p.payUntil||'?');
-  if(p.payUntilType==='years') return (p.payUntil||'?')+' ปี';
-  if(p.payUntilType==='date') return 'ถึง '+(p.payUntil||'?');
+  if(!p.payUntilType||p.payUntilType==='lifetime') return tr('ins_lifetime');
+  if(p.payUntilType==='age') return tr('ins_until_age')+' '+(p.payUntil||'?');
+  if(p.payUntilType==='years') return (p.payUntil||'?')+' '+tr('year_short');
+  if(p.payUntilType==='date') return tr('ins_until')+' '+(p.payUntil||'?');
   return p.payUntil||'–';
 }
 function openInsModal(id){
   var it=id?getIns().find(function(x){return x.id===id;}):null;
   document.getElementById('ins-eid').value=id||'';
-  document.getElementById('ins-m-title').textContent=id?'แก้ไขประกัน':'เพิ่มประกัน';
+  document.getElementById('ins-m-title').textContent=id?tr('ins_edit'):tr('ins_add');
   document.getElementById('ins-name').value=it?it.name:'';
   document.getElementById('ins-type').value=it?it.type:'life';
   document.getElementById('ins-insured').value=it?it.insured:'self';
