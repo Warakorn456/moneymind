@@ -3879,7 +3879,7 @@ function renderAiUsage(){
   const mColors=[accent,'#3b82f6','#f59e0b','#a78bfa','#ef4444','#06b6d4'];
   const modelSection=bm.length?(
     '<div class="card" style="padding:14px;margin-bottom:14px">'
-    +'<div style="font-size:13px;font-weight:700;margin-bottom:12px">แยกตามรุ่นโมเดล (ใช้มากสุดบนสุด)</div>'
+    +'<div style="font-size:13px;font-weight:700;margin-bottom:12px">'+tr('aiu_by_model')+'</div>'
     +bm.map(function(m,i){
       const w=Math.max(2,Math.round((m.thb||0)/maxMThb*100));
       const c=mColors[i%mColors.length];
