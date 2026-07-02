@@ -11984,14 +11984,14 @@ function renderLoanResults(){
   '<div class="card" style="margin-bottom:16px;border-top:2px solid rgba(16,185,129,.5)">'
     +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">'
       +'<div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-calculator" style="color:#10b981;font-size:12px"></i></div>'
-      +'<div class="sec-title">ผลลัพธ์</div>'
+      +'<div class="sec-title">'+tr('loan_results')+'</div>'
     +'</div>'
     +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px">'
       +[
-        {label:'ค่างวด/เดือน',val:fmt(Math.round(monthly)),color:'#a78bfa',icon:'fa-calendar-alt'},
-        {label:'ดอกเบี้ยรวม',val:fmt(Math.round(totalInterest)),color:'#f87171',icon:'fa-percentage'},
-        {label:'ยอดรวมที่ต้องจ่าย',val:fmt(Math.round(totalPayment)),color:'#fbbf24',icon:'fa-coins'},
-        {label:'ดอกเบี้ย/เงินต้น',val:(s.principal>0?Math.round(totalInterest/s.principal*100):0)+'%',color:'#06b6d4',icon:'fa-chart-pie'},
+        {label:tr('loan_payment_month'),val:fmt(Math.round(monthly)),color:'#a78bfa',icon:'fa-calendar-alt'},
+        {label:tr('loan_total_interest'),val:fmt(Math.round(totalInterest)),color:'#f87171',icon:'fa-percentage'},
+        {label:tr('loan_total_payable'),val:fmt(Math.round(totalPayment)),color:'#fbbf24',icon:'fa-coins'},
+        {label:tr('loan_interest_ratio'),val:(s.principal>0?Math.round(totalInterest/s.principal*100):0)+'%',color:'#06b6d4',icon:'fa-chart-pie'},
       ].map(function(x){
         return '<div style="padding:12px;background:var(--surface2);border-radius:12px">'
           +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="fas '+x.icon+'" style="color:'+x.color+';font-size:11px"></i><span style="font-size:11px;color:var(--muted)">'+x.label+'</span></div>'
@@ -12002,8 +12002,8 @@ function renderLoanResults(){
     // Principal vs Interest bar
     +'<div style="margin-bottom:14px">'
       +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px">'
-        +'<span><span style="color:#a78bfa">■</span> เงินต้น '+fmt(Math.round(s.principal))+'</span>'
-        +'<span><span style="color:#f87171">■</span> ดอกเบี้ย '+fmt(Math.round(totalInterest))+'</span>'
+        +'<span><span style="color:#a78bfa">■</span> '+tr('loan_th_principal')+' '+fmt(Math.round(s.principal))+'</span>'
+        +'<span><span style="color:#f87171">■</span> '+tr('loan_th_interest')+' '+fmt(Math.round(totalInterest))+'</span>'
       +'</div>'
       +'<div style="height:8px;border-radius:99px;overflow:hidden;display:flex">'
         +'<div style="width:'+(s.principal/totalPayment*100).toFixed(1)+'%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div>'
@@ -12011,7 +12011,7 @@ function renderLoanResults(){
       +'</div>'
     +'</div>'
     +'<button class="btn '+(s.showTable?'btn-primary':'btn-ghost')+'" style="font-size:13px" onclick="window._loanState.showTable=!window._loanState.showTable;renderLoan()">'
-      +'<i class="fas fa-table"></i> '+(s.showTable?'ซ่อนตารางผ่อน':'ดูตารางผ่อนรายงวด')+' ('+schedule.length+' งวด)'
+      +'<i class="fas fa-table"></i> '+(s.showTable?tr('loan_hide_table'):tr('loan_view_table'))+' ('+schedule.length+' '+tr('loan_installment_unit')+')'
     +'</button>'
     +tableHtml
   +'</div>'
