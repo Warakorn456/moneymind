@@ -12217,7 +12217,7 @@ function renderCalendarPage(){
       +'<div class="cal-detail-head">'
         +'<div style="display:flex;align-items:flex-start;justify-content:space-between">'
           +'<div>'
-            +'<div style="font-size:20px;font-weight:800;line-height:1.2">'+selDate.getDate()+' '+CAL_MON_FULL[selDate.getMonth()]+'</div>'
+            +'<div style="font-size:20px;font-weight:800;line-height:1.2">'+selDate.getDate()+' '+monthFullArr()[selDate.getMonth()]+'</div>'
             +'<div style="font-size:12px;color:var(--muted);margin-top:2px">วัน'+dowNames[selDate.getDay()]+' · '+(beYear(selDate.getFullYear()))+'</div>'
           +'</div>'
           +(sIncAmt||sExpAmt?'<div style="text-align:right">'
