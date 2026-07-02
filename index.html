@@ -1965,19 +1965,19 @@
 <!-- Investment Modal -->
 <div id="m-inv" class="overlay">
   <div class="modal" style="max-width:520px">
-    <div class="modal-title"><i class="fas fa-chart-line" style="color:var(--green)"></i><span id="inv-m-title">เพิ่มการลงทุน</span></div>
+    <div class="modal-title"><i class="fas fa-chart-line" style="color:var(--green)"></i><span id="inv-m-title" data-i18n="inv_add">เพิ่มการลงทุน</span></div>
     <input type="hidden" id="inv-eid">
     <div class="fg" style="margin-bottom:14px">
-      <label class="flabel">พอร์ต</label>
-      <select id="inv-portid" class="finput"><option value="">— ไม่ระบุพอร์ต —</option></select>
+      <label class="flabel" data-i18n="inv_tab_port">พอร์ต</label>
+      <select id="inv-portid" class="finput"><option value="">— <span data-i18n="no_portfolio">ไม่ระบุพอร์ต</span> —</option></select>
     </div>
     <div class="frow">
       <div class="fg">
-        <label class="flabel">Ticker / ชื่อ</label>
+        <label class="flabel">Ticker / <span data-i18n="inv_field_name">ชื่อ</span></label>
         <input type="text" id="inv-name" class="finput" placeholder="PTT.BK / AAPL / BTC" oninput="invNameHint()">
         <div id="inv-name-hint" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
       </div>
-      <div class="fg"><label class="flabel">ประเภท</label>
+      <div class="fg"><label class="flabel" data-i18n="inv_field_type">ประเภท</label>
         <select id="inv-type" class="fselect" onchange="invNameHint()">
           <option value="หุ้น">📈 หุ้น</option><option value="กองทุน">💼 กองทุน</option>
           <option value="คริปโต">🪙 คริปโต</option><option value="ทองคำ">🥇 ทองคำ</option>
@@ -1988,7 +1988,7 @@
     </div>
     <!-- Currency toggle -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-      <span style="font-size:12px;color:var(--muted);font-weight:600">สกุลเงินที่ใส่:</span>
+      <span style="font-size:12px;color:var(--muted);font-weight:600" data-i18n="inv_currency_used">สกุลเงินที่ใส่:</span>
       <div style="display:flex;gap:4px;background:var(--surface2);padding:3px;border-radius:8px">
         <button id="cur-thb" class="type-btn inc active" style="padding:5px 16px;font-size:13px;border-radius:6px;border-width:1px" onclick="setCurrency('THB')">🇹🇭 THB</button>
         <button id="cur-usd" class="type-btn exp" style="padding:5px 16px;font-size:13px;border-radius:6px;border-width:1px" onclick="setCurrency('USD')">🇺🇸 USD</button>
@@ -1997,39 +1997,39 @@
     </div>
     <input type="hidden" id="inv-currency" value="THB">
     <div class="frow">
-      <div class="fg"><label class="flabel">จำนวนหุ้น / หน่วย</label><input type="number" id="inv-qty" class="finput" placeholder="0" min="0" step="any" oninput="calcInvTotals()"></div>
+      <div class="fg"><label class="flabel" data-i18n="inv_field_qty">จำนวนหุ้น / หน่วย</label><input type="number" id="inv-qty" class="finput" placeholder="0" min="0" step="any" oninput="calcInvTotals()"></div>
       <div class="fg">
-        <label class="flabel" id="buyprice-label">ราคาซื้อ / หน่วย (฿)</label>
+        <label class="flabel" id="buyprice-label" data-i18n="inv_field_buyprice">ราคาซื้อ / หน่วย (฿)</label>
         <input type="number" id="inv-buyprice" class="finput" placeholder="0" min="0" step="any" oninput="calcInvTotals()">
         <div id="buyprice-convert" style="font-size:11px;color:var(--cyan);margin-top:3px"></div>
       </div>
     </div>
     <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
-      <div><div style="font-size:11px;color:var(--muted)">ต้นทุนรวม (฿)</div><div id="inv-cost-display" style="font-size:18px;font-weight:700;color:var(--text)">฿0</div></div>
+      <div><div style="font-size:11px;color:var(--muted)" data-i18n="inv_total_cost">ต้นทุนรวม (฿)</div><div id="inv-cost-display" style="font-size:18px;font-weight:700;color:var(--text)">฿0</div></div>
       <i class="fas fa-equals" style="color:var(--muted)"></i>
-      <div style="font-size:13px;color:var(--muted);text-align:right">จำนวน × ราคาซื้อ</div>
+      <div style="font-size:13px;color:var(--muted);text-align:right" data-i18n="inv_qty_x_price">จำนวน × ราคาซื้อ</div>
     </div>
     <div style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:13px;font-weight:600">ราคาปัจจุบัน</div>
-        <button class="btn btn-ghost btn-sm" id="fetch-price-btn" onclick="fetchCurrentPrice()"><i class="fas fa-sync-alt"></i> ดึงราคา</button>
+        <div style="font-size:13px;font-weight:600" data-i18n="inv_current_price">ราคาปัจจุบัน</div>
+        <button class="btn btn-ghost btn-sm" id="fetch-price-btn" onclick="fetchCurrentPrice()"><i class="fas fa-sync-alt"></i> <span data-i18n="inv_fetch_price">ดึงราคา</span></button>
       </div>
       <div class="frow">
         <div class="fg" style="margin-bottom:0">
-          <label class="flabel" id="curprice-label">ราคา / หน่วย (฿)</label>
+          <label class="flabel" id="curprice-label" data-i18n="inv_field_curprice">ราคา / หน่วย (฿)</label>
           <input type="number" id="inv-curprice" class="finput" placeholder="0" step="any" oninput="calcInvTotals()">
           <div id="curprice-convert" style="font-size:11px;color:var(--cyan);margin-top:3px"></div>
         </div>
-        <div class="fg" style="margin-bottom:0"><label class="flabel">อัปเดตล่าสุด</label><input type="text" id="inv-updated" class="finput" placeholder="-" readonly style="color:var(--muted)"></div>
+        <div class="fg" style="margin-bottom:0"><label class="flabel" data-i18n="inv_last_updated">อัปเดตล่าสุด</label><input type="text" id="inv-updated" class="finput" placeholder="-" readonly style="color:var(--muted)"></div>
       </div>
       <div style="margin-top:10px;background:var(--surface2);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center">
-        <div><div style="font-size:11px;color:var(--muted)">มูลค่าปัจจุบัน (฿)</div><div id="inv-val-display" style="font-size:18px;font-weight:700;color:var(--cyan)">฿0</div></div>
+        <div><div style="font-size:11px;color:var(--muted)" data-i18n="inv_field_curval">มูลค่าปัจจุบัน (฿)</div><div id="inv-val-display" style="font-size:18px;font-weight:700;color:var(--cyan)">฿0</div></div>
         <div id="inv-pnl-display" style="font-size:14px;font-weight:700;text-align:right"></div>
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeM('m-inv')">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="saveInv()">บันทึก</button>
+      <button class="btn btn-ghost" onclick="closeM('m-inv')" data-i18n="cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveInv()" data-i18n="save">บันทึก</button>
     </div>
   </div>
 </div>
