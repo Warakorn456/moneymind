@@ -10724,6 +10724,7 @@ function printMonthlyReport(){
     +'<table><tr><th>วันที่</th><th>หมวด</th><th>รายละเอียด</th><th style="text-align:right">จำนวน</th></tr>'+txRows+'</table>'
     +'<div style="font-size:11px;color:#94a3b8;text-align:center;margin-top:16px">MoneyMind — รายงานนี้สร้างอัตโนมัติ</div>'
   +'</body></html>';
+  if(_nativePrintHtml(html)) return;
   var w=window.open('','_blank');
   w.document.write(html);
   w.document.close();
