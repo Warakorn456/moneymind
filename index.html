@@ -8613,8 +8613,10 @@ function exportCSV(){
   const bom='﻿';
   const csv=bom+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const fn=`moneymind_${new Date().toISOString().split('T')[0]}.csv`;
+  if(_nativeSaveFile(blob,fn,'text/csv;charset=utf-8')) return;
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download=`moneymind_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+  a.download=fn; a.click();
   toast('ส่งออก CSV แล้ว','success');
 }
 
