@@ -3589,8 +3589,20 @@ function toggleMoneyMove(){ if(!DB.settings) DB.settings={}; DB.settings.hideMon
 //  I18N — เฟส 1: โครงระบบแปลภาษา + เมนูหลัก + หัวข้อหน้า (เนื้อหาในหน้ายังเป็นไทยอยู่ รอเฟสถัดไป)
 // ══════════════════════════════════════════
 const I18N = {
-  th: {dashboard:'Dashboard',transactions:'รายรับ-รายจ่าย',ot:'คำนวณ OT',loan:'คำนวณสินเชื่อ',subscriptions:'Subscriptions',calendar:'ปฏิทิน',savings:'เงินออม',banks:'บัญชีธนาคาร',debts:'หนี้สิน',investments:'พอร์ตลงทุน',tax:'ภาษีเงินได้',balance:'งบดุล & แผนการเงิน',retire:'แผนเกษียณ',profile:'ประวัติส่วนตัว',settings:'ตั้งค่า',admin:'Admin Dashboard',forecast:'พยากรณ์กระแสเงินสด',travel:'ท่องเที่ยว',aiusage:'AI Usage / ค่า Token',insurance:'ประกัน',app_tagline:'การเงินส่วนบุคคล'},
-  en: {dashboard:'Dashboard',transactions:'Income & Expenses',ot:'Overtime Calculator',loan:'Loan Calculator',subscriptions:'Subscriptions',calendar:'Calendar',savings:'Savings',banks:'Bank Accounts',debts:'Debts',investments:'Investment Portfolio',tax:'Income Tax',balance:'Balance Sheet & Financial Plan',retire:'Retirement Plan',profile:'Profile',settings:'Settings',admin:'Admin Dashboard',forecast:'Cash Flow Forecast',travel:'Travel',aiusage:'AI Usage / Token Cost',insurance:'Insurance',app_tagline:'Personal Finance'},
+  th: {dashboard:'Dashboard',transactions:'รายรับ-รายจ่าย',ot:'คำนวณ OT',loan:'คำนวณสินเชื่อ',subscriptions:'Subscriptions',calendar:'ปฏิทิน',savings:'เงินออม',banks:'บัญชีธนาคาร',debts:'หนี้สิน',investments:'พอร์ตลงทุน',tax:'ภาษีเงินได้',balance:'งบดุล & แผนการเงิน',retire:'แผนเกษียณ',profile:'ประวัติส่วนตัว',settings:'ตั้งค่า',admin:'Admin Dashboard',forecast:'พยากรณ์กระแสเงินสด',travel:'ท่องเที่ยว',aiusage:'AI Usage / ค่า Token',insurance:'ประกัน',app_tagline:'การเงินส่วนบุคคล',
+    login_sub:'ระบบการเงินส่วนตัว',ph_login_user:'ชื่อผู้ใช้ หรือ Email',ph_login_pass:'รหัสผ่าน',login_btn:'เข้าสู่ระบบ',login_checking:'กำลังตรวจสอบ...',login_divider:'หรือเข้าสู่ระบบด้วย',
+    no_account:'ยังไม่มีบัญชี?',register_link:'สมัครใหม่',forgot_pass:'ลืมรหัสผ่าน?',reset_pass_link:'รีเซ็ตรหัสผ่าน',
+    ph_reg_user:'ชื่อผู้ใช้ (a-z, 0-9, _ ความยาว 3-20)',ph_reg_pass:'รหัสผ่าน (อย่างน้อย 6 ตัว)',ph_reg_pass2:'ยืนยันรหัสผ่าน',register_btn:'สมัครใช้งาน',register_creating:'กำลังสร้างบัญชี...',register_divider:'หรือสมัครด้วย',register_sub:'สร้างบัญชีใหม่',
+    have_account:'มีบัญชีแล้ว?',login_link:'เข้าสู่ระบบ',forgot_sub:'รีเซ็ตรหัสผ่าน',
+    forgot_desc:'Firebase จะส่งลิงก์รีเซ็ตรหัสผ่านไปยัง <strong style="color:#a78bfa">Email</strong> ที่ลงทะเบียนไว้',ph_forgot_email:'Email ที่ใช้สมัคร',sending:'กำลังส่ง...',forgot_send_btn:'ส่งอีเมลรีเซ็ตรหัสผ่าน',
+    no_email_help:'ไม่มี Email ผูกกับบัญชี/กู้ไม่ได้?',contact_us:'ติดต่อทีมงาน',back_to:'กลับไป',privacy_link:'นโยบายความเป็นส่วนตัว',terms_link:'ข้อกำหนดการใช้งาน'},
+  en: {dashboard:'Dashboard',transactions:'Income & Expenses',ot:'Overtime Calculator',loan:'Loan Calculator',subscriptions:'Subscriptions',calendar:'Calendar',savings:'Savings',banks:'Bank Accounts',debts:'Debts',investments:'Investment Portfolio',tax:'Income Tax',balance:'Balance Sheet & Financial Plan',retire:'Retirement Plan',profile:'Profile',settings:'Settings',admin:'Admin Dashboard',forecast:'Cash Flow Forecast',travel:'Travel',aiusage:'AI Usage / Token Cost',insurance:'Insurance',app_tagline:'Personal Finance',
+    login_sub:'Personal Finance System',ph_login_user:'Username or Email',ph_login_pass:'Password',login_btn:'Log In',login_checking:'Checking...',login_divider:'Or log in with',
+    no_account:"Don't have an account?",register_link:'Sign up',forgot_pass:'Forgot password?',reset_pass_link:'Reset password',
+    ph_reg_user:'Username (a-z, 0-9, _, 3-20 chars)',ph_reg_pass:'Password (min. 6 characters)',ph_reg_pass2:'Confirm password',register_btn:'Sign Up',register_creating:'Creating account...',register_divider:'Or sign up with',register_sub:'Create New Account',
+    have_account:'Already have an account?',login_link:'Log In',forgot_sub:'Reset Password',
+    forgot_desc:'Firebase will send a password reset link to your registered <strong style="color:#a78bfa">Email</strong>',ph_forgot_email:'Your registered email',sending:'Sending...',forgot_send_btn:'Send Reset Email',
+    no_email_help:"No email linked / can't recover?",contact_us:'Contact us',back_to:'Back to',privacy_link:'Privacy Policy',terms_link:'Terms of Service'},
 };
 let currentLang=(function(){ try{ return localStorage.getItem('mm_lang')||'th'; }catch(e){ return 'th'; } })();
 function t(key){ return (I18N[currentLang]||I18N.th)[key] || (I18N.th[key]||key); }
