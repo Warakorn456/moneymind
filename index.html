@@ -4290,7 +4290,7 @@ function _populateTxBankDropdown(selectedId='', ccOnly=false){
       opts+=`<optgroup label="💳 ${tr('credit_card')}">`;
       ccBanks.forEach(b=>{
         const last4=b.accountNo?` ····${b.accountNo}`:'';
-        opts+=`<option value="${b.id}"${b.id===selectedId?' selected':''}>💳 ${b.name}${last4} (ค้าง:${fmt(b.balance)})</option>`;
+        opts+=`<option value="${b.id}"${b.id===selectedId?' selected':''}>💳 ${b.name}${last4} (${tr('owed')}:${fmt(b.balance)})</option>`;
       });
       opts+=`</optgroup>`;
     }
