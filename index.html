@@ -6147,7 +6147,7 @@ function renderBanks(){
     html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:${cards.length?'24px':'0'}">`;
     regular.forEach(b=>{
       const m=BANK_META[b.name]||BANK_META['อื่นๆ'];
-      const upd=b.updatedAt?`อัปเดต ${b.updatedAt}`:'ยังไม่อัปเดต';
+      const upd=b.updatedAt?`${tr('bank_updated')} ${b.updatedAt}`:tr('bank_not_updated');
       html+=`<div draggable="true" data-id="${b.id}" ondragstart="bankDragStart(event,'${b.id}')" ondragover="bankDragOver(event)" ondragleave="bankDragLeave(event)" ondrop="bankDrop(event,'${b.id}')" ondragend="bankDragEnd(event)" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;position:relative;overflow:hidden;cursor:grab;transition:opacity .2s,outline .15s">
         <div style="position:absolute;top:0;left:0;width:5px;height:100%;background:${m.color};border-radius:16px 0 0 16px"></div>
         <div style="padding-left:8px">
@@ -6165,12 +6165,12 @@ function renderBanks(){
             </div>
           </div>
           <div style="margin-bottom:10px">
-            <div style="font-size:11px;color:var(--muted);margin-bottom:2px">ยอดเงินคงเหลือ</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:2px">${tr('bank_balance')}</div>
             <div style="font-size:24px;font-weight:800;color:${m.color}">${fmt(b.balance)}</div>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="font-size:11px;color:var(--muted)">${upd}${b.note?` · ${b.note}`:''}</div>
-            <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 10px" onclick="openUpdateBalanceModal('${b.id}')"><i class="fas fa-sync-alt"></i> อัปเดตยอด</button>
+            <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 10px" onclick="openUpdateBalanceModal('${b.id}')"><i class="fas fa-sync-alt"></i> ${tr('bank_update_balance')}</button>
           </div>
         </div>
       </div>`;
