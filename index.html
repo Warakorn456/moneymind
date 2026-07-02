@@ -2654,11 +2654,11 @@ function fsListen(){
       const modalOpen=document.querySelector('.overlay.show,.plan-modal-bg.active,.modal-bg.active');
       const inputFocused=document.activeElement&&['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName);
       if(modalOpen||inputFocused){
-        toast('มีข้อมูลใหม่จากอุปกรณ์อื่น ☁️ (จะโหลดหลังปิดฟอร์ม)','info');
+        toast(tr('new_data_from_device'),'info');
         _pendingRemoteSync=true;
       } else {
         renderPage(curPage);
-        toast('ซิงค์จากอุปกรณ์อื่นแล้ว ☁️','success');
+        toast(tr('synced_from_device'),'success');
       }
     }catch(e){ console.error('[Firebase] snapshot parse:',e); }
   },e=>{ console.error('[Firebase] listener:',e); setSyncStatus('error'); });
