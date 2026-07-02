@@ -4818,11 +4818,11 @@ async function aiReadStatement(b64,mime){
     // Image: ใช้ inline_data ได้เลย
     let part;
     if(mime==='application/pdf'){
-      document.querySelector('#stmt-proc div:last-child').textContent='กำลังอัปโหลด PDF...';
+      document.querySelector('#stmt-proc div:last-child').textContent=tr('stmt_uploading_pdf');
       const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
       const fileUri=await uploadToGeminiFileAPI(bytes,mime,DB.settings.apiKey);
       part={file_data:{mime_type:'application/pdf',file_uri:fileUri}};
-      document.querySelector('#stmt-proc div:last-child').textContent='AI กำลังอ่านข้อมูล...';
+      document.querySelector('#stmt-proc div:last-child').textContent=tr('stmt_ai_reading_data');
     } else {
       part={inline_data:{mime_type:mime,data:b64}};
     }
