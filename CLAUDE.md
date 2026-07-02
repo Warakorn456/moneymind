@@ -112,10 +112,11 @@ DB = {
 | **ไม่มีลิงก์ privacy/terms จากในแอป + ไม่มี Terms of Service** | ✅ แก้แล้ว | เพิ่ม `terms.html` (ใหม่, สไตล์เดียวกับ `privacy.html`, มี disclaimer "ไม่ใช่ที่ปรึกษาการเงิน/ภาษี") + ลิงก์จาก PDPA consent modal และ footer หน้า login เสมอ — **`terms.html` ควรให้คนมีความรู้กฎหมายช่วยรีวิวก่อนถือว่าเป็นทางการ** |
 | **ไม่มี error/crash tracking** | ✅ แก้แล้ว | เพิ่ม `window.addEventListener('error'/'unhandledrejection')` ส่งเข้า Firestore `reports` เดียวกับ feedback (`kind:'error'`) มี dedupe กันยิงซ้ำ error เดิมในเซสชันเดียว — **ก็ต้องรอ deploy rule + relay script เหมือนกันถึงจะเห็นจริง**
 
-**สิ่งที่ยังค้างอยู่ (ต้องทำต่อ ไม่ใช่แค่แก้โค้ด):**
-1. Deploy `firestore.rules` ที่มี `reports/{doc}` เข้า live project (ตามขั้นตอน "redeploy" ด้านบน)
-2. เขียน + deploy VM script ใหม่ (เช่น `report_relay.py`) ดึง `reports` collection ส่ง Telegram + เพิ่มเข้า `cron_health.py` REGISTRY
-3. Rotate Telegram bot token ผ่าน @BotFather (ต้องทำเองผ่าน Telegram) แล้วอัปเดต `.env`/`mm_secrets.py` บน VM + ลบ token เก่าออกจาก **CLAUDE.md ไฟล์นี้เองด้วย** (ยังมี token เก่าอยู่ในหลายจุดของเอกสารนี้จากก่อนหน้า — ต้องเช็คว่า token เก่าไม่ได้ใช้จริงแล้วค่อยลบทิ้ง)
+**สิ่งที่ยังค้างอยู่ (แค่ 1 อย่าง ต้องทำเองผ่าน Telegram เท่านั้น):**
+1. Rotate Telegram bot token ผ่าน @BotFather → ได้ token ใหม่แล้วอัปเดต `MM_TG_TOKEN` ใน `.env` **2 ที่**: `C:\Users\warakorn\Documents\.env` (โน้ตบุ๊ก) และ `/home/warakornbest6/moneymind/.env` (VM, ต้อง `sudo systemctl restart moneymind-bot` ด้วยหลังแก้) — ห้ามจด token ใหม่ลง CLAUDE.md ตรงๆ (ดู "Firestore Security Rules" ด้านบน — token เก่าที่เคยจดไว้ตรงๆ ในไฟล์นี้ตอนนี้ต้องถือว่ารั่วแล้วเพราะ repo public)
+2. ไฟล์อื่นที่ยังมี token เก่า hardcode (เจอตอนตรวจ 2026-07-02, ยังไม่ได้แก้เพราะไม่ใช่ระบบที่รันจริง): `C:\Users\warakorn\Documents\refactor_secrets.py` (search pattern ในสคริปต์ migrate, ไม่ได้รันประจำ), `C:\Users\warakorn\Documents\stock_bot_remote.py` (โค้ดสำรอง ไม่มี cron/task เรียก), `C:\Users\warakorn\Documents\vm_setup.sh` (สคริปต์ bootstrap VM ตอนตั้งเครื่องใหม่ครั้งแรก ไม่ได้รันซ้ำ) — อัปเดตทีหลังได้เมื่อสะดวก ไม่กระทบระบบที่ใช้งานจริงตอนนี้
+
+**บทเรียนจากรอบนี้ (2026-07-02):** อย่า `sed -i` แก้ text ภาษาไทยบนไฟล์ remote ผ่าน `gcloud compute ssh --command="..."` — การ escape ผ่านหลายชั้น (bash local → gcloud/plink → bash remote) ทำให้ UTF-8 byte เพี้ยน (`cron_health.py` เจอ `UnicodeDecodeError` หลัง sed ครั้งหนึ่ง) **วิธีที่ปลอดภัย:** แก้ไฟล์ local (source of truth ใน `Documents/`) ด้วย Edit tool ปกติ เช็ค syntax ผ่านก่อน แล้วค่อย `gcloud compute scp` ทับของเดิมทั้งไฟล์ — ไม่ใช้ sed ผ่าน SSH กับไฟล์ที่มีภาษาไทยเด็ดขาด
 
 ## Pages & Navigation
 
