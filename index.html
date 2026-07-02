@@ -3603,6 +3603,8 @@ function setLang(lang){
 function toggleLang(){ setLang(currentLang==='th'?'en':'th'); }
 function applyLang(){
   document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ el.placeholder=t(el.getAttribute('data-i18n-ph')); });
+  document.querySelectorAll('[data-i18n-html]').forEach(function(el){ el.innerHTML=t(el.getAttribute('data-i18n-html')); });
   const pt=document.getElementById('page-title'); if(pt&&typeof curPage!=='undefined') pt.textContent=t(curPage);
   const langBtn=document.getElementById('lang-btn'); if(langBtn) langBtn.textContent=currentLang==='th'?'EN':'TH';
   const tagline=document.getElementById('app-tagline'); if(tagline) tagline.textContent=t('app_tagline');
