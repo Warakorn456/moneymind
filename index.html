@@ -5805,21 +5805,21 @@ async function saveInv(){
   const rawCur=parseFloat(document.getElementById('inv-curprice').value)||rawBuy;
   const currency=document.getElementById('inv-currency').value;
   const updatedAt=document.getElementById('inv-updated').value||'';
-  if(!name){ toast('กรุณาใส่ชื่อ','error'); return; }
-  if(!qty||qty<=0){ toast('กรุณาใส่จำนวน','error'); return; }
-  if(!rawBuy||rawBuy<=0){ toast('กรุณาใส่ราคาซื้อ','error'); return; }
+  if(!name){ toast(tr('inv_need_name'),'error'); return; }
+  if(!qty||qty<=0){ toast(tr('inv_need_qty'),'error'); return; }
+  if(!rawBuy||rawBuy<=0){ toast(tr('inv_need_buyprice'),'error'); return; }
   const fx=currency==='USD'?await getFxRate():1;
   const buyPrice=rawBuy*fx, curPrice=rawCur*fx;
   const cost=qty*buyPrice, value=qty*(curPrice||buyPrice);
   const portId=document.getElementById('inv-portid').value||null;
   const obj={name,type,qty,buyPrice,curPrice,cost,value,currency,fxRate:fx,updatedAt,portId};
   if(id){ const i=DB.investments.findIndex(x=>x.id===id); if(i>=0) DB.investments[i]={...DB.investments[i],...obj}; toast(tr('edited'),'success'); }
-  else { DB.investments.push({id:uid(),...obj}); toast('เพิ่มการลงทุนแล้ว','success'); }
+  else { DB.investments.push({id:uid(),...obj}); toast(tr('inv_added'),'success'); }
   saveDB(); closeM('m-inv'); renderInv();
 }
 
 function delInv(id){
-  if(!confirm('ต้องการลบการลงทุนนี้?')) return;
+  if(!confirm(tr('inv_confirm_delete'))) return;
   DB.investments=DB.investments.filter(i=>i.id!==id); saveDB(); renderInv(); toast(tr('deleted'),'info');
 }
 
