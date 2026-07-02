@@ -5085,10 +5085,10 @@ function saveSav(){
     : (parseFloat(document.getElementById('sav-cur').value)||0);
   const deadline=document.getElementById('sav-dl').value;
   const color=document.getElementById('sav-color').value;
-  if(!name){ toast('กรุณาใส่ชื่อเป้าหมาย','error'); return; }
-  if(!target||target<=0){ toast('กรุณาใส่จำนวนเป้าหมาย','error'); return; }
-  if(id){ const i=DB.savings.findIndex(s=>s.id===id); if(i>=0) DB.savings[i]={...DB.savings[i],name,target,current,deadline,color,linkedPortId}; toast('แก้ไขแล้ว','success'); }
-  else { DB.savings.push({id:uid(),name,target,current,deadline,color,linkedPortId}); toast('เพิ่มเป้าหมายแล้ว','success'); }
+  if(!name){ toast(tr('sav_need_name'),'error'); return; }
+  if(!target||target<=0){ toast(tr('sav_need_target'),'error'); return; }
+  if(id){ const i=DB.savings.findIndex(s=>s.id===id); if(i>=0) DB.savings[i]={...DB.savings[i],name,target,current,deadline,color,linkedPortId}; toast(tr('edited'),'success'); }
+  else { DB.savings.push({id:uid(),name,target,current,deadline,color,linkedPortId}); toast(tr('sav_added'),'success'); }
   saveDB(); closeM('m-sav'); renderSavings();
 }
 
