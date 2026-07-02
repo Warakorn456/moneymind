@@ -9867,8 +9867,8 @@ function renderSavingsRate(){
   _srChart=new Chart(ctx,{
     type:'bar',
     data:{labels:labels,datasets:[
-      {label:'อัตราออม %',data:srData,backgroundColor:srData.map(function(v){return v>=target?'rgba(16,185,129,.7)':v>=target*0.7?'rgba(245,158,11,.7)':'rgba(239,68,68,.7)';}),borderRadius:5,borderSkipped:false},
-      {label:'เป้าหมาย',data:targetArr,type:'line',borderColor:'rgba(255,255,255,.4)',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false}
+      {label:t('hs_savings_rate')+' %',data:srData,backgroundColor:srData.map(function(v){return v>=target?'rgba(16,185,129,.7)':v>=target*0.7?'rgba(245,158,11,.7)':'rgba(239,68,68,.7)';}),borderRadius:5,borderSkipped:false},
+      {label:t('target'),data:targetArr,type:'line',borderColor:'rgba(255,255,255,.4)',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false}
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'rgba(255,255,255,.6)',font:{family:'Sarabun',size:11},boxWidth:12}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.raw+'%';}}}},scales:{x:{ticks:{color:'rgba(255,255,255,.6)',font:{family:'Sarabun',size:11}},grid:{display:false}},y:{ticks:{color:'rgba(255,255,255,.6)',font:{family:'Sarabun',size:11},callback:function(v){return v+'%';}},grid:{color:'rgba(255,255,255,.05)'}}}}
   });
