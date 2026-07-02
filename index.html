@@ -12113,7 +12113,7 @@ function renderCalendarPage(){
     var dpts=dt.dueDate.split('-');
     if(dpts.length<2) return;
     if(parseInt(dpts[0])!==_calYear||parseInt(dpts[1])-1!==_calMonth) return;
-    getDayData(dt.dueDate).recur.push({name:'ครบกำหนด: '+dt.name,type:'expense',amount:dt.pay||0,_isDebt:true});
+    getDayData(dt.dueDate).recur.push({name:tr('cal_due')+': '+dt.name,type:'expense',amount:dt.pay||0,_isDebt:true});
   });
 
   // User notes
