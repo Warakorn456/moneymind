@@ -1042,8 +1042,8 @@
           Apple
         </button>
       </div>
-      <div class="login-toggle">ยังไม่มีบัญชี? <span onclick="switchToRegister()">สมัครใหม่</span></div>
-      <div class="login-toggle" style="margin-top:8px">ลืมรหัสผ่าน? <span onclick="switchToForgot()">รีเซ็ตรหัสผ่าน</span></div>
+      <div class="login-toggle"><span data-i18n="no_account">ยังไม่มีบัญชี?</span> <span onclick="switchToRegister()" data-i18n="register_link">สมัครใหม่</span></div>
+      <div class="login-toggle" style="margin-top:8px"><span data-i18n="forgot_pass">ลืมรหัสผ่าน?</span> <span onclick="switchToForgot()" data-i18n="reset_pass_link">รีเซ็ตรหัสผ่าน</span></div>
     </div>
 
     <!-- Register form -->
@@ -1051,13 +1051,13 @@
       <!-- honeypot กันบอทสมัครสแปม — ผู้ใช้จริงมองไม่เห็น ไม่ควรมีค่าเด็ดขาด -->
       <input type="text" id="reg-hp" name="website" autocomplete="off" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
       <input class="login-inp" id="reg-email" type="email" placeholder="Email" autocomplete="email">
-      <input class="login-inp" id="reg-user" type="text" placeholder="ชื่อผู้ใช้ (a-z, 0-9, _ ความยาว 3-20)" autocomplete="username">
-      <input class="login-inp" id="reg-pass" type="password" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัว)" autocomplete="new-password">
-      <input class="login-inp" id="reg-pass2" type="password" placeholder="ยืนยันรหัสผ่าน" autocomplete="new-password"
+      <input class="login-inp" id="reg-user" type="text" placeholder="ชื่อผู้ใช้ (a-z, 0-9, _ ความยาว 3-20)" data-i18n-ph="ph_reg_user" autocomplete="username">
+      <input class="login-inp" id="reg-pass" type="password" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัว)" data-i18n-ph="ph_reg_pass" autocomplete="new-password">
+      <input class="login-inp" id="reg-pass2" type="password" placeholder="ยืนยันรหัสผ่าน" data-i18n-ph="ph_reg_pass2" autocomplete="new-password"
         onkeydown="if(event.key==='Enter') tryRegister()">
-      <button class="login-btn" id="reg-btn" onclick="tryRegister()">สมัครใช้งาน</button>
+      <button class="login-btn" id="reg-btn" onclick="tryRegister()" data-i18n="register_btn">สมัครใช้งาน</button>
       <div class="login-err" id="reg-err"></div>
-      <div class="login-divider">หรือสมัครด้วย</div>
+      <div class="login-divider" data-i18n="register_divider">หรือสมัครด้วย</div>
       <div style="display:flex;gap:8px">
         <button class="google-btn" id="google-reg-btn" onclick="tryGoogleLogin()" style="flex:1;justify-content:center;gap:8px">
           <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
@@ -2817,7 +2817,7 @@ async function tryLogin(){
   const errEl=document.getElementById('login-err');
   const btn=document.getElementById('login-btn');
   if(!user||!pass){ errEl.textContent='กรุณากรอกข้อมูลให้ครบ'; return; }
-  errEl.textContent=''; btn.disabled=true; btn.textContent='กำลังตรวจสอบ...';
+  errEl.textContent=''; btn.disabled=true; btn.textContent=t('login_checking');
 
   // ── Owner (warakorn) — decrypt _ENC blob ──
   if(user===_ENC.user.toLowerCase()){
@@ -2842,18 +2842,18 @@ async function tryLogin(){
       fsListen();
     }catch{
       errEl.textContent='รหัสผ่านไม่ถูกต้อง';
-      btn.disabled=false; btn.textContent='เข้าสู่ระบบ';
+      btn.disabled=false; btn.textContent=t('login_btn');
     }
     return;
   }
 
   // ── Email login via Firebase Auth ──
   if(user.includes('@')){
-    if(!_auth){ errEl.textContent='ระบบ Auth ยังไม่พร้อม ลองใหม่'; btn.disabled=false; btn.textContent='เข้าสู่ระบบ'; return; }
+    if(!_auth){ errEl.textContent='ระบบ Auth ยังไม่พร้อม ลองใหม่'; btn.disabled=false; btn.textContent=t('login_btn'); return; }
     try{
       await _auth.signInWithEmailAndPassword(user,pass);
       const snap=await _fs.collection('members').where('email','==',user).limit(1).get();
-      if(snap.empty){ errEl.textContent='ไม่พบบัญชีที่ใช้ Email นี้'; btn.disabled=false; btn.textContent='เข้าสู่ระบบ'; return; }
+      if(snap.empty){ errEl.textContent='ไม่พบบัญชีที่ใช้ Email นี้'; btn.disabled=false; btn.textContent=t('login_btn'); return; }
       const memberData=snap.docs[0].data();
       currentUser=memberData.username;
       DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
@@ -2864,7 +2864,7 @@ async function tryLogin(){
       fsListen();
     }catch(e){
       const msg=e.code==='auth/wrong-password'||e.code==='auth/invalid-credential'?'Email หรือรหัสผ่านไม่ถูกต้อง':e.code==='auth/user-not-found'?'ไม่พบบัญชีนี้':'เกิดข้อผิดพลาด ลองใหม่';
-      errEl.textContent=msg; btn.disabled=false; btn.textContent='เข้าสู่ระบบ';
+      errEl.textContent=msg; btn.disabled=false; btn.textContent=t('login_btn');
     }
     return;
   }
@@ -2872,11 +2872,11 @@ async function tryLogin(){
   // ── Other users — hash compare ──
   const users=getUsers();
   const rec=users.find(u=>u.username===user);
-  if(!rec){ errEl.textContent='ไม่พบชื่อผู้ใช้นี้'; btn.disabled=false; btn.textContent='เข้าสู่ระบบ'; return; }
+  if(!rec){ errEl.textContent='ไม่พบชื่อผู้ใช้นี้'; btn.disabled=false; btn.textContent=t('login_btn'); return; }
   try{
     const saltBytes=Uint8Array.from(atob(rec.salt),c=>c.charCodeAt(0));
     const hash=await pbkdf2Hash(pass,saltBytes);
-    if(hash!==rec.hash){ errEl.textContent='รหัสผ่านไม่ถูกต้อง'; btn.disabled=false; btn.textContent='เข้าสู่ระบบ'; return; }
+    if(hash!==rec.hash){ errEl.textContent='รหัสผ่านไม่ถูกต้อง'; btn.disabled=false; btn.textContent=t('login_btn'); return; }
     currentUser=rec.username;
     DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
     loadDB();
@@ -2887,7 +2887,7 @@ async function tryLogin(){
     fsListen();
   }catch{
     errEl.textContent='เกิดข้อผิดพลาด ลองใหม่';
-    btn.disabled=false; btn.textContent='เข้าสู่ระบบ';
+    btn.disabled=false; btn.textContent=t('login_btn');
   }
 }
 
@@ -2915,7 +2915,7 @@ async function tryRegister(){
   if(user===_ENC.user.toLowerCase()){ errEl.textContent='ชื่อนี้ถูกใช้งานแล้ว'; return; }
   const users=getUsers();
   if(users.find(u=>u.username===user)){ errEl.textContent='ชื่อผู้ใช้นี้ถูกใช้งานแล้ว'; return; }
-  errEl.textContent=''; btn.disabled=true; btn.textContent='กำลังสร้างบัญชี...';
+  errEl.textContent=''; btn.disabled=true; btn.textContent=t('register_creating');
   try{
     // สร้าง Firebase Auth account
     let fbUid='';
@@ -2925,8 +2925,8 @@ async function tryRegister(){
         fbUid=fbCred.user.uid;
         try{ await fbCred.user.sendEmailVerification({url:location.href}); }catch(ve){ console.warn('[verify email]',ve.message); }
       }catch(e){
-        if(e.code==='auth/email-already-in-use'){ errEl.textContent='Email นี้ถูกใช้งานแล้ว'; btn.disabled=false; btn.textContent='สมัครใช้งาน'; return; }
-        if(e.code==='auth/invalid-email'){ errEl.textContent='รูปแบบ Email ไม่ถูกต้อง'; btn.disabled=false; btn.textContent='สมัครใช้งาน'; return; }
+        if(e.code==='auth/email-already-in-use'){ errEl.textContent='Email นี้ถูกใช้งานแล้ว'; btn.disabled=false; btn.textContent=t('register_btn'); return; }
+        if(e.code==='auth/invalid-email'){ errEl.textContent='รูปแบบ Email ไม่ถูกต้อง'; btn.disabled=false; btn.textContent=t('register_btn'); return; }
       }
     }
     // บันทึก hash ลง localStorage (offline support)
@@ -2957,7 +2957,7 @@ async function tryRegister(){
     setTimeout(_showWelcomeOnboard, 600);
   }catch{
     errEl.textContent='เกิดข้อผิดพลาด ลองใหม่';
-    btn.disabled=false; btn.textContent='สมัครใช้งาน';
+    btn.disabled=false; btn.textContent=t('register_btn');
   }
 }
 
@@ -3312,7 +3312,7 @@ async function doForgotEmail(){
   if(!email){ errEl.textContent='กรุณากรอก Email'; return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent='รูปแบบ Email ไม่ถูกต้อง'; return; }
   if(!_auth){ errEl.textContent='ระบบ Auth ยังไม่พร้อม ลองใหม่'; return; }
-  btn.disabled=true; btn.textContent='กำลังส่ง...';
+  btn.disabled=true; btn.textContent=t('sending');
   try{
     await _auth.sendPasswordResetEmail(email,{url:location.href});
     document.getElementById('forgot-email').value='';
@@ -3323,7 +3323,7 @@ async function doForgotEmail(){
     const msg=e.code==='auth/user-not-found'||e.code==='auth/invalid-credential'?'ไม่พบบัญชีที่ใช้ Email นี้':e.code==='auth/invalid-email'?'รูปแบบ Email ไม่ถูกต้อง':'เกิดข้อผิดพลาด: '+e.message;
     errEl.textContent=msg;
   }
-  btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane"></i> ส่งอีเมลรีเซ็ตรหัสผ่าน';
+  btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane"></i> '+t('forgot_send_btn');
 }
 
 // ══════════════════════════════════════════
@@ -14360,7 +14360,7 @@ function _rlReset(){ try{ localStorage.removeItem(_RL_KEY); }catch(e){} }
     const btn=document.getElementById('_fbSend');
     if(!text){ if(errEl) errEl.textContent='กรุณาพิมพ์ข้อความก่อนส่ง'; return; }
     if(errEl) errEl.textContent='';
-    btn.disabled=true; btn.textContent='กำลังส่ง...';
+    btn.disabled=true; btn.textContent=t('sending');
     const ok=await _sendReport({kind:'feedback',feedbackType:type,text:text});
     if(ok){
       const ov=document.getElementById('_feedbackModal');
