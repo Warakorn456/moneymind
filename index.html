@@ -2884,6 +2884,14 @@ async function tryLogin(){
 
 // ── Register ──
 async function tryRegister(){
+  // กันบอทสมัครสแปม: honeypot field ต้องว่างเสมอ + ต้องใช้เวลากรอกฟอร์มอย่างน้อย 1.5 วิ
+  // (บอทมักกรอกทุกช่อง รวมช่องที่ซ่อนไว้ และ submit เร็วกว่ามนุษย์มาก)
+  if((document.getElementById('reg-hp')?.value||'')!==''){ return; }
+  if(Date.now()-(window._regFormShownAt||0)<1500){
+    const errEl0=document.getElementById('reg-err');
+    if(errEl0) errEl0.textContent='กรุณาลองอีกครั้ง';
+    return;
+  }
   const email=document.getElementById('reg-email').value.trim().toLowerCase();
   const user=document.getElementById('reg-user').value.trim().toLowerCase();
   const pass=document.getElementById('reg-pass').value;
