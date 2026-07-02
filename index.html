@@ -10528,8 +10528,8 @@ function renderTaxAdvisor(){
   }).join('');
   el.innerHTML='<div class="comparison-card">'
     +'<div class="sec-hd" style="margin-bottom:12px">'
-    +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(167,139,250,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-receipt" style="color:#a78bfa;font-size:12px"></i></div><div class="sec-title">ยังลดหย่อนภาษีได้อีก</div></div>'
-    +'<button class="btn btn-ghost btn-sm" onclick="nav(\'tax\')">ดูภาษี →</button></div>'
+    +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(167,139,250,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-receipt" style="color:#a78bfa;font-size:12px"></i></div><div class="sec-title">'+tr('tax_more_deduct')+'</div></div>'
+    +'<button class="btn btn-ghost btn-sm" onclick="nav(\'tax\')">'+tr('view_tax')+' →</button></div>'
     +rows+'</div>';
 }
 
