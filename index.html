@@ -3914,13 +3914,13 @@ function renderBudgetCard(){
   barEl.style.width=pct+'%';
   barEl.style.background=pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--primary-l)';
 
-  document.getElementById('b-bar-label').textContent=pct.toFixed(1)+'% ใช้แล้ว';
-  document.getElementById('b-src-label').textContent=carryAmt>0?`ยกมาจากเดือนก่อน ${fmt(carryAmt)}`:'';
+  document.getElementById('b-bar-label').textContent=pct.toFixed(1)+'% '+tr('budget_used');
+  document.getElementById('b-src-label').textContent=carryAmt>0?`${tr('carried_from_prev')} ${fmt(carryAmt)}`:'';
 
   const badge=document.getElementById('budget-pct-badge');
-  if(pct>=100) badge.innerHTML='<span class="badge" style="background:rgba(239,68,68,.15);color:var(--red);font-size:12px"><i class="fas fa-exclamation-triangle"></i> เกินงบ</span>';
-  else if(pct>=80) badge.innerHTML='<span class="badge" style="background:rgba(245,158,11,.15);color:var(--amber);font-size:12px"><i class="fas fa-exclamation-circle"></i> ใกล้เต็ม</span>';
-  else badge.innerHTML='<span class="badge" style="background:rgba(16,185,129,.15);color:var(--green);font-size:12px"><i class="fas fa-check-circle"></i> ปกติ</span>';
+  if(pct>=100) badge.innerHTML='<span class="badge" style="background:rgba(239,68,68,.15);color:var(--red);font-size:12px"><i class="fas fa-exclamation-triangle"></i> '+tr('budget_over')+'</span>';
+  else if(pct>=80) badge.innerHTML='<span class="badge" style="background:rgba(245,158,11,.15);color:var(--amber);font-size:12px"><i class="fas fa-exclamation-circle"></i> '+tr('budget_near')+'</span>';
+  else badge.innerHTML='<span class="badge" style="background:rgba(16,185,129,.15);color:var(--green);font-size:12px"><i class="fas fa-check-circle"></i> '+tr('budget_normal')+'</span>';
 }
 
 function renderCatChart(){
