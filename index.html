@@ -13535,13 +13535,13 @@ async function travelRoute(){
   const fromVal=document.getElementById('travel-route-from')?.value;
   const toVal=document.getElementById('travel-route-to')?.value;
   const resEl=document.getElementById('travel-route-result');
-  if(!fromVal||!toVal||fromVal===toVal){ toast('กรุณาเลือกจุดเริ่มต้นและปลายทางที่ต่างกัน','error'); return; }
+  if(!fromVal||!toVal||fromVal===toVal){ toast(tr('travel_need_diff_points'),'error'); return; }
   const from=_getRouteCoords(fromVal);
   const to=_getRouteCoords(toVal);
-  if(!from||!to){ toast('ไม่พบพิกัดสถานที่','error'); return; }
+  if(!from||!to){ toast(tr('travel_place_coords_not_found'),'error'); return; }
   if(!resEl) return;
   resEl.style.display='block';
-  resEl.innerHTML='<div style="text-align:center;padding:12px;color:var(--muted);font-size:13px"><i class="fas fa-spinner fa-spin"></i> กำลังคำนวณเส้นทาง…</div>';
+  resEl.innerHTML='<div style="text-align:center;padding:12px;color:var(--muted);font-size:13px"><i class="fas fa-spinner fa-spin"></i> '+tr('travel_calculating_route')+'…</div>';
   await _ensureTravelGlobe();
   const fromName=fromVal==='__my__'?'ตำแหน่งฉัน':fromVal;
   const _routeFooter=(fName,tName)=>`
