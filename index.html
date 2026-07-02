@@ -1849,60 +1849,60 @@
 <!-- Image Import Modal -->
 <div id="m-img" class="overlay">
   <div class="modal" style="max-width:540px">
-    <div class="modal-title"><i class="fas fa-camera" style="color:var(--cyan)"></i> สแกนเอกสารด้วย AI</div>
+    <div class="modal-title"><i class="fas fa-camera" style="color:var(--cyan)"></i> <span data-i18n="scan_title">สแกนเอกสารด้วย AI</span></div>
     <!-- ประเภทเอกสาร -->
     <div class="type-toggle" style="margin-bottom:16px;grid-template-columns:1fr 1fr">
-      <button class="type-btn inc active" id="scan-expense-btn" onclick="setScanType('expense',this)"><i class="fas fa-receipt"></i> ใบเสร็จ / รายจ่าย</button>
-      <button class="type-btn exp" id="scan-income-btn" onclick="setScanType('income',this)"><i class="fas fa-file-invoice-dollar"></i> สลิปเงินเดือน / รายรับ</button>
+      <button class="type-btn inc active" id="scan-expense-btn" onclick="setScanType('expense',this)"><i class="fas fa-receipt"></i> <span data-i18n="scan_receipt_exp">ใบเสร็จ / รายจ่าย</span></button>
+      <button class="type-btn exp" id="scan-income-btn" onclick="setScanType('income',this)"><i class="fas fa-file-invoice-dollar"></i> <span data-i18n="scan_slip_inc">สลิปเงินเดือน / รายรับ</span></button>
     </div>
     <input type="hidden" id="scan-type" value="expense">
     <div id="ua" class="upload-area" ondragover="dOver(event)" ondragleave="dLeave(event)" ondrop="dDrop(event)">
       <input type="file" id="receipt-in" accept="image/*" onchange="handleReceipt(event)">
       <div id="up-ph">
         <i class="fas fa-cloud-upload-alt" style="font-size:38px;color:var(--muted);display:block;margin-bottom:10px"></i>
-        <div style="font-size:14px;color:var(--muted)">ลากรูปวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">รองรับ JPG, PNG, HEIC, WEBP</div>
+        <div style="font-size:14px;color:var(--muted)" data-i18n="scan_drop_hint">ลากรูปวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px" data-i18n="scan_formats">รองรับ JPG, PNG, HEIC, WEBP</div>
       </div>
       <img id="rcpt-prev" class="upload-preview" style="display:none">
     </div>
     <div id="ai-proc" style="display:none;text-align:center;padding:20px">
       <div class="spinner" style="margin:0 auto 12px"></div>
-      <div style="font-size:14px;color:var(--muted)">AI กำลังอ่านใบเสร็จ...</div>
+      <div style="font-size:14px;color:var(--muted)" data-i18n="scan_reading">AI กำลังอ่านใบเสร็จ...</div>
     </div>
     <div id="ai-warn" style="display:none;margin-top:14px;padding:13px 16px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:10px;font-size:13px;color:var(--amber)"></div>
     <div id="ai-result" style="display:none;margin-top:16px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-        <span class="ai-badge"><i class="fas fa-magic"></i> AI อ่านข้อมูลแล้ว — ตรวจสอบก่อนบันทึก</span>
+        <span class="ai-badge"><i class="fas fa-magic"></i> <span data-i18n="scan_read_done">AI อ่านข้อมูลแล้ว — ตรวจสอบก่อนบันทึก</span></span>
       </div>
-      <div class="fg" style="margin-bottom:12px"><label class="flabel">วันที่</label><input type="date" id="ai-date" class="finput"></div>
+      <div class="fg" style="margin-bottom:12px"><label class="flabel" data-i18n="tx_date">วันที่</label><input type="date" id="ai-date" class="finput"></div>
       <!-- รายการย่อยใบเสร็จ (expense) -->
       <div id="ai-items-container" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <label class="flabel" style="margin:0">รายการสินค้า/บริการ</label>
-          <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="addReceiptItem()"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
+          <label class="flabel" style="margin:0" data-i18n="scan_items_label">รายการสินค้า/บริการ</label>
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="addReceiptItem()"><i class="fas fa-plus"></i> <span data-i18n="tx_add_item">เพิ่มรายการ</span></button>
         </div>
         <div id="ai-items-list"></div>
         <div style="margin-top:8px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;text-align:right">
-          รวมทั้งสิ้น: <strong id="ai-items-total" style="color:var(--primary-l)">฿0</strong>
+          <span data-i18n="scan_grand_total">รวมทั้งสิ้น</span>: <strong id="ai-items-total" style="color:var(--primary-l)">฿0</strong>
         </div>
       </div>
       <!-- single amount (income) -->
       <div id="ai-single-container" style="display:none">
-        <div class="fg" style="margin-bottom:8px"><label class="flabel" id="ai-amt-label">จำนวนเงิน (บาท)</label><input type="number" id="ai-amt" class="finput"></div>
-        <div class="fg"><label class="flabel">รายละเอียด</label><input type="text" id="ai-desc" class="finput"></div>
-        <div class="fg"><label class="flabel">หมวดหมู่</label><select id="ai-cat" class="fselect"></select></div>
+        <div class="fg" style="margin-bottom:8px"><label class="flabel" id="ai-amt-label" data-i18n="scan_amount_baht">จำนวนเงิน (บาท)</label><input type="number" id="ai-amt" class="finput"></div>
+        <div class="fg"><label class="flabel" data-i18n="tx_description">รายละเอียด</label><input type="text" id="ai-desc" class="finput"></div>
+        <div class="fg"><label class="flabel" data-i18n="tx_category">หมวดหมู่</label><select id="ai-cat" class="fselect"></select></div>
         <div id="salary-extra" style="display:none">
           <div class="frow">
-            <div class="fg"><label class="flabel">เงินเดือนรวม (บาท)</label><input type="number" id="ai-gross" class="finput" placeholder="ก่อนหักภาษี/ประกัน"></div>
-            <div class="fg"><label class="flabel">หักทั้งหมด (บาท)</label><input type="number" id="ai-deduct" class="finput" placeholder="ภาษี + ประกันสังคม"></div>
+            <div class="fg"><label class="flabel" data-i18n="scan_gross_salary">เงินเดือนรวม (บาท)</label><input type="number" id="ai-gross" class="finput" placeholder="ก่อนหักภาษี/ประกัน" data-i18n-ph="scan_before_deduct"></div>
+            <div class="fg"><label class="flabel" data-i18n="scan_total_deduct">หักทั้งหมด (บาท)</label><input type="number" id="ai-deduct" class="finput" placeholder="ภาษี + ประกันสังคม" data-i18n-ph="scan_tax_social"></div>
           </div>
         </div>
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeM('m-img')">ยกเลิก</button>
-      <button class="btn btn-ghost" id="ai-manual-btn" onclick="showManualForm()" style="display:none"><i class="fas fa-pen"></i> กรอกเอง</button>
-      <button class="btn btn-primary" id="ai-save-btn" onclick="saveFromReceipt()" style="display:none"><i class="fas fa-save"></i> บันทึก</button>
+      <button class="btn btn-ghost" onclick="closeM('m-img')" data-i18n="cancel">ยกเลิก</button>
+      <button class="btn btn-ghost" id="ai-manual-btn" onclick="showManualForm()" style="display:none"><i class="fas fa-pen"></i> <span data-i18n="scan_manual_entry">กรอกเอง</span></button>
+      <button class="btn btn-primary" id="ai-save-btn" onclick="saveFromReceipt()" style="display:none"><i class="fas fa-save"></i> <span data-i18n="save">บันทึก</span></button>
     </div>
   </div>
 </div>
