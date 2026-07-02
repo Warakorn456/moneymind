@@ -12236,15 +12236,15 @@ function renderCalendarPage(){
       +'</div>'
       // ── body ──
       +'<div class="cal-detail-body">'
-        +(txRows?'<div style="margin-bottom:14px"><div class="cal-section-label">รายการ</div>'+txRows+'</div>':'')
-        +(recurRows?'<div style="margin-bottom:14px"><div class="cal-section-label">กำหนดชำระ / ซ้ำประจำ</div>'+recurRows+'</div>':'')
+        +(txRows?'<div style="margin-bottom:14px"><div class="cal-section-label">'+tr('cal_items')+'</div>'+txRows+'</div>':'')
+        +(recurRows?'<div style="margin-bottom:14px"><div class="cal-section-label">'+tr('cal_due_recurring')+'</div>'+recurRows+'</div>':'')
         +'<div style="margin-bottom:14px">'
-          +'<div class="cal-section-label">โน้ต</div>'
-          +(noteRows||'<div style="font-size:12px;color:var(--muted);padding:8px 0">ยังไม่มีโน้ต</div>')
+          +'<div class="cal-section-label">'+tr('cal_notes')+'</div>'
+          +(noteRows||'<div style="font-size:12px;color:var(--muted);padding:8px 0">'+tr('cal_no_notes')+'</div>')
         +'</div>'
         +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border)">'
           +colorPicker
-          +'<input type="text" id="cal-note-inp" class="finput" placeholder="เพิ่มโน้ต... (Enter)" style="flex:1;min-width:120px;padding:8px 12px;font-size:13px" onkeydown="if(event.key===\'Enter\')calAddNote(\''+_calSelDate+'\')">'
+          +'<input type="text" id="cal-note-inp" class="finput" placeholder="'+tr('cal_add_note_ph')+'" style="flex:1;min-width:120px;padding:8px 12px;font-size:13px" onkeydown="if(event.key===\'Enter\')calAddNote(\''+_calSelDate+'\')">'
           +'<input type="hidden" id="cal-note-color" value="purple">'
           +'<button class="btn btn-primary" style="padding:8px 14px;flex-shrink:0" onclick="calAddNote(\''+_calSelDate+'\')"><i class="fas fa-plus"></i></button>'
         +'</div>'
