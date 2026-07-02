@@ -3639,7 +3639,8 @@ const I18N = {
     ef_critical:'Critical',ef_low:'Low',ef_fair:'Fair',ef_safe:'Safe',ef_need_more:'Need to save more',ef_to_reach:'to reach',ef_title:'Emergency Fund',ef_target_months:'Target Months',ef_bank_balance:'Bank Balance',ef_avg_expense:'Avg. Expense',
     r503020_needs:'Needs',r503020_wants:'Wants',r503020_save:'Save/Invest',r503020_over:'Over target',r503020_under:'Under target',r503020_ontarget:'On target',r503020_title:'50/30/20 Rule',r503020_footer:'Needs = food/transport/fuel/housing/health/insurance/debt • Save = investments+surplus',
     ytd_title:'This Year (YTD)',ytd_saved:'Saved',ytd_income:'YTD Income',ytd_expense:'YTD Expense',ytd_balance:'Saved/Balance',vs_last_year:'vs last year',last_year:'Last year',exp_income_ratio:'Expense/Income Ratio',
-    bank_of_total:'of total',credit_card:'Credit Card',owed:'Owed',used_of_limit:'{pct}% used of {limit} limit',bank_accounts_title:'Bank Accounts',accounts_unit:'accounts',card_owed:'Card owed',total_amount:'Total',view_all:'View All'},
+    bank_of_total:'of total',credit_card:'Credit Card',owed:'Owed',used_of_limit:'{pct}% used of {limit} limit',bank_accounts_title:'Bank Accounts',accounts_unit:'accounts',card_owed:'Card owed',total_amount:'Total',view_all:'View All',
+    no_portfolio:'Unassigned Portfolio',other_asset:'Other Asset',no_data_yet:'No data yet',other_debt:'Other Debt',no_debt_msg:'No debts',bs_title:'Balance Sheet & Net Worth',details:'Details',assets:'Assets',total_label:'Total',liabilities:'Liabilities',net_worth_full:'Net Worth'},
 };
 let currentLang=(function(){ try{ return localStorage.getItem('mm_lang')||'th'; }catch(e){ return 'th'; } })();
 function tr(key){ return (I18N[currentLang]||I18N.th)[key] || (I18N.th[key]||key); }
