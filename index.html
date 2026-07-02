@@ -10745,19 +10745,19 @@ function renderInsurance(){
   var list=getIns();
   var fm=function(n){return '฿'+Math.round(n||0).toLocaleString('th-TH');};
   var head='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">'
-    +'<div style="font-size:18px;font-weight:800"><i class="fas fa-shield-heart" style="color:#10b981"></i> ประกันของฉัน</div>'
-    +'<button class="btn btn-primary" onclick="openInsModal()"><i class="fas fa-plus"></i> เพิ่มประกัน</button></div>';
-  if(!list.length){ el.innerHTML=head+'<div class="empty"><i class="fas fa-shield-heart"></i><p>ยังไม่มีกรมธรรม์ — กด "เพิ่มประกัน" เพื่อบันทึกความคุ้มครองของคุณและครอบครัว</p></div>'; return; }
+    +'<div style="font-size:18px;font-weight:800"><i class="fas fa-shield-heart" style="color:#10b981"></i> '+tr('ins_my_insurance')+'</div>'
+    +'<button class="btn btn-primary" onclick="openInsModal()"><i class="fas fa-plus"></i> '+tr('ins_add')+'</button></div>';
+  if(!list.length){ el.innerHTML=head+'<div class="empty"><i class="fas fa-shield-heart"></i><p>'+tr('ins_empty_hint')+'</p></div>'; return; }
   var totMo=list.reduce(function(s,p){return s+insMonthly(p);},0);
   var totCover=list.reduce(function(s,p){return s+(p.coverage||0);},0);
   var totDeduct=list.filter(function(p){return p.taxDeduct;}).reduce(function(s,p){
     return s+(p.cycle==='onetime'?0:p.cycle==='yearly'?p.premium:p.cycle==='quarterly'?p.premium*4:(p.premium||0)*12);},0);
   var card=function(label,val,sub,color){return '<div class="card" style="padding:14px"><div style="color:var(--muted);font-size:12px">'+label+'</div><div style="font-size:21px;font-weight:800;color:'+(color||'var(--text)')+'">'+val+'</div><div style="font-size:11px;color:var(--muted)">'+(sub||'')+'</div></div>';};
   var cards='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px">'
-    +card('กรมธรรม์ทั้งหมด',list.length+' ฉบับ','')
-    +card('เบี้ยรวม/เดือน',fm(totMo),'≈ '+fm(totMo*12)+'/ปี','#ef4444')
-    +card('วงเงินคุ้มครองรวม',fm(totCover),'','#10b981')
-    +card('เบี้ยลดหย่อนภาษี/ปี',fm(totDeduct),'จากกรมธรรม์ที่ลดหย่อนได้','#fbbf24')
+    +card(tr('ins_total_policies'),list.length+' '+tr('ins_policy_unit'),'')
+    +card(tr('ins_total_premium_mo'),fm(totMo),'≈ '+fm(totMo*12)+'/'+tr('year_short'),'#ef4444')
+    +card(tr('ins_total_coverage'),fm(totCover),'','#10b981')
+    +card(tr('ins_total_deduct_yr'),fm(totDeduct),tr('ins_from_deductible'),'#fbbf24')
     +'</div>';
   var policyCard=function(p){
     var ty=INS_TYPE[p.type]||INS_TYPE.other, who=INS_INSURED[p.insured]||p.insured;
@@ -10766,27 +10766,27 @@ function renderInsurance(){
     return '<div class="card" style="padding:14px;margin-bottom:10px;cursor:pointer;border-left:3px solid '+ty.c+'" onclick="openInsModal(\''+p.id+'\')">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'
         +'<div style="flex:1;min-width:0">'
-          +'<div style="font-size:15px;font-weight:700"><i class="fas '+ty.i+'" style="color:'+ty.c+';margin-right:6px"></i>'+_escHtml(p.name)+(p.taxDeduct?' <span style="font-size:10px;background:rgba(251,191,36,.15);color:#fbbf24;padding:1px 6px;border-radius:6px">ลดหย่อนได้</span>':'')+'</div>'
+          +'<div style="font-size:15px;font-weight:700"><i class="fas '+ty.i+'" style="color:'+ty.c+';margin-right:6px"></i>'+_escHtml(p.name)+(p.taxDeduct?' <span style="font-size:10px;background:rgba(251,191,36,.15);color:#fbbf24;padding:1px 6px;border-radius:6px">'+tr('ins_deductible')+'</span>':'')+'</div>'
           +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+ty.l+' · '+who+'</div>'
           +(p.benefits?'<div style="font-size:12px;color:var(--muted);margin-top:6px">🛡️ '+_escHtml(p.benefits)+'</div>':'')
         +'</div>'
-        +'<div style="text-align:right;flex-shrink:0"><div style="font-size:11px;color:var(--muted)">วงเงิน</div><div style="font-weight:800;color:#10b981">'+fm(p.coverage)+'</div></div>'
+        +'<div style="text-align:right;flex-shrink:0"><div style="font-size:11px;color:var(--muted)">'+tr('ins_coverage')+'</div><div style="font-weight:800;color:#10b981">'+fm(p.coverage)+'</div></div>'
       +'</div>'
       +'<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px">'
-        +'<span>💵 เบี้ย <b>'+fm(p.premium)+'</b>/'+(INS_CYCLE[p.cycle]||p.cycle)+(mo?' (≈'+fm(mo)+'/ด.)':'')+'</span>'
-        +'<span>⏳ จ่ายถึง <b>'+insPayUntilText(p)+'</b></span>'
-        +(p.coverUntil?'<span>📅 คุ้มครองถึง '+p.coverUntil+'</span>':'')
+        +'<span>💵 '+tr('ins_premium')+' <b>'+fm(p.premium)+'</b>/'+(INS_CYCLE[p.cycle]||p.cycle)+(mo?' (≈'+fm(mo)+'/'+tr('month_abbr')+')':'')+'</span>'
+        +'<span>⏳ '+tr('ins_pay_until')+' <b>'+insPayUntilText(p)+'</b></span>'
+        +(p.coverUntil?'<span>📅 '+tr('ins_covers_until')+' '+p.coverUntil+'</span>':'')
       +'</div></div>';
   };
   var sec=function(title,icon,arr){ if(!arr.length) return '';
     var subMo=arr.reduce(function(s,p){return s+insMonthly(p);},0);
     return '<div style="margin:14px 0 8px;display:flex;justify-content:space-between;align-items:center">'
       +'<div style="font-size:14px;font-weight:700">'+icon+' '+title+' <span style="font-size:12px;color:var(--muted)">('+arr.length+')</span></div>'
-      +'<div style="font-size:12px;color:var(--muted)">'+fm(subMo)+'/ด.</div></div>'
+      +'<div style="font-size:12px;color:var(--muted)">'+fm(subMo)+'/'+tr('month_abbr')+'</div></div>'
       +arr.map(policyCard).join(''); };
   var selfList=list.filter(function(p){return p.insured==='self';});
   var famList=list.filter(function(p){return p.insured!=='self';});
-  el.innerHTML=head+cards+sec('ของตัวเอง','👤',selfList)+sec('ครอบครัว','👨‍👩‍👧',famList);
+  el.innerHTML=head+cards+sec(tr('ins_self'),'👤',selfList)+sec(tr('ins_family'),'👨‍👩‍👧',famList);
 }
 
 // ══════════════════════════════════════════
