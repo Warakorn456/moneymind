@@ -5398,8 +5398,8 @@ function switchInvTab(tab){
   if(tabDca) tabDca.classList.toggle('active',tab==='dca');
   if(btnPort) btnPort.style.display=tab==='portfolio'?'':'none';
   if(btnAdd){
-    if(tab==='dca'){ btnAdd.textContent=''; btnAdd.innerHTML='<i class="fas fa-plus"></i> เพิ่มแผน DCA'; btnAdd.onclick=()=>openDcaPlanModal(); }
-    else { btnAdd.innerHTML='<i class="fas fa-plus"></i> เพิ่มการลงทุน'; btnAdd.onclick=()=>openInvModal(); }
+    if(tab==='dca'){ btnAdd.textContent=''; btnAdd.innerHTML='<i class="fas fa-plus"></i> '+tr('dca_add_plan'); btnAdd.onclick=()=>openDcaPlanModal(); }
+    else { btnAdd.innerHTML='<i class="fas fa-plus"></i> '+tr('inv_add'); btnAdd.onclick=()=>openInvModal(); }
   }
   renderInv();
 }
