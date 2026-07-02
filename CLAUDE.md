@@ -277,6 +277,22 @@ renderDash = function(){
 Static file — ไม่ต้อง build:
 - เปิด `index.html` ใน browser โดยตรง
 - หรือ host บน GitHub Pages, Netlify, Firebase Hosting
+- **`index.html` ต้องอยู่ที่ root ของ repo เท่านั้น** — GitHub Pages serve จริงที่ `https://warakorn456.github.io/moneymind/` และแอปมือถือ (`mobile/src/screens/WebApp.tsx` → `WEB_URL`) ชี้ตรงมา URL นี้ ห้ามย้าย `index.html` เข้า subfolder โดยไม่แก้ GitHub Pages source + `WEB_URL` พร้อมกัน
+
+## Mobile App (`mobile/`)
+
+**รวมเข้า repo นี้แล้ว 2026-07-02** — เดิมเป็น repo แยกที่ `D:\Mobiy\finance-app` (Expo/React Native) ย้ายเข้ามาด้วย `git subtree add --prefix=mobile` (เก็บ git history เดิมทั้ง 6 commits ไว้ครบ ดูได้ด้วย `git log -- mobile/`)
+
+- **สถาปัตยกรรม:** ไม่ใช่แอป native เต็มรูปแบบ — เป็น **WebView wrapper** ที่โหลด `WEB_URL` (`https://warakorn456.github.io/moneymind/`, ตัวเดียวกับ `index.html` ใน repo นี้) ฟีเจอร์ทั้งหมดอยู่ในเว็บ ฝั่ง native ทำแค่ bridge ที่เว็บ browser ทำเองไม่ได้
+- **ไฟล์หลัก:** `mobile/src/screens/WebApp.tsx` — native bridge ทั้งหมดอยู่ที่นี่:
+  - **Google Sign-In** ผ่าน `@react-native-google-signin/google-signin` (native SDK, ไม่ใช้ browser redirect เพราะ Google บล็อก OAuth ใน WebView)
+  - **Android back button** — `injectJavaScript` ถาม `window.handleBackButton()` ในเว็บก่อนเสมอ (ปิด modal/nav กลับ) ออกจากแอปเฉพาะเว็บส่ง `{action:'exitApp'}` กลับมา
+  - **Export/Print bridge** — `saveFile`/`printHtml` message handler ใช้ `expo-file-system`+`expo-sharing`+`expo-print` เพราะ `<a download>` บน blob URL และ `window.print()` ใช้ไม่ได้ใน WebView
+  - `window._isAndroidApp`/`window._isIOSApp` — inject ตาม `Platform.OS` จริง (เพิ่งแก้ 2026-07-02 เดิม hardcode true ทั้ง 2 platform ทำให้ปุ่ม Apple Sign-In ฝั่งเว็บไม่มีวันทำงาน — **Apple Sign-In native bridge ยังไม่ได้สร้างจริง** รอ Apple Developer account activate ก่อน)
+- **`node_modules/`, `.expo/`, `mobile/android`, `mobile/ios`** — gitignored ผ่าน `mobile/.gitignore` (nested, มาพร้อม subtree) ต้อง `cd mobile && npm install` เองก่อนรัน/build
+- **`.gitignore` root มี `*.png` (กัน screenshot หลุด commit)** — เพิ่ม exception `!mobile/**/*.png` แล้ว ไม่งั้นไอคอนแอปที่ mobile/assets/ จะโดนกันไม่ให้ commit
+- **`D:\Mobiy\finance-app` (repo เดิม) ยังอยู่ ไม่ได้ลบ** — แต่**ถือว่า deprecated แล้ว** ต่อจากนี้แก้ไขที่ `wabbest/mobile/` เป็นหลัก อย่าแก้ 2 ที่พร้อมกันจะทำให้ diverge
+- **ไม่ได้เอามาด้วย:** โฟลเดอร์ `download/` (Expo อีกโปรเจกต์ซ้อนอยู่ข้างในของเดิม ไม่เคยถูก commit) และไฟล์ `*.bak` (ของเดิมก็ untracked อยู่แล้ว)
 
 ---
 
