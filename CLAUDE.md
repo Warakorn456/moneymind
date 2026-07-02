@@ -132,7 +132,7 @@ Navigation ผ่าน `nav(page)` (~3595) — routing อยู่ใน `rend
 
 - **CSS Variables:** `--primary`, `--primary-l`, `--surface`, `--surface2`, `--border`, `--text`, `--muted`, `--red`
 - **Dark mode** เป็นค่าเริ่มต้น, toggle ด้วย class `body.light-mode`
-- **Premium polish** (ท้าย style block ~บรรทัด 836, additive) — bg radial glow, การ์ด gradient+เงา+hover lift, sidebar/topbar glass blur, nav active pill, btn-primary gradient, input focus ring; scoped `body:not(.light-mode)` เพื่อไม่กระทบ light mode
+- **Premium polish** (ท้าย style block ~บรรทัด 934, additive) — bg radial glow, การ์ด gradient+เงา+hover lift, sidebar/topbar glass blur, nav active pill, btn-primary gradient, input focus ring; scoped `body:not(.light-mode)` เพื่อไม่กระทบ light mode
 - **Responsive:** breakpoints ที่ 860px และ 768px
 - **Component classes:** `.card`, `.btn`, `.finput`, `.fselect`, `.flabel`, `.ftab`, `.pbar/.pfill`
 - **Toast:** `toast(message, type)` — type: `'success'` | `'error'` | `'info'`
