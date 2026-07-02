@@ -10498,7 +10498,7 @@ saveTx=function(){
   });
   saveDB(); closeM('m-tx'); renderPage(curPage);
   _splitRows=[];
-  toast('แยก '+count+' หมวดหมู่แล้ว','success');
+  toast(tr('split_n_categories').replace('{n}',count),'success');
 };
 
 // ══════════════════════════════════════════
