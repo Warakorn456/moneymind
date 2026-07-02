@@ -8001,7 +8001,7 @@ function saveWorkEntry(){
   const p=getProfile();
   const toVal=document.getElementById('work-to').value;
   const entry={id,co:document.getElementById('work-co').value.trim(),pos:document.getElementById('work-pos').value.trim(),from:document.getElementById('work-from').value,to:toVal,current:!toVal,sal:parseFloat(document.getElementById('work-sal').value)||0,desc:document.getElementById('work-desc').value.trim()};
-  if(!entry.co||!entry.pos){toast('กรุณาใส่ชื่อบริษัทและตำแหน่ง','error');return;}
+  if(!entry.co||!entry.pos){toast(tr('prof_need_company_pos'),'error');return;}
   const idx=p.work.findIndex(w=>w.id===id);
   if(idx>=0) p.work[idx]=entry; else p.work.unshift(entry);
   saveDB(); closeModal('work-modal-bg'); renderProfile();
