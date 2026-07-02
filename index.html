@@ -8081,7 +8081,7 @@ function readFileAsDataURL(file){
 function setZoneLoading(id,loading){
   const z=document.getElementById(id);
   if(!z) return;
-  if(loading){ z.classList.add('loading'); z.dataset.orig=z.innerHTML; z.innerHTML='<i class="fas fa-spinner fa-spin" style="font-size:22px;margin-bottom:6px;display:block"></i><div>กำลังอ่าน...</div>'; }
+  if(loading){ z.classList.add('loading'); z.dataset.orig=z.innerHTML; z.innerHTML='<i class="fas fa-spinner fa-spin" style="font-size:22px;margin-bottom:6px;display:block"></i><div>'+tr('taxdoc_reading')+'...</div>'; }
   else{ z.classList.remove('loading'); if(z.dataset.orig) z.innerHTML=z.dataset.orig; }
 }
 
