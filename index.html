@@ -2625,7 +2625,7 @@ async function fsLoad(){
   }catch(e){
     console.error('[Firebase] load error:',e);
     setSyncStatus('error');
-    toast('โหลด cloud ไม่ได้: '+e.message,'error');
+    toast(tr('cloud_load_failed')+': '+e.message,'error');
     return false;
   }
 }
