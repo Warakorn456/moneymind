@@ -174,6 +174,13 @@ export default function WebApp() {
     webViewRef.current?.injectJavaScript(js);
   }, []);
 
+  // ส่ง error กลับเข้าเว็บให้บันทึกผ่าน _sendReport() เดิม (Firestore 'reports') — เพราะ debug
+  // native code จากเครื่องจริงโดยไม่มี USB/logcat ทำไม่ได้ ใช้ pipeline error-report ที่มีอยู่แล้วแทน
+  const injectPushError = useCallback((msg: string) => {
+    const js = `(function(){ if(window._sendReport) window._sendReport({kind:'error',message:${JSON.stringify('push register: ' + msg)}}); })(); true;`;
+    webViewRef.current?.injectJavaScript(js);
+  }, []);
+
   // ขอ permission + ดึง Expo push token — เรียกจากเว็บหลัง login สำเร็จ (action: 'requestPushToken')
   // ใช้ Expo push service (ครอบ FCM/APNs ให้) แทน raw FCM เพราะแอปนี้เป็น Expo managed workflow อยู่แล้ว
   const registerForPushNotifications = useCallback(async () => {
