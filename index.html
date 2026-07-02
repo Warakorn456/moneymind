@@ -11307,31 +11307,31 @@ async function renderAdmin(){
           <td style="padding:10px 14px;font-size:12px;text-align:right">${(u.txCount||0).toLocaleString()}</td>
           <td style="padding:10px 14px;font-size:12px;text-align:right">${fmtB(u.netWorth)}</td>
           <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${u.lastTxDate||'-'}</td>
-          <td style="padding:10px 14px;font-size:11px">${featChip(f.inv,'ลงทุน')}${featChip(f.debt,'หนี้')}${featChip(f.save,'ออม')}${featChip(f.insurance,'ประกัน')}${featChip(f.travel,'เที่ยว')}${featChip(f.sub,'subs')}</td>
+          <td style="padding:10px 14px;font-size:11px">${featChip(f.inv,tr('investments'))}${featChip(f.debt,tr('debts'))}${featChip(f.save,tr('savings'))}${featChip(f.insurance,tr('insurance'))}${featChip(f.travel,tr('travel'))}${featChip(f.sub,'subs')}</td>
         </tr>`;
       }).join('');
       usageSection=`
-      <div style="margin:24px 0 10px;font-size:15px;font-weight:800"><i class="fas fa-database" style="color:#a78bfa"></i> Usage รวม (ฝั่งเซิร์ฟเวอร์)</div>
+      <div style="margin:24px 0 10px;font-size:15px;font-weight:800"><i class="fas fa-database" style="color:#a78bfa"></i> ${tr('admin_server_usage')}</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:14px">
-        ${statCard((t.txCount||0).toLocaleString(),'รายการรวม','#a78bfa')}
-        ${statCard(fmtB(t.netWorthSum),'Net Worth รวม','#10b981')}
-        ${statCard((t.activeUsers||0),'มีข้อมูลจริง','#06b6d4')}
-        ${statCard((t.avgTx||0).toLocaleString(),'รายการ/คน เฉลี่ย','#f59e0b')}
+        ${statCard((t.txCount||0).toLocaleString(),tr('admin_total_tx'),'#a78bfa')}
+        ${statCard(fmtB(t.netWorthSum),tr('admin_total_nw'),'#10b981')}
+        ${statCard((t.activeUsers||0),tr('admin_has_real_data'),'#06b6d4')}
+        ${statCard((t.avgTx||0).toLocaleString(),tr('admin_avg_tx_per_user'),'#f59e0b')}
       </div>
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:8px">
-        <div style="padding:14px 16px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span>การใช้งานต่อคน</span><span style="font-size:11px;color:var(--muted);font-weight:400">อัปเดต: ${upd}</span></div>
+        <div style="padding:14px 16px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span>${tr('admin_usage_per_user')}</span><span style="font-size:11px;color:var(--muted);font-weight:400">${tr('bank_updated')}: ${upd}</span></div>
         <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
           <thead><tr style="background:rgba(255,255,255,.03)">
-            <th style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:left">ผู้ใช้</th>
-            <th style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:right">รายการ</th>
+            <th style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:left">${tr('admin_user')}</th>
+            <th style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:right">${tr('cal_items')}</th>
             <th style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:right">Net Worth</th>
-            <th style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:left">รายการล่าสุด</th>
-            <th style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:left">ฟีเจอร์ที่ใช้</th>
+            <th style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:left">${tr('admin_last_tx')}</th>
+            <th style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:left">${tr('admin_features_used')}</th>
           </tr></thead><tbody>${urows}</tbody></table></div>
       </div>`;
     } else {
       usageSection=`<div style="margin:24px 0;padding:16px;background:var(--surface);border:1px dashed var(--border);border-radius:14px;font-size:12px;color:var(--muted);line-height:1.7">
-        <i class="fas fa-circle-info" style="color:#a78bfa"></i> ยังไม่มี usage รวมฝั่งเซิร์ฟเวอร์ — รัน <code>admin_stats.py</code> บน VM (อ่าน userdata ทุกคนผ่าน Service Account → เขียน <code>admin/summary</code>) แล้วรีเฟรช</div>`;
+        <i class="fas fa-circle-info" style="color:#a78bfa"></i> ${tr('admin_no_server_usage')}</div>`;
     }
 
     el.innerHTML=`
