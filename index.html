@@ -1744,21 +1744,21 @@
 <!-- Transaction Modal -->
 <div id="m-tx" class="overlay">
   <div class="modal">
-    <div class="modal-title"><i class="fas fa-plus-circle" style="color:var(--primary-l)"></i><span id="tx-m-title">เพิ่มรายการ</span></div>
+    <div class="modal-title"><i class="fas fa-plus-circle" style="color:var(--primary-l)"></i><span id="tx-m-title" data-i18n="tx_add_item">เพิ่มรายการ</span></div>
     <div class="type-toggle">
-      <button class="type-btn inc active" onclick="setTxType('income',this)"><i class="fas fa-arrow-down"></i> รายรับ</button>
-      <button class="type-btn exp" onclick="setTxType('expense',this)"><i class="fas fa-arrow-up"></i> รายจ่าย</button>
-      <button class="type-btn sav" onclick="setTxType('saving',this)"><i class="fas fa-piggy-bank"></i> เงินออม</button>
+      <button class="type-btn inc active" onclick="setTxType('income',this)"><i class="fas fa-arrow-down"></i> <span data-i18n="dh_income">รายรับ</span></button>
+      <button class="type-btn exp" onclick="setTxType('expense',this)"><i class="fas fa-arrow-up"></i> <span data-i18n="dh_expense">รายจ่าย</span></button>
+      <button class="type-btn sav" onclick="setTxType('saving',this)"><i class="fas fa-piggy-bank"></i> <span data-i18n="dh_saving_full">เงินออม</span></button>
     </div>
     <input type="hidden" id="tx-eid">
     <input type="hidden" id="tx-type" value="income">
     <div class="frow" style="align-items:flex-end">
       <div class="fg" style="flex:2">
-        <label class="flabel">จำนวนเงิน</label>
+        <label class="flabel" data-i18n="tx_amount">จำนวนเงิน</label>
         <input type="number" id="tx-amt" class="finput" placeholder="0.00" min="0" step="0.01" oninput="calcTxConvert()">
       </div>
       <div class="fg" style="flex:1">
-        <label class="flabel">สกุลเงิน</label>
+        <label class="flabel" data-i18n="tx_currency">สกุลเงิน</label>
         <select id="tx-currency" class="fselect" onchange="calcTxConvert()">
           <option value="THB">🇹🇭 THB</option>
           <option value="USD">🇺🇸 USD</option>
@@ -1772,14 +1772,14 @@
     </div>
     <div id="tx-convert-display" style="display:none;font-size:12px;color:var(--cyan);margin-top:-6px;margin-bottom:8px;padding:6px 10px;background:rgba(6,182,212,.08);border-radius:8px"></div>
     <div class="frow">
-      <div class="fg"><label class="flabel">หมวดหมู่</label><select id="tx-cat" class="fselect" onchange="autoSetTxFixed()"></select></div>
-      <div class="fg"><label class="flabel">วันที่</label><input type="date" id="tx-date" class="finput"></div>
+      <div class="fg"><label class="flabel" data-i18n="tx_category">หมวดหมู่</label><select id="tx-cat" class="fselect" onchange="autoSetTxFixed()"></select></div>
+      <div class="fg"><label class="flabel" data-i18n="tx_date">วันที่</label><input type="date" id="tx-date" class="finput"></div>
     </div>
-    <div class="fg"><label class="flabel">รายละเอียด</label><input type="text" id="tx-desc" class="finput" placeholder="เช่น ค่าอาหารกลางวัน, เงินเดือน"></div>
+    <div class="fg"><label class="flabel" data-i18n="tx_description">รายละเอียด</label><input type="text" id="tx-desc" class="finput" placeholder="เช่น ค่าอาหารกลางวัน, เงินเดือน" data-i18n-ph="tx_desc_ph"></div>
     <div class="fg">
-      <label class="flabel">แท็ก (กด Enter หรือ , เพื่อเพิ่ม)</label>
+      <label class="flabel" data-i18n="tx_tags_label">แท็ก (กด Enter หรือ , เพื่อเพิ่ม)</label>
       <div class="tag-input-wrap" id="tx-tag-wrap" onclick="document.getElementById('tx-tag-inp').focus()">
-        <input id="tx-tag-inp" class="tag-input-inp" placeholder="เช่น work, ครอบครัว, เที่ยว..." onkeydown="txTagKey(event)" oninput="txTagInput(event)">
+        <input id="tx-tag-inp" class="tag-input-inp" placeholder="เช่น work, ครอบครัว, เที่ยว..." data-i18n-ph="tx_tags_ph" onkeydown="txTagKey(event)" oninput="txTagInput(event)">
       </div>
       <input type="hidden" id="tx-tags-val" value="">
     </div>
@@ -1787,13 +1787,13 @@
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px">
         <input type="checkbox" id="tx-paybycard" style="width:16px;height:16px;accent-color:#ef4444;cursor:pointer" onchange="onPayByCCChange()">
         <div>
-          <div style="font-size:13px;font-weight:600;color:#f87171">💳 จ่ายด้วยบัตรเครดิต</div>
-          <div style="font-size:11px;color:var(--muted)">เลือกเพื่อบันทึกยอดค้างชำระในบัตร</div>
+          <div style="font-size:13px;font-weight:600;color:#f87171">💳 <span data-i18n="tx_pay_by_card">จ่ายด้วยบัตรเครดิต</span></div>
+          <div style="font-size:11px;color:var(--muted)" data-i18n="tx_pay_by_card_hint">เลือกเพื่อบันทึกยอดค้างชำระในบัตร</div>
         </div>
       </label>
     </div>
     <div class="fg" id="tx-bank-row">
-      <label class="flabel" id="tx-bank-label">ธนาคาร (ไม่บังคับ — จะอัปเดตยอดอัตโนมัติ)</label>
+      <label class="flabel" id="tx-bank-label" data-i18n="bank_optional_hint">ธนาคาร (ไม่บังคับ — จะอัปเดตยอดอัตโนมัติ)</label>
       <select id="tx-bank" class="finput">
         <option value="">— ไม่ระบุ —</option>
       </select>
@@ -1801,11 +1801,11 @@
     <div id="saving-bank-row" style="display:none">
       <div class="frow">
         <div class="fg">
-          <label class="flabel"><i class="fas fa-arrow-circle-right" style="color:#f87171;margin-right:4px"></i>โอนออกจาก</label>
+          <label class="flabel"><i class="fas fa-arrow-circle-right" style="color:#f87171;margin-right:4px"></i><span data-i18n="tx_transfer_from">โอนออกจาก</span></label>
           <select id="tx-save-src" class="finput"><option value="">— ไม่ระบุ —</option></select>
         </div>
         <div class="fg">
-          <label class="flabel"><i class="fas fa-piggy-bank" style="color:#06b6d4;margin-right:4px"></i>โอนไปที่</label>
+          <label class="flabel"><i class="fas fa-piggy-bank" style="color:#06b6d4;margin-right:4px"></i><span data-i18n="tx_transfer_to">โอนไปที่</span></label>
           <select id="tx-save-dst" class="finput"><option value="">— ไม่ระบุ —</option></select>
         </div>
       </div>
@@ -1814,17 +1814,17 @@
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:10px">
         <input type="checkbox" id="tx-carryover" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer">
         <div>
-          <div style="font-size:13px;font-weight:600;color:var(--primary-l)">ยกไปเป็นงบเดือนถัดไป</div>
-          <div style="font-size:11px;color:var(--muted)">เงินเดือนสิ้นเดือน — นำไปใช้เป็นงบของเดือนหน้า</div>
+          <div style="font-size:13px;font-weight:600;color:var(--primary-l)" data-i18n="tx_carryover_title">ยกไปเป็นงบเดือนถัดไป</div>
+          <div style="font-size:11px;color:var(--muted)" data-i18n="tx_carryover_hint">เงินเดือนสิ้นเดือน — นำไปใช้เป็นงบของเดือนหน้า</div>
         </div>
       </label>
     </div>
     <!-- Fixed / Variable toggle (expense only) -->
     <div id="tx-fixed-row" style="display:none;margin-bottom:8px">
-      <label class="flabel">ประเภทรายจ่าย</label>
+      <label class="flabel" data-i18n="tx_expense_type">ประเภทรายจ่าย</label>
       <div class="fixed-toggle">
-        <button type="button" id="tx-fixed-btn-f" class="fixed-btn fix" onclick="setTxFixed(true)"><i class="fas fa-lock"></i> คงที่ (Fixed)</button>
-        <button type="button" id="tx-fixed-btn-v" class="fixed-btn var" onclick="setTxFixed(false)"><i class="fas fa-random"></i> แปรผัน (Variable)</button>
+        <button type="button" id="tx-fixed-btn-f" class="fixed-btn fix" onclick="setTxFixed(true)"><i class="fas fa-lock"></i> <span data-i18n="tx_fixed">คงที่ (Fixed)</span></button>
+        <button type="button" id="tx-fixed-btn-v" class="fixed-btn var" onclick="setTxFixed(false)"><i class="fas fa-random"></i> <span data-i18n="tx_variable">แปรผัน (Variable)</span></button>
       </div>
     </div>
     <input type="hidden" id="tx-fixed-val" value="">
@@ -1832,16 +1832,16 @@
     <!-- Split Transaction Panel -->
     <div id="tx-split-panel" style="display:none;margin-bottom:4px;padding:12px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-size:13px;font-weight:600;color:var(--primary-l)"><i class="fas fa-cut"></i> แยกหมวดหมู่</span>
-        <button class="btn btn-ghost" style="padding:3px 10px;font-size:12px" onclick="addSplitRow()"><i class="fas fa-plus"></i> เพิ่มแถว</button>
+        <span style="font-size:13px;font-weight:600;color:var(--primary-l)"><i class="fas fa-cut"></i> <span data-i18n="tx_split_cat">แยกหมวดหมู่</span></span>
+        <button class="btn btn-ghost" style="padding:3px 10px;font-size:12px" onclick="addSplitRow()"><i class="fas fa-plus"></i> <span data-i18n="tx_add_row">เพิ่มแถว</span></button>
       </div>
       <div id="tx-split-rows"></div>
       <div id="tx-split-remain" style="font-size:12px;padding:6px 10px;background:var(--surface2);border-radius:6px;margin-top:6px"></div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeM('m-tx')">ยกเลิก</button>
-      <button class="btn btn-ghost" id="tx-split-btn" onclick="toggleTxSplit()" style="display:none"><i class="fas fa-cut"></i> แยกหมวด</button>
-      <button class="btn btn-primary" onclick="saveTx()">บันทึก</button>
+      <button class="btn btn-ghost" onclick="closeM('m-tx')" data-i18n="cancel">ยกเลิก</button>
+      <button class="btn btn-ghost" id="tx-split-btn" onclick="toggleTxSplit()" style="display:none"><i class="fas fa-cut"></i> <span data-i18n="tx_split_cat_short">แยกหมวด</span></button>
+      <button class="btn btn-primary" onclick="saveTx()" data-i18n="save">บันทึก</button>
     </div>
   </div>
 </div>
