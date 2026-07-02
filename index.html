@@ -5750,19 +5750,19 @@ async function getPriceFor(symbol,type){
 
 async function refreshInvPrice(id){
   const inv=DB.investments.find(x=>x.id===id); if(!inv) return;
-  toast('กำลังอัปเดตราคา '+inv.name+'...','info');
+  toast(tr('inv_updating_price')+' '+inv.name+'...','info');
   try{
     const price=await getPriceFor(inv.name,inv.type);
     const i=DB.investments.findIndex(x=>x.id===id);
     const qty=inv.qty||1;
     DB.investments[i]={...inv,curPrice:price,value:qty*price,updatedAt:new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})};
-    saveDB(); renderInv(); toast(`อัปเดต ${inv.name}: ${fmt(price)}`,'success');
-  }catch(e){ toast('อัปเดตไม่ได้: '+e.message,'error'); }
+    saveDB(); renderInv(); toast(`${tr('update')} ${inv.name}: ${fmt(price)}`,'success');
+  }catch(e){ toast(tr('inv_update_failed')+': '+e.message,'error'); }
 }
 
 function openInvModal(prePortId){
   document.getElementById('inv-eid').value='';
-  document.getElementById('inv-m-title').textContent='เพิ่มการลงทุน';
+  document.getElementById('inv-m-title').textContent=tr('inv_add');
   ['inv-name','inv-qty','inv-buyprice','inv-curprice','inv-updated'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('inv-type').value='หุ้น';
   document.getElementById('inv-cost-display').textContent='฿0';
