@@ -6763,18 +6763,18 @@ function renderTax(){
   inp.innerHTML=`
   <!-- อัปโหลดเอกสาร -->
   <div class="tax-card">
-    <div class="set-title"><i class="fas fa-cloud-upload-alt" style="color:#a78bfa"></i> สแกนเอกสารด้วย AI</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">โยนสลิปหรือ ทวิ 50 แล้ว AI จะแยกข้อมูลใส่ช่องให้อัตโนมัติ</p>
+    <div class="set-title"><i class="fas fa-cloud-upload-alt" style="color:#a78bfa"></i> ${tr('tax_scan_doc')}</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">${tr('tax_scan_doc_hint')}</p>
     <div style="display:flex;gap:12px;flex-wrap:wrap">
       <div class="tax-upload-zone" id="slip-zone" onclick="document.getElementById('slip-file').click()">
         <i class="fas fa-file-alt" style="font-size:22px;color:#a78bfa;display:block;margin-bottom:6px"></i>
-        <div style="font-weight:600">สลิปเงินเดือน</div>
-        <div class="tax-hint">รูปภาพหรือ PDF</div>
+        <div style="font-weight:600">${tr('tax_salary_slip')}</div>
+        <div class="tax-hint">${tr('tax_img_or_pdf')}</div>
       </div>
       <div class="tax-upload-zone" id="tawi-zone" onclick="document.getElementById('tawi-file').click()">
         <i class="fas fa-file-invoice" style="font-size:22px;color:#06b6d4;display:block;margin-bottom:6px"></i>
-        <div style="font-weight:600">ทวิ 50</div>
-        <div class="tax-hint">หนังสือรับรองหักภาษี</div>
+        <div style="font-weight:600">${tr('tax_tawi50')}</div>
+        <div class="tax-hint">${tr('tax_tawi50_hint')}</div>
       </div>
     </div>
     <input type="file" id="slip-file" accept="image/*,.pdf" style="display:none" onchange="processPaySlip(this.files[0]);this.value=''">
@@ -6784,106 +6784,106 @@ function renderTax(){
 
   <!-- รายได้ -->
   <div class="tax-card">
-    <div class="set-title"><i class="fas fa-coins" style="color:#10b981"></i> รายได้ปี ${t.year||curYear}</div>
+    <div class="set-title"><i class="fas fa-coins" style="color:#10b981"></i> ${tr('tax_income_year')} ${t.year||curYear}</div>
     <div class="tax-row">
-      <div><label>เงินเดือน/ค่าจ้าง (มาตรา 40(1))</label><div class="tax-hint">หัก 50% max ฿100,000</div></div>
+      <div><label>${tr('tax_salary')}</label><div class="tax-hint">${tr('tax_salary_hint')}</div></div>
       <input class="tax-inp" type="number" min="0" step="1000" value="${t.salary||0}" oninput="updateTax('salary',this.value)">
     </div>
     <div class="tax-row">
-      <div><label>รายได้อิสระ/ค่าเช่า (มาตรา 40(2)(8))</label><div class="tax-hint">หัก 50% max ฿100,000</div></div>
+      <div><label>${tr('tax_freelance')}</label><div class="tax-hint">${tr('tax_freelance_hint')}</div></div>
       <input class="tax-inp" type="number" min="0" step="1000" value="${t.freelance||0}" oninput="updateTax('freelance',this.value)">
     </div>
     <div class="tax-row">
-      <div><label>รายได้อื่นๆ</label><div class="tax-hint">ปันผล ดอกเบี้ย ฯลฯ</div></div>
+      <div><label>${tr('tax_other_income')}</label><div class="tax-hint">${tr('tax_other_income_hint')}</div></div>
       <input class="tax-inp" type="number" min="0" step="1000" value="${t.otherInc||0}" oninput="updateTax('otherInc',this.value)">
     </div>
     <div class="tax-row" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px">
-      <label style="font-weight:600">รายได้รวม</label>
+      <label style="font-weight:600">${tr('tax_total_income')}</label>
       <span style="font-weight:700;color:var(--cyan)">฿${totalInc.toLocaleString('th-TH')}</span>
     </div>
   </div>
 
   <!-- ส่วนตัวและครอบครัว -->
   <div class="tax-card">
-    <div class="set-title"><i class="fas fa-users" style="color:#a78bfa"></i> ลดหย่อนส่วนตัวและครอบครัว</div>
-    <div class="tax-row"><label>ผู้มีเงินได้ (ตัวเอง)</label><span style="color:var(--green);font-weight:600">฿60,000</span></div>
+    <div class="set-title"><i class="fas fa-users" style="color:#a78bfa"></i> ${tr('tax_personal_family')}</div>
+    <div class="tax-row"><label>${tr('tax_self')}</label><span style="color:var(--green);font-weight:600">฿60,000</span></div>
     <div class="tax-row">
-      <label>คู่สมรส (ไม่มีรายได้)</label>
+      <label>${tr('tax_spouse')}</label>
       <label class="tax-toggle"><input type="checkbox" ${t.spouse?'checked':''} onchange="updateTax('spouse',this.checked)"><span style="font-size:13px;color:var(--green)">${t.spouse?'฿60,000':'–'}</span></label>
     </div>
     <div class="tax-row">
-      <div><label>จำนวนบุตร</label><div class="tax-hint">30,000/คน</div></div>
+      <div><label>${tr('tax_children')}</label><div class="tax-hint">30,000/${tr('tax_person')}</div></div>
       <input class="tax-inp" type="number" min="0" max="20" step="1" value="${t.children||0}" oninput="updateTax('children',this.value)" style="width:70px">
     </div>
     <div class="tax-row">
-      <div><label>อุปการะบิดามารดา (อายุ 60+)</label><div class="tax-hint">30,000/คน max 4 คน</div></div>
+      <div><label>${tr('tax_parents')}</label><div class="tax-hint">30,000/${tr('tax_person')} max 4 ${tr('tax_person')}</div></div>
       <input class="tax-inp" type="number" min="0" max="4" step="1" value="${t.parents||0}" oninput="updateTax('parents',this.value)" style="width:70px">
     </div>
     <div class="tax-row">
-      <div><label>อุปการะคนพิการ/ทุพพลภาพ</label><div class="tax-hint">60,000/คน</div></div>
+      <div><label>${tr('tax_disabled')}</label><div class="tax-hint">60,000/${tr('tax_person')}</div></div>
       <input class="tax-inp" type="number" min="0" max="10" step="1" value="${t.disabled||0}" oninput="updateTax('disabled',this.value)" style="width:70px">
     </div>
   </div>
 
   <!-- ประกัน -->
   <div class="tax-card">
-    <div class="set-title"><i class="fas fa-shield-alt" style="color:#06b6d4"></i> ลดหย่อนประกัน</div>
+    <div class="set-title"><i class="fas fa-shield-alt" style="color:#06b6d4"></i> ${tr('tax_insurance_deduct')}</div>
     <div class="tax-row">
-      <div><label>ประกันชีวิต/ประกันออมทรัพย์</label><div class="tax-hint">max ฿100,000 (รวมกับสุขภาพ)</div></div>
+      <div><label>${tr('tax_life_ins')}</label><div class="tax-hint">max ฿100,000 (${tr('tax_incl_health')})</div></div>
       <input class="tax-inp" type="number" min="0" max="100000" step="100" value="${t.lifeIns||0}" oninput="updateTax('lifeIns',this.value)">
     </div>
     <div class="tax-row">
-      <div><label>ประกันสุขภาพ</label><div class="tax-hint">max ฿25,000 (รวมชีวิตไม่เกิน 100k)</div></div>
+      <div><label>${tr('tax_health_ins')}</label><div class="tax-hint">max ฿25,000 (${tr('tax_incl_life')})</div></div>
       <input class="tax-inp" type="number" min="0" max="25000" step="100" value="${t.healthIns||0}" oninput="updateTax('healthIns',this.value)">
     </div>
     <div class="tax-row">
-      <div><label>ประกันชีวิตแบบบำนาญ</label><div class="tax-hint">max ฿200,000</div></div>
+      <div><label>${tr('tax_annuity_ins')}</label><div class="tax-hint">max ฿200,000</div></div>
       <input class="tax-inp" type="number" min="0" max="200000" step="100" value="${t.annuityIns||0}" oninput="updateTax('annuityIns',this.value)">
     </div>
     <div class="tax-row">
-      <div><label>ประกันสุขภาพบิดามารดา</label><div class="tax-hint">max ฿15,000</div></div>
+      <div><label>${tr('tax_parent_health_ins')}</label><div class="tax-hint">max ฿15,000</div></div>
       <input class="tax-inp" type="number" min="0" max="15000" step="100" value="${t.parentHealthIns||0}" oninput="updateTax('parentHealthIns',this.value)">
     </div>
     <div class="tax-row">
-      <div><label>ประกันสังคม</label><div class="tax-hint">max ฿9,000/ปี</div></div>
+      <div><label>${tr('tax_sso')}</label><div class="tax-hint">max ฿9,000/${tr('year_short')}</div></div>
       <input class="tax-inp" type="number" min="0" max="9000" step="100" value="${t.sso||0}" oninput="updateTax('sso',this.value)">
     </div>
   </div>
 
   <!-- การลงทุน -->
   <div class="tax-card">
-    <div class="set-title"><i class="fas fa-chart-line" style="color:#f59e0b"></i> ลดหย่อนการลงทุน</div>
+    <div class="set-title"><i class="fas fa-chart-line" style="color:#f59e0b"></i> ${tr('tax_invest_deduct')}</div>
     <div class="tax-row">
-      <div><label>กองทุน SSF</label><div class="tax-hint">max 30% รายได้ / ฿200,000 (รวม RMF+PVD ไม่เกิน 500k)</div></div>
+      <div><label>${tr('fund_ssf')}</label><div class="tax-hint">max 30% ${tr('tax_of_income')} / ฿200,000 (${tr('tax_incl_rmf_pvd')})</div></div>
       <input class="tax-inp" type="number" min="0" max="200000" step="1000" value="${t.ssf||0}" oninput="updateTax('ssf',this.value)">
     </div>
     <div class="tax-row">
-      <div><label>กองทุน RMF</label><div class="tax-hint">max 30% รายได้ / ฿500,000</div></div>
+      <div><label>${tr('fund_rmf')}</label><div class="tax-hint">max 30% ${tr('tax_of_income')} / ฿500,000</div></div>
       <input class="tax-inp" type="number" min="0" max="500000" step="1000" value="${t.rmf||0}" oninput="updateTax('rmf',this.value)">
     </div>
     <div class="tax-row">
-      <div><label>กองทุนสำรองเลี้ยงชีพ (PVD/กบข.)</label><div class="tax-hint">max 15% รายได้ / ฿500,000</div></div>
+      <div><label>${tr('tax_pvd')}</label><div class="tax-hint">max 15% ${tr('tax_of_income')} / ฿500,000</div></div>
       <input class="tax-inp" type="number" min="0" max="500000" step="1000" value="${t.pvd||0}" oninput="updateTax('pvd',this.value)">
     </div>
     <div class="tax-row">
-      <div><label>กองทุน Thai ESG</label><div class="tax-hint">max 30% รายได้ / ฿300,000</div></div>
+      <div><label>${tr('tax_esg')}</label><div class="tax-hint">max 30% ${tr('tax_of_income')} / ฿300,000</div></div>
       <input class="tax-inp" type="number" min="0" max="300000" step="1000" value="${t.thaiEsg||0}" oninput="updateTax('thaiEsg',this.value)">
     </div>
   </div>
 
   <!-- อื่นๆ -->
   <div class="tax-card">
-    <div class="set-title"><i class="fas fa-ellipsis-h" style="color:#94a3b8"></i> ลดหย่อนอื่นๆ</div>
+    <div class="set-title"><i class="fas fa-ellipsis-h" style="color:#94a3b8"></i> ${tr('tax_other_deduct')}</div>
     <div class="tax-row">
-      <div><label>ดอกเบี้ยเงินกู้ที่อยู่อาศัย</label><div class="tax-hint">max ฿100,000</div></div>
+      <div><label>${tr('tax_home_loan')}</label><div class="tax-hint">max ฿100,000</div></div>
       <input class="tax-inp" type="number" min="0" max="100000" step="100" value="${t.homeLoan||0}" oninput="updateTax('homeLoan',this.value)">
     </div>
     <div class="tax-row">
-      <div><label>เงินบริจาค</label><div class="tax-hint">max 10% ของเงินได้หลังหักลดหย่อน</div></div>
+      <div><label>${tr('tax_donation')}</label><div class="tax-hint">${tr('tax_donation_hint')}</div></div>
       <input class="tax-inp" type="number" min="0" step="100" value="${t.donation||0}" oninput="updateTax('donation',this.value)">
     </div>
     <div class="tax-row">
-      <div><label>ภาษีถูกหัก ณ ที่จ่าย (ทั้งปี)</label><div class="tax-hint">ดูจากหนังสือรับรองการหักภาษี</div></div>
+      <div><label>${tr('tax_withheld')}</label><div class="tax-hint">${tr('tax_withheld_hint')}</div></div>
       <input class="tax-inp" type="number" min="0" step="100" value="${t.withheld||0}" oninput="updateTax('withheld',this.value)">
     </div>
   </div>`;
