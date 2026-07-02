@@ -10767,7 +10767,7 @@ function renderInsurance(){
     +card(tr('ins_total_deduct_yr'),fm(totDeduct),tr('ins_from_deductible'),'#fbbf24')
     +'</div>';
   var policyCard=function(p){
-    var ty=INS_TYPE[p.type]||INS_TYPE.other, who=INS_INSURED[p.insured]||p.insured;
+    var ty=INS_TYPE[p.type]||INS_TYPE.other, who=insInsuredLabel(p.insured);
     if(p.insuredName) who+=' · '+_escHtml(p.insuredName);
     var mo=insMonthly(p);
     return '<div class="card" style="padding:14px;margin-bottom:10px;cursor:pointer;border-left:3px solid '+ty.c+'" onclick="openInsModal(\''+p.id+'\')">'
