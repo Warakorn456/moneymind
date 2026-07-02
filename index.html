@@ -14845,18 +14845,17 @@ function _requestPushTokenIfNative(){
   }
 }
 (function(){
-  // fresh login (tryLogin/tryRegister/ฯลฯ เรียก enterApp() ตรงๆ)
+  // fresh login (tryLogin/tryRegister/ฯลฯ เรียก enterApp() ตรงๆ — เกิดหลัง user กดปุ่ม
+  // ซึ่งอยู่หลังโค้ดนี้ parse เสร็จแล้วเสมอ patch ทันเวลาแน่นอน)
   if(typeof enterApp==='function'){
     var _origEnterAppPush=enterApp;
     enterApp=function(){ _origEnterAppPush(); _requestPushTokenIfNative(); };
   }
-  // เปิดแอปซ้ำโดยมี session เดิมอยู่แล้ว — checkLogin() มี fast path ของตัวเอง
-  // ไม่ได้เรียก enterApp() เลย (return ตรงๆ ใน branch นี้) ถ้าไม่ patch ตรงนี้ด้วย
-  // push token จะขอแค่ครั้งแรกตอน login ใหม่เท่านั้น ไม่ขอทุกครั้งที่เปิดแอปตามปกติ
-  if(typeof checkLogin==='function'){
-    var _origCheckLoginPush=checkLogin;
-    checkLogin=function(){ _origCheckLoginPush(); _requestPushTokenIfNative(); };
-  }
+  // เปิดแอปซ้ำโดยมี session เดิมอยู่แล้ว — checkLogin() ถูกเรียกไปแล้วครั้งเดียวที่ INIT block
+  // (บรรทัด ~8019) ซึ่งมาก่อนโค้ดนี้ในไฟล์ — patch checkLogin ตรงนี้ "ไม่ทัน" การเรียกครั้งนั้น
+  // (เคย patch ผิดมาก่อน ทำให้ token ไม่ถูกขอเลยตอนเปิดแอปซ้ำ) เช็ค currentUser ตรงๆ แทน:
+  // ถ้า checkLogin() เจอ session ที่ยังไม่หมดอายุ มันตั้ง currentUser ให้แล้วตอนนี้ (synchronous)
+  if(currentUser){ _requestPushTokenIfNative(); }
 })();
 
 // ══════════════════════════════════════════
