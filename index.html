@@ -12753,15 +12753,15 @@ function _renderBulkBar(){
   }
   const n=_bulkSel.size;
   const expCats=[...EXP_CATS,...(DB.settings?.customExpCats||[])];
-  const opts=expCats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  const opts=expCats.map(c=>`<option value="${c.id}">${catLabel(c)}</option>`).join('');
   const bs='background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:12px;font-family:Sarabun;cursor:pointer';
-  bar.innerHTML=`<span style="font-size:13px;font-weight:700;color:#a78bfa">เลือก ${n}</span>
-    <button onclick="bulkSelectAll()" style="${bs}">ทั้งหมด</button>
-    ${n?`<button onclick="bulkClearSel()" style="${bs}">ล้าง</button>`:''}
-    <select id="bulk-cat" style="${bs}"><option value="">เปลี่ยนหมวด…</option>${opts}</select>
-    <button onclick="applyBulkCat()" ${n?'':'disabled'} style="${bs};background:rgba(124,58,237,.3);border-color:rgba(124,58,237,.5);opacity:${n?1:.4}">ใช้</button>
+  bar.innerHTML=`<span style="font-size:13px;font-weight:700;color:#a78bfa">${tr('selected_n').replace('{n}',n)}</span>
+    <button onclick="bulkSelectAll()" style="${bs}">${tr('tx_filter_all')}</button>
+    ${n?`<button onclick="bulkClearSel()" style="${bs}">${tr('clear')}</button>`:''}
+    <select id="bulk-cat" style="${bs}"><option value="">${tr('change_category')}…</option>${opts}</select>
+    <button onclick="applyBulkCat()" ${n?'':'disabled'} style="${bs};background:rgba(124,58,237,.3);border-color:rgba(124,58,237,.5);opacity:${n?1:.4}">${tr('apply')}</button>
     <button onclick="bulkDelete()" ${n?'':'disabled'} style="${bs};background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4);color:#fca5a5;opacity:${n?1:.4}"><i class="fas fa-trash"></i></button>
-    <button onclick="toggleBulkMode()" style="${bs}"><i class="fas fa-times"></i> ปิด</button>`;
+    <button onclick="toggleBulkMode()" style="${bs}"><i class="fas fa-times"></i> ${tr('close')}</button>`;
 }
 
 function applyBulkCat(){
