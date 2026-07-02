@@ -11547,7 +11547,7 @@ async function renderAdmin(){
       _addHandles(c);
       _bindEvents(c,true);
       if(btn){btn.innerHTML='<i class="fas fa-check"></i>';btn.style.cssText+=';background:rgba(16,185,129,.2);border-color:rgba(16,185,129,.4);color:#34d399';}
-      toast('ลากเพื่อจัดเรียง — กดเครื่องหมายถูกเมื่อเสร็จ','info');
+      toast(tr('dash_drag_hint'),'info');
     } else {
       c.classList.remove('dash-sort-mode');
       _removeHandles(c);
