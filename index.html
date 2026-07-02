@@ -2637,8 +2637,8 @@ function fsListen(){
       const remoteTs=remote._savedAt||0;
       // remote ไม่ใหม่กว่า local → เป็น bounce-back จาก write เรา หรือ device อื่นช้ากว่า
       if(remoteTs<=localTs){ setSyncStatus('ok'); return; }
-      // remote ใหม่กว่า → อุปกรณ์อื่น sync มา
-      DB={...DB,...remote};
+      // remote ใหม่กว่า → อุปกรณ์อื่น sync มา (merge union-by-id กัน tx ใหม่ที่ยังไม่ sync หาย)
+      DB=_mergeDbSnapshot(DB,remote);
       saveLocalOnly();
       setSyncStatus('ok');
       // ถ้ามี input focused หรือ modal เปิดอยู่ → defer re-render
