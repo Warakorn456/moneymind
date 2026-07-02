@@ -12434,7 +12434,7 @@ function setSubColor(c){
 function openSubModal(id){
   var item=id?getSubs().find(function(s){return s.id===id;}):null;
   document.getElementById('sub-eid').value=id||'';
-  document.getElementById('sub-m-title').textContent=id?'แก้ไข Subscription':'เพิ่ม Subscription';
+  document.getElementById('sub-m-title').textContent=id?tr('sub_edit_full'):tr('sub_add_full');
   document.getElementById('sub-name').value=item?item.name:'';
   document.getElementById('sub-price').value=item?item.price:'';
   document.getElementById('sub-cycle').value=item?item.cycle:'monthly';
