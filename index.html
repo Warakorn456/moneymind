@@ -8752,18 +8752,18 @@ function saveCustomCat(){
   const label=document.getElementById('customcat-label').value.trim();
   const type=document.getElementById('customcat-type').value;
   const color=document.getElementById('customcat-color').value||'#ef4444';
-  if(!label){ toast('กรุณาใส่ชื่อหมวดหมู่','error'); return; }
+  if(!label){ toast(tr('customcat_need_name'),'error'); return; }
   if(!DB.settings.customIncCats) DB.settings.customIncCats=[];
   if(!DB.settings.customExpCats) DB.settings.customExpCats=[];
   const entry={id,label,icon:'fa-tag',color,catType:type};
   const list=type==='income'?DB.settings.customIncCats:DB.settings.customExpCats;
   const idx=list.findIndex(c=>c.id===id);
   if(idx>=0) list[idx]=entry; else list.push(entry);
-  saveDB(); closeM('m-customcat'); renderSettings(); toast('บันทึกหมวดหมู่แล้ว','success');
+  saveDB(); closeM('m-customcat'); renderSettings(); toast(tr('customcat_saved'),'success');
 }
 
 function deleteCustomCat(id){
-  if(!confirm('ลบหมวดหมู่นี้?')) return;
+  if(!confirm(tr('customcat_confirm_delete'))) return;
   DB.settings.customIncCats=(DB.settings.customIncCats||[]).filter(c=>c.id!==id);
   DB.settings.customExpCats=(DB.settings.customExpCats||[]).filter(c=>c.id!==id);
   saveDB(); renderSettings(); toast(tr('deleted'),'info');
