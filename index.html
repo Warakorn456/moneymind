@@ -12271,7 +12271,7 @@ function renderCalendarPage(){
       var monBtns='';
       for(var mi=0;mi<12;mi++){
         var isSelMon=(_calPickerYear===_calYear&&mi===_calMonth);
-        monBtns+='<button onclick="calPickMonth('+_calPickerYear+','+mi+')" style="padding:8px 4px;border-radius:8px;border:1px solid '+(isSelMon?'var(--primary-l)':'var(--border)')+';background:'+(isSelMon?'var(--primary)':'var(--surface2)')+';color:'+(isSelMon?'#fff':'var(--text)')+';font-size:13px;cursor:pointer;font-family:inherit">'+CAL_MON_SHORT[mi]+'</button>';
+        monBtns+='<button onclick="calPickMonth('+_calPickerYear+','+mi+')" style="padding:8px 4px;border-radius:8px;border:1px solid '+(isSelMon?'var(--primary-l)':'var(--border)')+';background:'+(isSelMon?'var(--primary)':'var(--surface2)')+';color:'+(isSelMon?'#fff':'var(--text)')+';font-size:13px;cursor:pointer;font-family:inherit">'+monthShortArr()[mi]+'</button>';
       }
       pickerBody='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
         +'<button class="btn btn-ghost" style="padding:6px 10px" onclick="calPickerYearNav(-1)"><i class="fas fa-chevron-left"></i></button>'
