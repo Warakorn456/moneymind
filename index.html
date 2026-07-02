@@ -12696,9 +12696,9 @@ function _initTxCatFilter(){
   sel.dataset.init='1';
   const incCats=[...INC_CATS,...(DB.settings?.customIncCats||[])];
   const expCats=[...EXP_CATS,...(DB.settings?.customExpCats||[])];
-  const exp=expCats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
-  const inc=incCats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
-  sel.innerHTML=`<option value="">📂 ทุกหมวด</option><optgroup label="รายจ่าย">${exp}</optgroup><optgroup label="รายรับ">${inc}</optgroup>`;
+  const exp=expCats.map(c=>`<option value="${c.id}">${catLabel(c)}</option>`).join('');
+  const inc=incCats.map(c=>`<option value="${c.id}">${catLabel(c)}</option>`).join('');
+  sel.innerHTML=`<option value="">📂 ${tr('all_categories')}</option><optgroup label="${tr('dh_expense')}">${exp}</optgroup><optgroup label="${tr('dh_income')}">${inc}</optgroup>`;
 }
 
 function setTxCatFilter(v){ _txCatFilter=v; renderTx(); }
