@@ -3626,9 +3626,9 @@ function setLang(lang){
 }
 function toggleLang(){ setLang(currentLang==='th'?'en':'th'); }
 // เดือน/ปี พ.ศ. ใช้ซ้ำหลายสิบจุดทั่วไฟล์ — รวมเป็น helper กลางแทนการประกาศ MN=[...] ซ้ำในทุกฟังก์ชัน
-const MN_SHORT_TH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const MN_SHORT_TH=monthShortArr();
 const MN_SHORT_EN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const MN_FULL_TH=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const MN_FULL_TH=monthFullArr();
 const MN_FULL_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 function monthShortArr(){ return currentLang==='en'?MN_SHORT_EN:MN_SHORT_TH; }
 function monthFullArr(){ return currentLang==='en'?MN_FULL_EN:MN_FULL_TH; }
@@ -3809,7 +3809,7 @@ function initDate(){
   const now=new Date(); selMonth=now.getMonth(); selYear=now.getFullYear();
   const ms=document.getElementById('sel-month'), ys=document.getElementById('sel-year');
   if(ms&&ys){
-    const MN=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    const MN=monthFullArr();
     MN.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=m; if(i===selMonth) o.selected=true; ms.appendChild(o); });
     for(let y=now.getFullYear()-4;y<=now.getFullYear()+1;y++){ const o=document.createElement('option'); o.value=y; o.textContent=y+543; if(y===selYear) o.selected=true; ys.appendChild(o); }
   }
@@ -3943,7 +3943,7 @@ function openCatDrill(cat){
 }
 
 function renderTrendChart(){
-  const now=new Date(); const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const now=new Date(); const MN=monthShortArr();
   const labels=[],incData=[],expData=[];
   for(let i=5;i>=0;i--){ let m=now.getMonth()-i,y=now.getFullYear(); if(m<0){m+=12;y--;} const txs=monthTx(m,y); labels.push(MN[m]); incData.push(txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)); expData.push(txs.filter(isRealExp).reduce((s,t)=>s+t.amount,0)); }
   const ctx=document.getElementById('ch-trend').getContext('2d');
@@ -4105,7 +4105,7 @@ function renderTxChart(year,month){
   if(!DB.transactions.length){el.innerHTML='';return;}
   const now=new Date(); const nowY=now.getFullYear();
   const fmtK=v=>v>=1000000?'฿'+(v/1000000).toFixed(1)+'M':v>=1000?'฿'+(v/1000).toFixed(0)+'K':'฿'+Math.round(v);
-  const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const MN=monthShortArr();
   let labels=[],datasets=[],yearList=[];
 
   const agg={};
@@ -5054,7 +5054,7 @@ function renderDebts(){
   if(!DB.debts.length){ el.innerHTML='<div class="empty"><i class="fas fa-check-circle"></i><p>ยอดเยี่ยม! ไม่มีหนี้สิน</p></div>'; return; }
   const now=new Date();
   const nowY=now.getFullYear(), nowM=now.getMonth()+1;
-  const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const MN=monthShortArr();
   el.innerHTML=DB.debts.map(d=>{
     // build month range: startDate → dueDate (fallback to 12-month window)
     let sy,sm,ey,em;
@@ -6857,7 +6857,7 @@ function updateBsDebt(id,field,val){ const d=(getPlan().extraDebts||[]).find(x=>
 
 function ymStr(y,m){ return `${y}-${String(m).padStart(2,'0')}`; }
 function ymAdd(ym,n){ let [y,m]=ym.split('-').map(Number); m+=n; while(m>12){m-=12;y++;} while(m<1){m+=12;y--;} return ymStr(y,m); }
-function ymLabel(ym){ const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']; const [y,m]=ym.split('-').map(Number); return `${MN[m-1]} ${y+543}`; }
+function ymLabel(ym){ const MN=monthShortArr(); const [y,m]=ym.split('-').map(Number); return `${MN[m-1]} ${y+543}`; }
 
 function planItemApplies(item, ym){
   if(ym < item.from) return false;
@@ -6952,7 +6952,7 @@ function renderPlanChart(year){
     if(titleEl) titleEl.innerHTML=`<i class="fas fa-calendar" style="color:var(--cyan)"></i> รายละเอียดรายเดือน ปี ${year} (${year+543})`;
     if(backBtn) backBtn.style.display='inline-flex';
     const plan=getPlan();
-    const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const MN=monthShortArr();
     const inc=[],exp=[],bal=[];
     for(let m=1;m<=12;m++){
       const ym=ymStr(year,m);
@@ -7392,7 +7392,7 @@ function renderBalance(){
   const dobYear=DB.profile&&DB.profile.dob?new Date(DB.profile.dob).getFullYear():null;
   const hasAge=!!dobYear;
   const incomeStopYear=(dobYear&&(plan.incomeStopAge||0))?(dobYear+plan.incomeStopAge):null;
-  const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const MN=monthShortArr();
   let cumNW=nw.netWorth;
   let planRows='';
   const endYear=getPlanEndYear();
@@ -7663,7 +7663,7 @@ function uploadProfilePhoto(inp){
 }
 
 function calcAge(dob){ if(!dob) return ''; const d=new Date(dob),now=new Date(); let a=now.getFullYear()-d.getFullYear(); if(now<new Date(now.getFullYear(),d.getMonth(),d.getDate())) a--; return a+' ปี'; }
-function ymLabelWork(ym){ if(!ym) return 'ปัจจุบัน'; const [y,m]=ym.split('-').map(Number); const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']; return `${MN[m-1]} ${y+543}`; }
+function ymLabelWork(ym){ if(!ym) return 'ปัจจุบัน'; const [y,m]=ym.split('-').map(Number); const MN=monthShortArr(); return `${MN[m-1]} ${y+543}`; }
 function workDuration(from,to){ if(!from) return ''; const f=new Date(from+'-01'), t=to?new Date(to+'-01'):new Date(); const months=Math.max(0,Math.round((t-f)/2592000000)); if(months<12) return months+'เดือน'; return Math.floor(months/12)+'ปี '+(months%12?months%12+'เดือน':''); }
 
 function famSave(member,field,val){ getProfile().family[member][field]=val; saveDB(); if(field==='dob') renderProfile(); }
@@ -8712,7 +8712,7 @@ function renderSpendingInsights(){
 
   if(!sorted.length){ el.innerHTML=''; return; }
   const maxVal=Math.max(...sorted.map(x=>Math.max(x.cur,x.prev)),1);
-  const MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const MN=monthShortArr();
 
   el.innerHTML=`
     <div class="insights-card">
@@ -8772,7 +8772,7 @@ function openShareModal(){
   const banks=getBanks().reduce((s,b)=>s+b.balance,0);
   const debts=(DB.debts||[]).reduce((s,d)=>s+(d.remaining||d.total||0),0);
   const networth=banks+port-debts;
-  const MN=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const MN=monthFullArr();
   document.getElementById('share-period').textContent=`${MN[selMonth]} ${selYear+543}`;
   document.getElementById('share-networth').textContent=fmt(networth);
   document.getElementById('share-inc').textContent=fmt(inc);
@@ -9066,7 +9066,7 @@ function renderNWHistory(){
   const el=document.getElementById('dash-nw-history-section'); if(!el) return;
   if(!DB.nwHistory||Object.keys(DB.nwHistory).length<2){ el.innerHTML=''; return; }
   const sorted=Object.entries(DB.nwHistory).sort(([a],[b])=>a.localeCompare(b)).slice(-12);
-  const labels=sorted.map(([k])=>{ const [y,m]=k.split('-'); const mn=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']; return mn[parseInt(m)-1]+'\''+String(parseInt(y)-2500+43).slice(-2); });
+  const labels=sorted.map(([k])=>{ const [y,m]=k.split('-'); const mn=monthShortArr(); return mn[parseInt(m)-1]+'\''+String(parseInt(y)-2500+43).slice(-2); });
   const vals=sorted.map(([,v])=>v);
   const first=vals[0], last=vals[vals.length-1];
   const diff=last-first, diffPct=first!==0?((diff/Math.abs(first))*100).toFixed(1):0;
@@ -9530,7 +9530,7 @@ function checkRebalAlerts(){
 //  NEW FEATURE H — PDF PRINT REPORT
 // ══════════════════════════════════════════
 function printMonthlyReport(){
-  const MN=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const MN=monthFullArr();
   const txs=monthTx(selMonth,selYear);
   const inc=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const exp=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
@@ -9841,7 +9841,7 @@ function renderSavingsRate(){
     var inc=txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
     var exp=txs.filter(function(t){return t.type==='expense'&&!isSavingTx(t);}).reduce(function(s,t){return s+t.amount;},0);
     var sr=inc>0?Math.round(((inc-exp)/inc)*100):0;
-    var thM=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][mo];
+    var thM=monthShortArr()[mo];
     labels.push(thM); srData.push(sr);
   }
   var curSR=srData[srData.length-1];
@@ -9972,7 +9972,7 @@ function renderMonthComparison(){
     var txs=monthTx(mo,yr);
     var inc=txs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
     var exp=txs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
-    var thMonth=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][mo];
+    var thMonth=monthShortArr()[mo];
     labels.push(thMonth+' '+String(yr+543).slice(2));
     incData.push(Math.round(inc));
     expData.push(Math.round(exp));
@@ -10037,8 +10037,8 @@ function renderOT(){
   else { pStart=new Date(_otYear,_otMonth-1,cut+1); }
   pEnd=new Date(_otYear,_otMonth,cut);
 
-  var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  var TH_MON_FULL=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  var TH_MON=monthShortArr();
+  var TH_MON_FULL=monthFullArr();
 
   // Filter logs in this period
   var logs=DB.otLogs.filter(function(l){
@@ -10391,7 +10391,7 @@ function renderFinancialCalendar(){
   var now=new Date();
   var in30=new Date(now); in30.setDate(in30.getDate()+30);
   var events=[];
-  var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  var TH_MON=monthShortArr();
   // Recurring
   (DB.recurringTx||[]).filter(function(r){ return r.active; }).forEach(function(r){
     var d=_nextRecurDate(r,now);
@@ -10729,7 +10729,7 @@ function renderInsurance(){
 function printMonthlyReport(){
   var now=new Date();
   var m=now.getMonth(), y=now.getFullYear();
-  var TH_MON=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  var TH_MON=monthFullArr();
   var txs=monthTx(m,y);
   var inc=txs.filter(function(t){ return t.type==='income'; }).reduce(function(s,t){ return s+t.amount; },0);
   var exp=txs.filter(function(t){ return t.type==='expense'; }).reduce(function(s,t){ return s+t.amount; },0);
@@ -10871,7 +10871,7 @@ function renderRule503020(){
     {label:'ต้องการ',icon:'fa-shopping-bag',amt:wants,pct:wantsPct,target:30,color:'#a78bfa',over:wantsPct>30},
     {label:'ออม/ลงทุน',icon:'fa-piggy-bank',amt:savings,pct:savePct,target:20,color:'#10b981',over:false,under:savePct<20}
   ];
-  var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  var TH_MON=monthShortArr();
   var rows=buckets.map(function(b){
     var barW=Math.min(100,b.pct);
     var statusColor=b.over?'#ef4444':(b.under?'#f59e0b':'#10b981');
@@ -10913,7 +10913,7 @@ function renderPayYourselfFirst(){
   var saved=Math.max(0,income-totalExp);
   var pct=targetAmt>0?Math.min(100,saved/targetAmt*100):0;
   var achieved=saved>=targetAmt;
-  var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  var TH_MON=monthShortArr();
   el.innerHTML='<div class="comparison-card">'
     +'<div class="sec-hd" style="margin-bottom:12px">'
       +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-piggy-bank" style="color:#10b981;font-size:12px"></i></div><div class="sec-title">ออมก่อนใช้</div></div>'
@@ -11590,7 +11590,7 @@ function renderYTD(){
 
   if(ci===0&&ce===0&&pi===0&&pe===0){ el.innerHTML=''; return; }
 
-  var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  var TH_MON=monthShortArr();
   var periodStr='1 ม.ค. – '+now.getDate()+' '+TH_MON[now.getMonth()];
 
   function pctChange(cur,prev){
@@ -11772,7 +11772,7 @@ function renderLoanResults(){
   var monthsSaved=hasExtra?(schedule.length-accSchedule.length):0;
   var interestSaved=hasExtra?(totalInterest-accInterest):0;
 
-  var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  var TH_MON=monthShortArr();
 
   var tableHtml='';
   if(s.showTable&&schedule.length){
@@ -11947,8 +11947,8 @@ function autoSetTxFixed(){
 // ══════════════════════════════════════════
 var _calYear=-1, _calMonth=-1, _calSelDate=null, _calPickerOpen=false, _calPickerYear=-1, _calPickerMode='month', _calPickerYearPage=0;
 
-var CAL_MON_FULL=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-var CAL_MON_SHORT=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+var CAL_MON_FULL=monthFullArr();
+var CAL_MON_SHORT=monthShortArr();
 var CAL_DOW_TH=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
 
 function renderCalendarPage(){
@@ -12138,7 +12138,7 @@ function renderCalendarPage(){
       }
       pickerBody='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
         +'<button class="btn btn-ghost" style="padding:6px 10px" onclick="calPickerPageNav(-1)"><i class="fas fa-chevron-left"></i></button>'
-        +'<span style="font-size:14px;font-weight:600;color:var(--muted)">'+(pageStart+543)+'–'+(pageStart+11+543)+'</span>'
+        +'<span style="font-size:14px;font-weight:600;color:var(--muted)">'+beYear(pageStart)+'–'+beYear(pageStart+11)+'</span>'
         +'<button class="btn btn-ghost" style="padding:6px 10px" onclick="calPickerPageNav(1)"><i class="fas fa-chevron-right"></i></button>'
       +'</div>'
       +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">'+yrBtns+'</div>';
@@ -12747,7 +12747,7 @@ function bulkDelete(){
 //  TRAVEL — ท่องเที่ยว (จัดกลุ่มทริปตาม tag สถานที่)
 // ══════════════════════════════════════════
 const TRAVEL_SYS_TAGS=new Set(['quick-add','gmail-import','maya','slip-scan','bot-import','voice-add','ai-agent','recurring','transfer','cash','bot','bot-quick']);
-const _TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const _TH_MON=monthShortArr();
 
 function _travelDest(t){
   const tags=(t.tags||[]).filter(g=>g&&!TRAVEL_SYS_TAGS.has(g));
