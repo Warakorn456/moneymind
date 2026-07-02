@@ -3562,11 +3562,11 @@ const EXP_CATS = [
   {id:'transfer',label:'โอนเงิน',labelEn:'Transfer',icon:'fa-exchange-alt',color:'#64748b'},
   {id:'cash',label:'ถอนเงินสด',labelEn:'Cash Withdrawal',icon:'fa-money-bill-wave',color:'#78716c'},
   {id:'travel',label:'ท่องเที่ยว',labelEn:'Travel',icon:'fa-plane',color:'#0ea5e9'},
-  {id:'donation',label:'บริจาค',icon:'fa-hand-holding-heart',color:'#d946ef'},
-  {id:'pet',label:'สัตว์เลี้ยง',icon:'fa-paw',color:'#22c55e'},
-  {id:'bank_fee',label:'ค่าธรรมเนียม/ดอกเบี้ย',icon:'fa-percent',color:'#6366f1'},
-  {id:'beauty',label:'ความงาม',icon:'fa-spa',color:'#f472b6'},
-  {id:'other_exp',label:'รายจ่ายอื่นๆ',icon:'fa-ellipsis-h',color:'#94a3b8'},
+  {id:'donation',label:'บริจาค',labelEn:'Donation',icon:'fa-hand-holding-heart',color:'#d946ef'},
+  {id:'pet',label:'สัตว์เลี้ยง',labelEn:'Pet',icon:'fa-paw',color:'#22c55e'},
+  {id:'bank_fee',label:'ค่าธรรมเนียม/ดอกเบี้ย',labelEn:'Bank Fees/Interest',icon:'fa-percent',color:'#6366f1'},
+  {id:'beauty',label:'ความงาม',labelEn:'Beauty',icon:'fa-spa',color:'#f472b6'},
+  {id:'other_exp',label:'รายจ่ายอื่นๆ',labelEn:'Other Expenses',icon:'fa-ellipsis-h',color:'#94a3b8'},
 ];
 
 function getCat(id,type){ const custom=(type==='income'?(DB.settings?.customIncCats||[]):(DB.settings?.customExpCats||[])); const l=type==='income'?[...INC_CATS,...custom]:[...EXP_CATS,...custom]; return l.find(c=>c.id===id)||{label:id,icon:'fa-circle',color:'#94a3b8'}; }
