@@ -126,7 +126,7 @@ Navigation ผ่าน `nav(page)` (~3595) — routing อยู่ใน `rend
 > **ถอดออกแล้ว 2026-06-26:** เมนู/หน้า **AI Inbox (`inbox`)**, **รายการซ้ำ (`recurring`)**, **จัดลำดับ (`priority`)** ถูกลบทั้ง nav + page HTML + render/CRUD functions + CSS + routing + PAGE_TITLE. เหลือเฉพาะ `applyRecurringTx()` (auto-apply รายการซ้ำเดิม — ปฏิทิน/Dashboard ยังอ่าน `DB.recurringTx`); ข้อมูล `DB.priorities`/inbox tags ยังอยู่ใน DB แต่ไม่มี UI แล้ว
 
 **Sidebar nav** — items มี `data-nav="<key>"` และ `draggable="true"` รองรับ drag-and-drop reorder  
-ลำดับถูกบันทึกใน `DB.settings.navOrder` — ดูโค้ดที่ `// NAV SORTABLE` บรรทัด ~11332
+ลำดับถูกบันทึกใน `DB.settings.navOrder` — ดูโค้ดที่ `// NAV SORTABLE` บรรทัด ~14639 (ท้ายไฟล์ ก่อนปิด `</script>`)
 
 ## UI/CSS Conventions
 
