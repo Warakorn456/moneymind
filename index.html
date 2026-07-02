@@ -14837,17 +14837,26 @@ window.handleNativePushToken=function(token){
 };
 
 // ขอ push token จาก native หลัง login สำเร็จ (เฉพาะตอนอยู่ในแอป — เว็บ browser ปกติไม่มี native ให้ขอ)
+function _requestPushTokenIfNative(){
+  if(_isNativeApp()){
+    setTimeout(function(){
+      window.ReactNativeWebView.postMessage(JSON.stringify({action:'requestPushToken'}));
+    },800);
+  }
+}
 (function(){
-  if(typeof enterApp!=='function') return;
-  var _origEnterAppPush=enterApp;
-  enterApp=function(){
-    _origEnterAppPush();
-    if(_isNativeApp()){
-      setTimeout(function(){
-        window.ReactNativeWebView.postMessage(JSON.stringify({action:'requestPushToken'}));
-      },800);
-    }
-  };
+  // fresh login (tryLogin/tryRegister/ฯลฯ เรียก enterApp() ตรงๆ)
+  if(typeof enterApp==='function'){
+    var _origEnterAppPush=enterApp;
+    enterApp=function(){ _origEnterAppPush(); _requestPushTokenIfNative(); };
+  }
+  // เปิดแอปซ้ำโดยมี session เดิมอยู่แล้ว — checkLogin() มี fast path ของตัวเอง
+  // ไม่ได้เรียก enterApp() เลย (return ตรงๆ ใน branch นี้) ถ้าไม่ patch ตรงนี้ด้วย
+  // push token จะขอแค่ครั้งแรกตอน login ใหม่เท่านั้น ไม่ขอทุกครั้งที่เปิดแอปตามปกติ
+  if(typeof checkLogin==='function'){
+    var _origCheckLoginPush=checkLogin;
+    checkLogin=function(){ _origCheckLoginPush(); _requestPushTokenIfNative(); };
+  }
 })();
 
 // ══════════════════════════════════════════
