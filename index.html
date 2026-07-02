@@ -3274,43 +3274,6 @@ async function doForgotEmail(){
   btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane"></i> ส่งอีเมลรีเซ็ตรหัสผ่าน';
 }
 
-async function doResetPassword(){
-  var user=(document.getElementById('forgot-user').value||'').trim().toLowerCase();
-  var newVal=(document.getElementById('forgot-pass').value||'');
-  var confirmVal=(document.getElementById('forgot-pass2').value||'');
-  var errEl=document.getElementById('forgot-err');
-  var btn=document.getElementById('forgot-direct-btn');
-  errEl.style.color='#ef4444'; errEl.textContent='';
-  if(!user){ errEl.textContent='กรุณากรอกชื่อผู้ใช้'; return; }
-  if(newVal.length<6){ errEl.textContent='รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร'; return; }
-  if(newVal!==confirmVal){ errEl.textContent='รหัสผ่านไม่ตรงกัน'; return; }
-  if(_ENC&&user===(_ENC.user||'').toLowerCase()){ errEl.textContent='บัญชีหลักไม่รองรับการรีเซ็ตจากหน้านี้'; return; }
-  var users=getUsers();
-  var rec=users.find(function(u){ return u.username.toLowerCase()===user; });
-  if(!rec){ errEl.textContent='ไม่พบชื่อผู้ใช้นี้'; return; }
-  btn.disabled=true; btn.textContent='กำลังบันทึก...';
-  try{
-    var newSalt=randB64(16);
-    var newSaltBytes=Uint8Array.from(atob(newSalt),function(c){ return c.charCodeAt(0); });
-    var newHash=await pbkdf2Hash(newVal,newSaltBytes);
-    rec.salt=newSalt; rec.hash=newHash;
-    saveUsers(users);
-    // sync รหัสผ่านใหม่ไปยัง Firebase Auth ด้วย (ถ้ามี email ผูกไว้)
-    if(_auth&&rec.email){
-      try{
-        await _auth.signInWithEmailAndPassword(rec.email,newVal);
-      }catch(e){}
-    }
-    document.getElementById('forgot-user').value='';
-    document.getElementById('forgot-pass').value='';
-    document.getElementById('forgot-pass2').value='';
-    errEl.style.color='#10b981';
-    errEl.textContent='ตั้งรหัสผ่านใหม่สำเร็จ! กรุณาเข้าสู่ระบบ';
-    setTimeout(function(){ switchToLogin(); errEl.style.color=''; },1800);
-  }catch(e){ errEl.textContent='เกิดข้อผิดพลาด กรุณาลองใหม่'; }
-  btn.disabled=false; btn.innerHTML='<i class="fas fa-key"></i> ตั้งรหัสผ่านใหม่';
-}
-
 // ══════════════════════════════════════════
 //  AUTO-LOCK
 // ══════════════════════════════════════════
