@@ -10825,27 +10825,27 @@ function renderEmergencyFund(){
   var covered=avgExp>0?liquidAssets/avgExp:0;
   var pct=Math.min(100,(covered/target)*100);
   var status,color;
-  if(covered<1){status='วิกฤต';color='#ef4444';}
-  else if(covered<3){status='ต่ำ';color='#f59e0b';}
-  else if(covered<target){status='กำลังดี';color='#06b6d4';}
-  else{status='ปลอดภัย';color='#10b981';}
-  var need=covered<target&&avgExp>0?'<div style="margin-top:10px;padding:8px 12px;background:rgba(16,185,129,.08);border-radius:8px;font-size:12px;color:#10b981">ต้องเก็บเพิ่ม: <strong>'+fmt(Math.round((target-covered)*avgExp))+'</strong> เพื่อให้ครบ '+target+' เดือน</div>':'';
+  if(covered<1){status=tr('ef_critical');color='#ef4444';}
+  else if(covered<3){status=tr('ef_low');color='#f59e0b';}
+  else if(covered<target){status=tr('ef_fair');color='#06b6d4';}
+  else{status=tr('ef_safe');color='#10b981';}
+  var need=covered<target&&avgExp>0?'<div style="margin-top:10px;padding:8px 12px;background:rgba(16,185,129,.08);border-radius:8px;font-size:12px;color:#10b981">'+tr('ef_need_more')+': <strong>'+fmt(Math.round((target-covered)*avgExp))+'</strong> '+tr('ef_to_reach')+' '+target+' '+tr('hs_months')+'</div>':'';
   el.innerHTML='<div class="comparison-card">'
     +'<div class="sec-hd" style="margin-bottom:12px">'
-      +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-shield-alt" style="color:#10b981;font-size:12px"></i></div><div class="sec-title">กองทุนฉุกเฉิน</div></div>'
+      +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-shield-alt" style="color:#10b981;font-size:12px"></i></div><div class="sec-title">'+tr('ef_title')+'</div></div>'
       +'<div style="display:flex;align-items:center;gap:8px">'
         +'<span style="font-size:12px;font-weight:600;color:'+color+';padding:3px 10px;background:'+color+'22;border-radius:20px">'+status+'</span>'
-        +'<input type="number" title="เดือนเป้าหมาย" value="'+target+'" min="1" max="24" style="width:44px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:2px 6px;color:var(--text);font-size:12px;text-align:center;font-family:Sarabun,sans-serif" onchange="DB.settings.efMonths=parseFloat(this.value)||6;saveDB();renderEmergencyFund()" title="เดือนเป้าหมาย"> เดือน'
+        +'<input type="number" title="'+tr('ef_target_months')+'" value="'+target+'" min="1" max="24" style="width:44px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:2px 6px;color:var(--text);font-size:12px;text-align:center;font-family:Sarabun,sans-serif" onchange="DB.settings.efMonths=parseFloat(this.value)||6;saveDB();renderEmergencyFund()" title="'+tr('ef_target_months')+'"> '+tr('hs_months')+''
       +'</div>'
     +'</div>'
     +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">'
-      +'<span style="font-size:28px;font-weight:800;color:'+color+'">'+covered.toFixed(1)+' <span style="font-size:14px;font-weight:400;color:var(--muted)">เดือน</span></span>'
-      +'<span style="font-size:12px;color:var(--muted)">เป้า '+target+' เดือน</span>'
+      +'<span style="font-size:28px;font-weight:800;color:'+color+'">'+covered.toFixed(1)+' <span style="font-size:14px;font-weight:400;color:var(--muted)">'+tr('hs_months')+'</span></span>'
+      +'<span style="font-size:12px;color:var(--muted)">'+tr('target')+' '+target+' '+tr('hs_months')+'</span>'
     +'</div>'
     +'<div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-bottom:10px"><div style="height:100%;width:'+pct+'%;background:'+color+';border-radius:4px;transition:width .5s"></div></div>'
     +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)">'
-      +'<span>เงินในบัญชี: '+fmt(Math.round(liquidAssets))+'</span>'
-      +(avgExp>0?'<span>ค่าใช้จ่ายเฉลี่ย: '+fmt(Math.round(avgExp))+'/เดือน</span>':'')
+      +'<span>'+tr('ef_bank_balance')+': '+fmt(Math.round(liquidAssets))+'</span>'
+      +(avgExp>0?'<span>'+tr('ef_avg_expense')+': '+fmt(Math.round(avgExp))+'/'+tr('month_short')+'</span>':'')
     +'</div>'
     +need
   +'</div>';
