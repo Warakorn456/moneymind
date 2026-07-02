@@ -7540,15 +7540,15 @@ function renderBalance(){
   el.innerHTML=`
   <!-- Net Worth Banner -->
   <div class="nw-card">
-    <div style="font-size:12px;color:var(--muted);margin-bottom:4px">ความมั่งคั่งสุทธิ (Net Worth)</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:4px">${tr('net_worth_full')}</div>
     <div style="font-size:32px;font-weight:800;color:${nw.netWorth>=0?'#a78bfa':'#ef4444'}">${fmt(nw.netWorth)}</div>
-    <div style="font-size:13px;color:var(--muted);margin-top:4px">สินทรัพย์ ${fmt(nw.totalAssets)} − หนี้สิน ${fmt(nw.debts)}</div>
+    <div style="font-size:13px;color:var(--muted);margin-top:4px">${tr('assets')} ${fmt(nw.totalAssets)} − ${tr('liabilities')} ${fmt(nw.debts)}</div>
   </div>
 
   <!-- Balance Sheet -->
   <div class="bs-grid">
     <div class="bs-card">
-      <div class="set-title"><i class="fas fa-coins" style="color:#10b981"></i> สินทรัพย์</div>
+      <div class="set-title"><i class="fas fa-coins" style="color:#10b981"></i> ${tr('assets')}</div>
       ${(()=>{
         const ports=getPortfolios();
         const allInv=DB.investments||[];
@@ -7560,9 +7560,9 @@ function renderBalance(){
         const uncat=allInv.filter(i=>!i.portId||!ports.find(p=>p.id===i.portId));
         if(uncat.length){
           const uVal=uncat.reduce((s,i)=>s+i.value,0);
-          rows+=`<div class="bs-row"><span style="color:var(--muted);font-size:12px">ไม่ระบุพอร์ต</span><span style="color:#10b981">${fmt(uVal)}</span></div>`;
+          rows+=`<div class="bs-row"><span style="color:var(--muted);font-size:12px">${tr('no_portfolio')}</span><span style="color:#10b981">${fmt(uVal)}</span></div>`;
         }
-        if(!allInv.length) rows+=`<div class="bs-row"><span style="color:var(--muted);font-size:12px">ยังไม่มีการลงทุน</span><span>฿0</span></div>`;
+        if(!allInv.length) rows+=`<div class="bs-row"><span style="color:var(--muted);font-size:12px">${tr('inv_none_yet')}</span><span>฿0</span></div>`;
         return rows;
       })()}
       ${(plan.extraAssets||[]).map(a=>`
