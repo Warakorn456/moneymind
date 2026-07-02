@@ -200,10 +200,8 @@ export default function WebApp() {
         console.warn('[push] ผู้ใช้ไม่อนุญาต notification permission');
         return;
       }
-      const projectId = 'https://github.com/Warakorn456/moneymind'; // placeholder, overwritten below
-      const tokenResp = await Notifications.getExpoPushTokenAsync({
-        projectId: require('expo-constants').default?.expoConfig?.extra?.eas?.projectId,
-      });
+      const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+      const tokenResp = await Notifications.getExpoPushTokenAsync({ projectId });
       injectPushToken(tokenResp.data);
     } catch (e) {
       console.warn('[push] register error:', e);
