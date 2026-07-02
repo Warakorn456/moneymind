@@ -9866,20 +9866,20 @@ function saveTransfer(){
   var amt=parseFloat(document.getElementById('transfer-amt').value);
   var date=document.getElementById('transfer-date').value;
   var note=document.getElementById('transfer-note').value.trim();
-  if(fromId===toId){ toast('บัญชีต้นทางและปลายทางต้องไม่ใช่บัญชีเดียวกัน','error'); return; }
-  if(isNaN(amt)||amt<=0){ toast('กรุณาระบุจำนวนเงิน','error'); return; }
+  if(fromId===toId){ toast(tr('transfer_same_account'),'error'); return; }
+  if(isNaN(amt)||amt<=0){ toast(tr('transfer_need_amount'),'error'); return; }
   var banks=getBanks();
   var from=banks.find(function(b){ return b.id===fromId; });
   var to=banks.find(function(b){ return b.id===toId; });
   if(!from||!to) return;
-  if(from.balance<amt){ toast('ยอดเงินในบัญชีต้นทางไม่เพียงพอ','error'); return; }
+  if(from.balance<amt){ toast(tr('transfer_insufficient'),'error'); return; }
   from.balance=Math.round((from.balance-amt)*100)/100;
   to.balance=Math.round((to.balance+amt)*100)/100;
   // บันทึกเป็น transfer transaction (ไม่นับใน income/expense)
   if(!DB.transactions) DB.transactions=[];
-  DB.transactions.push({id:'tx_'+Date.now(),date:date,type:'transfer',amount:amt,description:(note||'โอนเงิน')+' '+from.name+' → '+to.name,category:'transfer',fromBankId:fromId,toBankId:toId,tags:[]});
+  DB.transactions.push({id:'tx_'+Date.now(),date:date,type:'transfer',amount:amt,description:(note||tr('bank_transfer'))+' '+from.name+' → '+to.name,category:'transfer',fromBankId:fromId,toBankId:toId,tags:[]});
   saveDB(); closeM('m-transfer'); renderPage(curPage);
-  toast('โอนเงิน '+fmt(amt)+' จาก '+from.name+' → '+to.name+' เรียบร้อย','success');
+  toast(tr('transfer_success').replace('{amt}',fmt(amt)).replace('{from}',from.name).replace('{to}',to.name),'success');
 }
 
 // ══════════════════════════════════════════
