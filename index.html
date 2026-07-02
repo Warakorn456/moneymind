@@ -12499,7 +12499,7 @@ function renderSubscriptions(){
   }
 
   function makeCards(arr){
-    if(!arr.length) return '<div class="empty"><i class="fas fa-credit-card"></i><p>ยังไม่มี subscription</p></div>';
+    if(!arr.length) return '<div class="empty"><i class="fas fa-credit-card"></i><p>'+tr('sub_none_yet')+'</p></div>';
     return arr.map(function(s){
       var mo=subMonthly(s);
       var dim=s.active===false?'opacity:.45;':'';
