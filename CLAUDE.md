@@ -401,6 +401,7 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | **Smart Advisor** (spending pace ทุก category → เตือนเฉพาะเมื่อ projected เกิน avg 30%) | 20:00 ทุกวัน | `smart_advisor.py` → personal + topic 💰 (เงียบถ้าปกติ) |
 | **AI Coach** (pace warning กลางเดือน — projection vs avg 3 เดือน + หมวดพุ่ง, AI เรียบเรียง) | พุธ+เสาร์ 19:00 | `ai_coach.py` → topic 💰 |
 | **Subscription Detect** (หา recurring charge ที่ลืมบันทึก) | วันที่ 3 ของเดือน 09:00 | `subscription_detect.py` → topic 💰 |
+| **Report Relay** (feedback ผู้ใช้ + client JS error จากเว็บ → Telegram) | ทุก 5 นาที | `report_relay.py` → topic feedback (thread 907); อ่าน Firestore `reports` collection ผ่าน SA แล้วลบ doc ทันทีที่ส่งสำเร็จ — ใหม่ 2026-07-02 แทนที่ client เดิมยิง Telegram ตรงด้วย hardcode token |
 | **Cron Health Monitor** (log เก่า + crash ของ ~30 cron) | 11:00 ทุกวัน | `cron_health.py` → topic 💰 (dedup 2 วัน) |
 | **Token Watchdog** (refresh gmail/drive token) | 11:30 ทุกวัน | `token_watchdog.py` → topic 💰 (เตือนก่อน revoke) |
 | **Duplicate Check** (txn ซ้ำจาก 4 pipelines) | อาทิตย์ 09:00 | `dup_cleanup.py` → topic 💰 (report-only ไม่ลบ) |
