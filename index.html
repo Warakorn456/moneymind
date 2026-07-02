@@ -10376,15 +10376,15 @@ function addOTLog(){
   var hours=parseFloat(document.getElementById('ot-inp-hours')?.value||0);
   var note=document.getElementById('ot-inp-note')?.value.trim()||'';
   if(!date){ toast(tr('scan_select_date'),'error'); return; }
-  if(!hours||hours<=0){ toast('กรุณาใส่จำนวนชั่วโมง','error'); return; }
+  if(!hours||hours<=0){ toast(tr('ot_need_hours'),'error'); return; }
   if(!DB.otLogs) DB.otLogs=[];
   DB.otLogs.push({id:uid(),date,type,hours,note});
   saveDB(); renderOT();
-  toast('เพิ่ม OT '+hours+' ชม. แล้ว','success');
+  toast(tr('ot_added_hours').replace('{n}',hours),'success');
 }
 
 function deleteOTLog(id){
-  if(!confirm('ลบรายการ OT นี้?')) return;
+  if(!confirm(tr('ot_confirm_delete'))) return;
   DB.otLogs=(DB.otLogs||[]).filter(function(l){ return l.id!==id; });
   saveDB(); renderOT(); toast(tr('deleted'),'info');
 }
