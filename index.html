@@ -1176,16 +1176,16 @@
     <div class="dash-hero">
       <div class="dash-hero-top">
         <div class="dash-hero-nw">
-          <div class="dash-hero-label"><i class="fas fa-crown" style="margin-right:5px;opacity:.6"></i>ความมั่งคั่งสุทธิ (Net Worth)</div>
+          <div class="dash-hero-label"><i class="fas fa-crown" style="margin-right:5px;opacity:.6"></i><span data-i18n="dh_networth">ความมั่งคั่งสุทธิ (Net Worth)</span></div>
           <div class="dash-hero-amount" id="s-networth" style="color:#c4b5fd">฿0</div>
-          <div class="dash-hero-sub" id="s-networth-sub">สินทรัพย์ − หนี้สิน</div>
+          <div class="dash-hero-sub" id="s-networth-sub" data-i18n="dh_assets_minus_debts">สินทรัพย์ − หนี้สิน</div>
         </div>
         <div class="dash-hero-actions">
           <button class="btn btn-primary" style="padding:9px 16px;font-size:13px;gap:6px" onclick="openTxModal();document.querySelector('#m-tx .type-btn.inc')?.click()">
-            <i class="fas fa-plus"></i> รายรับ
+            <i class="fas fa-plus"></i> <span data-i18n="dh_income">รายรับ</span>
           </button>
           <button class="btn" style="padding:9px 16px;font-size:13px;background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4);color:#f87171;gap:6px" onclick="openTxModal();document.querySelector('#m-tx .type-btn.exp')?.click()">
-            <i class="fas fa-minus"></i> รายจ่าย
+            <i class="fas fa-minus"></i> <span data-i18n="dh_expense">รายจ่าย</span>
           </button>
           <button class="btn btn-ghost" style="padding:9px 14px;font-size:13px" onclick="nav('balance')">
             <i class="fas fa-balance-scale"></i>
@@ -1198,25 +1198,25 @@
       <!-- 4 mini stats -->
       <div class="dash-hero-stats">
         <div class="dash-hero-stat dhs-green">
-          <div class="dhs-label"><i class="fas fa-arrow-down" style="margin-right:4px"></i>รายรับ</div>
+          <div class="dhs-label"><i class="fas fa-arrow-down" style="margin-right:4px"></i><span data-i18n="dh_income">รายรับ</span></div>
           <div class="dhs-value" id="s-income" style="color:#34d399">฿0</div>
-          <div class="dhs-sub">เดือนนี้</div>
+          <div class="dhs-sub" data-i18n="dh_this_month">เดือนนี้</div>
         </div>
         <div class="dash-hero-stat dhs-red">
-          <div class="dhs-label"><i class="fas fa-arrow-up" style="margin-right:4px"></i>รายจ่าย</div>
+          <div class="dhs-label"><i class="fas fa-arrow-up" style="margin-right:4px"></i><span data-i18n="dh_expense">รายจ่าย</span></div>
           <div class="dhs-value" id="s-expense" style="color:#f87171">฿0</div>
-          <div class="dhs-sub">เดือนนี้</div>
-          <div class="dhs-sub" id="s-saving-row" style="color:#06b6d4;margin-top:2px;display:none;font-size:11px"><i class="fas fa-piggy-bank" style="font-size:9px"></i> ออม <span id="s-saving">฿0</span></div>
+          <div class="dhs-sub" data-i18n="dh_this_month">เดือนนี้</div>
+          <div class="dhs-sub" id="s-saving-row" style="color:#06b6d4;margin-top:2px;display:none;font-size:11px"><i class="fas fa-piggy-bank" style="font-size:9px"></i> <span data-i18n="dh_saving">ออม</span> <span id="s-saving">฿0</span></div>
         </div>
         <div class="dash-hero-stat dhs-blue">
-          <div class="dhs-label"><i class="fas fa-wallet" style="margin-right:4px"></i>คงเหลือ</div>
+          <div class="dhs-label"><i class="fas fa-wallet" style="margin-right:4px"></i><span data-i18n="dh_remaining">คงเหลือ</span></div>
           <div class="dhs-value" id="s-balance" style="color:#60a5fa">฿0</div>
-          <div class="dhs-sub">รายรับ − รายจ่าย − ออม</div>
+          <div class="dhs-sub" data-i18n="dh_remaining_formula">รายรับ − รายจ่าย − ออม</div>
         </div>
         <div class="dash-hero-stat dhs-amber">
-          <div class="dhs-label"><i class="fas fa-chart-pie" style="margin-right:4px"></i>พอร์ตลงทุน</div>
+          <div class="dhs-label"><i class="fas fa-chart-pie" style="margin-right:4px"></i><span data-i18n="dh_portfolio">พอร์ตลงทุน</span></div>
           <div class="dhs-value" id="s-portfolio" style="color:#fbbf24">฿0</div>
-          <div class="dhs-sub">มูลค่าปัจจุบัน</div>
+          <div class="dhs-sub" data-i18n="dh_current_value">มูลค่าปัจจุบัน</div>
         </div>
       </div>
     </div>
