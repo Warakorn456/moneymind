@@ -8831,7 +8831,7 @@ function exportCSV(){
   if(_nativeSaveFile(blob,fn,'text/csv;charset=utf-8')) return;
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=fn; a.click();
-  toast('ส่งออก CSV แล้ว','success');
+  toast(tr('csv_exported'),'success');
 }
 
 // ══════════════════════════════════════════
@@ -11182,7 +11182,7 @@ function exportAdminCsv(){
   if(_nativeSaveFile(blob,fn,'text/csv;charset=utf-8')) return;
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=fn; a.click();
-  toast('ส่งออก CSV แล้ว','success');
+  toast(tr('csv_exported'),'success');
 }
 function filterAdminTable(q){
   q=(q||'').toLowerCase().trim();
