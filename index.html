@@ -1350,28 +1350,28 @@
   <div id="pg-travel" class="page">
     <div class="card" style="padding:16px;margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-        <div style="font-size:15px;font-weight:700"><i class="fas fa-globe-asia" style="color:#0ea5e9"></i> แผนที่การเดินทาง</div>
-        <button id="travel-spin-btn" class="btn btn-ghost" style="padding:6px 10px;font-size:12px" onclick="travelToggleSpin()"><i class="fas fa-pause"></i> หยุดหมุน</button>
+        <div style="font-size:15px;font-weight:700"><i class="fas fa-globe-asia" style="color:#0ea5e9"></i> <span data-i18n="travel_map">แผนที่การเดินทาง</span></div>
+        <button id="travel-spin-btn" class="btn btn-ghost" style="padding:6px 10px;font-size:12px" onclick="travelToggleSpin()"><i class="fas fa-pause"></i> <span data-i18n="travel_stop_spin">หยุดหมุน</span></button>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-        <input id="travel-search" class="finput" style="flex:1;min-width:170px" placeholder="พิมพ์ประเทศ/เมือง เช่น ญี่ปุ่น, ปารีส, เชียงใหม่" onkeydown="if(event.key==='Enter')travelSearch()">
-        <button class="btn btn-primary" onclick="travelSearch()"><i class="fas fa-location-arrow"></i> หมุนไป</button>
+        <input id="travel-search" class="finput" style="flex:1;min-width:170px" placeholder="พิมพ์ประเทศ/เมือง เช่น ญี่ปุ่น, ปารีส, เชียงใหม่" data-i18n-ph="travel_search_ph" onkeydown="if(event.key==='Enter')travelSearch()">
+        <button class="btn btn-primary" onclick="travelSearch()"><i class="fas fa-location-arrow"></i> <span data-i18n="travel_fly_to">หมุนไป</span></button>
       </div>
       <div id="travel-pending" style="display:none;margin-bottom:12px"></div>
-      <div id="travel-globe-canvas" style="width:100%;height:380px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px">แตะปุ่ม "หมุนไป" หรือเปิดหน้านี้เพื่อโหลดลูกโลก…</div>
+      <div id="travel-globe-canvas" style="width:100%;height:380px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px" data-i18n="travel_globe_hint">แตะปุ่ม "หมุนไป" หรือเปิดหน้านี้เพื่อโหลดลูกโลก…</div>
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:10px;gap:8px">
         <div style="display:flex;gap:12px;font-size:11px;color:var(--muted)">
-          <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#34d399;margin-right:4px"></span>เคยไปแล้ว</span>
-          <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#fbbf24;margin-right:4px"></span>อยากไป</span>
-          <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#f87171;margin-right:4px"></span>ตำแหน่งฉัน</span>
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#34d399;margin-right:4px"></span><span data-i18n="travel_visited">เคยไปแล้ว</span></span>
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#fbbf24;margin-right:4px"></span><span data-i18n="travel_want_to_go">อยากไป</span></span>
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#f87171;margin-right:4px"></span><span data-i18n="travel_my_location">ตำแหน่งฉัน</span></span>
         </div>
         <div style="display:flex;gap:6px">
-          <button id="travel-myloc-btn" class="btn btn-ghost" onclick="travelGetMyLocation()" style="padding:5px 10px;font-size:11px"><i class="fas fa-crosshairs" style="color:#f87171"></i> ตำแหน่งฉัน</button>
-          <button class="btn btn-ghost" onclick="travelToggleRoutePanel()" style="padding:5px 10px;font-size:11px"><i class="fas fa-route" style="color:#a78bfa"></i> วางแผนเส้นทาง</button>
+          <button id="travel-myloc-btn" class="btn btn-ghost" onclick="travelGetMyLocation()" style="padding:5px 10px;font-size:11px"><i class="fas fa-crosshairs" style="color:#f87171"></i> <span data-i18n="travel_my_location">ตำแหน่งฉัน</span></button>
+          <button class="btn btn-ghost" onclick="travelToggleRoutePanel()" style="padding:5px 10px;font-size:11px"><i class="fas fa-route" style="color:#a78bfa"></i> <span data-i18n="travel_plan_route">วางแผนเส้นทาง</span></button>
         </div>
       </div>
       <div id="travel-route-panel" style="display:none;margin-top:12px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:12px">
-        <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)"><i class="fas fa-route" style="color:#a78bfa"></i> วางแผนเส้นทาง</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)"><i class="fas fa-route" style="color:#a78bfa"></i> <span data-i18n="travel_plan_route">วางแผนเส้นทาง</span></div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="width:22px;height:22px;border-radius:50%;background:#4ade80;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#000;flex-shrink:0">A</span>
@@ -1383,12 +1383,12 @@
           </div>
         </div>
         <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
-          <button class="btn travel-mode-btn" data-mode="driving" onclick="travelSetMode('driving')" style="flex:1;min-width:60px;padding:5px;font-size:11px;background:var(--primary);color:#fff;border-radius:8px"><i class="fas fa-car"></i> รถยนต์</button>
-          <button class="btn travel-mode-btn" data-mode="foot" onclick="travelSetMode('foot')" style="flex:1;min-width:60px;padding:5px;font-size:11px;border-radius:8px"><i class="fas fa-walking"></i> เดิน</button>
-          <button class="btn travel-mode-btn" data-mode="bike" onclick="travelSetMode('bike')" style="flex:1;min-width:60px;padding:5px;font-size:11px;border-radius:8px"><i class="fas fa-bicycle"></i> จักรยาน</button>
-          <button class="btn travel-mode-btn" data-mode="plane" onclick="travelSetMode('plane')" style="flex:1;min-width:60px;padding:5px;font-size:11px;border-radius:8px"><i class="fas fa-plane"></i> เครื่องบิน</button>
+          <button class="btn travel-mode-btn" data-mode="driving" onclick="travelSetMode('driving')" style="flex:1;min-width:60px;padding:5px;font-size:11px;background:var(--primary);color:#fff;border-radius:8px"><i class="fas fa-car"></i> <span data-i18n="travel_car">รถยนต์</span></button>
+          <button class="btn travel-mode-btn" data-mode="foot" onclick="travelSetMode('foot')" style="flex:1;min-width:60px;padding:5px;font-size:11px;border-radius:8px"><i class="fas fa-walking"></i> <span data-i18n="travel_walk">เดิน</span></button>
+          <button class="btn travel-mode-btn" data-mode="bike" onclick="travelSetMode('bike')" style="flex:1;min-width:60px;padding:5px;font-size:11px;border-radius:8px"><i class="fas fa-bicycle"></i> <span data-i18n="travel_bike">จักรยาน</span></button>
+          <button class="btn travel-mode-btn" data-mode="plane" onclick="travelSetMode('plane')" style="flex:1;min-width:60px;padding:5px;font-size:11px;border-radius:8px"><i class="fas fa-plane"></i> <span data-i18n="travel_plane">เครื่องบิน</span></button>
         </div>
-        <button class="btn btn-primary" onclick="travelRoute()" style="width:100%;margin-top:10px"><i class="fas fa-directions"></i> คำนวณเส้นทาง</button>
+        <button class="btn btn-primary" onclick="travelRoute()" style="width:100%;margin-top:10px"><i class="fas fa-directions"></i> <span data-i18n="travel_calc_route">คำนวณเส้นทาง</span></button>
         <div id="travel-route-result" style="display:none;margin-top:10px"></div>
       </div>
     </div>
