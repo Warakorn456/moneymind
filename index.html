@@ -9670,7 +9670,7 @@ function saveRebalTarget(type,val){
       if(!target) return;
       const actual=(DB.investments.filter(i=>i.type===t).reduce((s,i)=>s+i.value,0)/totalVal)*100;
       const dev=Math.abs(actual-target);
-      if(dev>=5) toast(`⚠️ ${t} เบี่ยงจากเป้า ${dev.toFixed(1)}%`,'warn');
+      if(dev>=5) toast(`⚠️ ${t} ${tr('rebal_deviates')} ${dev.toFixed(1)}%`,'warn');
     });
   }
 }
