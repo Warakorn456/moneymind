@@ -7816,7 +7816,7 @@ function deleteChild(id){ const p=getProfile(); p.family.children=p.family.child
 function renderProfile(){
   const p=getProfile();
   const fmt=n=>n?'฿'+Number(n).toLocaleString('th-TH'):'';
-  const skillLevels=['','พื้นฐาน','เบื้องต้น','ปานกลาง','ดี','เชี่ยวชาญ'];
+  const skillLevels=['',tr('skill_basic'),tr('skill_beginner'),tr('skill_intermediate'),tr('skill_good'),tr('skill_expert')];
   const catColors={tech:'#06b6d4',lang:'#a78bfa',soft:'#10b981',creative:'#f59e0b',other:'#94a3b8'};
 
   // Education entries
