@@ -3927,8 +3927,8 @@ function renderCatChart(){
   // อัปเดต label ปุ่ม toggle money-movement
   const tgl=document.getElementById('toggle-money-move');
   if(tgl) tgl.innerHTML=hideMoveOn()
-    ? '<i class="fas fa-eye-slash"></i> ซ่อนเงินโอน/ถอน'
-    : '<i class="fas fa-eye"></i> รวมเงินโอน/ถอน';
+    ? '<i class="fas fa-eye-slash"></i> '+tr('hide_transfer_cash')
+    : '<i class="fas fa-eye"></i> '+tr('show_transfer_cash');
   const txs=monthTx().filter(isRealExp);
   const by={};
   txs.forEach(t=>{ by[t.category]=(by[t.category]||0)+t.amount; });
@@ -3936,7 +3936,7 @@ function renderCatChart(){
   const ctx=document.getElementById('ch-cat').getContext('2d');
   if(chCat) chCat.destroy();
   if(!cats.length){
-    ctx.canvas.parentElement.innerHTML='<div class="empty" style="padding:30px 0"><i class="fas fa-chart-pie"></i><p>ยังไม่มีรายจ่ายเดือนนี้</p></div>';
+    ctx.canvas.parentElement.innerHTML='<div class="empty" style="padding:30px 0"><i class="fas fa-chart-pie"></i><p>'+tr('no_expense_this_month')+'</p></div>';
     return;
   }
   chCat=new Chart(ctx,{
