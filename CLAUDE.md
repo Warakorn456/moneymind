@@ -231,6 +231,14 @@ _escHtml(s)              // escape HTML string (บรรทัด ~14142, ใ�
 | Transactions | กรองตามหมวด (`tx-cat-filter`) + bulk select (`toggleBulkMode`): ติ๊กหลายรายการ → เปลี่ยนหมวด (`applyBulkCat`)/ลบ (`bulkDelete`) ทีเดียว; floating `bulk-bar` |
 | Dashboard | **Finance Character** (`renderFinanceChar`, `#dash-char-section`) — ตัวละคร SVG chibi **8 ระดับ** (Iron→Legend, lv 1–8) แสดง Net Worth ชนชั้น + progress bar + Health Score + คำแนะนำ; monkey-patch บน renderDash |
 | Dashboard | **Rank Popup Character** — ใน `_buildRankPopupBody` แสดงตัวละคร chibi แบบ **SVG vector** (ไม่ใช่ sprite image); ฟังก์ชัน `_fcSVG(lv, gender)` อยู่ใน IIFE ที่ expose เป็น `window._fcSvgG`; `_buildRankPopupBody` ต้องเรียกผ่าน `window._fcSvgG` ไม่ใช่ `_fcSVG` ตรงๆ; gender toggle `window._fcGender` 0=หญิง 1=ชาย; K array index 1–8 (null placeholder ที่ 0) |
+| Dashboard | **Wealth Ranking (percentile)** — `_WT_DATA` เก็บ 8 tier ต่อ 3 ขอบเขต (`th`/`asean`/`world`, ข้อมูลอ้าง Credit Suisse 2023) แต่ละ tier มี min/max net worth + `pct` (สัดส่วนประชากร); `_calcPercentile(nw, scopeKey)` คำนวณ percentile จริงจาก NW ปัจจุบัน (interpolate ในช่วง tier); `_getRank(lv)` แปลง lv→ชื่ออันดับ (`_RANK_TIERS` Iron→Legend, คนละชุดกับ `_WT_DATA` แต่ lv 1–8 ตรงกัน); `_rankPopupScope`/`_wrankScope` toggle ขอบเขตที่แสดงในป็อปอัพ |
+| Onboarding | **Welcome Onboarding** (`_showWelcomeOnboard`) — overlay 4 ขั้นตอนแนะนำผู้ใช้ใหม่ (บันทึกรายการแรก→เพิ่มธนาคาร→ตั้งเป้าออม→ลอง AI มายา) คลิกแต่ละขั้น `nav()` ไปหน้านั้นเลย |
+| System | **PDPA Consent** — banner/modal ขอความยินยอมเก็บข้อมูล (เพิ่มเป็น mini-feature "1." ท้ายไฟล์) |
+| Dashboard | **Empty State** — หน้า Dashboard ว่าง (ยังไม่มี transaction) แสดง placeholder แนะนำแทนกราฟ/การ์ดว่างเปล่า |
+| System | **Rate Limit Login** (`_rlCheck`/`_rlFail`/`_rlReset`, key `mm_login_fail`) — ใส่รหัสผ่านผิดครบ 5 ครั้ง (`_RL_MAX`) → ล็อก 5 นาที (`_RL_LOCK_MS`); monkey-patch บน `tryLogin` |
+| System | **Feedback Modal** — ฟอร์มส่งความคิดเห็น/รายงานปัญหาในแอป (mini-feature "4." ท้ายไฟล์) |
+| System | **Chat FAB Drag** — ปุ่มลอย (FAB) เปิดแชท Maya ลากได้ทั้งจอ, snap ไปขอบที่ใกล้ที่สุดอัตโนมัติ, จำตำแหน่งไว้ `localStorage` (`mm_fab_pos`) |
+| Transactions | **Gmail Bank Auto-Import (client-side)** — poll URL จาก `DB.settings.gmailImportUrl` (n8n เขียนลง Google Sheet "PendingTx") ทุก 1 นาที (`_gmailPoll`/`_gmailStartPoll`), badge แจ้งจำนวนรายการค้าง (`_gmailUpdateBadge`); คลิกเปิด modal (`openGmailInbox`/`_renderGmailModal`) แก้ไข/ยืนยันทีละรายการ (`confirmGmailTx`) หรือยืนยันทั้งหมด (`confirmAllGmailTx`) ก่อนบันทึกเข้า `DB.transactions` จริง — คนละส่วนกับ GCP script `gmail_bank_alert.py` (ฝั่งนั้นดัก Gmail แล้วเขียน Sheet, ฝั่งนี้ดึง Sheet มาให้ผู้ใช้ยืนยันในเว็บ) |
 | Dashboard | Health Score, NW History, Monthly Comparison, Spending Heatmap, YTD Summary |
 | Dashboard | RVV (Fixed vs Variable), 50/30/20, Emergency Fund, Pay Yourself First |
 | Dashboard | Drag-and-drop reorder sections (DB.settings.dashOrder) |
