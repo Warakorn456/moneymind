@@ -11612,7 +11612,7 @@ function renderYTD(){
   if(ci===0&&ce===0&&pi===0&&pe===0){ el.innerHTML=''; return; }
 
   var TH_MON=monthShortArr();
-  var periodStr='1 ม.ค. – '+now.getDate()+' '+TH_MON[now.getMonth()];
+  var periodStr='1 '+TH_MON[0]+' – '+now.getDate()+' '+TH_MON[now.getMonth()];
 
   function pctChange(cur,prev){
     if(prev===0) return cur>0?'+100%':'—';
