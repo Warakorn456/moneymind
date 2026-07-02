@@ -6557,7 +6557,7 @@ function clearAll(){
   if(!confirm(tr('clear_all_confirm1'))) return;
   if(!confirm(tr('clear_all_confirm2'))) return;
   DB={transactions:[],savings:[],debts:[],investments:[],settings:{apiKey:''}};
-  saveDB(); renderPage(curPage); toast('ล้างข้อมูลแล้ว','info');
+  saveDB(); renderPage(curPage); toast(tr('data_cleared'),'info');
 }
 
 // ══════════════════════════════════════════
