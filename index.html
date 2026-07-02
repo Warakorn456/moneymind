@@ -13099,30 +13099,31 @@ function renderTravel(){
 // ── ประมาณงบทริปล่วงหน้า (ตั๋วเครื่องบิน + ที่พัก + ค่ากินเที่ยว) ──
 let _tripEstStyle='standard';
 const _TRIP_STYLES={
-  budget:  {label:'ประหยัด', daily:700,  hotel:600,  icon:'fa-wallet'},
-  standard:{label:'ปานกลาง', daily:1800, hotel:1800, icon:'fa-hotel'},
-  comfort: {label:'สบาย',   daily:4000, hotel:4500, icon:'fa-star'},
+  budget:  {label:'ประหยัด', labelEn:'Budget', daily:700,  hotel:600,  icon:'fa-wallet'},
+  standard:{label:'ปานกลาง', labelEn:'Standard', daily:1800, hotel:1800, icon:'fa-hotel'},
+  comfort: {label:'สบาย',   labelEn:'Comfort', daily:4000, hotel:4500, icon:'fa-star'},
 };
+function _tripStyleLabel(v){ return (typeof currentLang!=='undefined'&&currentLang==='en')?v.labelEn:v.label; }
 function _travelEstimatorHtml(){
   const places=(DB.travel?.places||[]).filter(p=>p.lat!=null);
   const opts=places.map(p=>'<option value="'+_escAttr(p.name)+'">'+(p.visited?'✓ ':'★ ')+_escHtml(p.name)+'</option>').join('');
   const styleBtns=Object.entries(_TRIP_STYLES).map(([k,v])=>
     '<button class="btn trip-est-style" data-style="'+k+'" onclick="tripEstSetStyle(\''+k+'\')" '
     +'style="flex:1;min-width:74px;padding:6px;font-size:11px;border-radius:8px;'+(k===_tripEstStyle?'background:var(--primary);color:#fff':'')+'">'
-    +'<i class="fas '+v.icon+'"></i> '+v.label+'</button>').join('');
+    +'<i class="fas '+v.icon+'"></i> '+_tripStyleLabel(v)+'</button>').join('');
   return '<div class="card" style="padding:16px;margin-bottom:18px">'
-    +'<div style="font-size:13px;font-weight:700;margin-bottom:4px"><i class="fas fa-calculator" style="color:#f59e0b"></i> ประมาณงบทริป</div>'
-    +'<div style="font-size:11px;color:var(--muted);margin-bottom:12px">คำนวณคร่าวๆ ก่อนไปจริง — ตั๋วเครื่องบินไป-กลับ + ที่พัก + ค่ากินเที่ยว</div>'
+    +'<div style="font-size:13px;font-weight:700;margin-bottom:4px"><i class="fas fa-calculator" style="color:#f59e0b"></i> '+tr('travel_est_title')+'</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:12px">'+tr('travel_est_hint')+'</div>'
     +(places.length?(
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
         +'<select id="trip-est-dest" class="fselect" style="flex:2;min-width:150px">'+opts+'</select>'
-        +'<input id="trip-est-days" class="finput" type="number" min="1" value="4" style="flex:1;min-width:80px" placeholder="กี่วัน">'
+        +'<input id="trip-est-days" class="finput" type="number" min="1" value="4" style="flex:1;min-width:80px" placeholder="'+tr('travel_est_days_ph')+'">'
       +'</div>'
       +'<div style="display:flex;gap:6px;margin-bottom:12px">'+styleBtns+'</div>'
-      +'<button class="btn btn-primary" onclick="tripEstCalc()" style="width:100%"><i class="fas fa-calculator"></i> คำนวณงบ</button>'
+      +'<button class="btn btn-primary" onclick="tripEstCalc()" style="width:100%"><i class="fas fa-calculator"></i> '+tr('travel_est_calc')+'</button>'
       +'<div id="trip-est-result" style="display:none;margin-top:12px"></div>'
     ):(
-      '<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0">ยังไม่มีหมุดสถานที่ — ค้นหาประเทศ/เมืองด้านบน แล้วกด ★ อยากไป ก่อน</div>'
+      '<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0">'+tr('travel_est_no_pins')+'</div>'
     ))
   +'</div>';
 }
