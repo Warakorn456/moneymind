@@ -12506,10 +12506,10 @@ function renderSubscriptions(){
       var days=s.nextDate?daysUntil(s.nextDate):-1;
       var dueStr='';
       if(s.nextDate){
-        if(days<0) dueStr='<span style="font-size:11px;color:var(--muted)">ครบกำหนดแล้ว</span>';
-        else if(days===0) dueStr='<span style="font-size:11px;color:#f87171;font-weight:700">ชำระวันนี้!</span>';
-        else if(days<=3) dueStr='<span style="font-size:11px;color:#fbbf24;font-weight:700">อีก '+days+' วัน</span>';
-        else dueStr='<span style="font-size:11px;color:var(--muted)">อีก '+days+' วัน</span>';
+        if(days<0) dueStr='<span style="font-size:11px;color:var(--muted)">'+tr('sub_overdue')+'</span>';
+        else if(days===0) dueStr='<span style="font-size:11px;color:#f87171;font-weight:700">'+tr('sub_due_today')+'</span>';
+        else if(days<=3) dueStr='<span style="font-size:11px;color:#fbbf24;font-weight:700">'+tr('sub_in_n_days').replace('{n}',days)+'</span>';
+        else dueStr='<span style="font-size:11px;color:var(--muted)">'+tr('sub_in_n_days').replace('{n}',days)+'</span>';
       }
       return '<div class="sub-card" style="'+dim+'">'
         +'<div class="sub-card-accent" style="background:'+s.color+'"></div>'
