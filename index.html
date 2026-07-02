@@ -4360,7 +4360,7 @@ function setTxType(type,btn){
   else document.querySelector('#m-tx .type-btn.'+(dbType==='income'?'inc':'exp'))?.classList.add('active');
   const cats=dbType==='income'?INC_CATS:EXP_CATS;
   const customCats=dbType==='income'?(DB.settings?.customIncCats||[]):(DB.settings?.customExpCats||[]);
-  document.getElementById('tx-cat').innerHTML=cats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')+(customCats.length?'<optgroup label="— หมวดหมู่ของฉัน —">'+customCats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')+'</optgroup>':'');
+  document.getElementById('tx-cat').innerHTML=cats.map(c=>`<option value="${c.id}">${catLabel(c)}</option>`).join('')+(customCats.length?`<optgroup label="— ${tr('my_categories')} —">`+customCats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')+'</optgroup>':'');
   if(isSaving) setTimeout(()=>{ document.getElementById('tx-cat').value='save_tx'; },0);
   document.getElementById('carryover-row').style.display=dbType==='income'?'block':'none';
   if(dbType!=='income') document.getElementById('tx-carryover').checked=false;
