@@ -1068,23 +1068,23 @@
           Apple
         </button>
       </div>
-      <div class="login-toggle">มีบัญชีแล้ว? <span onclick="switchToLogin()">เข้าสู่ระบบ</span></div>
+      <div class="login-toggle"><span data-i18n="have_account">มีบัญชีแล้ว?</span> <span onclick="switchToLogin()" data-i18n="login_link">เข้าสู่ระบบ</span></div>
     </div>
 
     <!-- Forgot Password form -->
     <div id="form-forgot" style="display:none">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:12px;line-height:1.6">Firebase จะส่งลิงก์รีเซ็ตรหัสผ่านไปยัง <strong style="color:#a78bfa">Email</strong> ที่ลงทะเบียนไว้</div>
-      <input class="login-inp" id="forgot-email" type="email" placeholder="Email ที่ใช้สมัคร" autocomplete="email" onkeydown="if(event.key==='Enter') doForgotEmail()">
-      <button class="login-btn" id="forgot-email-btn" onclick="doForgotEmail()" style="background:linear-gradient(135deg,#f59e0b,#d97706)"><i class="fas fa-paper-plane"></i> ส่งอีเมลรีเซ็ตรหัสผ่าน</button>
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:12px;line-height:1.6" data-i18n-html="forgot_desc">Firebase จะส่งลิงก์รีเซ็ตรหัสผ่านไปยัง <strong style="color:#a78bfa">Email</strong> ที่ลงทะเบียนไว้</div>
+      <input class="login-inp" id="forgot-email" type="email" placeholder="Email ที่ใช้สมัคร" data-i18n-ph="ph_forgot_email" autocomplete="email" onkeydown="if(event.key==='Enter') doForgotEmail()">
+      <button class="login-btn" id="forgot-email-btn" onclick="doForgotEmail()" style="background:linear-gradient(135deg,#f59e0b,#d97706)"><i class="fas fa-paper-plane"></i> <span data-i18n="forgot_send_btn">ส่งอีเมลรีเซ็ตรหัสผ่าน</span></button>
       <div class="login-err" id="forgot-err"></div>
-      <div class="login-toggle">ไม่มี Email ผูกกับบัญชี/กู้ไม่ได้? <span onclick="_showFeedbackModal()">ติดต่อทีมงาน</span></div>
-      <div class="login-toggle">กลับไป <span onclick="switchToLogin()">เข้าสู่ระบบ</span></div>
+      <div class="login-toggle"><span data-i18n="no_email_help">ไม่มี Email ผูกกับบัญชี/กู้ไม่ได้?</span> <span onclick="_showFeedbackModal()" data-i18n="contact_us">ติดต่อทีมงาน</span></div>
+      <div class="login-toggle"><span data-i18n="back_to">กลับไป</span> <span onclick="switchToLogin()" data-i18n="login_link">เข้าสู่ระบบ</span></div>
     </div>
   </div>
   <div style="position:absolute;left:0;right:0;bottom:20px;text-align:center;font-size:11px;color:#475569">
-    <a href="privacy.html" target="_blank" style="color:#64748b">นโยบายความเป็นส่วนตัว</a>
+    <a href="privacy.html" target="_blank" style="color:#64748b" data-i18n="privacy_link">นโยบายความเป็นส่วนตัว</a>
     &nbsp;·&nbsp;
-    <a href="terms.html" target="_blank" style="color:#64748b">ข้อกำหนดการใช้งาน</a>
+    <a href="terms.html" target="_blank" style="color:#64748b" data-i18n="terms_link">ข้อกำหนดการใช้งาน</a>
   </div>
 </div>
 
