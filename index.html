@@ -14844,6 +14844,10 @@ window.handleNativePushToken=function(token){
 
 // ขอ push token จาก native หลัง login สำเร็จ (เฉพาะตอนอยู่ในแอป — เว็บ browser ปกติไม่มี native ให้ขอ)
 function _requestPushTokenIfNative(){
+  // DEBUG ชั่วคราว (2026-07-02) — หา root cause ว่าทำไม push token ไม่เข้า Firestore เลย
+  try{
+    _sendReport({kind:'error',message:'push debug: isAndroidApp='+(!!window._isAndroidApp)+' isIOSApp='+(!!window._isIOSApp)+' hasRNWebView='+(!!window.ReactNativeWebView)+' isNativeApp='+_isNativeApp()+' currentUser='+currentUser});
+  }catch(e){}
   if(_isNativeApp()){
     setTimeout(function(){
       window.ReactNativeWebView.postMessage(JSON.stringify({action:'requestPushToken'}));
