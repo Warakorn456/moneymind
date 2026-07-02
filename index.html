@@ -12355,7 +12355,7 @@ function calAddNote(dateStr){
   saveDB();
   inp.value='';
   renderCalendarPage();
-  toast('เพิ่มโน้ตแล้ว','success');
+  toast(tr('cal_note_added'),'success');
 }
 
 function calDeleteNote(dateStr,noteId){
