@@ -4662,7 +4662,7 @@ let stmtRows=[];
 let stmtFilter='all';
 
 function openStmtModal(){
-  if(!DB.settings.apiKey){ toast('กรุณาใส่ Gemini API Key ในหน้าตั้งค่าก่อน','error'); nav('settings'); return; }
+  if(!DB.settings.apiKey){ toast(tr('need_apikey_first'),'error'); nav('settings'); return; }
   resetStmt();
   openM('m-stmt');
 }
