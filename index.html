@@ -1499,65 +1499,65 @@
   <!-- Profile modals -->
   <div class="plan-modal-bg" id="edu-modal-bg" onclick="if(event.target===this)closeModal('edu-modal-bg')">
     <div class="plan-modal">
-      <div style="font-size:16px;font-weight:700;margin-bottom:18px"><i class="fas fa-graduation-cap" style="color:#a78bfa"></i> ประวัติการศึกษา</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:18px"><i class="fas fa-graduation-cap" style="color:#a78bfa"></i> <span data-i18n="prof_education">ประวัติการศึกษา</span></div>
       <input type="hidden" id="edu-edit-id">
-      <div class="fg"><label class="flabel">ระดับการศึกษา</label>
+      <div class="fg"><label class="flabel" data-i18n="edu_level">ระดับการศึกษา</label>
         <select class="finput" id="edu-degree">
-          <option>มัธยมศึกษา</option><option>ปวช./ปวส.</option><option>ปริญญาตรี</option>
-          <option>ปริญญาโท</option><option>ปริญญาเอก</option><option>อื่นๆ</option>
+          <option data-i18n="edu_high_school">มัธยมศึกษา</option><option data-i18n="edu_vocational">ปวช./ปวส.</option><option data-i18n="edu_bachelor">ปริญญาตรี</option>
+          <option data-i18n="edu_master">ปริญญาโท</option><option data-i18n="edu_doctorate">ปริญญาเอก</option><option data-i18n="other">อื่นๆ</option>
         </select></div>
-      <div class="fg"><label class="flabel">สาขาวิชา</label><input class="finput" id="edu-field" placeholder="เช่น วิทยาการคอมพิวเตอร์"></div>
-      <div class="fg"><label class="flabel">สถาบัน</label><input class="finput" id="edu-inst" placeholder="ชื่อโรงเรียน/มหาวิทยาลัย"></div>
+      <div class="fg"><label class="flabel" data-i18n="edu_field">สาขาวิชา</label><input class="finput" id="edu-field" placeholder="เช่น วิทยาการคอมพิวเตอร์" data-i18n-ph="edu_field_ph"></div>
+      <div class="fg"><label class="flabel" data-i18n="edu_institution">สถาบัน</label><input class="finput" id="edu-inst" placeholder="ชื่อโรงเรียน/มหาวิทยาลัย" data-i18n-ph="edu_institution_ph"></div>
       <div style="display:flex;gap:10px">
-        <div class="fg" style="flex:1"><label class="flabel">ปีที่เข้า (ค.ศ.)</label><input class="finput" type="number" id="edu-from" min="1980" max="2040" placeholder="2018"></div>
-        <div class="fg" style="flex:1"><label class="flabel">ปีที่จบ (ค.ศ.)</label><input class="finput" type="number" id="edu-to" min="1980" max="2040" placeholder="2022"></div>
+        <div class="fg" style="flex:1"><label class="flabel" data-i18n="edu_year_start">ปีที่เข้า (ค.ศ.)</label><input class="finput" type="number" id="edu-from" min="1980" max="2040" placeholder="2018"></div>
+        <div class="fg" style="flex:1"><label class="flabel" data-i18n="edu_year_end">ปีที่จบ (ค.ศ.)</label><input class="finput" type="number" id="edu-to" min="1980" max="2040" placeholder="2022"></div>
       </div>
-      <div class="fg"><label class="flabel">เกรดเฉลี่ย (ถ้ามี)</label><input class="finput" id="edu-gpa" placeholder="3.50"></div>
+      <div class="fg"><label class="flabel" data-i18n="edu_gpa">เกรดเฉลี่ย (ถ้ามี)</label><input class="finput" id="edu-gpa" placeholder="3.50"></div>
       <div style="display:flex;gap:10px;margin-top:6px">
-        <button class="btn btn-primary" style="flex:1" onclick="saveEduEntry()">บันทึก</button>
-        <button class="btn btn-ghost" onclick="closeModal('edu-modal-bg')">ยกเลิก</button>
+        <button class="btn btn-primary" style="flex:1" onclick="saveEduEntry()" data-i18n="save">บันทึก</button>
+        <button class="btn btn-ghost" onclick="closeModal('edu-modal-bg')" data-i18n="cancel">ยกเลิก</button>
       </div>
     </div>
   </div>
 
   <div class="plan-modal-bg" id="work-modal-bg" onclick="if(event.target===this)closeModal('work-modal-bg')">
     <div class="plan-modal">
-      <div style="font-size:16px;font-weight:700;margin-bottom:18px"><i class="fas fa-briefcase" style="color:#06b6d4"></i> ประวัติการทำงาน</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:18px"><i class="fas fa-briefcase" style="color:#06b6d4"></i> <span data-i18n="prof_work_history">ประวัติการทำงาน</span></div>
       <input type="hidden" id="work-edit-id">
-      <div class="fg"><label class="flabel">ชื่อบริษัท / องค์กร</label><input class="finput" id="work-co" placeholder="ชื่อบริษัท"></div>
-      <div class="fg"><label class="flabel">ตำแหน่ง</label><input class="finput" id="work-pos" placeholder="เช่น Software Engineer"></div>
+      <div class="fg"><label class="flabel" data-i18n="work_company">ชื่อบริษัท / องค์กร</label><input class="finput" id="work-co" placeholder="ชื่อบริษัท" data-i18n-ph="work_company_ph"></div>
+      <div class="fg"><label class="flabel" data-i18n="work_position">ตำแหน่ง</label><input class="finput" id="work-pos" placeholder="เช่น Software Engineer"></div>
       <div style="display:flex;gap:10px">
-        <div class="fg" style="flex:1"><label class="flabel">เริ่มงาน</label><input class="finput" type="month" id="work-from"></div>
-        <div class="fg" style="flex:1"><label class="flabel">สิ้นสุด <span style="color:var(--muted);font-weight:400">(ว่าง=ปัจจุบัน)</span></label><input class="finput" type="month" id="work-to"></div>
+        <div class="fg" style="flex:1"><label class="flabel" data-i18n="work_start">เริ่มงาน</label><input class="finput" type="month" id="work-from"></div>
+        <div class="fg" style="flex:1"><label class="flabel" data-i18n="work_end">สิ้นสุด</label> <span style="color:var(--muted);font-weight:400" data-i18n="work_end_hint">(ว่าง=ปัจจุบัน)</span><input class="finput" type="month" id="work-to"></div>
       </div>
-      <div class="fg"><label class="flabel">เงินเดือน (บาท)</label><input class="finput" type="number" id="work-sal" min="0" step="1000" placeholder="0"></div>
-      <div class="fg"><label class="flabel">รายละเอียดงาน</label><textarea class="finput" id="work-desc" rows="3" placeholder="สรุปหน้าที่และผลงานสำคัญ"></textarea></div>
+      <div class="fg"><label class="flabel" data-i18n="work_salary">เงินเดือน (บาท)</label><input class="finput" type="number" id="work-sal" min="0" step="1000" placeholder="0"></div>
+      <div class="fg"><label class="flabel" data-i18n="work_desc">รายละเอียดงาน</label><textarea class="finput" id="work-desc" rows="3" placeholder="สรุปหน้าที่และผลงานสำคัญ" data-i18n-ph="work_desc_ph"></textarea></div>
       <div style="display:flex;gap:10px;margin-top:6px">
-        <button class="btn btn-primary" style="flex:1" onclick="saveWorkEntry()">บันทึก</button>
-        <button class="btn btn-ghost" onclick="closeModal('work-modal-bg')">ยกเลิก</button>
+        <button class="btn btn-primary" style="flex:1" onclick="saveWorkEntry()" data-i18n="save">บันทึก</button>
+        <button class="btn btn-ghost" onclick="closeModal('work-modal-bg')" data-i18n="cancel">ยกเลิก</button>
       </div>
     </div>
   </div>
 
   <div class="plan-modal-bg" id="skill-modal-bg" onclick="if(event.target===this)closeModal('skill-modal-bg')">
     <div class="plan-modal">
-      <div style="font-size:16px;font-weight:700;margin-bottom:18px"><i class="fas fa-star" style="color:#f59e0b"></i> เพิ่มทักษะ / ความสามารถ</div>
-      <div class="fg"><label class="flabel">ชื่อทักษะ</label><input class="finput" id="skill-name" placeholder="เช่น Python, Photoshop, การขาย"></div>
-      <div class="fg"><label class="flabel">หมวดหมู่</label>
+      <div style="font-size:16px;font-weight:700;margin-bottom:18px"><i class="fas fa-star" style="color:#f59e0b"></i> <span data-i18n="skill_add">เพิ่มทักษะ / ความสามารถ</span></div>
+      <div class="fg"><label class="flabel" data-i18n="skill_name">ชื่อทักษะ</label><input class="finput" id="skill-name" placeholder="เช่น Python, Photoshop, การขาย" data-i18n-ph="skill_name_ph"></div>
+      <div class="fg"><label class="flabel" data-i18n="tx_category">หมวดหมู่</label>
         <select class="finput" id="skill-cat">
-          <option value="tech">เทคนิค / IT</option>
-          <option value="lang">ภาษา</option>
+          <option value="tech" data-i18n="skill_cat_tech">เทคนิค / IT</option>
+          <option value="lang" data-i18n="skill_cat_lang">ภาษา</option>
           <option value="soft">Soft Skill</option>
-          <option value="creative">ความคิดสร้างสรรค์</option>
-          <option value="other">อื่นๆ</option>
+          <option value="creative" data-i18n="skill_cat_creative">ความคิดสร้างสรรค์</option>
+          <option value="other" data-i18n="other">อื่นๆ</option>
         </select></div>
-      <div class="fg"><label class="flabel">ระดับความสามารถ: <span id="skill-level-label">ปานกลาง</span></label>
-        <input type="range" id="skill-level" min="1" max="5" value="3" oninput="document.getElementById('skill-level-label').textContent=['','พื้นฐาน','เบื้องต้น','ปานกลาง','ดี','เชี่ยวชาญ'][this.value]" style="width:100%;accent-color:var(--primary)">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)"><span>พื้นฐาน</span><span>เชี่ยวชาญ</span></div>
+      <div class="fg"><label class="flabel"><span data-i18n="skill_level">ระดับความสามารถ</span>: <span id="skill-level-label" data-i18n="skill_intermediate">ปานกลาง</span></label>
+        <input type="range" id="skill-level" min="1" max="5" value="3" oninput="document.getElementById('skill-level-label').textContent=['',tr('skill_basic'),tr('skill_beginner'),tr('skill_intermediate'),tr('skill_good'),tr('skill_expert')][this.value]" style="width:100%;accent-color:var(--primary)">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)"><span data-i18n="skill_basic">พื้นฐาน</span><span data-i18n="skill_expert">เชี่ยวชาญ</span></div>
       </div>
       <div style="display:flex;gap:10px;margin-top:6px">
-        <button class="btn btn-primary" style="flex:1" onclick="saveSkillEntry()">บันทึก</button>
-        <button class="btn btn-ghost" onclick="closeModal('skill-modal-bg')">ยกเลิก</button>
+        <button class="btn btn-primary" style="flex:1" onclick="saveSkillEntry()" data-i18n="save">บันทึก</button>
+        <button class="btn btn-ghost" onclick="closeModal('skill-modal-bg')" data-i18n="cancel">ยกเลิก</button>
       </div>
     </div>
   </div>
