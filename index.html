@@ -5064,7 +5064,7 @@ function openSavModal(){
 function editSav(id){
   const s=DB.savings.find(x=>x.id===id); if(!s) return;
   document.getElementById('sav-eid').value=id;
-  document.getElementById('sav-m-title').textContent='แก้ไขเป้าหมาย';
+  document.getElementById('sav-m-title').textContent=tr('sav_edit_goal_title');
   document.getElementById('sav-name').value=s.name;
   document.getElementById('sav-tgt').value=s.target;
   document.getElementById('sav-cur').value=s.current;
