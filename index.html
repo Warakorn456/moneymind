@@ -8801,7 +8801,7 @@ function applyRecurringTx(){
     if(r.bankId) _adjustBankBalance(r.bankId,r.type,r.amount);
     added++;
   });
-  if(added>0){ saveDB(); toast(`เพิ่มรายการซ้ำ ${added} รายการอัตโนมัติ`,'success'); }
+  if(added>0){ saveDB(); toast(tr('recur_auto_added').replace('{n}',added),'success'); }
 }
 
 // ══════════════════════════════════════════
