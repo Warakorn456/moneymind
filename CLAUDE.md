@@ -150,28 +150,52 @@ calcNetWorth()           // คำนวณ Net Worth ปัจจุบัน
 getCat(id, type)         // ดึง category object
 toast(msg, type)         // แสดง notification
 uid()                    // สร้าง unique ID
-_escHtml(s)              // escape HTML string (บรรทัด ~11428)
+_escHtml(s)              // escape HTML string (บรรทัด ~14142, ใกล้ท้ายไฟล์ ไม่ใช่กลางไฟล์)
 ```
 
-## โครงสร้าง Script Block (บรรทัด 2364–11429)
+## โครงสร้าง Script Block (บรรทัด 2478–14739)
+
+อัปเดตล่าสุดด้วย `grep -n "══════" index.html -A1` — ถ้าตัวเลขข้างล่างไม่ตรงกับที่ grep เจอ ให้เชื่อ grep:
 
 ```
-~2364–3215   Auth, DB helpers, nav, renderPage, PAGE_TITLE
-~3216–7390   Core renders: renderDash, renderTx, renderTx, renderInv, renderTax,
-             renderSettings, renderRetire, renderBalance, renderBanks, ...
-~7391–7395   INIT block — checkLogin() + renderDash() on load
-~7396–7500   AI Chat (buildFinanceContext, toggleChat, sendChat, rulesAI)
-             — sendChat ใช้ mayaAgent() (tool calling) เมื่อมี apiKey, fallback rulesAI
-~ก่อน _escHtml  MAYA AGENT — mayaAgent()/MAYA_TOOLS/MAYA_IMPLS (tool calling ใน browser)
-~7500–8948   Features 1–9: notifications, categories, recurring, export, OT, ฯลฯ
-~8949–10300  PATCHES: renderDash, renderSettings, saveTx, renderTx
-             + Quick Add, Bank Transfer, YTD, Savings Rate, Top Merchants,
-               NW Milestone, Heatmap, Monthly Comparison, RVV, Loan Calc
-~10305–10440 Dashboard Section Reorder (drag-and-drop, DB.settings.dashOrder)
-~10441–10840 RVV (Recurring vs Variable), YTD Summary
-~10841–11150 Calendar Page (renderCalendarPage, calNav, calSelectDay, ฯลฯ)
-~11151–11330 Subscription Manager (renderSubscriptions, saveSub, ฯลฯ)
-~11332–11428 Nav Sortable (drag-and-drop sidebar reorder)
+~2478–3338   Firebase config (_ENC), DATA multi-user, Firestore sync setup
+~3338–3472   AUTO-LOCK
+~3472–3540   GEMINI MODEL — auto-retry on quota
+~3540–3589   CATEGORIES (INC_CATS/EXP_CATS)
+~3589–3633   NAVIGATION — PAGE_TITLE (~3592), nav() (~3595), renderPage() (~3611)
+~3633–3745   AI USAGE tab (aiUsageTab)
+~3745–3777   SIDEBAR (mobile), DATE, FORMAT (fmt)
+~3777–4034   DASHBOARD (renderDash core)
+~4034–4377   TRANSACTIONS (txHTML, renderTx)
+~4377–4881   IMAGE IMPORT (สแกนใบเสร็จ) + BANK STATEMENT IMPORT
+~4881–5975   SAVINGS, DEBTS, INVESTMENTS, DCA
+~5975–6436   BANKS, SETTINGS, MODAL UTILS, TOAST, INVESTMENT AUTO-REFRESH
+~6436–6959   TAX, BALANCE SHEET & PLAN
+~6959–7571   RETIRE PLANNER
+~7571–8015   PROFILE
+~8015–8030   AI CHAT vars (ประกาศก่อนกัน TDZ) + INIT block — checkLogin() (~8030)
+~8030–8426   AI Chat ต่อ (buildFinanceContext/toggleChat/sendChat) + RULE-BASED AI (rulesAI fallback, ~8204)
+~8426–9514   FEATURE 1–9 (notifications→category budget) + NEW FEATURE A–H (PIN Lock→PDF Print)
+~9514–9960   PATCHES เข้า render เดิม + Quick Add/Undo/Bank Transfer/Savings Rate/Top Merchants/NW Milestone/Monthly Comparison
+~9960–10554  OT CALCULATOR, SPLIT TRANSACTION, SPENDING ANOMALY, FINANCIAL CALENDAR widget,
+             SUBSCRIPTION TRACKER widget, TAX ADVISOR, TAX OPTIMIZER
+~10554–10939 INSURANCE, PRINT MONTHLY REPORT, PATCH renderDash, EMERGENCY FUND, 50/30/20, PAY YOURSELF FIRST, CHANGE PASSWORD
+~10939–11215 ADMIN DASHBOARD (renderAdmin)
+~11215–11593 DASHBOARD SECTION REORDER, RVV (Recurring vs Variable), YTD SUMMARY
+~11593–11881 LOAN CALCULATOR (renderLoan + accelerated schedule)
+~11881–12203 CALENDAR PAGE (renderCalendarPage)
+~12203–12382 SUBSCRIPTION MANAGER (renderSubscriptions, หน้าเต็ม)
+~12382–12581 MAYA AGENT — mayaAgent()/MAYA_TOOLS/MAYA_IMPLS (tool calling ใน browser)
+~12581–12682 TX ADVANCED FILTER + BULK SELECT
+~12682–13448 TRAVEL (หน้าหลัก + 3D globe) + TRAVEL ROUTE PLANNER + MY LOCATION
+~13448–14071 WEALTH RANKING (3 ฐาน TH/ASEAN/World, _WT_DATA/_RANK_TIERS/_calcPercentile)
+             — มี WELCOME ONBOARDING (_showWelcomeOnboard) และ CHAT FAB DRAG (snap-to-edge) แทรกอยู่กลางบล็อกนี้
+~14071–14144 FINANCE CHARACTER — topbar avatar + rank popup (ใช้ window._fcSvgG)
+~14144–14358 4 mini-features เรียงเลข: 1.PDPA CONSENT · 2.EMPTY STATE DASHBOARD ·
+             3.RATE LIMIT LOGIN (_rlCheck/_rlFail, ล็อก 5 นาทีหลังพลาด 5 ครั้ง) · 4.FEEDBACK MODAL
+~14358–14639 GMAIL BANK AUTO-IMPORT (client-side) — poll `DB.settings.gmailImportUrl`,
+             modal ยืนยัน/แก้ก่อนบันทึก (openGmailInbox/_renderGmailModal/confirmGmailTx)
+~14639–14739 NAV SORTABLE (drag-and-drop sidebar reorder) — ท้ายสุดก่อนปิด </script>
 ```
 
 ## ฟีเจอร์ทั้งหมด
