@@ -10,15 +10,17 @@
 
 ## สถาปัตยกรรม
 
-**ไฟล์เดียว:** `index.html` (~10,700 บรรทัด) — HTML + CSS + Vanilla JavaScript ทั้งหมดอยู่ในไฟล์เดียว
+**ไฟล์เดียว:** `index.html` (~14,870 บรรทัด — เพิ่มขึ้นเรื่อยๆ จาก auto-commit ทุกครั้งที่แก้ ให้ `wc -l index.html` เช็คของจริงก่อนอ้างอิงเลขบรรทัดเสมอ) — HTML + CSS + Vanilla JavaScript ทั้งหมดอยู่ในไฟล์เดียว
 
 ```
 index.html
-├── <head>         — CDN links (Chart.js, Firebase, Font Awesome, Sarabun)
-├── <style>        — CSS ทั้งหมด (บรรทัด 9–840 โดยประมาณ)
-├── <body>         — HTML structure, sidebar nav, หน้าทุกหน้า
-└── <script>       — JavaScript ทั้งหมด (บรรทัด 2364–11429)
+├── <head>         — บรรทัด 3–967, CDN links (Chart.js, Firebase, Font Awesome, Sarabun)
+├── <style>        — CSS ทั้งหมด (บรรทัด 9–966, 2 บล็อก)
+├── <body>         — บรรทัด 968–2477, HTML structure, sidebar nav, หน้าทุกหน้า
+└── <script>       — JavaScript ทั้งหมด (บรรทัด 2478–14739) — `<script>` เดียว ห้ามเปิดใหม่
 ```
+
+**หา section ในไฟล์:** โค้ดคั่นแทบทุก section ด้วยคอมเมนต์ `══════`  — `grep -n "══════" index.html -A1` ได้ผังทั้งไฟล์ทันที เชื่อถือได้กว่าเลขบรรทัดที่จำไว้ในเอกสารนี้ (ไฟล์ถูก auto-commit เปลี่ยนเกือบทุกวัน)
 
 ไม่มี `package.json`, `node_modules`, build tool, หรือ test suite — เปิดไฟล์ใน browser ได้เลย
 
