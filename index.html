@@ -5110,7 +5110,7 @@ function delSav(id){
 // ══════════════════════════════════════════
 function renderDebts(){
   const el=document.getElementById('debt-list');
-  if(!DB.debts.length){ el.innerHTML='<div class="empty"><i class="fas fa-check-circle"></i><p>ยอดเยี่ยม! ไม่มีหนี้สิน</p></div>'; return; }
+  if(!DB.debts.length){ el.innerHTML='<div class="empty"><i class="fas fa-check-circle"></i><p>'+tr('debt_none_great')+'</p></div>'; return; }
   const now=new Date();
   const nowY=now.getFullYear(), nowM=now.getMonth()+1;
   const MN=monthShortArr();
