@@ -5019,13 +5019,13 @@ function renderSavings(){
       ondrop="_savDrop(event,'${s.id}')">
       <div class="scard-hd">
         <div style="display:flex;align-items:flex-start;gap:6px">
-          <span class="drag-handle" title="ลากเพื่อเรียงลำดับ">⠿</span>
+          <span class="drag-handle" title="ลากเพื่อเรียงลำดับ" data-i18n-title="drag_to_reorder">⠿</span>
           <div>
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
               <span class="scard-name">${s.name}</span>
               ${linkedPort?`<span style="font-size:11px;background:rgba(6,182,212,.15);color:var(--cyan);padding:2px 8px;border-radius:20px;white-space:nowrap"><i class="fas fa-link" style="margin-right:3px"></i>${linkedPort.name}</span>`:''}
             </div>
-            ${s.deadline?`<div class="scard-sub">ถึง ${fmtD(s.deadline)}</div>`:''}
+            ${s.deadline?`<div class="scard-sub">${tr('sav_deadline_until')} ${fmtD(s.deadline)}</div>`:''}
           </div>
         </div>
         <div style="display:flex;gap:5px"><button class="icon-btn" onclick="editSav('${s.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delSav('${s.id}')"><i class="fas fa-trash"></i></button></div>
@@ -5033,10 +5033,10 @@ function renderSavings(){
       <div class="scard-amts"><div class="scard-cur" style="color:${color}">${fmt(s.current)}</div><div class="scard-tgt">/ ${fmt(s.target)}</div></div>
       <div class="pbar"><div class="pfill" style="width:${pct}%;background:${color}"></div></div>
       <div style="display:flex;justify-content:space-between;margin-top:7px;font-size:12px;color:var(--muted)">
-        <span>${pct.toFixed(1)}% สำเร็จ</span><span>เหลือ ${fmt(Math.max(0,s.target-s.current))}</span>
+        <span>${pct.toFixed(1)}% ${tr('sav_achieved_pct')}</span><span>${tr('sav_remaining')} ${fmt(Math.max(0,s.target-s.current))}</span>
       </div>
-      ${pct>=100?'<div style="margin-top:10px;text-align:center;color:var(--green);font-size:13px;font-weight:700"><i class="fas fa-check-circle"></i> บรรลุเป้าหมายแล้ว!</div>':''}
-      ${linkedPort?`<div style="margin-top:8px;font-size:11px;color:var(--muted);text-align:right;cursor:pointer" onclick="nav('investments')">ดูพอร์ต <i class="fas fa-arrow-right"></i></div>`:''}
+      ${pct>=100?'<div style="margin-top:10px;text-align:center;color:var(--green);font-size:13px;font-weight:700"><i class="fas fa-check-circle"></i> '+tr('sav_goal_reached')+'</div>':''}
+      ${linkedPort?`<div style="margin-top:8px;font-size:11px;color:var(--muted);text-align:right;cursor:pointer" onclick="nav('investments')">${tr('sav_view_portfolio')} <i class="fas fa-arrow-right"></i></div>`:''}
     </div>`;
   }).join('');
 }
