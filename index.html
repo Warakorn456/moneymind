@@ -7273,7 +7273,7 @@ function renderRetireChart(r,c,extraMonthly=0){
   const totalYears=r.lifeAge-(c.age||30);
   let whatIfPortAtRetire=0;
   for(let y=0;y<=totalYears;y++){
-    labels.push((c.age||30)+y+' ปี');
+    labels.push((c.age||30)+y+' '+tr('year_short'));
     const n=y*12;
     if(y<=c.yearsToRetire){
       // base = portfolio growth + SSO + PVD accumulated to year y
