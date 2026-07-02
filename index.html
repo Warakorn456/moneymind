@@ -10780,7 +10780,7 @@ function renderInsurance(){
         +'<div style="text-align:right;flex-shrink:0"><div style="font-size:11px;color:var(--muted)">'+tr('ins_coverage')+'</div><div style="font-weight:800;color:#10b981">'+fm(p.coverage)+'</div></div>'
       +'</div>'
       +'<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px">'
-        +'<span>💵 '+tr('ins_premium')+' <b>'+fm(p.premium)+'</b>/'+(INS_CYCLE[p.cycle]||p.cycle)+(mo?' (≈'+fm(mo)+'/'+tr('month_abbr')+')':'')+'</span>'
+        +'<span>💵 '+tr('ins_premium')+' <b>'+fm(p.premium)+'</b>/'+insCycleLabel(p.cycle)+(mo?' (≈'+fm(mo)+'/'+tr('month_abbr')+')':'')+'</span>'
         +'<span>⏳ '+tr('ins_pay_until')+' <b>'+insPayUntilText(p)+'</b></span>'
         +(p.coverUntil?'<span>📅 '+tr('ins_covers_until')+' '+p.coverUntil+'</span>':'')
       +'</div></div>';
