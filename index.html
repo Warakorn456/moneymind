@@ -6750,7 +6750,7 @@ function renderTax(){
   if(ySel){
     if(!ySel.options.length){
       for(let y=curYear;y>=curYear-4;y--){
-        const o=document.createElement('option'); o.value=y; o.textContent=`ปี ${y} (${beYear(y)})`; ySel.appendChild(o);
+        const o=document.createElement('option'); o.value=y; o.textContent=`${tr('tax_year')} ${y} (${beYear(y)})`; ySel.appendChild(o);
       }
     }
     ySel.value=t.year||curYear;
