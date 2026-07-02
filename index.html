@@ -11177,11 +11177,11 @@ async function renderAdmin(){
   if(!el) return;
   // เฉพาะ owner เท่านั้น
   if(!_ENC||currentUser!==_ENC.user){
-    el.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)"><i class="fas fa-lock" style="font-size:48px;margin-bottom:16px;display:block"></i>ไม่มีสิทธิ์เข้าถึงหน้านี้</div>';
+    el.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)"><i class="fas fa-lock" style="font-size:48px;margin-bottom:16px;display:block"></i>'+tr('admin_no_access')+'</div>';
     return;
   }
-  el.innerHTML='<div style="padding:20px 0"><div class="spinner" style="margin:0 auto 12px"></div><div style="text-align:center;color:var(--muted);font-size:13px">กำลังโหลดข้อมูล...</div></div>';
-  if(!_fs){ el.innerHTML='<div style="padding:20px;color:var(--red)">Firebase ยังไม่พร้อม</div>'; return; }
+  el.innerHTML='<div style="padding:20px 0"><div class="spinner" style="margin:0 auto 12px"></div><div style="text-align:center;color:var(--muted);font-size:13px">'+tr('admin_loading')+'</div></div>';
+  if(!_fs){ el.innerHTML='<div style="padding:20px;color:var(--red)">'+tr('admin_fb_not_ready')+'</div>'; return; }
   try{
     // ดึง members ทั้งหมด
     const snap=await _fs.collection('members').get();
