@@ -6725,29 +6725,29 @@ function calcTaxLive(){
       </div>
       <span style="width:70px;text-align:right;font-weight:600">${fmt(b.tax)}</span>
       <span style="width:30px;text-align:right;color:var(--muted)">${(b.rate*100).toFixed(0)}%</span>
-    </div>`).join('')||`<div style="font-size:13px;color:var(--muted)">เงินได้สุทธิอยู่ในเกณฑ์ยกเว้นภาษี</div>`;
+    </div>`).join('')||`<div style="font-size:13px;color:var(--muted)">${tr('tax_exempt')}</div>`;
 
   p.innerHTML=`
-    <div style="font-size:15px;font-weight:700;margin-bottom:14px">📊 ผลการคำนวณภาษี</div>
-    <div class="tax-res-row"><span>เงินได้รวม</span><span>${fmt(totalInc)}</span></div>
-    <div class="tax-res-row"><span>หัก ค่าใช้จ่าย</span><span style="color:var(--green)">−${fmt(totalExp)}</span></div>
-    <div class="tax-res-row"><span>หัก ค่าลดหย่อน</span><span style="color:var(--green)">−${fmt(totalDeduct+dDonation)}</span></div>
-    <div class="tax-res-row total"><span>เงินได้สุทธิ</span><span style="color:var(--cyan)">${fmt(netIncome)}</span></div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:14px">📊 ${tr('tax_result_title')}</div>
+    <div class="tax-res-row"><span>${tr('tax_total_income')}</span><span>${fmt(totalInc)}</span></div>
+    <div class="tax-res-row"><span>${tr('tax_less_expense')}</span><span style="color:var(--green)">−${fmt(totalExp)}</span></div>
+    <div class="tax-res-row"><span>${tr('tax_less_deduct')}</span><span style="color:var(--green)">−${fmt(totalDeduct+dDonation)}</span></div>
+    <div class="tax-res-row total"><span>${tr('tax_net_income')}</span><span style="color:var(--cyan)">${fmt(netIncome)}</span></div>
 
-    <div style="font-size:13px;font-weight:600;margin:14px 0 8px">อัตราภาษีแต่ละขั้น</div>
+    <div style="font-size:13px;font-weight:600;margin:14px 0 8px">${tr('tax_bracket_rate')}</div>
     <div class="bracket-wrap">${bracketHTML}</div>
 
     <div class="tax-badge" style="background:${tax>0?'rgba(239,68,68,.15)':'rgba(16,185,129,.15)'};color:${tax>0?'#ef4444':'#10b981'}">
       <i class="fas fa-${tax>0?'file-invoice-dollar':'check-circle'}"></i>
-      ภาษีที่ต้องชำระ: <strong>${fmt(tax)}</strong>
+      ${tr('tax_to_pay')}: <strong>${fmt(tax)}</strong>
     </div>
-    <div class="tax-res-row"><span>ภาษีถูกหัก ณ ที่จ่าย</span><span>${fmt(withheld)}</span></div>
+    <div class="tax-res-row"><span>${tr('tax_withheld')}</span><span>${fmt(withheld)}</span></div>
     <div class="tax-res-row total">
-      <span>${diff>0?'ต้องชำระเพิ่ม':'ได้รับคืน'}</span>
+      <span>${diff>0?tr('tax_pay_more'):tr('tax_get_refund')}</span>
       <span style="color:${diff>0?'#ef4444':'#10b981'};font-size:18px">${diff>0?'+':''}${fmt(diff)}</span>
     </div>
-    ${diff>0?`<div style="font-size:12px;color:var(--muted);margin-top:8px">⚠️ ต้องยื่นแบบ ภ.ง.ด.90/91 ภายใน 31 มี.ค.</div>`:
-             diff<0?`<div style="font-size:12px;color:#10b981;margin-top:8px">✅ ได้รับคืนภาษี ${fmt(-diff)}</div>`:''}
+    ${diff>0?`<div style="font-size:12px;color:var(--muted);margin-top:8px">⚠️ ${tr('tax_file_deadline')}</div>`:
+             diff<0?`<div style="font-size:12px;color:#10b981;margin-top:8px">✅ ${tr('tax_refund_amt').replace('{amt}',fmt(-diff))}</div>`:''}
   `;
 }
 
