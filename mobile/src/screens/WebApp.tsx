@@ -186,7 +186,7 @@ export default function WebApp() {
   const registerForPushNotifications = useCallback(async () => {
     try {
       if (!Device.isDevice) {
-        console.warn('[push] ต้องใช้เครื่องจริง ไม่ใช่ simulator/emulator');
+        injectPushError('ต้องใช้เครื่องจริง ไม่ใช่ simulator/emulator');
         return;
       }
       if (Platform.OS === 'android') {
@@ -204,16 +204,22 @@ export default function WebApp() {
         status = req.status;
       }
       if (status !== 'granted') {
-        console.warn('[push] ผู้ใช้ไม่อนุญาต notification permission');
+        injectPushError('ผู้ใช้ไม่อนุญาต notification permission (status=' + status + ')');
         return;
       }
-      const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+      // projectId: ลอง extra.eas ก่อน (SDK ปกติ) fallback easConfig (บาง build type ไม่มี expoConfig เต็ม)
+      const projectId =
+        Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+      if (!projectId) {
+        injectPushError('ไม่พบ projectId จาก Constants (ทั้ง expoConfig และ easConfig)');
+        return;
+      }
       const tokenResp = await Notifications.getExpoPushTokenAsync({ projectId });
       injectPushToken(tokenResp.data);
-    } catch (e) {
-      console.warn('[push] register error:', e);
+    } catch (e: any) {
+      injectPushError(String(e?.message || e));
     }
-  }, [injectPushToken]);
+  }, [injectPushToken, injectPushError]);
 
   // รับ message จาก WebView (action: 'googleSignIn' | 'exitApp' | 'saveFile' | 'printHtml' | 'requestPushToken')
   const handleMessage = useCallback((event: any) => {
