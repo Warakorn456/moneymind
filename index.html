@@ -4563,12 +4563,12 @@ async function aiReadReceipt(dataURL){
     document.getElementById('ai-proc').style.display='none';
     document.getElementById('ai-result').style.display='block';
     document.getElementById('ai-save-btn').style.display='inline-flex';
-    toast('AI อ่านเอกสารสำเร็จ!','success');
+    toast(tr('scan_success'),'success');
   } catch(err){
     document.getElementById('ai-proc').style.display='none';
-    showWarn('<i class="fas fa-exclamation-triangle"></i> อ่านไม่สำเร็จ: '+err.message);
+    showWarn('<i class="fas fa-exclamation-triangle"></i> '+tr('scan_fail_prefix')+': '+err.message);
     document.getElementById('ai-manual-btn').style.display='inline-flex';
-    toast('อ่านใบเสร็จไม่สำเร็จ','error');
+    toast(tr('scan_fail'),'error');
   }
 }
 
