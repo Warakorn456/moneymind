@@ -4256,10 +4256,10 @@ function renderTx(appendMore=false){
   const el=document.getElementById('tx-list');
   let txs=[...DB.transactions].sort((a,b)=>new Date(b.date)-new Date(a.date));
   if(txFilter!=='all') txs=txs.filter(t=>t.type===txFilter);
-  if(!txs.length){ el.innerHTML='<div class="empty"><i class="fas fa-receipt"></i><p>ยังไม่มีรายการ</p></div>'; return; }
+  if(!txs.length){ el.innerHTML='<div class="empty"><i class="fas fa-receipt"></i><p>'+tr('no_items_yet')+'</p></div>'; return; }
   const slice=txs.slice(0,(_txPage+1)*TX_PAGE_SIZE);
   const hasMore=slice.length<txs.length;
-  const moreBtn=hasMore?`<div style="text-align:center;padding:12px"><button onclick="_txPage++;renderTx(true)" style="background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);color:#a78bfa;border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer;font-family:Sarabun,sans-serif">โหลดเพิ่ม (เหลือ ${txs.length-slice.length} รายการ)</button></div>`:'';
+  const moreBtn=hasMore?`<div style="text-align:center;padding:12px"><button onclick="_txPage++;renderTx(true)" style="background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);color:#a78bfa;border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer;font-family:Sarabun,sans-serif">${tr('load_more')} (${tr('remaining')} ${txs.length-slice.length} ${tr('items_unit')})</button></div>`:'';
   if(appendMore){
     document.getElementById('tx-load-more')?.remove();
     el.insertAdjacentHTML('beforeend',txs.slice(_txPage*TX_PAGE_SIZE,(_txPage+1)*TX_PAGE_SIZE).map(t=>txHTML(t)).join('')+(hasMore?`<div id="tx-load-more">${moreBtn}</div>`:''));
