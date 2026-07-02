@@ -259,16 +259,16 @@ renderDash = function(){
 };
 ```
 
-เพิ่มใหม่ที่ **ท้าย script block** (ก่อน `_escHtml`) หรือต่อจาก section สุดท้าย  
+เพิ่มใหม่ที่ **ท้าย script block** (ก่อน `</script>` ที่บรรทัด ~14739 ปัจจุบัน) หรือต่อจาก section สุดท้าย — เช็คตำแหน่งจริงด้วย `grep -n "══════" index.html -A1` ก่อนเสมอ  
 **ระวัง:** อย่า redeclare `let`/`const` ที่มีอยู่แล้ว — จะเกิด SyntaxError
 
 ## ข้อควรระวัง (Gotchas)
 
-- **TDZ:** `let`/`const` ที่ declare หลัง INIT block (~7391) จะ error ถ้า renderDash เรียกก่อน — declare ก่อน `checkLogin()` เสมอ
+- **TDZ:** `let`/`const` ที่ declare หลัง INIT block (`checkLogin()` ~8030) จะ error ถ้า renderDash เรียกก่อน — declare ก่อน `checkLogin()` เสมอ
 - **Gemini response:** กรอง thinking parts ด้วย `.filter(p=>!p.thought)` — `gemini-2.5-flash` ส่ง thinking parts มาด้วย
-- **ไฟล์ใหญ่:** ต้อง Grep หาตำแหน่งก่อนทุกครั้ง ห้าม Read ทั้งไฟล์ ใช้ offset/limit เสมอ
+- **ไฟล์ใหญ่:** ต้อง Grep หาตำแหน่งก่อนทุกครั้ง ห้าม Read ทั้งไฟล์ ใช้ offset/limit เสมอ (ไฟล์โตเรื่อยๆ จาก auto-commit — เลขบรรทัดในเอกสารนี้ drift ได้ไว)
 - **Firebase config:** เข้ารหัสใน `_ENC` object (บรรทัดยาวมากใกล้ต้นไฟล์) — ไม่ต้องแตะ
-- **Single `<script>` block:** บรรทัด 2364–11429 — อย่า add `<script>` tag ใหม่
+- **Single `<script>` block:** บรรทัด 2478–14739 (ปัจจุบัน, จะขยับขึ้นเรื่อยๆ) — อย่า add `<script>` tag ใหม่
 - **Admin nav:** แสดงเฉพาะ owner (`currentUser === _ENC.user`) — จัดการโดย `_syncAdminNav()`
 - **Dashboard flash fix:** `renderDash` ซ่อน container ก่อน reorder แล้ว restore เพื่อไม่ให้กระพริบ
 
