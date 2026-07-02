@@ -4493,9 +4493,9 @@ function setScanType(type, btn){
   if(btn) btn.classList.add('active');
   else document.getElementById(type==='expense'?'scan-expense-btn':'scan-income-btn').classList.add('active');
   const cats=type==='income'?INC_CATS:EXP_CATS;
-  document.getElementById('ai-cat').innerHTML=cats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  document.getElementById('ai-cat').innerHTML=cats.map(c=>`<option value="${c.id}">${catLabel(c)}</option>`).join('');
   document.getElementById('salary-extra').style.display=type==='income'?'block':'none';
-  document.getElementById('ai-amt-label').textContent=type==='income'?'รับสุทธิ (บาท)':'จำนวนเงิน (บาท)';
+  document.getElementById('ai-amt-label').textContent=type==='income'?tr('scan_net_received'):tr('scan_amount_baht');
   // reset result ถ้าเปลี่ยนประเภทหลังสแกนแล้ว
   document.getElementById('ai-result').style.display='none';
   document.getElementById('ai-save-btn').style.display='none';
