@@ -5053,7 +5053,7 @@ function onSavPortChange(){
 }
 function openSavModal(){
   document.getElementById('sav-eid').value='';
-  document.getElementById('sav-m-title').textContent='เพิ่มเป้าหมายออม';
+  document.getElementById('sav-m-title').textContent=tr('sav_add_goal_title');
   ['sav-name','sav-tgt','sav-dl'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('sav-cur').value='0';
   document.getElementById('sav-color').value='cyan';
