@@ -5203,17 +5203,17 @@ function saveDebt(){
   const pay=parseFloat(document.getElementById('debt-pay').value)||0;
   const startDate=document.getElementById('debt-start').value;
   const dueDate=document.getElementById('debt-due').value;
-  if(!name){ toast('กรุณาใส่ชื่อหนี้','error'); return; }
-  if(!total||total<=0){ toast('กรุณาใส่ยอดหนี้','error'); return; }
+  if(!name){ toast(tr('debt_need_name'),'error'); return; }
+  if(!total||total<=0){ toast(tr('debt_need_total'),'error'); return; }
   const obj={name,total,remaining:remaining||total,rate,pay,startDate,dueDate};
-  if(id){ const i=DB.debts.findIndex(d=>d.id===id); if(i>=0) DB.debts[i]={...DB.debts[i],...obj}; toast('แก้ไขแล้ว','success'); }
-  else { DB.debts.push({id:uid(),...obj}); toast('เพิ่มหนี้แล้ว','success'); }
+  if(id){ const i=DB.debts.findIndex(d=>d.id===id); if(i>=0) DB.debts[i]={...DB.debts[i],...obj}; toast(tr('edited'),'success'); }
+  else { DB.debts.push({id:uid(),...obj}); toast(tr('debt_added'),'success'); }
   saveDB(); closeM('m-debt'); renderDebts();
 }
 
 function delDebt(id){
-  if(!confirm('ต้องการลบข้อมูลหนี้นี้?')) return;
-  DB.debts=DB.debts.filter(d=>d.id!==id); saveDB(); renderDebts(); toast('ลบแล้ว','info');
+  if(!confirm(tr('debt_confirm_delete'))) return;
+  DB.debts=DB.debts.filter(d=>d.id!==id); saveDB(); renderDebts(); toast(tr('deleted'),'info');
 }
 
 // ══════════════════════════════════════════
