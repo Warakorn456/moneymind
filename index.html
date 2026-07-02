@@ -3976,7 +3976,7 @@ function renderTrendChart(){
   if(chTrend) chTrend.destroy();
   chTrend=new Chart(ctx,{
     type:'bar',
-    data:{labels,datasets:[{label:'รายรับ',data:incData,backgroundColor:'rgba(16,185,129,.7)',borderRadius:6},{label:'รายจ่าย',data:expData,backgroundColor:'rgba(239,68,68,.7)',borderRadius:6}]},
+    data:{labels,datasets:[{label:tr('dh_income'),data:incData,backgroundColor:'rgba(16,185,129,.7)',borderRadius:6},{label:tr('dh_expense'),data:expData,backgroundColor:'rgba(239,68,68,.7)',borderRadius:6}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{
       legend:{labels:{color:'#e2e8f0',font:{family:'Sarabun',size:12},padding:12}},
       tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmt(c.raw)}`}}
