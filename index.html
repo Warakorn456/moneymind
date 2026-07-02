@@ -9828,11 +9828,11 @@ async function saveEmailSetting(){
 }
 
 async function sendVerifyEmail(){
-  if(!_auth||!_auth.currentUser){ toast('กรุณา Login ด้วย Email ก่อน','error'); return; }
+  if(!_auth||!_auth.currentUser){ toast(tr('login_email_first'),'error'); return; }
   try{
     await _auth.currentUser.sendEmailVerification({url:location.href});
-    toast('ส่งอีเมลยืนยันแล้ว ตรวจสอบกล่องจดหมาย','success');
-  }catch(e){ toast('ส่งไม่ได้: '+e.message,'error'); }
+    toast(tr('verify_email_sent'),'success');
+  }catch(e){ toast(tr('send_failed')+': '+e.message,'error'); }
 }
 
 // Patch saveTx to save tags
