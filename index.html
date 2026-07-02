@@ -13139,7 +13139,7 @@ function tripEstCalc(){
   const days=Math.max(1,parseInt(document.getElementById('trip-est-days')?.value)||1);
   const resEl=document.getElementById('trip-est-result');
   const p=(DB.travel?.places||[]).find(x=>x.name===dest);
-  if(!p||p.lat==null){ toast('ไม่พบพิกัดปลายทาง','error'); return; }
+  if(!p||p.lat==null){ toast(tr('travel_no_dest_coords'),'error'); return; }
   // ต้นทาง: ตำแหน่งฉัน (ถ้ามี) ไม่งั้นกรุงเทพฯ
   const origin=(_myLocation&&_myLocation.lat!=null)?_myLocation:{lat:13.7563,lng:100.5018};
   const dist=_haversine(origin.lat,origin.lng,p.lat,p.lng);
