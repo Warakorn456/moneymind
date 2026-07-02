@@ -14824,6 +14824,33 @@ window.handleBackButton=function(){
 };
 
 // ══════════════════════════════════════════
+//  PUSH NOTIFICATIONS — เก็บ Expo push token ต่อผู้ใช้ใน Firestore
+//  (ฝั่ง VM อ่าน members/{user}.expoPushToken ไปยิง Expo Push API เวลามีแจ้งเตือน)
+// ══════════════════════════════════════════
+// เรียกจาก native (WebApp.tsx) หลัง register push token สำเร็จ — เก็บลง Firestore
+window.handleNativePushToken=function(token){
+  try{
+    if(!token || !currentUser || !_fs) return;
+    _fs.collection('members').doc(currentUser).set({expoPushToken:token},{merge:true})
+      .catch(function(e){ console.warn('[push] save token error:',e.message); });
+  }catch(e){ console.error('[handleNativePushToken]',e); }
+};
+
+// ขอ push token จาก native หลัง login สำเร็จ (เฉพาะตอนอยู่ในแอป — เว็บ browser ปกติไม่มี native ให้ขอ)
+(function(){
+  if(typeof enterApp!=='function') return;
+  var _origEnterAppPush=enterApp;
+  enterApp=function(){
+    _origEnterAppPush();
+    if(_isNativeApp()){
+      setTimeout(function(){
+        window.ReactNativeWebView.postMessage(JSON.stringify({action:'requestPushToken'}));
+      },800);
+    }
+  };
+})();
+
+// ══════════════════════════════════════════
 //  OFFLINE DETECTION
 // ══════════════════════════════════════════
 window.addEventListener('offline',function(){ toast('ขาดการเชื่อมต่ออินเทอร์เน็ต — ข้อมูลจะยังบันทึกในเครื่อง','error',4000); });
