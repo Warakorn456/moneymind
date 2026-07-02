@@ -4723,9 +4723,9 @@ async function uploadToGeminiFileAPI(bytes, mime, apiKey){
     headers:{'Content-Type':`multipart/related; boundary=${boundary}`},
     body
   });
-  if(!res.ok){const e=await res.json(); throw new Error('อัปโหลดไฟล์ไม่สำเร็จ: '+(e.error?.message||res.status));}
+  if(!res.ok){const e=await res.json(); throw new Error(tr('stmt_upload_failed')+': '+(e.error?.message||res.status));}
   const d=await res.json();
-  if(!d.file?.uri) throw new Error('File API ไม่ส่ง URI กลับมา');
+  if(!d.file?.uri) throw new Error(tr('stmt_no_file_uri'));
   return d.file.uri;
 }
 
