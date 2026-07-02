@@ -5971,7 +5971,7 @@ function openDcaPlanModal(id){
     if(pInv.length) opts+=`<optgroup label="${p.name}">${pInv.map(i=>`<option value="${i.id}"${i.id===plan?.linkedInvId?' selected':''}>${i.name} (${i.type}) — ${fmt(i.value)}</option>`).join('')}</optgroup>`;
   });
   const uncatInv=allInv.filter(i=>!i.portId||!getPortById(i.portId));
-  if(uncatInv.length) opts+=`<optgroup label="ไม่ระบุพอร์ต">${uncatInv.map(i=>`<option value="${i.id}"${i.id===plan?.linkedInvId?' selected':''}>${i.name} (${i.type}) — ${fmt(i.value)}</option>`).join('')}</optgroup>`;
+  if(uncatInv.length) opts+=`<optgroup label="${tr('no_portfolio')}">${uncatInv.map(i=>`<option value="${i.id}"${i.id===plan?.linkedInvId?' selected':''}>${i.name} (${i.type}) — ${fmt(i.value)}</option>`).join('')}</optgroup>`;
   invSel.innerHTML=opts;
   onDcaInvLinkChange();
   openM('m-dca-plan');
