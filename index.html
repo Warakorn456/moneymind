@@ -8222,7 +8222,7 @@ async function processTawi50(file){
     );
   }catch(e){
     setZoneLoading('tawi-zone',false);
-    toast('อ่าน ทวิ 50 ไม่สำเร็จ: '+e.message,'error');
+    toast(tr('taxdoc_tawi50_failed')+': '+e.message,'error');
   }
 }
 
