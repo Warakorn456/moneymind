@@ -13470,9 +13470,9 @@ let _myLocation=null, _myLocMarker=null, _routeMode='driving';
 
 function travelGetMyLocation(){
   const btn=document.getElementById('travel-myloc-btn');
-  if(!navigator.geolocation){ toast('เบราว์เซอร์นี้ไม่รองรับ GPS','error'); return; }
-  if(btn){ btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> กำลังหาตำแหน่ง…'; btn.disabled=true; }
-  toast('กรุณาอนุญาต GPS ในเบราว์เซอร์','info');
+  if(!navigator.geolocation){ toast(tr('travel_no_gps_support'),'error'); return; }
+  if(btn){ btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> '+tr('travel_finding_location')+'…'; btn.disabled=true; }
+  toast(tr('travel_allow_gps'),'info');
   navigator.geolocation.getCurrentPosition(
     async pos=>{
       _myLocation={lat:pos.coords.latitude,lng:pos.coords.longitude};
@@ -13480,16 +13480,16 @@ function travelGetMyLocation(){
       if(_myLocMarker) _myLocMarker.remove();
       const el=document.createElement('div');
       el.style.cssText='width:16px;height:16px;border-radius:50%;background:#f87171;border:3px solid #fff;box-shadow:0 0 0 3px #f87171,0 2px 8px rgba(0,0,0,.5);cursor:pointer';
-      el.title='ตำแหน่งของฉัน';
+      el.title=tr('travel_my_location');
       _myLocMarker=new maplibregl.Marker({element:el}).setLngLat([_myLocation.lng,_myLocation.lat]).addTo(_travelMap);
       _flyToPlace(_myLocation.lat,_myLocation.lng,13);
-      if(btn){ btn.innerHTML='<i class="fas fa-crosshairs" style="color:#4ade80"></i> พบตำแหน่งแล้ว'; btn.disabled=false; }
-      toast('พบตำแหน่งของคุณแล้ว','success');
+      if(btn){ btn.innerHTML='<i class="fas fa-crosshairs" style="color:#4ade80"></i> '+tr('travel_location_found'); btn.disabled=false; }
+      toast(tr('travel_location_found_toast'),'success');
       _updateRouteSelects();
     },
     err=>{
-      if(btn){ btn.innerHTML='<i class="fas fa-crosshairs" style="color:#f87171"></i> ตำแหน่งฉัน'; btn.disabled=false; }
-      toast('ไม่สามารถหาตำแหน่งได้ — ตรวจสอบการอนุญาต GPS','error');
+      if(btn){ btn.innerHTML='<i class="fas fa-crosshairs" style="color:#f87171"></i> '+tr('travel_my_location'); btn.disabled=false; }
+      toast(tr('travel_location_failed'),'error');
     },
     {enableHighAccuracy:true,timeout:12000}
   );
