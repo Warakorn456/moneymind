@@ -15088,33 +15088,33 @@ window.addEventListener('online',function(){ toast('เชื่อมต่อ�
 <!-- Subscription Modal -->
 <div id="m-sub" class="overlay">
   <div class="modal" style="max-width:440px">
-    <div class="modal-title"><i class="fas fa-credit-card" style="color:#a78bfa"></i> <span id="sub-m-title">เพิ่ม Subscription</span></div>
+    <div class="modal-title"><i class="fas fa-credit-card" style="color:#a78bfa"></i> <span id="sub-m-title" data-i18n="sub_add_full">เพิ่ม Subscription</span></div>
     <input type="hidden" id="sub-eid">
-    <div class="fgroup"><label class="flabel">ชื่อบริการ</label><input id="sub-name" class="finput" placeholder="เช่น Netflix, iCloud, Spotify"></div>
+    <div class="fgroup"><label class="flabel" data-i18n="sub_field_name">ชื่อบริการ</label><input id="sub-name" class="finput" placeholder="เช่น Netflix, iCloud, Spotify"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="fgroup"><label class="flabel">ราคา (บาท)</label><input id="sub-price" type="number" class="finput" placeholder="0" min="0"></div>
-      <div class="fgroup"><label class="flabel">รอบชำระ</label>
+      <div class="fgroup"><label class="flabel" data-i18n="sub_field_price">ราคา (บาท)</label><input id="sub-price" type="number" class="finput" placeholder="0" min="0"></div>
+      <div class="fgroup"><label class="flabel" data-i18n="sub_field_cycle">รอบชำระ</label>
         <select id="sub-cycle" class="fselect">
-          <option value="monthly">รายเดือน</option>
-          <option value="yearly">รายปี</option>
-          <option value="weekly">รายสัปดาห์</option>
-          <option value="quarterly">รายไตรมาส</option>
+          <option value="monthly" data-i18n="ins_cycle_monthly">รายเดือน</option>
+          <option value="yearly" data-i18n="ins_cycle_yearly">รายปี</option>
+          <option value="weekly" data-i18n="sub_cycle_weekly">รายสัปดาห์</option>
+          <option value="quarterly" data-i18n="ins_cycle_quarterly">รายไตรมาส</option>
         </select>
       </div>
     </div>
-    <div class="fgroup"><label class="flabel">วันชำระครั้งถัดไป</label><input id="sub-date" type="date" class="finput"></div>
-    <div class="fgroup"><label class="flabel">หมวดหมู่</label>
+    <div class="fgroup"><label class="flabel" data-i18n="sub_field_next_date">วันชำระครั้งถัดไป</label><input id="sub-date" type="date" class="finput"></div>
+    <div class="fgroup"><label class="flabel" data-i18n="tx_category">หมวดหมู่</label>
       <select id="sub-cat" class="fselect">
-        <option value="entertainment">🎬 ความบันเทิง</option>
-        <option value="productivity">💼 การทำงาน</option>
-        <option value="health">💪 สุขภาพ & ฟิตเนส</option>
+        <option value="entertainment">🎬 <span data-i18n="sub_cat_entertainment">ความบันเทิง</span></option>
+        <option value="productivity">💼 <span data-i18n="sub_cat_productivity">การทำงาน</span></option>
+        <option value="health">💪 <span data-i18n="sub_cat_health">สุขภาพ & ฟิตเนส</span></option>
         <option value="cloud">☁️ Cloud & Storage</option>
-        <option value="news">📰 ข่าว & สื่อ</option>
-        <option value="education">📚 การศึกษา</option>
-        <option value="other">📦 อื่นๆ</option>
+        <option value="news">📰 <span data-i18n="sub_cat_news">ข่าว & สื่อ</span></option>
+        <option value="education">📚 <span data-i18n="sub_cat_education">การศึกษา</span></option>
+        <option value="other">📦 <span data-i18n="other">อื่นๆ</span></option>
       </select>
     </div>
-    <div class="fgroup"><label class="flabel">สี</label>
+    <div class="fgroup"><label class="flabel" data-i18n="sav_color">สี</label>
       <div id="sub-color-picker" style="display:flex;gap:8px;flex-wrap:wrap;padding:4px 0">
         <span data-color="#a78bfa" onclick="setSubColor('#a78bfa')" style="width:24px;height:24px;border-radius:50%;background:#a78bfa;cursor:pointer"></span>
         <span data-color="#60a5fa" onclick="setSubColor('#60a5fa')" style="width:24px;height:24px;border-radius:50%;background:#60a5fa;cursor:pointer"></span>
