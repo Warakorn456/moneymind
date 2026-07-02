@@ -5366,23 +5366,23 @@ function _portSection(port, invList, colorDot){
         <div style="font-size:12px;color:var(--muted);margin-top:2px">${port.purpose}</div>
       </div>
       <div style="display:flex;gap:20px;flex-wrap:wrap">
-        <div style="text-align:right"><div style="font-size:11px;color:var(--muted)">มูลค่า</div><div style="font-size:15px;font-weight:700">${fmt(val)}</div></div>
-        <div style="text-align:right"><div style="font-size:11px;color:var(--muted)">กำไร/ขาดทุน</div><div style="font-size:15px;font-weight:700;color:${pnl>=0?'var(--green)':'var(--red)'}">${pnl>=0?'+':''}${fmt(pnl)} (${pnl>=0?'+':''}${pnlP}%)</div></div>
+        <div style="text-align:right"><div style="font-size:11px;color:var(--muted)">${tr('dh_current_value')}</div><div style="font-size:15px;font-weight:700">${fmt(val)}</div></div>
+        <div style="text-align:right"><div style="font-size:11px;color:var(--muted)">${tr('inv_pnl')}</div><div style="font-size:15px;font-weight:700;color:${pnl>=0?'var(--green)':'var(--red)'}">${pnl>=0?'+':''}${fmt(pnl)} (${pnl>=0?'+':''}${pnlP}%)</div></div>
       </div>
-      <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px" onclick="openInvModal('${port.id}')"><i class="fas fa-plus"></i> เพิ่มในพอร์ตนี้</button>
+      <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px" onclick="openInvModal('${port.id}')"><i class="fas fa-plus"></i> ${tr('inv_add_to_port')}</button>
       ${port.note?`<div style="width:100%;font-size:12px;color:var(--muted);padding-top:4px;border-top:1px solid rgba(255,255,255,.05);margin-top:6px"><i class="fas fa-sticky-note" style="margin-right:4px"></i>${port.note}</div>`:''}
       ${(()=>{
         if(!port.linkedSavingId) return '';
         const sv=(DB.savings||[]).find(s=>s.id===port.linkedSavingId);
         if(!sv) return '';
         return `<div style="width:100%;display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,.05);margin-top:4px">
-          <span style="font-size:12px;color:var(--cyan)"><i class="fas fa-piggy-bank" style="margin-right:4px"></i>ลิ้งกับ: <b>${sv.name}</b></span>
-          <button class="btn btn-primary" style="padding:4px 12px;font-size:12px" onclick="syncPortToSaving('${port.id}')"><i class="fas fa-sync-alt" style="margin-right:4px"></i>ส่งยอดไปเงินออม</button>
-          <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="nav('savings')"><i class="fas fa-arrow-right" style="margin-right:4px"></i>ไปหน้าเงินออม</button>
+          <span style="font-size:12px;color:var(--cyan)"><i class="fas fa-piggy-bank" style="margin-right:4px"></i>${tr('inv_linked_to')}: <b>${sv.name}</b></span>
+          <button class="btn btn-primary" style="padding:4px 12px;font-size:12px" onclick="syncPortToSaving('${port.id}')"><i class="fas fa-sync-alt" style="margin-right:4px"></i>${tr('inv_sync_to_saving')}</button>
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="nav('savings')"><i class="fas fa-arrow-right" style="margin-right:4px"></i>${tr('inv_goto_savings')}</button>
         </div>`;
       })()}
     </div>
-    <div class="inv-table-wrap"><table class="inv-table"><thead><tr><th>ชื่อ</th><th>จำนวน</th><th>ราคาซื้อ</th><th>ราคาปัจจุบัน</th><th>มูลค่า</th><th>กำไร/ขาดทุน</th><th></th></tr></thead>
+    <div class="inv-table-wrap"><table class="inv-table"><thead><tr><th>${tr('inv_th_name')}</th><th>${tr('inv_th_qty')}</th><th>${tr('inv_th_buy_price')}</th><th>${tr('inv_th_cur_price')}</th><th>${tr('inv_th_value')}</th><th>${tr('inv_pnl')}</th><th></th></tr></thead>
     <tbody>${_invTableRows(invList)}</tbody></table></div>
   </div>`;
 }
