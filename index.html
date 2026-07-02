@@ -3581,7 +3581,29 @@ function toggleMoneyMove(){ if(!DB.settings) DB.settings={}; DB.settings.hideMon
 // ══════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════
-const PAGE_TITLE = {dashboard:'Dashboard',transactions:'รายรับ-รายจ่าย',ot:'คำนวณ OT',loan:'คำนวณสินเชื่อ',subscriptions:'Subscriptions',calendar:'ปฏิทิน',savings:'เงินออม',banks:'บัญชีธนาคาร',debts:'หนี้สิน',investments:'พอร์ตลงทุน',tax:'ภาษีเงินได้',balance:'งบดุล & แผนการเงิน',retire:'แผนเกษียณ',profile:'ประวัติส่วนตัว',settings:'ตั้งค่า',admin:'Admin Dashboard',forecast:'พยากรณ์กระแสเงินสด',travel:'ท่องเที่ยว',aiusage:'AI Usage / ค่า Token',insurance:'ประกัน'};
+// ══════════════════════════════════════════
+//  I18N — เฟส 1: โครงระบบแปลภาษา + เมนูหลัก + หัวข้อหน้า (เนื้อหาในหน้ายังเป็นไทยอยู่ รอเฟสถัดไป)
+// ══════════════════════════════════════════
+const I18N = {
+  th: {dashboard:'Dashboard',transactions:'รายรับ-รายจ่าย',ot:'คำนวณ OT',loan:'คำนวณสินเชื่อ',subscriptions:'Subscriptions',calendar:'ปฏิทิน',savings:'เงินออม',banks:'บัญชีธนาคาร',debts:'หนี้สิน',investments:'พอร์ตลงทุน',tax:'ภาษีเงินได้',balance:'งบดุล & แผนการเงิน',retire:'แผนเกษียณ',profile:'ประวัติส่วนตัว',settings:'ตั้งค่า',admin:'Admin Dashboard',forecast:'พยากรณ์กระแสเงินสด',travel:'ท่องเที่ยว',aiusage:'AI Usage / ค่า Token',insurance:'ประกัน',app_tagline:'การเงินส่วนบุคคล'},
+  en: {dashboard:'Dashboard',transactions:'Income & Expenses',ot:'Overtime Calculator',loan:'Loan Calculator',subscriptions:'Subscriptions',calendar:'Calendar',savings:'Savings',banks:'Bank Accounts',debts:'Debts',investments:'Investment Portfolio',tax:'Income Tax',balance:'Balance Sheet & Financial Plan',retire:'Retirement Plan',profile:'Profile',settings:'Settings',admin:'Admin Dashboard',forecast:'Cash Flow Forecast',travel:'Travel',aiusage:'AI Usage / Token Cost',insurance:'Insurance',app_tagline:'Personal Finance'},
+};
+let currentLang=(function(){ try{ return localStorage.getItem('mm_lang')||'th'; }catch(e){ return 'th'; } })();
+function t(key){ return (I18N[currentLang]||I18N.th)[key] || (I18N.th[key]||key); }
+function setLang(lang){
+  currentLang=(lang==='en')?'en':'th';
+  try{ localStorage.setItem('mm_lang',currentLang); }catch(e){}
+  if(typeof DB!=='undefined'&&DB.settings){ DB.settings.lang=currentLang; if(typeof saveDB==='function'&&currentUser) saveDB(); }
+  applyLang();
+}
+function toggleLang(){ setLang(currentLang==='th'?'en':'th'); }
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')); });
+  const pt=document.getElementById('page-title'); if(pt&&typeof curPage!=='undefined') pt.textContent=t(curPage);
+  const langBtn=document.getElementById('lang-btn'); if(langBtn) langBtn.textContent=currentLang==='th'?'EN':'TH';
+  const tagline=document.getElementById('app-tagline'); if(tagline) tagline.textContent=t('app_tagline');
+}
+const PAGE_TITLE = new Proxy({},{get:function(_,page){ return t(page); }}); // เก็บชื่อเดิมไว้ให้โค้ดเก่าที่เรียก PAGE_TITLE[page] ยังทำงานได้
 let curPage='dashboard', txFilter='all';
 
 function nav(page){
