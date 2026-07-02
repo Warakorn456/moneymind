@@ -9152,7 +9152,7 @@ function renderTxTagWrap(tags){
   const inp=wrap.querySelector('#tx-tag-inp');
   wrap.innerHTML=chips;
   const newInp=document.createElement('input');
-  newInp.id='tx-tag-inp'; newInp.className='tag-input-inp'; newInp.placeholder=tags.length?'':'เช่น work, ครอบครัว...';
+  newInp.id='tx-tag-inp'; newInp.className='tag-input-inp'; newInp.placeholder=tags.length?'':tr('tx_tags_ph');
   newInp.setAttribute('onkeydown','txTagKey(event)'); newInp.setAttribute('oninput','txTagInput(event)');
   wrap.appendChild(newInp);
 }
