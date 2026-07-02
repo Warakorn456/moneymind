@@ -12453,7 +12453,7 @@ function saveSub(){
   var nextDate=document.getElementById('sub-date').value;
   var cat=document.getElementById('sub-cat').value;
   var color=document.getElementById('sub-color').value||'#a78bfa';
-  if(!name||isNaN(price)||price<0){ toast('กรุณากรอกชื่อและราคา','error'); return; }
+  if(!name||isNaN(price)||price<0){ toast(tr('sub_need_name_price'),'error'); return; }
   var list=getSubs();
   if(id){ var s=list.find(function(x){return x.id===id;}); if(s){s.name=name;s.price=price;s.cycle=cycle;s.nextDate=nextDate;s.cat=cat;s.color=color;} }
   else { list.push({id:'sub_'+Date.now(),name:name,price:price,cycle:cycle,nextDate:nextDate,cat:cat,color:color,active:true}); }
