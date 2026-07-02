@@ -12458,7 +12458,7 @@ function saveSub(){
   if(id){ var s=list.find(function(x){return x.id===id;}); if(s){s.name=name;s.price=price;s.cycle=cycle;s.nextDate=nextDate;s.cat=cat;s.color=color;} }
   else { list.push({id:'sub_'+Date.now(),name:name,price:price,cycle:cycle,nextDate:nextDate,cat:cat,color:color,active:true}); }
   saveDB(); closeM('m-sub'); renderSubscriptions();
-  toast('บันทึกแล้ว','success');
+  toast(tr('save'),'success');
 }
 
 function deleteSub(id){
