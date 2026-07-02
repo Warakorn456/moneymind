@@ -2295,28 +2295,28 @@
 <!-- Plan item modal -->
 <div class="plan-modal-bg" id="plan-modal-bg" onclick="if(event.target===this) closePlanModal()">
   <div class="plan-modal">
-    <div style="font-size:16px;font-weight:700;margin-bottom:18px"><i class="fas fa-plus-circle" style="color:var(--primary-l)"></i> เพิ่มรายการแผนการเงิน</div>
-    <div class="fg"><label class="flabel">ชื่อรายการ</label><input class="finput" id="pm-name" placeholder="เช่น ค่าเช่า, ประกัน, เงินเดือน"></div>
-    <div class="fg"><label class="flabel">จำนวนเงิน (บาท)</label><input class="finput" type="number" id="pm-amount" min="0" step="100" placeholder="0"></div>
-    <div class="fg"><label class="flabel">ประเภท</label>
+    <div style="font-size:16px;font-weight:700;margin-bottom:18px"><i class="fas fa-plus-circle" style="color:var(--primary-l)"></i> <span data-i18n="pm_add_item">เพิ่มรายการแผนการเงิน</span></div>
+    <div class="fg"><label class="flabel" data-i18n="pm_item_name">ชื่อรายการ</label><input class="finput" id="pm-name" placeholder="เช่น ค่าเช่า, ประกัน, เงินเดือน" data-i18n-ph="pm_item_name_ph"></div>
+    <div class="fg"><label class="flabel" data-i18n="scan_amount_baht">จำนวนเงิน (บาท)</label><input class="finput" type="number" id="pm-amount" min="0" step="100" placeholder="0"></div>
+    <div class="fg"><label class="flabel" data-i18n="tx_category">ประเภท</label>
       <select class="finput" id="pm-type" onchange="onPmTypeChange()">
-        <option value="expense">รายจ่าย</option>
-        <option value="income">รายรับ</option>
+        <option value="expense" data-i18n="dh_expense">รายจ่าย</option>
+        <option value="income" data-i18n="dh_income">รายรับ</option>
       </select>
     </div>
-    <div class="fg"><label class="flabel">หมวดหมู่</label><select class="finput" id="pm-cat"></select></div>
-    <div class="fg"><label class="flabel">ความถี่</label>
+    <div class="fg"><label class="flabel" data-i18n="tx_category">หมวดหมู่</label><select class="finput" id="pm-cat"></select></div>
+    <div class="fg"><label class="flabel" data-i18n="pm_frequency">ความถี่</label>
       <select class="finput" id="pm-recur" onchange="onPmRecurChange()">
-        <option value="monthly">ทุกเดือน</option>
-        <option value="yearly">ปีละครั้ง</option>
-        <option value="once">ครั้งเดียว</option>
+        <option value="monthly" data-i18n="pm_every_month">ทุกเดือน</option>
+        <option value="yearly" data-i18n="pm_once_a_year">ปีละครั้ง</option>
+        <option value="once" data-i18n="pm_once">ครั้งเดียว</option>
       </select>
     </div>
-    <div class="fg"><label class="flabel" id="pm-from-label">เริ่มตั้งแต่เดือน</label><input class="finput" type="month" id="pm-from"></div>
-    <div class="fg" id="pm-to-wrap"><label class="flabel">สิ้นสุดเดือน <span style="color:var(--muted);font-weight:400">(ปล่อยว่าง = ไม่สิ้นสุด)</span></label><input class="finput" type="month" id="pm-to"></div>
+    <div class="fg"><label class="flabel" id="pm-from-label" data-i18n="pm_start_month">เริ่มตั้งแต่เดือน</label><input class="finput" type="month" id="pm-from"></div>
+    <div class="fg" id="pm-to-wrap"><label class="flabel" data-i18n="pm_end_month">สิ้นสุดเดือน</label> <span style="color:var(--muted);font-weight:400" data-i18n="pm_end_month_hint">(ปล่อยว่าง = ไม่สิ้นสุด)</span><input class="finput" type="month" id="pm-to"></div>
     <div style="display:flex;gap:10px;margin-top:6px">
-      <button class="btn btn-primary" style="flex:1" onclick="savePlanItem()">บันทึก</button>
-      <button class="btn btn-ghost" onclick="closePlanModal()">ยกเลิก</button>
+      <button class="btn btn-primary" style="flex:1" onclick="savePlanItem()" data-i18n="save">บันทึก</button>
+      <button class="btn btn-ghost" onclick="closePlanModal()" data-i18n="cancel">ยกเลิก</button>
     </div>
   </div>
 </div>
