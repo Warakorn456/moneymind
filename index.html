@@ -12901,22 +12901,22 @@ function _renderBulkBar(){
 
 function applyBulkCat(){
   const cat=document.getElementById('bulk-cat')?.value;
-  if(!cat||!_bulkSel.size){ toast('เลือกหมวดและรายการก่อน','error'); return; }
+  if(!cat||!_bulkSel.size){ toast(tr('bulk_select_first'),'error'); return; }
   let n=0;
   DB.transactions.forEach(t=>{ if(_bulkSel.has(t.id)){ t.category=cat; n++; } });
   saveDB(); _bulkSel.clear(); renderTx();
   if(curPage==='dashboard') renderDash();
-  toast(`เปลี่ยนหมวด ${n} รายการแล้ว`,'success');
+  toast(tr('bulk_changed_n').replace('{n}',n),'success');
 }
 
 function bulkDelete(){
   if(!_bulkSel.size) return;
-  if(!confirm(`ลบ ${_bulkSel.size} รายการที่เลือก? (ย้อนกลับไม่ได้)`)) return;
+  if(!confirm(tr('bulk_confirm_delete').replace('{n}',_bulkSel.size))) return;
   const n=_bulkSel.size;
   DB.transactions=DB.transactions.filter(t=>!_bulkSel.has(t.id));
   saveDB(); _bulkSel.clear(); renderTx();
   if(curPage==='dashboard') renderDash();
-  toast(`ลบ ${n} รายการแล้ว`,'info');
+  toast(tr('bulk_deleted_n').replace('{n}',n),'info');
 }
 
 // ══════════════════════════════════════════
