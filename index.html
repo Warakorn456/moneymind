@@ -8965,8 +8965,8 @@ function _captureShareCard(card){
     a.href=dataUrl;
     a.download=fn;
     a.click();
-    toast('บันทึกรูปแล้ว','success');
-  }).catch(()=>toast('ไม่สามารถสร้างรูปได้ ต้องเชื่อมต่ออินเทอร์เน็ต','error'));
+    toast(tr('image_saved'),'success');
+  }).catch(()=>toast(tr('image_create_failed'),'error'));
 }
 
 // ══════════════════════════════════════════
