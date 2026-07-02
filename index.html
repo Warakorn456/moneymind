@@ -4512,7 +4512,7 @@ function processFile(file){
     document.getElementById('rcpt-prev').style.display='block';
     document.getElementById('up-ph').style.display='none';
     if(DB.settings.apiKey) aiReadReceipt(rcptURL);
-    else { showWarn('<i class="fas fa-info-circle"></i> ยังไม่มี API Key — <button onclick="nav(\'settings\');closeM(\'m-img\')" style="background:none;border:none;color:var(--amber);cursor:pointer;text-decoration:underline;font-family:Sarabun,sans-serif;font-size:13px">ตั้งค่าที่นี่</button> หรือ กรอกข้อมูลเองได้เลย'); document.getElementById('ai-manual-btn').style.display='inline-flex'; }
+    else { showWarn('<i class="fas fa-info-circle"></i> '+tr('scan_no_apikey')+' — <button onclick="nav(\'settings\');closeM(\'m-img\')" style="background:none;border:none;color:var(--amber);cursor:pointer;text-decoration:underline;font-family:Sarabun,sans-serif;font-size:13px">'+tr('scan_setup_here')+'</button> '+tr('scan_or_manual')); document.getElementById('ai-manual-btn').style.display='inline-flex'; }
   };
   r.readAsDataURL(file);
 }
