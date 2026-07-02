@@ -15213,7 +15213,7 @@ window.addEventListener('online',function(){ toast(tr('online_msg'),'success'); 
 </div>
 
 <!-- AI Chat FAB + Panel -->
-<button class="chat-fab" onclick="toggleChat()" title="ถามผู้ช่วย AI">
+<button class="chat-fab" onclick="toggleChat()" title="ถามผู้ช่วย AI" data-i18n-title="chat_ask_ai">
   <i class="fas fa-robot"></i>
   <div class="chat-badge" id="chat-badge"></div>
 </button>
@@ -15222,23 +15222,23 @@ window.addEventListener('online',function(){ toast(tr('online_msg'),'success'); 
   <div class="chat-head">
     <div class="chat-head-icon"><i class="fas fa-user-tie"></i></div>
     <div class="chat-head-info">
-      <div class="chat-head-title">มายา — เลขาการเงินส่วนตัว</div>
-      <div class="chat-head-sub">รู้ข้อมูลการเงินทั้งหมดของคุณ</div>
+      <div class="chat-head-title" data-i18n="chat_maya_title">มายา — เลขาการเงินส่วนตัว</div>
+      <div class="chat-head-sub" data-i18n="chat_maya_sub">รู้ข้อมูลการเงินทั้งหมดของคุณ</div>
     </div>
-    <button onclick="chatHistory=[];renderChatMsgs();toggleChat();toggleChat();" title="เคลียร์แชท" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 8px;font-size:13px;margin-right:2px"><i class="fas fa-trash-alt"></i></button>
+    <button onclick="chatHistory=[];renderChatMsgs();toggleChat();toggleChat();" title="เคลียร์แชท" data-i18n-title="chat_clear" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 8px;font-size:13px;margin-right:2px"><i class="fas fa-trash-alt"></i></button>
     <button class="chat-head-close" onclick="toggleChat()"><i class="fas fa-times"></i></button>
   </div>
   <div class="chat-msgs" id="chat-msgs"></div>
   <div class="chat-quick" id="chat-quick">
-    <button class="chat-q" onclick="chatQuick('สรุปภาพรวมการเงินของฉันเดือนนี้')">📊 สรุปเดือนนี้</button>
-    <button class="chat-q" onclick="chatQuick('Net Worth ของฉันตอนนี้เป็นเท่าไร และควรปรับปรุงอะไรบ้าง?')">🏦 Net Worth</button>
-    <button class="chat-q" onclick="chatQuick('รายจ่ายหมวดไหนที่ลดได้บ้าง? ช่วยวิเคราะห์ให้หน่อย')">✂️ ลดรายจ่าย</button>
-    <button class="chat-q" onclick="chatQuick('ควรปิดหนี้ไหนก่อน? แนะนำกลยุทธ์การจัดการหนี้ให้หน่อย')">💳 จัดการหนี้</button>
-    <button class="chat-q" onclick="chatQuick('เป้าหมายออมของฉันถึงเป้าได้เมื่อไร ถ้าออมต่อเนื่องเดือนละเท่าเดิม?')">🎯 เป้าหมายออม</button>
-    <button class="chat-q" onclick="chatQuick('วิเคราะห์พอร์ตลงทุนของฉัน กำไร/ขาดทุนเป็นเท่าไร และควรปรับอะไรบ้าง?')">📈 วิเคราะห์พอร์ต</button>
+    <button class="chat-q" onclick="chatQuick(tr('chat_q1'))">📊 <span data-i18n="chat_q1_label">สรุปเดือนนี้</span></button>
+    <button class="chat-q" onclick="chatQuick(tr('chat_q2'))">🏦 Net Worth</button>
+    <button class="chat-q" onclick="chatQuick(tr('chat_q3'))">✂️ <span data-i18n="chat_q3_label">ลดรายจ่าย</span></button>
+    <button class="chat-q" onclick="chatQuick(tr('chat_q4'))">💳 <span data-i18n="chat_q4_label">จัดการหนี้</span></button>
+    <button class="chat-q" onclick="chatQuick(tr('chat_q5'))">🎯 <span data-i18n="chat_q5_label">เป้าหมายออม</span></button>
+    <button class="chat-q" onclick="chatQuick(tr('chat_q6'))">📈 <span data-i18n="chat_q6_label">วิเคราะห์พอร์ต</span></button>
   </div>
   <div class="chat-foot">
-    <textarea class="chat-input" id="chat-input" placeholder="ถามอะไรก็ได้เกี่ยวกับการเงินของคุณ..." rows="1"></textarea>
+    <textarea class="chat-input" id="chat-input" placeholder="ถามอะไรก็ได้เกี่ยวกับการเงินของคุณ..." data-i18n-ph="chat_input_ph" rows="1"></textarea>
     <button class="chat-send" id="chat-send" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
   </div>
 </div>
