@@ -7865,7 +7865,7 @@ function renderProfile(){
     </div>
     <div style="flex:1">
       <div class="prof-name">${p.firstName||''} ${p.lastName||''}</div>
-      <div class="prof-sub">${p.jobTitle||'ยังไม่ได้ระบุตำแหน่ง'}</div>
+      <div class="prof-sub">${p.jobTitle||tr('prof_no_title')}</div>
       ${p.dob?`<div style="font-size:12px;color:var(--muted);margin-top:4px">${calcAge(p.dob)}</div>`:''}
       <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)">
         ${p.phone?`<span><i class="fas fa-phone"></i> ${p.phone}</span>`:''}
@@ -7877,30 +7877,30 @@ function renderProfile(){
 
   <!-- ข้อมูลส่วนตัว -->
   <div class="prof-section">
-    <div class="set-title"><i class="fas fa-user" style="color:#a78bfa"></i> ข้อมูลส่วนตัว</div>
+    <div class="set-title"><i class="fas fa-user" style="color:#a78bfa"></i> ${tr('prof_personal_info')}</div>
     <div class="prof-grid">
-      ${profField('firstName','ชื่อ','text','ชื่อ')}
-      ${profField('lastName','นามสกุล','text','นามสกุล')}
-      ${profField('nickname','ชื่อเล่น','text','ชื่อเล่น')}
-      ${profField('dob','วันเกิด','date')}
-      ${profField('gender','เพศ','select','',{options:['','ชาย','หญิง','ไม่ระบุ']})}
-      ${profField('nationality','สัญชาติ','text','ไทย')}
-      ${profField('jobTitle','ตำแหน่งงาน','text','เช่น Software Engineer')}
-      ${profField('phone','เบอร์โทร','tel','0812345678')}
-      ${profField('email','อีเมล','email','email@example.com')}
+      ${profField('firstName',tr('prof_first_name'),'text',tr('prof_first_name'))}
+      ${profField('lastName',tr('prof_last_name'),'text',tr('prof_last_name'))}
+      ${profField('nickname',tr('prof_nickname'),'text',tr('prof_nickname'))}
+      ${profField('dob',tr('prof_dob'),'date')}
+      ${profField('gender',tr('prof_gender'),'select','',{options:['',tr('prof_male'),tr('prof_female'),tr('prof_unspecified')]})}
+      ${profField('nationality',tr('prof_nationality'),'text',tr('prof_thai'))}
+      ${profField('jobTitle',tr('prof_job_title'),'text',tr('prof_job_title_ph'))}
+      ${profField('phone',tr('prof_phone'),'tel','0812345678')}
+      ${profField('email',tr('prof_email'),'email','email@example.com')}
       ${profField('lineId','Line ID','text','@lineID')}
     </div>
     <div class="prof-grid" style="margin-top:10px;grid-template-columns:1fr">
-      ${profField('address','ที่อยู่','textarea','บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด')}
-      ${profField('bio','แนะนำตัวสั้นๆ','textarea','สรุปตัวเองในไม่กี่ประโยค...')}
+      ${profField('address',tr('prof_address'),'textarea',tr('prof_address_ph'))}
+      ${profField('bio',tr('prof_bio'),'textarea',tr('prof_bio_ph'))}
     </div>
   </div>
 
   <!-- ประวัติการศึกษา -->
   <div class="prof-section">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div class="set-title" style="margin:0"><i class="fas fa-graduation-cap" style="color:#a78bfa"></i> ประวัติการศึกษา</div>
-      <button class="btn btn-ghost" onclick="openEduModal()"><i class="fas fa-plus"></i> เพิ่ม</button>
+      <div class="set-title" style="margin:0"><i class="fas fa-graduation-cap" style="color:#a78bfa"></i> ${tr('prof_education')}</div>
+      <button class="btn btn-ghost" onclick="openEduModal()"><i class="fas fa-plus"></i> ${tr('add')}</button>
     </div>
     ${eduHTML}
   </div>
@@ -7908,8 +7908,8 @@ function renderProfile(){
   <!-- ประวัติการทำงาน -->
   <div class="prof-section">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div class="set-title" style="margin:0"><i class="fas fa-briefcase" style="color:#06b6d4"></i> ประวัติการทำงาน</div>
-      <button class="btn btn-ghost" onclick="openWorkModal()"><i class="fas fa-plus"></i> เพิ่ม</button>
+      <div class="set-title" style="margin:0"><i class="fas fa-briefcase" style="color:#06b6d4"></i> ${tr('prof_work_history')}</div>
+      <button class="btn btn-ghost" onclick="openWorkModal()"><i class="fas fa-plus"></i> ${tr('add')}</button>
     </div>
     ${workHTML}
   </div>
@@ -7917,28 +7917,28 @@ function renderProfile(){
   <!-- ทักษะ -->
   <div class="prof-section">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div class="set-title" style="margin:0"><i class="fas fa-star" style="color:#f59e0b"></i> ทักษะ / ความสามารถ</div>
-      <button class="btn btn-ghost" onclick="openModal('skill-modal-bg');document.getElementById('skill-name').value='';document.getElementById('skill-level').value=3;document.getElementById('skill-level-label').textContent='ปานกลาง'"><i class="fas fa-plus"></i> เพิ่ม</button>
+      <div class="set-title" style="margin:0"><i class="fas fa-star" style="color:#f59e0b"></i> ${tr('prof_skills')}</div>
+      <button class="btn btn-ghost" onclick="openModal('skill-modal-bg');document.getElementById('skill-name').value='';document.getElementById('skill-level').value=3;document.getElementById('skill-level-label').textContent='${tr('skill_intermediate')}'"><i class="fas fa-plus"></i> ${tr('add')}</button>
     </div>
     <div>${skillHTML}</div>
   </div>
 
   <!-- ความสนใจ & งานอดิเรก -->
   <div class="prof-section">
-    <div class="set-title"><i class="fas fa-heart" style="color:#ef4444"></i> ความสนใจ & งานอดิเรก</div>
+    <div class="set-title"><i class="fas fa-heart" style="color:#ef4444"></i> ${tr('prof_interests_hobbies')}</div>
     <div style="margin-bottom:12px">
-      <div style="font-size:13px;color:var(--muted);margin-bottom:6px">ความสนใจ</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:6px">${tr('prof_interests')}</div>
       <div id="interests-wrap">${tagHTML(p.interests,'interests')}</div>
       <div class="prof-inline-add">
-        <input id="add-interest-inp" placeholder="เช่น การลงทุน, เทคโนโลยี" onkeydown="if(event.key==='Enter')addProfileTag('interests','add-interest-inp')">
+        <input id="add-interest-inp" placeholder="${tr('prof_interests_ph')}" onkeydown="if(event.key==='Enter')addProfileTag('interests','add-interest-inp')">
         <button class="btn btn-ghost" onclick="addProfileTag('interests','add-interest-inp')"><i class="fas fa-plus"></i></button>
       </div>
     </div>
     <div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:6px">งานอดิเรก</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:6px">${tr('prof_hobbies')}</div>
       <div id="hobbies-wrap">${tagHTML(p.hobbies,'hobbies')}</div>
       <div class="prof-inline-add">
-        <input id="add-hobby-inp" placeholder="เช่น ถ่ายรูป, ทำอาหาร" onkeydown="if(event.key==='Enter')addProfileTag('hobbies','add-hobby-inp')">
+        <input id="add-hobby-inp" placeholder="${tr('prof_hobbies_ph')}" onkeydown="if(event.key==='Enter')addProfileTag('hobbies','add-hobby-inp')">
         <button class="btn btn-ghost" onclick="addProfileTag('hobbies','add-hobby-inp')"><i class="fas fa-plus"></i></button>
       </div>
     </div>
@@ -7946,10 +7946,10 @@ function renderProfile(){
 
   <!-- เป้าหมายชีวิต -->
   <div class="prof-section">
-    <div class="set-title"><i class="fas fa-flag" style="color:#10b981"></i> เป้าหมายชีวิต & ความฝัน</div>
+    <div class="set-title"><i class="fas fa-flag" style="color:#10b981"></i> ${tr('prof_life_goals')}</div>
     <div class="prof-grid" style="grid-template-columns:1fr">
-      ${profField('goals','เป้าหมายระยะสั้น (1-3 ปี)','textarea','สิ่งที่ต้องการทำให้สำเร็จใน 3 ปีข้างหน้า...')}
-      ${profField('longGoals','เป้าหมายระยะยาว','textarea','เป้าหมายชีวิต ความฝัน สิ่งที่ต้องการ...')}
+      ${profField('goals',tr('prof_short_goals'),'textarea',tr('prof_short_goals_ph'))}
+      ${profField('longGoals',tr('prof_long_goals'),'textarea',tr('prof_long_goals_ph'))}
     </div>
   </div>`;
 }
