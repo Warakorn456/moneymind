@@ -4,6 +4,8 @@ import { WebView } from 'react-native-webview';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as Print from 'expo-print';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
 import {
   GoogleSignin,
   statusCodes,
@@ -11,6 +13,16 @@ import {
   isErrorWithCode,
 } from '@react-native-google-signin/google-signin';
 import { C } from '../config/colors';
+
+// แจ้งเตือนที่มาถึงตอนแอปเปิดอยู่ (foreground) ให้โชว์แบนเนอร์+เสียงเหมือนตอนแอปปิดอยู่
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 export const WEB_URL = 'https://warakorn456.github.io/moneymind/';
 
