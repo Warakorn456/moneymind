@@ -3569,7 +3569,7 @@ const EXP_CATS = [
   {id:'other_exp',label:'รายจ่ายอื่นๆ',labelEn:'Other Expenses',icon:'fa-ellipsis-h',color:'#94a3b8'},
 ];
 
-function getCat(id,type){ const custom=(type==='income'?(DB.settings?.customIncCats||[]):(DB.settings?.customExpCats||[])); const l=type==='income'?[...INC_CATS,...custom]:[...EXP_CATS,...custom]; return l.find(c=>c.id===id)||{label:id,icon:'fa-circle',color:'#94a3b8'}; }
+function getCat(id,type){ const custom=(type==='income'?(DB.settings?.customIncCats||[]):(DB.settings?.customExpCats||[])); const l=type==='income'?[...INC_CATS,...custom]:[...EXP_CATS,...custom]; const cat=l.find(c=>c.id===id)||{label:id,icon:'fa-circle',color:'#94a3b8'}; return (typeof currentLang!=='undefined'&&currentLang==='en'&&cat.labelEn)?{...cat,label:cat.labelEn}:cat; }
 
 // ── Saving transaction helpers ──
 const SAVING_CAT_IDS=['save_tx'];
