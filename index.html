@@ -3607,7 +3607,12 @@ const I18N = {
     ph_reg_user:'Username (a-z, 0-9, _, 3-20 chars)',ph_reg_pass:'Password (min. 6 characters)',ph_reg_pass2:'Confirm password',register_btn:'Sign Up',register_creating:'Creating account...',register_divider:'Or sign up with',register_sub:'Create New Account',
     have_account:'Already have an account?',login_link:'Log In',forgot_sub:'Reset Password',
     forgot_desc:'Firebase will send a password reset link to your registered <strong style="color:#a78bfa">Email</strong>',ph_forgot_email:'Your registered email',sending:'Sending...',forgot_send_btn:'Send Reset Email',
-    no_email_help:"No email linked / can't recover?",contact_us:'Contact us',back_to:'Back to',privacy_link:'Privacy Policy',terms_link:'Terms of Service'},
+    no_email_help:"No email linked / can't recover?",contact_us:'Contact us',back_to:'Back to',privacy_link:'Privacy Policy',terms_link:'Terms of Service',
+    set_ai_scan_title:'AI Receipt Scan',set_ai_scan_desc:'Enter your Google Gemini API Key to let AI read receipt images automatically<br>The key is stored only in your browser, never sent anywhere else',save:'Save',set_get_key_hint:'Get a free key at aistudio.google.com → Get API Key',set_model_hint:'(leave blank for auto-select)',
+    set_cloud_title:'Firebase Cloud Sync',set_cloud_desc:'Sync data across devices via Firebase Firestore',set_test_conn:'Test Connection',set_upload_cloud:'Upload to Cloud',set_load_cloud:'Load from Cloud',set_recover:'Recover Data',
+    set_pin_title:'Set Unlock PIN',set_pin_none:'No PIN set',set_pin_active:'✅ PIN is set — use it to unlock instead of password',set_pin_new:'New PIN (6 digits)',set_pin_confirm:'Confirm PIN',set_pin_save:'Save PIN',set_pin_delete:'Delete PIN',
+    set_security_title:'Security',set_autolock:'Auto-lock app after inactivity',set_lock_off:'Off (no lock)',set_lock_5:'5 minutes',set_lock_10:'10 minutes',set_lock_15:'15 minutes (recommended)',set_lock_30:'30 minutes',set_lock_60:'1 hour',set_lock_now:'Lock App Now',set_session_expire:"Session expires after 30 days — you'll need to log in again",
+    set_data_title:'Data Management',set_export_json:'Export JSON',set_export_csv:'Export CSV',set_print_report:'Print Report',set_shareable:'Shareable Summary',set_import_json:'Import JSON',set_clear_all:'Clear All Data'},
 };
 let currentLang=(function(){ try{ return localStorage.getItem('mm_lang')||'th'; }catch(e){ return 'th'; } })();
 function t(key){ return (I18N[currentLang]||I18N.th)[key] || (I18N.th[key]||key); }
