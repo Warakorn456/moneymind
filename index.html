@@ -2567,6 +2567,26 @@ async function fsSave(){
 }
 
 let _aiUsage=null, _claudeUsage=null, _aiUsageChart=null, _aiUsageFetching=false, _aiUsageTab='gemini';   // AI token/cost usage (Gemini เขียนโดย gemini_usage_report.py, Claude โดย claude_usage_report.py)
+// Merge remote snapshot เข้ากับ local แบบ union-by-id สำหรับ array ที่เป็นรายการ (แทน
+// wholesale overwrite เดิม `{...DB,...remote}` ที่ทับทั้ง array ทิ้ง — ถ้า 2 อุปกรณ์แก้ไข
+// ใกล้เวลากัน อุปกรณ์ที่ _savedAt เก่ากว่าจะเสียรายการที่เพิ่งเพิ่มไปทั้งหมดแบบไม่มีเตือน)
+// ยังไม่ใช่ CRDT เต็มรูปแบบ — ถ้า id ชนกันจริง (แก้ item เดียวกัน) remote ชนะเหมือนเดิม
+// แต่ item ที่มีแค่ฝั่งเดียว (เพิ่งเพิ่มใหม่ยังไม่ทัน sync) จะไม่หายไปอีกต่อไป
+const _MERGE_ARRAY_FIELDS=['transactions','savings','debts','investments','subscriptions','insurance','dcaPlans'];
+function _mergeDbSnapshot(local,remote){
+  const merged={...local,...remote};
+  _MERGE_ARRAY_FIELDS.forEach(function(field){
+    const localArr=Array.isArray(local[field])?local[field]:[];
+    const remoteArr=Array.isArray(remote[field])?remote[field]:[];
+    if(!localArr.length){ merged[field]=remoteArr; return; }
+    const byId=new Map();
+    localArr.forEach(function(item){ if(item&&item.id!=null) byId.set(item.id,item); });
+    remoteArr.forEach(function(item){ if(item&&item.id!=null) byId.set(item.id,item); }); // ชนกัน = remote ชนะ (ถือว่าใหม่กว่าตาม _savedAt)
+    merged[field]=Array.from(byId.values());
+  });
+  return merged;
+}
+
 async function fsLoad(){
   if(!currentUser||!_fs){ setSyncStatus('error'); return false; }
   try{
