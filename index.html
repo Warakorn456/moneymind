@@ -12563,26 +12563,26 @@ function renderSubscriptions(){
   el.innerHTML=
     // header
     '<div class="sec-hd" style="margin-bottom:20px">'
-      +'<div><div class="sec-title">Subscription Manager</div><div style="font-size:12px;color:var(--muted);margin-top:3px">ติดตามค่าบริการรายเดือน / รายปีทั้งหมด</div></div>'
-      +'<button class="btn btn-primary" onclick="openSubModal()"><i class="fas fa-plus"></i> เพิ่มบริการ</button>'
+      +'<div><div class="sec-title">'+tr('sub_manager')+'</div><div style="font-size:12px;color:var(--muted);margin-top:3px">'+tr('sub_track_hint')+'</div></div>'
+      +'<button class="btn btn-primary" onclick="openSubModal()"><i class="fas fa-plus"></i> '+tr('sub_add')+'</button>'
     +'</div>'
     // summary bar
     +(list.length?'<div class="sub-summary-bar">'
-      +'<div class="sub-stat"><div class="sub-stat-val">'+fmt(Math.round(totalMonthly))+'</div><div class="sub-stat-lbl">รวม / เดือน</div></div>'
+      +'<div class="sub-stat"><div class="sub-stat-val">'+fmt(Math.round(totalMonthly))+'</div><div class="sub-stat-lbl">'+tr('sub_total_monthly')+'</div></div>'
       +'<div style="width:1px;background:rgba(124,58,237,.25);height:40px"></div>'
-      +'<div class="sub-stat"><div class="sub-stat-val">'+fmt(Math.round(totalYearly))+'</div><div class="sub-stat-lbl">รวม / ปี</div></div>'
+      +'<div class="sub-stat"><div class="sub-stat-val">'+fmt(Math.round(totalYearly))+'</div><div class="sub-stat-lbl">'+tr('sub_total_yearly')+'</div></div>'
       +'<div style="width:1px;background:rgba(124,58,237,.25);height:40px"></div>'
-      +'<div class="sub-stat"><div class="sub-stat-val">'+activeList.length+'</div><div class="sub-stat-lbl">บริการที่ใช้อยู่</div></div>'
-      +(inactiveList.length?'<div style="width:1px;background:rgba(124,58,237,.25);height:40px"></div><div class="sub-stat"><div class="sub-stat-val" style="color:var(--muted)">'+inactiveList.length+'</div><div class="sub-stat-lbl">ปิดชั่วคราว</div></div>':'')
+      +'<div class="sub-stat"><div class="sub-stat-val">'+activeList.length+'</div><div class="sub-stat-lbl">'+tr('sub_active_count')+'</div></div>'
+      +(inactiveList.length?'<div style="width:1px;background:rgba(124,58,237,.25);height:40px"></div><div class="sub-stat"><div class="sub-stat-val" style="color:var(--muted)">'+inactiveList.length+'</div><div class="sub-stat-lbl">'+tr('sub_paused')+'</div></div>':'')
     +'</div>':'')
     // upcoming
     +upcomingHTML
     // active cards
-    +(activeList.length?'<div style="margin-bottom:8px"><div class="sec-title" style="margin-bottom:12px">บริการทั้งหมด</div><div class="sub-grid">'+makeCards(activeList)+'</div></div>':'')
+    +(activeList.length?'<div style="margin-bottom:8px"><div class="sec-title" style="margin-bottom:12px">'+tr('sub_all_services')+'</div><div class="sub-grid">'+makeCards(activeList)+'</div></div>':'')
     // inactive
-    +(inactiveList.length?'<div style="margin-top:20px"><div class="sec-title" style="margin-bottom:12px;color:var(--muted)"><i class="fas fa-pause-circle" style="margin-right:6px"></i>ปิดชั่วคราว</div><div class="sub-grid">'+makeCards(inactiveList)+'</div></div>':'')
+    +(inactiveList.length?'<div style="margin-top:20px"><div class="sec-title" style="margin-bottom:12px;color:var(--muted)"><i class="fas fa-pause-circle" style="margin-right:6px"></i>'+tr('sub_paused')+'</div><div class="sub-grid">'+makeCards(inactiveList)+'</div></div>':'')
     // empty state
-    +(!list.length?'<div class="empty"><i class="fas fa-credit-card"></i><p>ยังไม่มี subscription — กด "+ เพิ่มบริการ" เพื่อเริ่มต้น</p></div>':'');
+    +(!list.length?'<div class="empty"><i class="fas fa-credit-card"></i><p>'+tr('sub_empty_hint')+'</p></div>':'');
 }
 
 // ══════════════════════════════════════════
