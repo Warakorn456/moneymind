@@ -11170,7 +11170,7 @@ async function doChangePassword(){
 let _adminChart=null;
 window._adminMembers=[];
 function exportAdminCsv(){
-  const ms=window._adminMembers||[]; if(!ms.length){ toast('ไม่มีข้อมูล','info'); return; }
+  const ms=window._adminMembers||[]; if(!ms.length){ toast(tr('no_data_yet'),'info'); return; }
   const rows=[['username','email','platform','currentPlatform','isOwner','createdAt','lastSeen']];
   ms.forEach(m=>rows.push([
     m.username,m.email||'',m.platform||'',m.currentPlatform||'',m.isOwner?'yes':'',
