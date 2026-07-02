@@ -13013,9 +13013,9 @@ function renderTravel(){
     +'<div style="font-size:22px;font-weight:800;margin-top:6px">'+val+'</div>'
     +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+label+'</div></div>';
   const summary='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px">'
-    +stat('fa-coins',fmt(grand),'ค่าใช้จ่ายรวม','#0ea5e9')
-    +stat('fa-suitcase-rolling',totalTrips,'จำนวนทริป','#8b5cf6')
-    +stat('fa-map-marked-alt',placeCount,'สถานที่','#10b981')
+    +stat('fa-coins',fmt(grand),tr('travel_total_expense'),'#0ea5e9')
+    +stat('fa-suitcase-rolling',totalTrips,tr('travel_num_trips'),'#8b5cf6')
+    +stat('fa-map-marked-alt',placeCount,tr('travel_places'),'#10b981')
     +'</div>';
 
   // ── ค่าใช้จ่ายต่อประเทศ ──
@@ -13025,7 +13025,7 @@ function renderTravel(){
   let countrySec='';
   if(countries.length>1){
     countrySec='<div class="card" style="padding:16px;margin-bottom:18px">'
-      +'<div style="font-size:13px;font-weight:700;margin-bottom:12px"><i class="fas fa-globe-asia" style="color:#10b981"></i> ค่าใช้จ่ายต่อประเทศ</div>'
+      +'<div style="font-size:13px;font-weight:700;margin-bottom:12px"><i class="fas fa-globe-asia" style="color:#10b981"></i> '+tr('travel_expense_per_country')+'</div>'
       +countries.map(([c,amt])=>{
         const cpct=grand?Math.round(amt/grand*100):0;
         return '<div style="margin-bottom:10px">'
