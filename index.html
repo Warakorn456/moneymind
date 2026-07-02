@@ -9931,7 +9931,7 @@ function quickAdd(){
   inp.value='';
   if(curPage==='transactions') renderTx();
   if(curPage==='dashboard') renderDash();
-  toast((type==='income'?'💰 รายรับ ':'💸 รายจ่าย ')+desc+' '+fmt(amount)+' — <u style="cursor:pointer" onclick="undoLastTx()">ยกเลิก</u>','success',6000);
+  toast((type==='income'?'💰 '+tr('dh_income')+' ':'💸 '+tr('dh_expense')+' ')+desc+' '+fmt(amount)+' — <u style="cursor:pointer" onclick="undoLastTx()">'+tr('cancel')+'</u>','success',6000);
 }
 
 // ══════════════════════════════════════════
@@ -9939,13 +9939,13 @@ function quickAdd(){
 // ══════════════════════════════════════════
 var _lastAddedTx=null;
 function undoLastTx(){
-  if(!_lastAddedTx){ toast('ไม่มีรายการที่ยกเลิกได้','info'); return; }
+  if(!_lastAddedTx){ toast(tr('quickadd_no_item_to_undo'),'info'); return; }
   DB.transactions=DB.transactions.filter(function(t){ return t.id!==_lastAddedTx.id; });
   _lastAddedTx=null;
   saveDB();
   if(curPage==='transactions') renderTx();
   if(curPage==='dashboard') renderDash();
-  toast('ยกเลิกรายการแล้ว','info');
+  toast(tr('quickadd_undone'),'info');
 }
 
 // ══════════════════════════════════════════
