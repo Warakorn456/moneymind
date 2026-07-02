@@ -5980,9 +5980,9 @@ function openDcaPlanModal(id){
 function saveDcaPlan(){
   const id=document.getElementById('dca-plan-eid').value;
   const name=document.getElementById('dca-plan-name').value.trim();
-  if(!name){ toast('กรุณาใส่ชื่อสินทรัพย์','error'); return; }
+  if(!name){ toast(tr('dca_need_asset_name'),'error'); return; }
   const amount=parseFloat(document.getElementById('dca-plan-amount').value)||0;
-  if(!amount){ toast('กรุณาใส่จำนวนเงินต่อครั้ง','error'); return; }
+  if(!amount){ toast(tr('dca_need_amount_per_time'),'error'); return; }
   const plans=getDcaPlans();
   const linkedInvId=document.getElementById('dca-plan-inv-id').value||null;
   const linkedInv=linkedInvId?(DB.investments||[]).find(i=>i.id===linkedInvId):null;
