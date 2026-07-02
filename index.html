@@ -9451,7 +9451,7 @@ function toggleDebtPlanner(btn){
 function renderDebtPlanner(){
   const el=document.getElementById('debt-planner-panel'); if(!el) return;
   const debts=(DB.debts||[]).filter(d=>d.remaining>0||d.total>0).map(d=>({...d,bal:d.remaining||d.total||0}));
-  if(!debts.length){ el.innerHTML='<div class="card" style="padding:16px;font-size:13px;color:var(--muted)">ยังไม่มีหนี้ที่ต้องชำระ</div>'; return; }
+  if(!debts.length){ el.innerHTML='<div class="card" style="padding:16px;font-size:13px;color:var(--muted)">'+tr('debt_no_payoff')+'</div>'; return; }
   const totalPay=debts.reduce((s,d)=>s+(d.monthlyPayment||0),0);
   const avalanche=calcPayoff([...debts].sort((a,b)=>parseFloat(b.rate||0)-parseFloat(a.rate||0)),totalPay);
   const snowball=calcPayoff([...debts].sort((a,b)=>a.bal-b.bal),totalPay);
