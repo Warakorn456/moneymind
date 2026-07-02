@@ -12129,7 +12129,15 @@ function renderCalendarPage(){
   var daysInMonth=new Date(_calYear,_calMonth+1,0).getDate();
 
   var dowHdr='';
-  var dowLabels=[
+  var dowLabels=(typeof currentLang!=='undefined'&&currentLang==='en')?[
+    {short:'Su',long:'Sunday',cls:'sun-col'},
+    {short:'Mo', long:'Monday',  cls:'weekday-col'},
+    {short:'Tu', long:'Tuesday', cls:'weekday-col'},
+    {short:'We', long:'Wednesday',    cls:'weekday-col'},
+    {short:'Th',long:'Thursday',  cls:'weekday-col'},
+    {short:'Fr', long:'Friday',  cls:'weekday-col'},
+    {short:'Sa', long:'Saturday',  cls:'sat-col'},
+  ]:[
     {short:'อา',long:'อาทิตย์',cls:'sun-col'},
     {short:'จ', long:'จันทร์',  cls:'weekday-col'},
     {short:'อ', long:'อังคาร', cls:'weekday-col'},
