@@ -15032,7 +15032,7 @@ function _nativeSaveFile(blobOrDataUrl, filename, mime){
       var s=String(reader.result); var idx=s.indexOf(',');
       post(idx>=0?s.slice(idx+1):s);
     };
-    reader.onerror=function(){ toast('บันทึกไฟล์ไม่สำเร็จ','error'); };
+    reader.onerror=function(){ toast(tr('file_save_failed'),'error'); };
     reader.readAsDataURL(blobOrDataUrl);
   }
   return true;
