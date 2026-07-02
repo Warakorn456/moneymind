@@ -5140,23 +5140,23 @@ function renderDebts(){
     }).join('');
     return `<div class="dcard">
       <div class="dcard-hd">
-        <div><div class="dcard-name">${d.name}</div>${d.dueDate?`<div style="font-size:11px;color:var(--muted);margin-top:2px">ครบกำหนด ${fmtD(d.dueDate)}</div>`:''}</div>
+        <div><div class="dcard-name">${d.name}</div>${d.dueDate?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${tr('debt_due_at')} ${fmtD(d.dueDate)}</div>`:''}</div>
         <div style="display:flex;align-items:center;gap:10px">
-          <div style="text-align:right"><div style="font-size:22px;font-weight:800;color:${calcRemaining<=0?'var(--green)':'var(--red)'}">${fmt(calcRemaining)}</div><div style="font-size:11px;color:var(--muted)">คงเหลือ</div></div>
+          <div style="text-align:right"><div style="font-size:22px;font-weight:800;color:${calcRemaining<=0?'var(--green)':'var(--red)'}">${fmt(calcRemaining)}</div><div style="font-size:11px;color:var(--muted)">${tr('debt_remaining')}</div></div>
           <div style="display:flex;gap:5px"><button class="icon-btn" onclick="editDebt('${d.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delDebt('${d.id}')"><i class="fas fa-trash"></i></button></div>
         </div>
       </div>
       <div class="pbar"><div class="pfill" style="width:${pct}%;background:linear-gradient(90deg,var(--green),#059669)"></div></div>
-      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--muted)"><span>ชำระแล้ว ${pct.toFixed(1)}%</span><span>${fmt(paidAmt)} / ${fmt(d.total)}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--muted)"><span>${tr('debt_paid_pct')} ${pct.toFixed(1)}%</span><span>${fmt(paidAmt)} / ${fmt(d.total)}</span></div>
       <div class="dstats">
-        <div class="dstat"><div class="dstat-l">ยอดเต็ม</div><div class="dstat-v">${fmt(d.total)}</div></div>
-        <div class="dstat"><div class="dstat-l">ดอกเบี้ย/ปี</div><div class="dstat-v" style="color:var(--amber)">${d.rate||0}%</div></div>
-        <div class="dstat"><div class="dstat-l">ผ่อน/เดือน</div><div class="dstat-v">${fmt(d.pay||0)}</div></div>
+        <div class="dstat"><div class="dstat-l">${tr('debt_full_amt')}</div><div class="dstat-v">${fmt(d.total)}</div></div>
+        <div class="dstat"><div class="dstat-l">${tr('debt_interest_yr')}</div><div class="dstat-v" style="color:var(--amber)">${d.rate||0}%</div></div>
+        <div class="dstat"><div class="dstat-l">${tr('debt_pay_month')}</div><div class="dstat-v">${fmt(d.pay||0)}</div></div>
       </div>
       <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,.06);padding-top:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <span style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.4px">ติ๊กเดือนที่จ่ายแล้ว</span>
-          <span style="font-size:11px;color:${paidCount>0?'#10b981':'var(--muted)'}">จ่ายแล้ว ${paidCount}/${months.length} เดือน</span>
+          <span style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.4px">${tr('debt_check_paid_months')}</span>
+          <span style="font-size:11px;color:${paidCount>0?'#10b981':'var(--muted)'}">${tr('debt_paid_n_months').replace('{n}',paidCount).replace('{total}',months.length)}</span>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:5px">${chips}</div>
       </div>
