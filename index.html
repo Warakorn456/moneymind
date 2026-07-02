@@ -5779,7 +5779,7 @@ function openInvModal(prePortId){
 function editInv(id){
   const inv=DB.investments.find(x=>x.id===id); if(!inv) return;
   document.getElementById('inv-eid').value=id;
-  document.getElementById('inv-m-title').textContent='แก้ไขการลงทุน';
+  document.getElementById('inv-m-title').textContent=tr('inv_edit');
   document.getElementById('inv-name').value=inv.name;
   document.getElementById('inv-type').value=inv.type;
   document.getElementById('inv-qty').value=inv.qty||'';
