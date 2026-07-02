@@ -4691,7 +4691,7 @@ function handleStmt(e){ const f=e.target.files[0]; if(f) processStmtFile(f); }
 async function processStmtFile(file){
   const isPDF=file.type==='application/pdf';
   const isImg=file.type.startsWith('image/');
-  if(!isPDF&&!isImg){ toast('รองรับเฉพาะ PDF และรูปภาพ','error'); return; }
+  if(!isPDF&&!isImg){ toast(tr('stmt_pdf_img_only'),'error'); return; }
 
   // แสดงชื่อไฟล์
   document.getElementById('stmt-ph').style.display='none';
