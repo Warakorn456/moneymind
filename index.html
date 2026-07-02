@@ -3650,7 +3650,8 @@ const I18N = {
     budget_used:'used',carried_from_prev:'Carried from last month',budget_over:'Over budget',budget_near:'Near limit',budget_normal:'Normal',hide_transfer_cash:'Hide Transfer/Cash',show_transfer_cash:'Show Transfer/Cash',no_expense_this_month:'No expenses this month',click_to_view:'click to view',items_unit:'items',no_items:'No items',no_items_yet:'No items yet',no_debt_excellent:'No debts, excellent!',total_debt_remaining:'Total Remaining Debt',
     sort_dashboard:'Sort Dashboard',toggle_money_move:'Toggle transfer/cash withdrawal counting',
     tx_filter_all:'All',tx_scan_receipt:'Scan Receipt',tx_print_pdf:'Print PDF Report',tx_add_item:'Add Item',tx_search_ph:'Search items, categories, tags...',tx_bulk_manage:'Bulk Manage',
-    daily_label:'Daily',back_to_monthly:'Back to Monthly',chart_yearly_title:'Income vs Expense Overview (Yearly)',chart_click_monthly:'Click a bar to see monthly detail',chart_year_detail:'Year Detail',chart_click_daily:'Click a bar to see daily detail',back_to_overview:'Back to Overview'},
+    daily_label:'Daily',back_to_monthly:'Back to Monthly',chart_yearly_title:'Income vs Expense Overview (Yearly)',chart_click_monthly:'Click a bar to see monthly detail',chart_year_detail:'Year Detail',chart_click_daily:'Click a bar to see daily detail',back_to_overview:'Back to Overview',
+    load_more:'Load More',remaining:'Remaining',tx_edit_title:'Edit Item',cc_select_hint:'Credit Card (select the card used)',bank_optional_hint:'Bank (optional — balance updates automatically)',my_categories:'My Categories',not_specified:'Not specified'},
 };
 let currentLang=(function(){ try{ return localStorage.getItem('mm_lang')||'th'; }catch(e){ return 'th'; } })();
 function tr(key){ return (I18N[currentLang]||I18N.th)[key] || (I18N.th[key]||key); }
