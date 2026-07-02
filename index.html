@@ -6066,7 +6066,7 @@ function saveDcaBuy(){
 function deleteDcaBuy(planId,recordId){
   const plan=getDcaPlans().find(p=>p.id===planId); if(!plan) return;
   plan.records=(plan.records||[]).filter(r=>r.id!==recordId);
-  saveDB(); renderDcaView(); toast('ลบรายการแล้ว','info');
+  saveDB(); renderDcaView(); toast(tr('item_deleted'),'info');
 }
 
 // ── DCA Auto-Execute ──
