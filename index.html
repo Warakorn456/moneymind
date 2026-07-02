@@ -7235,7 +7235,7 @@ function renderRetireResults(){
   const onTrack=c.surplus>=0;
 
   document.getElementById('r-res-years').textContent=c.yearsToRetire+' '+tr('year_short');
-  document.getElementById('r-res-future-exp').textContent=fmtB(c.futureMonthly)+'/'+tr('month_abbr2');
+  document.getElementById('r-res-future-exp').textContent=fmtB(c.futureMonthly)+'/'+tr('month_short');
   document.getElementById('r-res-fund').textContent=fmtB(c.fundNeeded);
   document.getElementById('r-res-port-now').textContent=fmtB(c.curPort);
   document.getElementById('r-res-port-retire').textContent=fmtB(c.portAtRetire);
