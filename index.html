@@ -11918,7 +11918,7 @@ function renderLoanResults(){
     var rows=schedule.map(function(r){
       return '<tr style="border-bottom:1px solid var(--border);font-size:12px">'
         +'<td style="padding:7px 8px;color:var(--muted)">'+r.month+'</td>'
-        +'<td style="padding:7px 8px;color:var(--muted)">'+r.date.getDate()+' '+TH_MON[r.date.getMonth()]+' '+(r.beYear(date.getFullYear()))+'</td>'
+        +'<td style="padding:7px 8px;color:var(--muted)">'+r.date.getDate()+' '+TH_MON[r.date.getMonth()]+' '+(beYear(r.date.getFullYear()))+'</td>'
         +'<td style="padding:7px 8px;text-align:right;font-weight:600">'+fmt(Math.round(r.payment))+'</td>'
         +'<td style="padding:7px 8px;text-align:right;color:#a78bfa">'+fmt(Math.round(r.principal))+'</td>'
         +'<td style="padding:7px 8px;text-align:right;color:#f87171">'+fmt(Math.round(r.interest))+'</td>'
@@ -11952,7 +11952,7 @@ function renderLoanResults(){
       var isLump=(s.lumpSum>0&&((s.lumpMonth>0&&r.month===s.lumpMonth)||(s.lumpMonth<=0&&r.month===1)));
       return '<tr style="border-bottom:1px solid var(--border);font-size:12px'+(isLump?';background:rgba(251,191,36,.08)':'')+'">'
         +'<td style="padding:7px 8px;color:var(--muted)">'+r.month+(isLump?' <i class="fas fa-bolt" style="color:#fbbf24;font-size:9px"></i>':'')+'</td>'
-        +'<td style="padding:7px 8px;color:var(--muted)">'+r.date.getDate()+' '+TH_MON[r.date.getMonth()]+' '+(r.beYear(date.getFullYear()))+'</td>'
+        +'<td style="padding:7px 8px;color:var(--muted)">'+r.date.getDate()+' '+TH_MON[r.date.getMonth()]+' '+(beYear(r.date.getFullYear()))+'</td>'
         +'<td style="padding:7px 8px;text-align:right;font-weight:600">'+fmt(Math.round(r.payment))+'</td>'
         +'<td style="padding:7px 8px;text-align:right;color:#a78bfa">'+fmt(Math.round(r.principal))+'</td>'
         +'<td style="padding:7px 8px;text-align:right;color:#f87171">'+fmt(Math.round(r.interest))+'</td>'
