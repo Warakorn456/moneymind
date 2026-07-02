@@ -5175,7 +5175,7 @@ function toggleDebtMonth(id,ym){
 
 function openDebtModal(){
   document.getElementById('debt-eid').value='';
-  document.getElementById('debt-m-title').textContent='เพิ่มหนี้สิน';
+  document.getElementById('debt-m-title').textContent=tr('debt_add_full');
   ['debt-name','debt-total','debt-rem','debt-rate','debt-pay','debt-start','debt-due'].forEach(id=>document.getElementById(id).value='');
   openM('m-debt');
 }
