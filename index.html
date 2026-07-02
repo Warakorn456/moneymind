@@ -2601,8 +2601,8 @@ async function fsLoad(){
       const localTs=DB._savedAt||0;
       const remoteTs=remote._savedAt||0;
       if(remoteTs>=localTs){
-        // cloud ใหม่กว่าหรือเท่ากัน → ใช้ cloud
-        DB={...DB,...remote};
+        // cloud ใหม่กว่าหรือเท่ากัน → ใช้ cloud (merge union-by-id กัน tx ใหม่ที่ยังไม่ sync หาย)
+        DB=_mergeDbSnapshot(DB,remote);
         saveLocalOnly();
       } else {
         // local ใหม่กว่า (เช่น ปิด tab ก่อน Firestore write เสร็จ) → push local ขึ้น cloud
