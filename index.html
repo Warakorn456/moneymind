@@ -12544,7 +12544,7 @@ function renderSubscriptions(){
   var upcomingHTML='';
   if(upcoming.length){
     upcomingHTML='<div style="margin-bottom:20px">'
-      +'<div class="sec-title" style="margin-bottom:10px"><i class="fas fa-bell" style="color:#fbbf24;margin-right:6px"></i>ชำระเดือนนี้</div>'
+      +'<div class="sec-title" style="margin-bottom:10px"><i class="fas fa-bell" style="color:#fbbf24;margin-right:6px"></i>'+tr('sub_due_this_month')+'</div>'
       +'<div style="display:flex;flex-direction:column;gap:8px">'
       +upcoming.map(function(s){
         var d=new Date(s.nextDate);
