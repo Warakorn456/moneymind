@@ -6333,7 +6333,9 @@ function saveModel(){
 
 function exportData(){
   const b=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='moneymind_'+new Date().toISOString().split('T')[0]+'.json'; a.click(); toast('ส่งออกข้อมูลแล้ว','success');
+  const fn='moneymind_'+new Date().toISOString().split('T')[0]+'.json';
+  if(_nativeSaveFile(b,fn,'application/json')) return;
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=fn; a.click(); toast('ส่งออกข้อมูลแล้ว','success');
 }
 
 function importData(){
