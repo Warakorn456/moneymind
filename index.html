@@ -7322,59 +7322,59 @@ function renderRetire(){
 
       <!-- ข้อมูลส่วนตัว -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px">
-        <div style="font-size:13px;font-weight:700;color:#a78bfa;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="fas fa-user-clock"></i> ข้อมูลส่วนตัว</div>
-        <div class="fg" style="margin-bottom:10px"><label class="flabel">อายุปัจจุบัน (ปี)</label>
+        <div style="font-size:13px;font-weight:700;color:#a78bfa;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="fas fa-user-clock"></i> ${tr('ret_personal_info')}</div>
+        <div class="fg" style="margin-bottom:10px"><label class="flabel">${tr('ret_current_age')}</label>
           <input type="number" id="r-cur-age" class="finput" value="${r.curAgeOverride!=null?r.curAgeOverride:(curAge||30)}" min="1" max="100" step="1" oninput="saveRetire()">
-          ${curAge?`<div style="font-size:11px;color:var(--muted);margin-top:3px">คำนวณจากวันเกิด: ${curAge} ปี</div>`:`<div style="font-size:11px;color:var(--amber);margin-top:3px">ไม่พบวันเกิด — ตั้งค่าได้ที่หน้า <span onclick="nav('profile')" style="color:#a78bfa;cursor:pointer">ประวัติส่วนตัว</span></div>`}
+          ${curAge?`<div style="font-size:11px;color:var(--muted);margin-top:3px">${tr('ret_calc_from_dob')}: ${curAge} ${tr('year_short')}</div>`:`<div style="font-size:11px;color:var(--amber);margin-top:3px">${tr('ret_no_dob')} <span onclick="nav('profile')" style="color:#a78bfa;cursor:pointer">${tr('profile')}</span></div>`}
         </div>
-        <div class="fg"><label class="flabel">อายุเกษียณ (ปี)</label>
+        <div class="fg"><label class="flabel">${tr('ret_retire_age')}</label>
           <input type="number" id="r-retire-age" class="finput" value="${r.retireAge}" min="30" max="80" oninput="saveRetire()"></div>
-        <div class="fg"><label class="flabel">อายุขัย (ปี)</label>
+        <div class="fg"><label class="flabel">${tr('ret_life_expectancy')}</label>
           <input type="number" id="r-life-age" class="finput" value="${r.lifeAge}" min="60" max="120" oninput="saveRetire()"></div>
       </div>
 
       <!-- ค่าใช้จ่ายและเงินเฟ้อ -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px">
-        <div style="font-size:13px;font-weight:700;color:#06b6d4;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="fas fa-shopping-cart"></i> ค่าใช้จ่ายและเงินเฟ้อ</div>
-        <div class="fg"><label class="flabel">ค่าใช้จ่ายต่อเดือนเมื่อเกษียณ (บาท ณ วันนี้)</label>
+        <div style="font-size:13px;font-weight:700;color:#06b6d4;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="fas fa-shopping-cart"></i> ${tr('ret_expense_inflation')}</div>
+        <div class="fg"><label class="flabel">${tr('ret_monthly_exp_retire')}</label>
           <input type="number" id="r-monthly-exp" class="finput" value="${r.monthlyExpense}" min="0" step="1000" oninput="saveRetire()"></div>
-        <div class="fg"><label class="flabel">อัตราเงินเฟ้อ (%/ปี)</label>
+        <div class="fg"><label class="flabel">${tr('ret_inflation_rate')}</label>
           <input type="number" id="r-inflation" class="finput" value="${r.inflation}" min="0" max="20" step="0.5" oninput="saveRetire()">
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">ไทยเฉลี่ยประมาณ 2–4% ต่อปี</div></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${tr('ret_thai_avg_inflation')}</div></div>
       </div>
 
       <!-- ผลตอบแทน -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px">
-        <div style="font-size:13px;font-weight:700;color:#10b981;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="fas fa-chart-line"></i> ผลตอบแทนการลงทุน</div>
-        <div class="fg"><label class="flabel">ผลตอบแทนช่วงสะสม (%/ปี)</label>
+        <div style="font-size:13px;font-weight:700;color:#10b981;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="fas fa-chart-line"></i> ${tr('ret_investment_return')}</div>
+        <div class="fg"><label class="flabel">${tr('ret_accum_return')}</label>
           <input type="number" id="r-return" class="finput" value="${r.returnRate}" min="0" max="30" step="0.5" oninput="saveRetire()">
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">กองทุนรวมหุ้นไทย ~7–10%, SSF/RMF ~6–8%</div></div>
-        <div class="fg"><label class="flabel">ผลตอบแทนช่วงเกษียณ (%/ปี)</label>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${tr('ret_accum_return_hint')}</div></div>
+        <div class="fg"><label class="flabel">${tr('ret_post_return')}</label>
           <input type="number" id="r-post-return" class="finput" value="${r.postReturnRate}" min="0" max="15" step="0.5" oninput="saveRetire()">
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">ช่วงเกษียณมักใช้พอร์ตที่มั่นคง ~3–5%</div></div>
-        <div class="fg"><label class="flabel"><i class="fas fa-shield-alt" style="color:#06b6d4;margin-right:4px"></i>ประกันสังคม (บาท/เดือน)</label>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${tr('ret_post_return_hint')}</div></div>
+        <div class="fg"><label class="flabel"><i class="fas fa-shield-alt" style="color:#06b6d4;margin-right:4px"></i>${tr('ret_sso')}</label>
           <input type="number" id="r-sso" class="finput" value="${r.sso||0}" min="0" step="50" oninput="saveRetire()">
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">ส่วนชราภาพ — สูงสุด ฿750/เดือน (เงินเดือน ≥ 15,000 บาท)</div></div>
-        <div class="fg"><label class="flabel"><i class="fas fa-building" style="color:#a78bfa;margin-right:4px"></i>กองทุนสำรองเลี้ยงชีพ (บาท/เดือน)</label>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${tr('ret_sso_hint')}</div></div>
+        <div class="fg"><label class="flabel"><i class="fas fa-building" style="color:#a78bfa;margin-right:4px"></i>${tr('ret_pvd')}</label>
           <input type="number" id="r-pvd" class="finput" value="${r.pvd||0}" min="0" step="100" oninput="saveRetire()">
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">ลูกจ้าง + นายจ้างรวมกัน (เช่น เงินเดือน 30,000 × 10% = 3,000 บาท)</div></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${tr('ret_pvd_hint')}</div></div>
         <div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.25);border-radius:12px;padding:12px 14px;margin-top:4px">
-          <div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:10px"><i class="fas fa-wallet" style="margin-right:5px"></i>พอร์ตเริ่มต้น (ปัจจุบัน)</div>
+          <div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:10px"><i class="fas fa-wallet" style="margin-right:5px"></i>${tr('ret_starting_port')}</div>
           <div style="display:flex;gap:6px;margin-bottom:10px">
             <button id="r-port-auto-btn" onclick="setRetirePortMode('auto')"
               style="flex:1;padding:6px;font-size:12px;border-radius:8px;border:1px solid rgba(16,185,129,.5);background:rgba(16,185,129,.25);color:#10b981;cursor:pointer;font-family:Sarabun,sans-serif;font-weight:600">
-              <i class="fas fa-sync-alt" style="margin-right:4px"></i>ดึงจากพอร์ตลงทุน</button>
+              <i class="fas fa-sync-alt" style="margin-right:4px"></i>${tr('ret_pull_from_port')}</button>
             <button id="r-port-manual-btn" onclick="setRetirePortMode('manual')"
               style="flex:1;padding:6px;font-size:12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:Sarabun,sans-serif;font-weight:600">
-              <i class="fas fa-pen" style="margin-right:4px"></i>กรอกเอง</button>
+              <i class="fas fa-pen" style="margin-right:4px"></i>${tr('ret_enter_manually')}</button>
           </div>
           <div id="r-port-auto-display" style="font-size:13px;color:var(--muted)">
-            มูลค่าพอร์ตล่าสุด: <span style="color:#10b981;font-weight:700">${'฿'+Math.round(curPort).toLocaleString('th-TH')}</span>
-            ${curPort===0?'<span style="color:var(--amber);margin-left:6px;font-size:11px">ยังไม่มีข้อมูลพอร์ต</span>':''}
+            ${tr('ret_latest_port_value')}: <span style="color:#10b981;font-weight:700">${'฿'+Math.round(curPort).toLocaleString('th-TH')}</span>
+            ${curPort===0?'<span style="color:var(--amber);margin-left:6px;font-size:11px">'+tr('ret_no_port_data')+'</span>':''}
           </div>
           <div id="r-port-manual-display" style="display:none">
             <input type="number" id="r-port-value" class="finput" value="${r.portOverride!=null?r.portOverride:curPort}" min="0" step="10000" placeholder="0" oninput="saveRetire()" style="margin-top:2px">
-            <div style="font-size:11px;color:var(--muted);margin-top:3px">กรอกมูลค่าพอร์ตที่ต้องการใช้คำนวณ</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px">${tr('ret_enter_port_value_hint')}</div>
           </div>
         </div>
       </div>
@@ -7385,26 +7385,26 @@ function renderRetire(){
 
       <!-- Status badge -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-        <div style="font-size:15px;font-weight:700">สถานะแผนเกษียณ</div>
+        <div style="font-size:15px;font-weight:700">${tr('ret_plan_status')}</div>
         <div id="r-status-badge" style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px"></div>
       </div>
 
       <!-- Key numbers -->
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">
-        <div class="stat-card sc-blue"><div class="stat-label">เวลาที่เหลือ</div><div class="stat-value" id="r-res-years" style="font-size:20px">—</div><div class="stat-sub">ก่อนเกษียณ</div></div>
-        <div class="stat-card sc-amber"><div class="stat-label">ค่าใช้จ่าย ณ เกษียณ</div><div class="stat-value" id="r-res-future-exp" style="font-size:16px">—</div><div class="stat-sub">หลังปรับเงินเฟ้อ</div></div>
-        <div class="stat-card sc-red"><div class="stat-label">เงินทุนที่ต้องการ</div><div class="stat-value" id="r-res-fund" style="font-size:16px">—</div><div class="stat-sub">ณ วันเกษียณ</div></div>
-        <div class="stat-card" style="background:rgba(30,41,59,.6);border-color:var(--border)"><div class="stat-label">พอร์ตปัจจุบัน</div><div class="stat-value" id="r-res-port-now" style="font-size:16px">—</div><div class="stat-sub">มูลค่าวันนี้</div></div>
-        <div class="stat-card sc-green"><div class="stat-label">พอร์ตที่คาด ณ เกษียณ</div><div class="stat-value" id="r-res-port-retire" style="font-size:16px">—</div><div class="stat-sub" id="r-res-port-retire-sub">รวม SSO+PVD</div></div>
-        <div class="stat-card" style="background:rgba(6,182,212,.1);border-color:rgba(6,182,212,.3)"><div class="stat-label">SSO + PVD ณ เกษียณ</div><div class="stat-value" id="r-res-ssopvd" style="font-size:16px;color:#06b6d4">—</div><div class="stat-sub">สะสมทบต้น</div></div>
-        <div class="stat-card" style="background:rgba(30,41,59,.6);border-color:var(--border)"><div class="stat-label">เงินเกิน/ขาด</div><div class="stat-value" id="r-res-surplus" style="font-size:16px">—</div><div class="stat-sub">เปรียบเทียบเป้า</div></div>
+        <div class="stat-card sc-blue"><div class="stat-label">${tr('ret_time_left')}</div><div class="stat-value" id="r-res-years" style="font-size:20px">—</div><div class="stat-sub">${tr('ret_before_retire')}</div></div>
+        <div class="stat-card sc-amber"><div class="stat-label">${tr('ret_exp_at_retire')}</div><div class="stat-value" id="r-res-future-exp" style="font-size:16px">—</div><div class="stat-sub">${tr('ret_after_inflation')}</div></div>
+        <div class="stat-card sc-red"><div class="stat-label">${tr('ret_fund_needed')}</div><div class="stat-value" id="r-res-fund" style="font-size:16px">—</div><div class="stat-sub">${tr('ret_at_retire_date')}</div></div>
+        <div class="stat-card" style="background:rgba(30,41,59,.6);border-color:var(--border)"><div class="stat-label">${tr('ret_current_port')}</div><div class="stat-value" id="r-res-port-now" style="font-size:16px">—</div><div class="stat-sub">${tr('ret_value_today')}</div></div>
+        <div class="stat-card sc-green"><div class="stat-label">${tr('ret_expected_port')}</div><div class="stat-value" id="r-res-port-retire" style="font-size:16px">—</div><div class="stat-sub" id="r-res-port-retire-sub">${tr('ret_incl_sso_pvd')}</div></div>
+        <div class="stat-card" style="background:rgba(6,182,212,.1);border-color:rgba(6,182,212,.3)"><div class="stat-label">SSO + PVD ${tr('ret_at_retire_date')}</div><div class="stat-value" id="r-res-ssopvd" style="font-size:16px;color:#06b6d4">—</div><div class="stat-sub">${tr('ret_compound_accum')}</div></div>
+        <div class="stat-card" style="background:rgba(30,41,59,.6);border-color:var(--border)"><div class="stat-label">${tr('ret_surplus_deficit')}</div><div class="stat-value" id="r-res-surplus" style="font-size:16px">—</div><div class="stat-sub">${tr('ret_vs_target')}</div></div>
       </div>
 
       <!-- Monthly needed (shown only if shortfall) -->
       <div id="r-monthly-need-row" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div>
-          <div style="font-size:13px;font-weight:700;color:#f59e0b"><i class="fas fa-piggy-bank" style="margin-right:6px"></i>ต้องลงทุนเพิ่มต่อเดือน</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">เพื่อให้ถึงเป้าหมาย ณ วันเกษียณ</div>
+          <div style="font-size:13px;font-weight:700;color:#f59e0b"><i class="fas fa-piggy-bank" style="margin-right:6px"></i>${tr('ret_need_invest_more')}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${tr('ret_need_invest_more_hint')}</div>
         </div>
         <div id="r-res-monthly-need" style="font-size:22px;font-weight:800;color:#f59e0b">—</div>
       </div>
@@ -7412,30 +7412,30 @@ function renderRetire(){
       <!-- Progress bar -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px">
         <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
-          <span style="font-weight:600">ความคืบหน้าสู่เป้าหมาย</span>
+          <span style="font-weight:600">${tr('ret_progress_to_goal')}</span>
           <span id="r-prog-pct" style="font-weight:700;color:#a78bfa">0%</span>
         </div>
         <div style="background:var(--surface2);border-radius:8px;height:14px;overflow:hidden">
           <div id="r-prog-bar" style="height:100%;border-radius:8px;transition:width .5s;width:0%"></div>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px">
-          <span>฿0</span><span id="r-res-fund2">เป้าหมาย</span>
+          <span>฿0</span><span id="r-res-fund2">${tr('ret_target')}</span>
         </div>
       </div>
 
       <!-- Chart -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px">
         <div style="font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px">
-          <i class="fas fa-chart-area" style="color:#7c3aed"></i> กราฟการเติบโตของพอร์ตตลอดชีวิต
+          <i class="fas fa-chart-area" style="color:#7c3aed"></i> ${tr('ret_lifetime_chart')}
         </div>
         <!-- What-if input -->
         <div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.25);border-radius:12px;padding:12px 16px;margin-bottom:14px">
-          <div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:10px"><i class="fas fa-magic" style="margin-right:5px"></i>จำลอง: ถ้าลงทุนเพิ่มเดือนละเท่านี้จะเป็นอย่างไร?</div>
+          <div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:10px"><i class="fas fa-magic" style="margin-right:5px"></i>${tr('ret_whatif_title')}</div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:200px">
-              <span style="font-size:13px;white-space:nowrap;color:var(--muted)">เพิ่มเดือนละ</span>
+              <span style="font-size:13px;white-space:nowrap;color:var(--muted)">${tr('ret_add_per_month')}</span>
               <input type="number" id="r-whatif-extra" class="finput" style="flex:1;max-width:160px" placeholder="0" min="0" step="500" value="0" oninput="onWhatIfChange()">
-              <span style="font-size:13px;white-space:nowrap;color:var(--muted)">บาท</span>
+              <span style="font-size:13px;white-space:nowrap;color:var(--muted)">${tr('baht')}</span>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;border-color:rgba(16,185,129,.4);color:#10b981" onclick="document.getElementById('r-whatif-extra').value=1000;onWhatIfChange()">+1,000</button>
@@ -7447,19 +7447,19 @@ function renderRetire(){
         </div>
         <div style="height:300px"><canvas id="ch-retire"></canvas></div>
         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--muted)">
-          <span><span style="display:inline-block;width:20px;height:3px;background:#7c3aed;border-radius:2px;vertical-align:middle;margin-right:4px"></span>พอร์ตปัจจุบัน (ไม่เพิ่มออม)</span>
-          <span><span style="display:inline-block;width:20px;height:3px;background:#10b981;border-radius:2px;vertical-align:middle;margin-right:4px"></span>ถ้าออมเพิ่ม</span>
-          <span><span style="display:inline-block;width:20px;height:3px;background:#ef4444;border-radius:2px;border-top:2px dashed #ef4444;vertical-align:middle;margin-right:4px"></span>เป้าหมาย</span>
+          <span><span style="display:inline-block;width:20px;height:3px;background:#7c3aed;border-radius:2px;vertical-align:middle;margin-right:4px"></span>${tr('ret_current_port_no_extra')}</span>
+          <span><span style="display:inline-block;width:20px;height:3px;background:#10b981;border-radius:2px;vertical-align:middle;margin-right:4px"></span>${tr('ret_if_save_extra')}</span>
+          <span><span style="display:inline-block;width:20px;height:3px;background:#ef4444;border-radius:2px;border-top:2px dashed #ef4444;vertical-align:middle;margin-right:4px"></span>${tr('ret_target')}</span>
         </div>
       </div>
 
       <!-- Assumptions box -->
       <div style="background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:14px;padding:14px 18px;font-size:12px;color:var(--muted);line-height:1.8">
-        <div style="font-weight:700;color:#a78bfa;margin-bottom:6px"><i class="fas fa-info-circle" style="margin-right:4px"></i>สมมติฐานในการคำนวณ</div>
-        <div>• ค่าใช้จ่ายเติบโตตามเงินเฟ้อทบต้นทุกปีจนถึงวันเกษียณ</div>
-        <div>• เงินทุนที่ต้องการ = PV ของค่าใช้จ่ายรายเดือนตลอดช่วงเกษียณ (annuity)</div>
-        <div>• พอร์ตเติบโตแบบทบต้นรายเดือนตามผลตอบแทนที่ตั้งค่า</div>
-        <div>• ไม่รวมเงินบำนาญ SSO / ประกันสังคม / รายได้อื่นในวัยเกษียณ</div>
+        <div style="font-weight:700;color:#a78bfa;margin-bottom:6px"><i class="fas fa-info-circle" style="margin-right:4px"></i>${tr('ret_assumptions')}</div>
+        <div>• ${tr('ret_assum_1')}</div>
+        <div>• ${tr('ret_assum_2')}</div>
+        <div>• ${tr('ret_assum_3')}</div>
+        <div>• ${tr('ret_assum_4')}</div>
       </div>
     </div>
   </div>`;
