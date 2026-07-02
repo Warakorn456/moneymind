@@ -3929,7 +3929,7 @@ function renderAiUsage(){
     const cv=document.getElementById('aiusage-chart');
     if(cv&&window.Chart){
       _aiUsageChart=new Chart(cv,{type:'bar',
-        data:{labels:days.map(d=>String(d.date).slice(5)),datasets:[{label:'฿/วัน',data:days.map(d=>d.thb||0),backgroundColor:accent,borderRadius:4}]},
+        data:{labels:days.map(d=>String(d.date).slice(5)),datasets:[{label:tr('aiu_baht_per_day'),data:days.map(d=>d.thb||0),backgroundColor:accent,borderRadius:4}]},
         options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
           scales:{y:{beginAtZero:true,ticks:{color:'#94a3b8'},grid:{color:'rgba(148,163,184,.1)'}},x:{ticks:{color:'#94a3b8'},grid:{display:false}}}}});
     }
