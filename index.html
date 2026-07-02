@@ -11225,7 +11225,7 @@ async function renderAdmin(){
     const withEmail=members.filter(m=>m.email&&!/@moneymind\.local$/i.test(m.email)).length;
     const stickiness=mau?Math.round(dau/mau*100):0;
 
-    const fmtAgo=d=>{ if(!d) return '<span style="color:#475569">ไม่เคย</span>'; const s=Math.floor((now-d.getTime())/1000); if(s<60) return '<span style="color:#10b981">เมื่อกี้</span>'; if(s<3600) return `<span style="color:#10b981">${Math.floor(s/60)} นาทีที่แล้ว</span>`; if(s<86400) return `${Math.floor(s/3600)} ชม.ที่แล้ว`; return `${Math.floor(s/86400)} วันที่แล้ว`; };
+    const fmtAgo=d=>{ if(!d) return '<span style="color:#475569">'+tr('admin_never')+'</span>'; const s=Math.floor((now-d.getTime())/1000); if(s<60) return '<span style="color:#10b981">'+tr('admin_just_now')+'</span>'; if(s<3600) return `<span style="color:#10b981">${Math.floor(s/60)} ${tr('admin_min_ago')}</span>`; if(s<86400) return `${Math.floor(s/3600)} ${tr('admin_hr_ago')}`; return `${Math.floor(s/86400)} ${tr('admin_day_ago')}`; };
     const onlineBadge=m=>{ if(!m.lastSeen) return ''; const ms=now-m.lastSeen.getTime(); if(ms<onlineMs) return '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:5px;box-shadow:0 0 6px #10b981"></span>'; return ''; };
     const platformIcon=p=>{ const mp={'web':'<i class="fas fa-globe" title="Web" style="color:#06b6d4"></i>','android':'<i class="fab fa-android" title="Android" style="color:#10b981"></i>','ios':'<i class="fab fa-apple" title="iOS" style="color:#94a3b8"></i>'}; return mp[p]||`<i class="fas fa-question-circle" style="color:#475569"></i>`; };
     const platformLabel=p=>({'web':'Web','android':'Android','ios':'iOS'}[p]||p||'-');
