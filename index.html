@@ -4969,12 +4969,12 @@ function filterStmt(f,el){
 
 function importStmt(){
   const toImport=stmtRows.filter(r=>r.selected);
-  if(!toImport.length){ toast('กรุณาเลือกอย่างน้อย 1 รายการ','error'); return; }
+  if(!toImport.length){ toast(tr('stmt_select_1_min'),'error'); return; }
   toImport.forEach(r=>{
     DB.transactions.push({id:uid(),type:r.type,amount:r.amount,category:r.category,date:r.date,description:r.description||getCat(r.category,r.type).label});
   });
   saveDB(); closeM('m-stmt'); renderPage(curPage);
-  toast(`นำเข้า ${toImport.length} รายการสำเร็จ!`,'success');
+  toast(tr('stmt_import_success').replace('{n}',toImport.length),'success');
 }
 
 // ══════════════════════════════════════════
