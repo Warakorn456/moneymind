@@ -2381,15 +2381,15 @@
 <!-- Transfer Modal -->
 <div id="m-transfer" class="overlay">
   <div class="modal" style="max-width:400px">
-    <div class="modal-title"><i class="fas fa-exchange-alt" style="color:var(--cyan)"></i> โอนเงินระหว่างบัญชี</div>
-    <div class="fgroup"><label class="flabel">จากบัญชี</label><select id="transfer-from" class="fselect"></select></div>
-    <div class="fgroup"><label class="flabel">ไปยังบัญชี</label><select id="transfer-to" class="fselect"></select></div>
-    <div class="fgroup"><label class="flabel">จำนวนเงิน (บาท)</label><input id="transfer-amt" type="number" class="finput" placeholder="0"></div>
-    <div class="fgroup"><label class="flabel">วันที่</label><input id="transfer-date" type="date" class="finput"></div>
-    <div class="fgroup"><label class="flabel">หมายเหตุ</label><input id="transfer-note" class="finput" placeholder="ไม่บังคับ"></div>
+    <div class="modal-title"><i class="fas fa-exchange-alt" style="color:var(--cyan)"></i> <span data-i18n="transfer_title">โอนเงินระหว่างบัญชี</span></div>
+    <div class="fgroup"><label class="flabel" data-i18n="transfer_from">จากบัญชี</label><select id="transfer-from" class="fselect"></select></div>
+    <div class="fgroup"><label class="flabel" data-i18n="transfer_to">ไปยังบัญชี</label><select id="transfer-to" class="fselect"></select></div>
+    <div class="fgroup"><label class="flabel" data-i18n="scan_amount_baht">จำนวนเงิน (บาท)</label><input id="transfer-amt" type="number" class="finput" placeholder="0"></div>
+    <div class="fgroup"><label class="flabel" data-i18n="tx_date">วันที่</label><input id="transfer-date" type="date" class="finput"></div>
+    <div class="fgroup"><label class="flabel" data-i18n="tx_note">หมายเหตุ</label><input id="transfer-note" class="finput" placeholder="ไม่บังคับ" data-i18n-ph="optional"></div>
     <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeM('m-transfer')">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="saveTransfer()">โอน</button>
+      <button class="btn btn-ghost" onclick="closeM('m-transfer')" data-i18n="cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveTransfer()" data-i18n="transfer_btn">โอน</button>
     </div>
   </div>
 </div>
