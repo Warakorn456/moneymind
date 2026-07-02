@@ -3665,6 +3665,7 @@ function applyLang(){
   document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=tr(el.getAttribute('data-i18n')); });
   document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ el.placeholder=tr(el.getAttribute('data-i18n-ph')); });
   document.querySelectorAll('[data-i18n-html]').forEach(function(el){ el.innerHTML=tr(el.getAttribute('data-i18n-html')); });
+  document.querySelectorAll('[data-i18n-title]').forEach(function(el){ el.title=tr(el.getAttribute('data-i18n-title')); });
   const pt=document.getElementById('page-title'); if(pt&&typeof curPage!=='undefined') pt.textContent=tr(curPage);
   const langBtn=document.getElementById('lang-btn'); if(langBtn) langBtn.textContent=currentLang==='th'?'EN':'TH';
   const tagline=document.getElementById('app-tagline'); if(tagline) tagline.textContent=tr('app_tagline');
