@@ -5474,7 +5474,7 @@ function renderPortChart(){
     // แสดงสัดส่วนตามพอร์ต
     const groups=[...ports.map(p=>({name:p.name,color:p.color,val:DB.investments.filter(i=>i.portId===p.id).reduce((s,i)=>s+i.value,0)}))];
     const uncat=DB.investments.filter(i=>!i.portId||!getPortById(i.portId)).reduce((s,i)=>s+i.value,0);
-    if(uncat>0) groups.push({name:'ไม่ระบุพอร์ต',color:'#64748b',val:uncat});
+    if(uncat>0) groups.push({name:tr('no_portfolio'),color:'#64748b',val:uncat});
     labels=groups.map(g=>g.name); data=groups.map(g=>g.val); colors=groups.map(g=>g.color);
   } else {
     const sorted=[...DB.investments].sort((a,b)=>b.value-a.value);
