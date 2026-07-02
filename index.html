@@ -3448,7 +3448,7 @@ function checkLogin(){
         _waitFbAuth().then(authed=>{
           if(!authed){
             // ไม่มี Firebase Auth session ในเบราว์เซอร์นี้ (เช่น ยังไม่เคย login ใหม่หลังล็อกกฎ) → cloud อ่าน/เขียนไม่ได้
-            toast('โปรดออกจากระบบแล้วเข้าสู่ระบบใหม่ 1 ครั้ง เพื่อเปิดการซิงค์ข้อมูล (อัปเดตความปลอดภัย)','info');
+            toast(tr('relogin_for_sync'),'info');
           }
           fsLoad().then(synced=>{ if(synced) renderPage(curPage); else fsSave(); fsListen(); });
         });
