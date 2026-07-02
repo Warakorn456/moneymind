@@ -1940,24 +1940,24 @@
 <!-- Debt Modal -->
 <div id="m-debt" class="overlay">
   <div class="modal">
-    <div class="modal-title"><i class="fas fa-credit-card" style="color:var(--red)"></i><span id="debt-m-title">เพิ่มหนี้สิน</span></div>
+    <div class="modal-title"><i class="fas fa-credit-card" style="color:var(--red)"></i><span id="debt-m-title" data-i18n="debt_add_full">เพิ่มหนี้สิน</span></div>
     <input type="hidden" id="debt-eid">
-    <div class="fg"><label class="flabel">ชื่อหนี้</label><input type="text" id="debt-name" class="finput" placeholder="เช่น บัตรเครดิต KTC, สินเชื่อรถ"></div>
+    <div class="fg"><label class="flabel" data-i18n="debt_name">ชื่อหนี้</label><input type="text" id="debt-name" class="finput" placeholder="เช่น บัตรเครดิต KTC, สินเชื่อรถ" data-i18n-ph="debt_name_ph"></div>
     <div class="frow">
-      <div class="fg"><label class="flabel">ยอดหนี้ทั้งหมด (บาท)</label><input type="number" id="debt-total" class="finput" placeholder="0"></div>
-      <div class="fg"><label class="flabel">ยอดคงเหลือ (บาท)</label><input type="number" id="debt-rem" class="finput" placeholder="0"></div>
+      <div class="fg"><label class="flabel" data-i18n="debt_total_amt">ยอดหนี้ทั้งหมด (บาท)</label><input type="number" id="debt-total" class="finput" placeholder="0"></div>
+      <div class="fg"><label class="flabel" data-i18n="debt_remaining_amt">ยอดคงเหลือ (บาท)</label><input type="number" id="debt-rem" class="finput" placeholder="0"></div>
     </div>
     <div class="frow">
-      <div class="fg"><label class="flabel">ดอกเบี้ย (% ต่อปี)</label><input type="number" id="debt-rate" class="finput" placeholder="0" step="0.1"></div>
-      <div class="fg"><label class="flabel">ผ่อน/เดือน (บาท)</label><input type="number" id="debt-pay" class="finput" placeholder="0"></div>
+      <div class="fg"><label class="flabel" data-i18n="debt_interest">ดอกเบี้ย (% ต่อปี)</label><input type="number" id="debt-rate" class="finput" placeholder="0" step="0.1"></div>
+      <div class="fg"><label class="flabel" data-i18n="debt_pay_month">ผ่อน/เดือน (บาท)</label><input type="number" id="debt-pay" class="finput" placeholder="0"></div>
     </div>
     <div class="frow">
-      <div class="fg"><label class="flabel">วันเริ่มผ่อน</label><input type="date" id="debt-start" class="finput"></div>
-      <div class="fg"><label class="flabel">วันครบกำหนด</label><input type="date" id="debt-due" class="finput"></div>
+      <div class="fg"><label class="flabel" data-i18n="debt_start_date">วันเริ่มผ่อน</label><input type="date" id="debt-start" class="finput"></div>
+      <div class="fg"><label class="flabel" data-i18n="debt_due_date">วันครบกำหนด</label><input type="date" id="debt-due" class="finput"></div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeM('m-debt')">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="saveDebt()">บันทึก</button>
+      <button class="btn btn-ghost" onclick="closeM('m-debt')" data-i18n="cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveDebt()" data-i18n="save">บันทึก</button>
     </div>
   </div>
 </div>
