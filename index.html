@@ -4164,28 +4164,28 @@ function renderTxChart(year,month){
     yearList=yearList.slice(-5);
     labels=yearList.map(String);
     datasets=[
-      ...INC_CATS.map(cat=>({label:cat.label,stack:'income',backgroundColor:cat.color+'bb',borderWidth:0,
+      ...INC_CATS.map(cat=>({label:catLabel(cat),stack:'income',backgroundColor:cat.color+'bb',borderWidth:0,
         data:yearList.map(yr=>getTotal(yr,'income',cat.id))})),
-      ...EXP_CATS.map(cat=>({label:cat.label,stack:'expense',backgroundColor:cat.color+'bb',borderWidth:0,
+      ...EXP_CATS.map(cat=>({label:catLabel(cat),stack:'expense',backgroundColor:cat.color+'bb',borderWidth:0,
         data:yearList.map(yr=>getTotal(yr,'expense',cat.id))}))
     ];
     hasAny=(type,cat)=>yearList.some(yr=>getTotal(yr,type,cat)>0);
-    title='ภาพรวมรายรับ-รายจ่าย (รายปี)';
-    hint='<div style="font-size:11px;color:var(--muted);margin-top:6px"><i class="fas fa-hand-pointer"></i> คลิกที่แท่งกราฟเพื่อดูรายละเอียดรายเดือน</div>';
+    title=tr('chart_yearly_title');
+    hint='<div style="font-size:11px;color:var(--muted);margin-top:6px"><i class="fas fa-hand-pointer"></i> '+tr('chart_click_monthly')+'</div>';
     onClickFn=(e,els)=>{ if(els.length) renderTxChart(yearList[els[0].index]); };
   } else if(month==null){
     // ── รายเดือน ──
     labels=MN;
     datasets=[
-      ...INC_CATS.map(cat=>({label:cat.label,stack:'income',backgroundColor:cat.color+'bb',borderWidth:0,
+      ...INC_CATS.map(cat=>({label:catLabel(cat),stack:'income',backgroundColor:cat.color+'bb',borderWidth:0,
         data:[...getMonths(year,'income',cat.id)]})),
-      ...EXP_CATS.map(cat=>({label:cat.label,stack:'expense',backgroundColor:cat.color+'bb',borderWidth:0,
+      ...EXP_CATS.map(cat=>({label:catLabel(cat),stack:'expense',backgroundColor:cat.color+'bb',borderWidth:0,
         data:[...getMonths(year,'expense',cat.id)]}))
     ];
     hasAny=(type,cat)=>getMonths(year,type,cat).some(v=>v>0);
-    title=`รายละเอียดปี ${year} (${beYear(year)})`;
-    hint='<div style="font-size:11px;color:var(--muted);margin-top:6px"><i class="fas fa-hand-pointer"></i> คลิกที่แท่งกราฟเพื่อดูรายละเอียดรายวัน</div>';
-    backBtn=`<button onclick="renderTxChart(null)" style="background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);color:#a78bfa;border-radius:8px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:Sarabun,sans-serif"><i class="fas fa-arrow-left"></i> กลับภาพรวม</button>`;
+    title=`${tr('chart_year_detail')} ${year} (${beYear(year)})`;
+    hint='<div style="font-size:11px;color:var(--muted);margin-top:6px"><i class="fas fa-hand-pointer"></i> '+tr('chart_click_daily')+'</div>';
+    backBtn=`<button onclick="renderTxChart(null)" style="background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);color:#a78bfa;border-radius:8px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:Sarabun,sans-serif"><i class="fas fa-arrow-left"></i> ${tr('back_to_overview')}</button>`;
     onClickFn=(e,els)=>{ if(els.length) renderTxChart(year,els[0].index); };
   } else {
     // ── รายวัน ──
