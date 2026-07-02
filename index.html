@@ -5183,7 +5183,7 @@ function openDebtModal(){
 function editDebt(id){
   const d=DB.debts.find(x=>x.id===id); if(!d) return;
   document.getElementById('debt-eid').value=id;
-  document.getElementById('debt-m-title').textContent='แก้ไขหนี้';
+  document.getElementById('debt-m-title').textContent=tr('debt_edit');
   document.getElementById('debt-name').value=d.name;
   document.getElementById('debt-total').value=d.total;
   document.getElementById('debt-rem').value=d.remaining;
