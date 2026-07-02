@@ -14279,29 +14279,62 @@ function _rlReset(){ try{ localStorage.removeItem(_RL_KEY); }catch(e){} }
     if(!text){ if(errEl) errEl.textContent='กรุณาพิมพ์ข้อความก่อนส่ง'; return; }
     if(errEl) errEl.textContent='';
     btn.disabled=true; btn.textContent='กำลังส่ง...';
-    const user=currentUser||'(ไม่ได้ login)';
-    const ua=navigator.userAgent.slice(0,80);
-    const msg=`📬 <b>Feedback จาก MoneyMind</b>\n<b>ประเภท:</b> ${type}\n<b>ผู้ใช้:</b> ${user}\n<b>ข้อความ:</b>\n${text}\n<i>UA: ${ua}</i>`;
-    const TG_TOKEN='8841603911:AAFz0JrEZcMTc5nxtxmzSAmg5y4w7odwi5o';
-    const TG_CHAT='-1004296300749';
-    const TG_THREAD=907;
-    try{
-      const r=await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`,{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({chat_id:TG_CHAT,message_thread_id:TG_THREAD,text:msg,parse_mode:'HTML'})
-      });
-      if(r.ok){
-        const ov=document.getElementById('_feedbackModal');
-        if(ov) ov.innerHTML=`<div style="background:#13141f;border:1px solid rgba(16,185,129,.3);border-radius:20px;padding:40px 24px;max-width:420px;width:100%;text-align:center"><div style="font-size:40px;margin-bottom:12px">✅</div><div style="font-size:16px;font-weight:800;margin-bottom:8px">ส่งเรียบร้อย!</div><div style="font-size:13px;color:#94a3b8;margin-bottom:20px">ขอบคุณสำหรับ feedback นะครับ ทีมพัฒนาจะดูและตอบกลับเร็วๆ นี้</div><button onclick="document.getElementById('_feedbackModal').remove()" style="background:linear-gradient(135deg,#10b981,#34d399);border:none;border-radius:10px;padding:11px 24px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:Sarabun,sans-serif">ปิด</button></div>`;
-      } else {
-        if(errEl) errEl.textContent='ส่งไม่สำเร็จ ลองใหม่อีกครั้ง';
-        btn.disabled=false; btn.textContent='ส่ง';
-      }
-    }catch(e){
-      if(errEl) errEl.textContent='ไม่มีการเชื่อมต่ออินเทอร์เน็ต';
+    const ok=await _sendReport({kind:'feedback',feedbackType:type,text:text});
+    if(ok){
+      const ov=document.getElementById('_feedbackModal');
+      if(ov) ov.innerHTML=`<div style="background:#13141f;border:1px solid rgba(16,185,129,.3);border-radius:20px;padding:40px 24px;max-width:420px;width:100%;text-align:center"><div style="font-size:40px;margin-bottom:12px">✅</div><div style="font-size:16px;font-weight:800;margin-bottom:8px">ส่งเรียบร้อย!</div><div style="font-size:13px;color:#94a3b8;margin-bottom:20px">ขอบคุณสำหรับ feedback นะครับ ทีมพัฒนาจะดูและตอบกลับเร็วๆ นี้</div><button onclick="document.getElementById('_feedbackModal').remove()" style="background:linear-gradient(135deg,#10b981,#34d399);border:none;border-radius:10px;padding:11px 24px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:Sarabun,sans-serif">ปิด</button></div>`;
+    } else {
+      if(errEl) errEl.textContent='ส่งไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่';
       btn.disabled=false; btn.textContent='ส่ง';
     }
   };
+})();
+
+// ══════════════════════════════════════════
+//  REPORTS — feedback + client error capture ผ่าน Firestore
+//  (เดิม feedback ส่งตรงไป Telegram Bot API ด้วย token ที่ hardcode ใน client
+//   ทุกคน view-source เห็น token ได้ — เปลี่ยนมาเขียนลง Firestore แทน แล้วให้
+//   สคริปต์ฝั่ง VM (auth ด้วย Service Account) ดึงไปส่ง Telegram แทน ไม่ต้องมี
+//   token ใดๆ ฝั่ง client อีก ต้องมี Firestore rule อนุญาต create บน
+//   collection 'reports' ให้ authenticated user เท่านั้น — ไม่มี read/list)
+// ══════════════════════════════════════════
+async function _sendReport(payload){
+  try{
+    if(!_fs) return false;
+    await _fs.collection('reports').add(Object.assign({
+      user: currentUser||'(ไม่ได้ login)',
+      ua: navigator.userAgent.slice(0,120),
+      page: (typeof curPage!=='undefined'?curPage:''),
+      ts: firebase.firestore.FieldValue.serverTimestamp()
+    }, payload));
+    return true;
+  }catch(e){ console.warn('[report]',e.message); return false; }
+}
+
+// ── Global error capture (เงียบๆ ไม่รบกวนผู้ใช้ แค่ให้เจ้าของแอปรู้ว่ามี error เกิดขึ้นจริง) ──
+(function(){
+  var _seenErrors=new Set();
+  function _reportOnce(key,payload){
+    if(_seenErrors.has(key)) return; // กัน error เดิมยิงซ้ำรัวๆ ในเซสชันเดียว (เช่น error ในลูป)
+    _seenErrors.add(key);
+    _sendReport(Object.assign({kind:'error'},payload));
+  }
+  window.addEventListener('error',function(e){
+    var msg=String(e.message||'');
+    _reportOnce('e:'+msg+':'+e.filename+':'+e.lineno,{
+      message:msg,
+      source:(e.filename||'')+':'+(e.lineno||'')+':'+(e.colno||''),
+      stack:(e.error&&e.error.stack)?String(e.error.stack).slice(0,2000):''
+    });
+  });
+  window.addEventListener('unhandledrejection',function(e){
+    var reason=e.reason;
+    var msg=(reason&&reason.message)?String(reason.message):String(reason);
+    _reportOnce('r:'+msg,{
+      message:'unhandledrejection: '+msg,
+      stack:(reason&&reason.stack)?String(reason.stack).slice(0,2000):''
+    });
+  });
 })();
 
 
