@@ -6353,17 +6353,17 @@ function renderDashBanks(){
           <i class="fas fa-university" style="color:#06b6d4;font-size:14px"></i>
         </div>
         <div>
-          <div style="font-size:15px;font-weight:700">บัญชีธนาคาร</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:1px">${banks.length} บัญชี</div>
+          <div style="font-size:15px;font-weight:700">${tr('bank_accounts_title')}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:1px">${banks.length} ${tr('accounts_unit')}</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:12px">
         <div style="text-align:right">
-          ${cards.length&&totalDebt>0?`<div style="font-size:10px;color:#f87171">ค้างบัตร ${fmt(totalDebt)}</div>`:''}
-          <div style="font-size:11px;color:var(--muted)">ยอดรวม</div>
+          ${cards.length&&totalDebt>0?`<div style="font-size:10px;color:#f87171">${tr('card_owed')} ${fmt(totalDebt)}</div>`:''}
+          <div style="font-size:11px;color:var(--muted)">${tr('total_amount')}</div>
           <div style="font-size:20px;font-weight:800;color:#06b6d4">${fmt(total)}</div>
         </div>
-        <button class="btn btn-ghost" style="padding:4px 12px;font-size:12px" onclick="nav('banks')"><i class="fas fa-arrow-right" style="margin-right:4px"></i>ดูทั้งหมด</button>
+        <button class="btn btn-ghost" style="padding:4px 12px;font-size:12px" onclick="nav('banks')"><i class="fas fa-arrow-right" style="margin-right:4px"></i>${tr('view_all')}</button>
       </div>
     </div>
     <div style="padding:4px 18px 8px">${rows}</div>
