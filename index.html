@@ -1302,27 +1302,27 @@
   <div id="pg-transactions" class="page">
     <div class="sec-hd" style="margin-bottom:16px;flex-wrap:wrap;gap:10px">
       <div class="filter-tabs">
-        <button class="ftab active" onclick="setFilter('all',this)">ทั้งหมด</button>
-        <button class="ftab" onclick="setFilter('income',this)">รายรับ</button>
-        <button class="ftab" onclick="setFilter('expense',this)">รายจ่าย</button>
+        <button class="ftab active" onclick="setFilter('all',this)" data-i18n="tx_filter_all">ทั้งหมด</button>
+        <button class="ftab" onclick="setFilter('income',this)" data-i18n="dh_income">รายรับ</button>
+        <button class="ftab" onclick="setFilter('expense',this)" data-i18n="dh_expense">รายจ่าย</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-ghost" onclick="openImgModal()"><i class="fas fa-camera"></i> สแกนใบเสร็จ</button>
+        <button class="btn btn-ghost" onclick="openImgModal()"><i class="fas fa-camera"></i> <span data-i18n="tx_scan_receipt">สแกนใบเสร็จ</span></button>
         <button class="btn btn-ghost" onclick="openStmtModal()" style="border-color:rgba(6,182,212,.4);color:var(--cyan)"><i class="fas fa-file-alt"></i> Bank Statement</button>
-        <button class="btn btn-ghost" onclick="printMonthlyReport()" title="พิมพ์รายงาน PDF"><i class="fas fa-file-pdf" style="color:#ef4444"></i> PDF</button>
-        <button class="btn btn-primary" onclick="openTxModal()"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
+        <button class="btn btn-ghost" onclick="printMonthlyReport()" title="พิมพ์รายงาน PDF" data-i18n-title="tx_print_pdf"><i class="fas fa-file-pdf" style="color:#ef4444"></i> PDF</button>
+        <button class="btn btn-primary" onclick="openTxModal()"><i class="fas fa-plus"></i> <span data-i18n="tx_add_item">เพิ่มรายการ</span></button>
       </div>
     </div>
     <!-- Search bar -->
     <div class="tx-search-bar">
       <i class="fas fa-search" style="color:var(--muted)"></i>
-      <input id="tx-search" placeholder="ค้นหารายการ, หมวดหมู่, แท็ก..." oninput="renderTx()">
+      <input id="tx-search" placeholder="ค้นหารายการ, หมวดหมู่, แท็ก..." data-i18n-ph="tx_search_ph" oninput="renderTx()">
       <button onclick="document.getElementById('tx-search').value='';renderTx()" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:2px"><i class="fas fa-times"></i></button>
     </div>
     <!-- Category filter + bulk manage -->
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
       <select id="tx-cat-filter" onchange="setTxCatFilter(this.value)" class="fselect" style="max-width:220px;width:auto"></select>
-      <button id="bulk-toggle-btn" onclick="toggleBulkMode()" class="btn btn-ghost" style="padding:7px 14px;font-size:13px"><i class="fas fa-check-double"></i> จัดการหลายรายการ</button>
+      <button id="bulk-toggle-btn" onclick="toggleBulkMode()" class="btn btn-ghost" style="padding:7px 14px;font-size:13px"><i class="fas fa-check-double"></i> <span data-i18n="tx_bulk_manage">จัดการหลายรายการ</span></button>
     </div>
     <!-- Tag filter -->
     <div id="tx-tag-filters" style="margin-bottom:10px;min-height:0"></div>
