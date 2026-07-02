@@ -4066,20 +4066,20 @@ function renderDashNetWorth(){
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(124,58,237,.06)">
       <div style="display:flex;align-items:center;gap:10px">
         <i class="fas fa-balance-scale" style="color:#a78bfa;font-size:16px"></i>
-        <span style="font-size:15px;font-weight:700">งบดุล & ความมั่งคั่งสุทธิ</span>
+        <span style="font-size:15px;font-weight:700">${tr('bs_title')}</span>
       </div>
-      <button class="btn btn-ghost" style="padding:4px 12px;font-size:12px" onclick="nav('balance')"><i class="fas fa-arrow-right" style="margin-right:4px"></i>รายละเอียด</button>
+      <button class="btn btn-ghost" style="padding:4px 12px;font-size:12px" onclick="nav('balance')"><i class="fas fa-arrow-right" style="margin-right:4px"></i>${tr('details')}</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
       <!-- สินทรัพย์ -->
       <div style="padding:16px 18px;border-right:1px solid var(--border)">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
           <i class="fas fa-coins" style="color:#10b981;font-size:13px"></i>
-          <span style="font-size:12px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.5px">สินทรัพย์</span>
+          <span style="font-size:12px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.5px">${tr('assets')}</span>
         </div>
         ${assetRows}
         <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;margin-top:4px">
-          <span style="font-size:13px;font-weight:700">รวม</span>
+          <span style="font-size:13px;font-weight:700">${tr('total_label')}</span>
           <span style="font-size:15px;font-weight:800;color:#10b981">${fmt(nw.totalAssets)}</span>
         </div>
       </div>
@@ -4087,11 +4087,11 @@ function renderDashNetWorth(){
       <div style="padding:16px 18px">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
           <i class="fas fa-credit-card" style="color:#ef4444;font-size:13px"></i>
-          <span style="font-size:12px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:.5px">หนี้สิน</span>
+          <span style="font-size:12px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:.5px">${tr('liabilities')}</span>
         </div>
         ${debtRows}
         <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;margin-top:4px">
-          <span style="font-size:13px;font-weight:700">รวม</span>
+          <span style="font-size:13px;font-weight:700">${tr('total_label')}</span>
           <span style="font-size:15px;font-weight:800;color:#ef4444">${fmt(nw.debts)}</span>
         </div>
       </div>
@@ -4099,7 +4099,7 @@ function renderDashNetWorth(){
     <!-- Net Worth footer -->
     <div style="padding:14px 20px;border-top:1px solid var(--border);background:rgba(124,58,237,.06);display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:2px">ความมั่งคั่งสุทธิ (Net Worth)</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:2px">${tr('net_worth_full')}</div>
         <div style="font-size:11px;color:var(--muted)">${fmt(nw.totalAssets)} − ${fmt(nw.debts)}</div>
       </div>
       <div style="font-size:26px;font-weight:900;color:${nwColor}">${nw.netWorth>=0?'':'-'}${fmt(Math.abs(nw.netWorth))}</div>
