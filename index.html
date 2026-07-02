@@ -10479,7 +10479,7 @@ saveTx=function(){
   if(!isSplit){ _origSaveTxSplit(); return; }
   var total=parseFloat(document.getElementById('tx-amt').value)||0;
   var splitTotal=_splitRows.reduce(function(s,r){ return s+(parseFloat(r.amount)||0); },0);
-  if(Math.abs(total-splitTotal)>0.5){ toast('ยอดรวมไม่ตรงกัน กรุณาตรวจสอบ','error'); return; }
+  if(Math.abs(total-splitTotal)>0.5){ toast(tr('split_total_mismatch'),'error'); return; }
   var date=document.getElementById('tx-date').value;
   var type=document.getElementById('tx-type').value;
   var bankId=document.getElementById('tx-bank')?.value||'';
