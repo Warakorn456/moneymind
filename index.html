@@ -7567,7 +7567,7 @@ function renderBalance(){
       })()}
       ${(plan.extraAssets||[]).map(a=>`
       <div class="bs-row">
-        <input class="bs-inp bs-name-inp" type="text" value="${a.name.replace(/"/g,'&quot;')}" placeholder="ชื่อสินทรัพย์"
+        <input class="bs-inp bs-name-inp" type="text" value="${a.name.replace(/"/g,'&quot;')}" placeholder="${tr('bs_asset_name_ph')}"
           onchange="updateBsAsset('${a.id}','name',this.value)">
         <div style="display:flex;align-items:center;gap:5px">
           <input class="bs-inp" type="number" value="${a.amount}" style="width:100px;text-align:right;color:#10b981"
@@ -7575,15 +7575,15 @@ function renderBalance(){
           <button onclick="delBsAsset('${a.id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:17px;line-height:1;padding:0 2px">×</button>
         </div>
       </div>`).join('')}
-      <button class="bs-add-btn" style="color:#10b981;border-color:rgba(16,185,129,.4)" onclick="addBsAsset()">+ เพิ่มสินทรัพย์</button>
-      <div class="bs-row total"><span>รวมสินทรัพย์</span><span style="color:#10b981">${fmt(nw.totalAssets)}</span></div>
+      <button class="bs-add-btn" style="color:#10b981;border-color:rgba(16,185,129,.4)" onclick="addBsAsset()">+ ${tr('bs_add_asset')}</button>
+      <div class="bs-row total"><span>${tr('bs_total_assets')}</span><span style="color:#10b981">${fmt(nw.totalAssets)}</span></div>
     </div>
     <div class="bs-card">
-      <div class="set-title"><i class="fas fa-credit-card" style="color:#ef4444"></i> หนี้สิน</div>
+      <div class="set-title"><i class="fas fa-credit-card" style="color:#ef4444"></i> ${tr('liabilities')}</div>
       ${(DB.debts||[]).map(d=>`<div class="bs-row"><span style="color:var(--muted);font-size:12px"><i class="fas fa-link" style="font-size:10px;opacity:.5"></i> ${d.name}</span><span style="color:#ef4444">${fmt(d.remaining||d.amount)}</span></div>`).join('')}
       ${(plan.extraDebts||[]).map(d=>`
       <div class="bs-row">
-        <input class="bs-inp bs-name-inp" type="text" value="${d.name.replace(/"/g,'&quot;')}" placeholder="ชื่อหนี้สิน"
+        <input class="bs-inp bs-name-inp" type="text" value="${d.name.replace(/"/g,'&quot;')}" placeholder="${tr('bs_debt_name_ph')}"
           onchange="updateBsDebt('${d.id}','name',this.value)">
         <div style="display:flex;align-items:center;gap:5px">
           <input class="bs-inp" type="number" value="${d.amount}" style="width:100px;text-align:right;color:#ef4444"
@@ -7591,9 +7591,9 @@ function renderBalance(){
           <button onclick="delBsDebt('${d.id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:17px;line-height:1;padding:0 2px">×</button>
         </div>
       </div>`).join('')}
-      ${!(DB.debts||[]).length&&!(plan.extraDebts||[]).length?'<div style="font-size:13px;color:var(--muted);padding:8px 0">ไม่มีหนี้สิน ✅</div>':''}
-      <button class="bs-add-btn" style="color:#ef4444;border-color:rgba(239,68,68,.4)" onclick="addBsDebt()">+ เพิ่มหนี้สิน</button>
-      <div class="bs-row total"><span>รวมหนี้สิน</span><span style="color:#ef4444">${fmt(nw.debts)}</span></div>
+      ${!(DB.debts||[]).length&&!(plan.extraDebts||[]).length?'<div style="font-size:13px;color:var(--muted);padding:8px 0">'+tr('debt_none_great_short')+' ✅</div>':''}
+      <button class="bs-add-btn" style="color:#ef4444;border-color:rgba(239,68,68,.4)" onclick="addBsDebt()">+ ${tr('bs_add_debt')}</button>
+      <div class="bs-row total"><span>${tr('bs_total_debts')}</span><span style="color:#ef4444">${fmt(nw.debts)}</span></div>
     </div>
   </div>
 
@@ -7601,13 +7601,13 @@ function renderBalance(){
   <div class="bs-card" style="margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
     <i class="fas fa-wallet" style="color:var(--cyan);font-size:20px"></i>
     <div style="flex:1">
-      <div style="font-size:13px;font-weight:600">รายรับที่คาดหวังต่อเดือน</div>
-      <div style="font-size:12px;color:var(--muted)">ใช้เป็นฐานคำนวณยอดคงเหลือแต่ละเดือน</div>
+      <div style="font-size:13px;font-weight:600">${tr('bs_expected_income')}</div>
+      <div style="font-size:12px;color:var(--muted)">${tr('bs_expected_income_hint')}</div>
     </div>
     <input id="plan-income-inp" style="width:160px;background:#1a1a2e;border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:16px;font-weight:700;color:var(--cyan);font-family:Sarabun,sans-serif;text-align:right;outline:none" type="number" value="${plan.monthlyIncome||0}" placeholder="0" onchange="getPlan().monthlyIncome=parseFloat(this.value)||0;saveDB();renderBalance()" onkeydown="if(event.key==='Enter'){getPlan().monthlyIncome=parseFloat(this.value)||0;saveDB();renderBalance();this.blur()}" onfocus="this.select()">
     <div style="display:flex;align-items:center;gap:6px;border-left:1px solid var(--border);padding-left:14px">
       <div style="text-align:right">
-        <div style="font-size:11px;color:var(--muted);white-space:nowrap">ขึ้นปีละ</div>
+        <div style="font-size:11px;color:var(--muted);white-space:nowrap">${tr('bs_growth_per_year')}</div>
         <div style="font-size:11px;color:var(--muted);white-space:nowrap">(compound)</div>
       </div>
       <input id="plan-growth-inp" style="width:72px;background:#1a1a2e;border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:15px;font-weight:700;color:#f59e0b;font-family:Sarabun,sans-serif;text-align:right;outline:none" type="number" min="0" max="100" step="0.1" value="${plan.incomeGrowth||0}" placeholder="0" onchange="getPlan().incomeGrowth=parseFloat(this.value)||0;saveDB();renderBalance()" onkeydown="if(event.key==='Enter'){getPlan().incomeGrowth=parseFloat(this.value)||0;saveDB();renderBalance();this.blur()}" onfocus="this.select()">
@@ -7615,41 +7615,41 @@ function renderBalance(){
     </div>
     <div style="display:flex;align-items:center;gap:6px;border-left:1px solid var(--border);padding-left:14px">
       <div style="text-align:right">
-        <div style="font-size:11px;color:var(--muted);white-space:nowrap">หยุดที่อายุ</div>
-        <div style="font-size:11px;color:${dobYear?'var(--muted)':'#ef4444'};white-space:nowrap">${dobYear?'ปี ค.ศ. '+(dobYear+(plan.incomeStopAge||0)):'ต้องกรอกวันเกิด'}</div>
+        <div style="font-size:11px;color:var(--muted);white-space:nowrap">${tr('bs_stop_at_age')}</div>
+        <div style="font-size:11px;color:${dobYear?'var(--muted)':'#ef4444'};white-space:nowrap">${dobYear?tr('bs_year_ce')+' '+(dobYear+(plan.incomeStopAge||0)):tr('bs_need_dob')}</div>
       </div>
-      <input id="plan-stop-age-inp" style="width:72px;background:#1a1a2e;border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:15px;font-weight:700;color:#a78bfa;font-family:Sarabun,sans-serif;text-align:right;outline:none" type="number" min="0" max="120" step="1" value="${plan.incomeStopAge||''}" placeholder="ไม่จำกัด" onchange="getPlan().incomeStopAge=parseInt(this.value)||0;saveDB();renderBalance()" onkeydown="if(event.key==='Enter'){getPlan().incomeStopAge=parseInt(this.value)||0;saveDB();renderBalance();this.blur()}" onfocus="this.select()">
-      <span style="font-size:14px;font-weight:600;color:#a78bfa">ปี</span>
+      <input id="plan-stop-age-inp" style="width:72px;background:#1a1a2e;border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:15px;font-weight:700;color:#a78bfa;font-family:Sarabun,sans-serif;text-align:right;outline:none" type="number" min="0" max="120" step="1" value="${plan.incomeStopAge||''}" placeholder="${tr('bs_unlimited')}" onchange="getPlan().incomeStopAge=parseInt(this.value)||0;saveDB();renderBalance()" onkeydown="if(event.key==='Enter'){getPlan().incomeStopAge=parseInt(this.value)||0;saveDB();renderBalance();this.blur()}" onfocus="this.select()">
+      <span style="font-size:14px;font-weight:600;color:#a78bfa">${tr('year_short')}</span>
     </div>
   </div>
 
   <!-- Plan Chart -->
   <div class="bs-card" style="margin-bottom:16px;padding:18px 20px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-      <div id="plan-chart-title" style="font-size:15px;font-weight:700"><i class="fas fa-chart-bar" style="color:var(--primary-l)"></i> ภาพรวมรายปี</div>
-      <button id="plan-chart-back" onclick="renderPlanChart(null)" style="display:none;background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);color:#a78bfa;border-radius:8px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:Sarabun,sans-serif"><i class="fas fa-arrow-left"></i> กลับภาพรวม</button>
+      <div id="plan-chart-title" style="font-size:15px;font-weight:700"><i class="fas fa-chart-bar" style="color:var(--primary-l)"></i> ${tr('bs_yearly_overview')}</div>
+      <button id="plan-chart-back" onclick="renderPlanChart(null)" style="display:none;background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);color:#a78bfa;border-radius:8px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:Sarabun,sans-serif"><i class="fas fa-arrow-left"></i> ${tr('back_to_overview')}</button>
     </div>
     <div style="position:relative;height:280px"><canvas id="plan-chart"></canvas></div>
-    <div style="font-size:11px;color:var(--muted);margin-top:6px"><i class="fas fa-hand-pointer"></i> คลิกที่แท่งกราฟปีเพื่อดูรายละเอียดรายเดือน</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px"><i class="fas fa-hand-pointer"></i> ${tr('bs_click_bar_monthly')}</div>
   </div>
 
   <!-- Plan Accordion -->
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
-    <div style="font-size:15px;font-weight:700"><i class="fas fa-chart-line" style="color:var(--primary-l)"></i> แผนการเงิน (ถึงปี ${endYear} / พ.ศ. ${beYear(endYear)})</div>
-    <button class="btn btn-primary" onclick="openPlanModal()"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
+    <div style="font-size:15px;font-weight:700"><i class="fas fa-chart-line" style="color:var(--primary-l)"></i> ${tr('bs_financial_plan')} (${tr('bs_to_year')} ${endYear} / ${beYear(endYear)})</div>
+    <button class="btn btn-primary" onclick="openPlanModal()"><i class="fas fa-plus"></i> ${tr('tx_add_item')}</button>
   </div>
-  <div style="font-size:12px;color:var(--muted);margin-bottom:10px"><i class="fas fa-hand-pointer"></i> คลิกที่แถวปีเพื่อขยาย/ย่อดูรายเดือน — กด <b style="color:#a78bfa">+ เพิ่ม</b> ในเดือนนั้นเพื่อใส่รายรับ/รายจ่าย</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:10px"><i class="fas fa-hand-pointer"></i> ${tr('bs_click_year_hint')} <b style="color:#a78bfa">+ ${tr('add')}</b> ${tr('bs_click_year_hint2')}</div>
   <div class="year-tbl-wrap">
     <table class="year-table">
       <thead><tr>
-        <th>ปี ค.ศ.</th><th>พ.ศ.</th>
-        ${hasAge?'<th>อายุ</th>':''}
-        <th>รายรับ</th><th>รายจ่าย</th><th>คงเหลือ/ปี</th><th>ทรัพย์สินสะสม</th>
+        <th>${tr('bs_year_ce')}</th><th>${tr('bs_year_be')}</th>
+        ${hasAge?`<th>${tr('bs_age')}</th>`:''}
+        <th>${tr('dh_income')}</th><th>${tr('dh_expense')}</th><th>${tr('bs_balance_per_year')}</th><th>${tr('bs_cumulative_assets')}</th>
       </tr></thead>
       <tbody>${planRows}</tbody>
     </table>
   </div>
-  <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:right">* ทรัพย์สินสะสมเริ่มจาก Net Worth ปัจจุบัน ${fmt(nw.netWorth)}</div>
+  <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:right">* ${tr('bs_cumulative_note')} ${fmt(nw.netWorth)}</div>
   `;
   renderPlanChart(_planChartYear);
 }
