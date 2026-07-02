@@ -4932,9 +4932,8 @@ function updateStmtSummary(){
 
 function updateStmtSelectedCount(){
   const n=stmtRows.filter(r=>r.selected).length;
-  document.getElementById('stmt-selected-count').textContent=`เลือก ${n}/${stmtRows.length} รายการ`;
-  document.getElementById('stmt-import-btn').textContent=`นำเข้า ${n} รายการ`;
-  document.getElementById('stmt-import-btn').innerHTML=`<i class="fas fa-file-import"></i> นำเข้า ${n} รายการ`;
+  document.getElementById('stmt-selected-count').textContent=tr('stmt_selected_n_of').replace('{n}',n).replace('{total}',stmtRows.length);
+  document.getElementById('stmt-import-btn').innerHTML=`<i class="fas fa-file-import"></i> ${tr('stmt_import_n').replace('{n}',n)}`;
   document.getElementById('stmt-check-all').checked=n===stmtRows.length;
   updateStmtSummary();
 }
