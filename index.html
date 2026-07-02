@@ -2762,7 +2762,7 @@ async function recoverData(){
       }
     }catch(e){}
   }
-  if(best){ DB={...DB,...best}; saveLocalOnly(); renderPage(curPage); toast('กู้คืนข้อมูลสำเร็จ ✓','success'); return true; }
+  if(best){ DB={...DB,...best}; saveLocalOnly(); renderPage(curPage); toast(tr('recover_success'),'success'); return true; }
   return false;
 }
 
