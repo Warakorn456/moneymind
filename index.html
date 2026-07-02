@@ -8744,9 +8744,12 @@ function downloadShareImage(){
 
 function _captureShareCard(card){
   html2canvas(card,{backgroundColor:'#0d0d1a',scale:2,useCORS:true}).then(canvas=>{
+    const dataUrl=canvas.toDataURL('image/png');
+    const fn=`moneymind_${new Date().toISOString().split('T')[0]}.png`;
+    if(_nativeSaveFile(dataUrl,fn,'image/png')) return;
     const a=document.createElement('a');
-    a.href=canvas.toDataURL('image/png');
-    a.download=`moneymind_${new Date().toISOString().split('T')[0]}.png`;
+    a.href=dataUrl;
+    a.download=fn;
     a.click();
     toast('บันทึกรูปแล้ว','success');
   }).catch(()=>toast('ไม่สามารถสร้างรูปได้ ต้องเชื่อมต่ออินเทอร์เน็ต','error'));
