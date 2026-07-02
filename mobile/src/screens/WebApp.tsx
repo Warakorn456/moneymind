@@ -167,7 +167,49 @@ export default function WebApp() {
     }
   }, []);
 
-  // รับ message จาก WebView (action: 'googleSignIn' | 'exitApp' | 'saveFile' | 'printHtml')
+  // ส่ง Expo push token เข้า WebView ให้เว็บเก็บลง Firestore (members/{user}.expoPushToken)
+  const injectPushToken = useCallback((token: string | null) => {
+    const js = `(function(){ if(window.handleNativePushToken) window.handleNativePushToken(${JSON.stringify(token)}); })(); true;`;
+    webViewRef.current?.injectJavaScript(js);
+  }, []);
+
+  // ขอ permission + ดึง Expo push token — เรียกจากเว็บหลัง login สำเร็จ (action: 'requestPushToken')
+  // ใช้ Expo push service (ครอบ FCM/APNs ให้) แทน raw FCM เพราะแอปนี้เป็น Expo managed workflow อยู่แล้ว
+  const registerForPushNotifications = useCallback(async () => {
+    try {
+      if (!Device.isDevice) {
+        console.warn('[push] ต้องใช้เครื่องจริง ไม่ใช่ simulator/emulator');
+        return;
+      }
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('default', {
+          name: 'default',
+          importance: Notifications.AndroidImportance.DEFAULT,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#7c3aed',
+        });
+      }
+      const existing = await Notifications.getPermissionsAsync();
+      let status = existing.status;
+      if (status !== 'granted') {
+        const req = await Notifications.requestPermissionsAsync();
+        status = req.status;
+      }
+      if (status !== 'granted') {
+        console.warn('[push] ผู้ใช้ไม่อนุญาต notification permission');
+        return;
+      }
+      const projectId = 'https://github.com/Warakorn456/moneymind'; // placeholder, overwritten below
+      const tokenResp = await Notifications.getExpoPushTokenAsync({
+        projectId: require('expo-constants').default?.expoConfig?.extra?.eas?.projectId,
+      });
+      injectPushToken(tokenResp.data);
+    } catch (e) {
+      console.warn('[push] register error:', e);
+    }
+  }, [injectPushToken]);
+
+  // รับ message จาก WebView (action: 'googleSignIn' | 'exitApp' | 'saveFile' | 'printHtml' | 'requestPushToken')
   const handleMessage = useCallback((event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
@@ -179,9 +221,11 @@ export default function WebApp() {
         saveFile(data.filename, data.mime, data.base64);
       } else if (data.action === 'printHtml') {
         printHtml(data.html);
+      } else if (data.action === 'requestPushToken') {
+        registerForPushNotifications();
       }
     } catch (_) {}
-  }, [startGoogleSignIn, saveFile, printHtml]);
+  }, [startGoogleSignIn, saveFile, printHtml, registerForPushNotifications]);
 
   // Android hardware back button — ถามหน้าเว็บก่อนเสมอว่ามี modal/หน้าย่อยให้ปิด/ย้อนกลับไหม
   // (SPA ไม่ใช้ pushState ทำให้ webView.canGoBack() เป็น false เกือบตลอด — ถ้าใช้ default
