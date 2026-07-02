@@ -10739,11 +10739,11 @@ function saveIns(){
   var list=getIns();
   if(id){ var it=list.find(function(x){return x.id===id;}); if(it) Object.assign(it,o); }
   else { o.id='ins_'+Date.now(); list.push(o); }
-  saveDB(); closeM('m-ins'); renderInsurance(); toast('บันทึกแล้ว','success');
+  saveDB(); closeM('m-ins'); renderInsurance(); toast(tr('ins_saved'),'success');
 }
 function deleteIns(){
   var id=document.getElementById('ins-eid').value; if(!id) return;
-  if(!confirm('ลบประกันนี้?')) return;
+  if(!confirm(tr('ins_confirm_delete'))) return;
   DB.insurance=getIns().filter(function(x){return x.id!==id;});
   saveDB(); closeM('m-ins'); renderInsurance();
 }
