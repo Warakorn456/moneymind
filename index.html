@@ -9027,7 +9027,7 @@ function renderHealthScore(){
           <div style="width:30px;height:30px;border-radius:8px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-heartbeat" style="color:#10b981;font-size:12px"></i></div>
           <div class="sec-title">Financial Health Score</div>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="toast('คำนวณจากค่าเฉลี่ย 6 เดือนย้อนหลัง','info')"><i class="fas fa-info-circle"></i></button>
+        <button class="btn btn-ghost btn-sm" onclick="toast(t('hs_calc_note'),'info')"><i class="fas fa-info-circle"></i></button>
       </div>
       <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
         <div class="health-score-ring" style="background:conic-gradient(${grade.color} ${score*3.6}deg, rgba(255,255,255,.08) 0deg)">
