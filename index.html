@@ -12474,8 +12474,9 @@ function renderSubscriptions(){
   var el=document.getElementById('sub-content'); if(!el) return;
   var list=getSubs();
 
-  var cycleLabel={monthly:'รายเดือน',yearly:'รายปี',weekly:'รายสัปดาห์',quarterly:'รายไตรมาส'};
-  var catLabel={entertainment:'🎬 ความบันเทิง',productivity:'💼 การทำงาน',health:'💪 สุขภาพ',cloud:'☁️ Cloud & Storage',news:'📰 ข่าว & สื่อ',education:'📚 การศึกษา',other:'📦 อื่นๆ'};
+  var isEn=(typeof currentLang!=='undefined'&&currentLang==='en');
+  var cycleLabel=isEn?{monthly:'Monthly',yearly:'Yearly',weekly:'Weekly',quarterly:'Quarterly'}:{monthly:'รายเดือน',yearly:'รายปี',weekly:'รายสัปดาห์',quarterly:'รายไตรมาส'};
+  var catLabel=isEn?{entertainment:'🎬 Entertainment',productivity:'💼 Productivity',health:'💪 Health',cloud:'☁️ Cloud & Storage',news:'📰 News & Media',education:'📚 Education',other:'📦 Other'}:{entertainment:'🎬 ความบันเทิง',productivity:'💼 การทำงาน',health:'💪 สุขภาพ',cloud:'☁️ Cloud & Storage',news:'📰 ข่าว & สื่อ',education:'📚 การศึกษา',other:'📦 อื่นๆ'};
 
   var activeList=list.filter(function(s){return s.active!==false;});
   var inactiveList=list.filter(function(s){return s.active===false;});
