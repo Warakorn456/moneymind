@@ -9886,8 +9886,8 @@ function renderTopMerchants(){
   var preMo=mo-1<0?11:mo-1, preYr=mo-1<0?yr-1:yr;
   var txsPre=monthTx(preMo,preYr).filter(function(t){return t.type==='expense';});
   var map={}, mapPre={};
-  txsCur.forEach(function(t){ var k=t.description||t.category||'อื่นๆ'; map[k]=(map[k]||0)+t.amount; });
-  txsPre.forEach(function(t){ var k=t.description||t.category||'อื่นๆ'; mapPre[k]=(mapPre[k]||0)+t.amount; });
+  txsCur.forEach(function(t){ var k=t.description||t.category||t('other'); map[k]=(map[k]||0)+t.amount; });
+  txsPre.forEach(function(t){ var k=t.description||t.category||t('other'); mapPre[k]=(mapPre[k]||0)+t.amount; });
   var sorted=Object.entries(map).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
   if(!sorted.length){ el.innerHTML=''; return; }
   var maxVal=sorted[0][1];
