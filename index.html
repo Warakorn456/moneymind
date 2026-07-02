@@ -9006,10 +9006,10 @@ function calcHealthScore(){
   const port=DB.investments.reduce((s,i)=>s+i.value,0);
   const invScore=avgInc>0?Math.min(100,(port/(avgInc*12))*100):0;
   const metrics=[
-    {label:'อัตราการออม',val:Math.max(0,savingsRate),desc:`${savingsRate.toFixed(1)}% ของรายรับ`,icon:'fa-piggy-bank',color:'#10b981',weight:30},
-    {label:'ภาระหนี้',val:Math.max(0,100-dti),desc:totalDebt>0?`หนี้ ${fmt(totalDebt)}`:'ไม่มีหนี้',icon:'fa-credit-card',color:'#06b6d4',weight:25},
-    {label:'เงินสำรองฉุกเฉิน',val:Math.min(100,emergencyFund),desc:`${(banks/Math.max(avgExp,1)).toFixed(1)} เดือน`,icon:'fa-shield-alt',color:'#a78bfa',weight:25},
-    {label:'การลงทุน',val:Math.min(100,invScore),desc:`พอร์ต ${fmt(port)}`,icon:'fa-chart-line',color:'#f59e0b',weight:20},
+    {label:t('hs_savings_rate'),val:Math.max(0,savingsRate),desc:`${savingsRate.toFixed(1)}% ${t('hs_of_income')}`,icon:'fa-piggy-bank',color:'#10b981',weight:30},
+    {label:t('hs_debt_burden'),val:Math.max(0,100-dti),desc:totalDebt>0?`${t('hs_debt')} ${fmt(totalDebt)}`:t('hs_no_debt'),icon:'fa-credit-card',color:'#06b6d4',weight:25},
+    {label:t('hs_emergency_fund'),val:Math.min(100,emergencyFund),desc:`${(banks/Math.max(avgExp,1)).toFixed(1)} ${t('hs_months')}`,icon:'fa-shield-alt',color:'#a78bfa',weight:25},
+    {label:t('hs_investment'),val:Math.min(100,invScore),desc:`${t('hs_portfolio')} ${fmt(port)}`,icon:'fa-chart-line',color:'#f59e0b',weight:20},
   ];
   const score=Math.round(metrics.reduce((s,m)=>s+(m.val*m.weight/100),0));
   return {score,metrics};
