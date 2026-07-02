@@ -6162,9 +6162,9 @@ async function executeDcaPlan(id){
   }
   // บันทึกใน DCA history
   if(!plan.records) plan.records=[];
-  plan.records.push({id:uid(),date:today,amount:plan.amount,units,price,note:'DCA อัตโนมัติ',invId:usedInvId});
+  plan.records.push({id:uid(),date:today,amount:plan.amount,units,price,note:tr('dca_auto'),invId:usedInvId});
   saveDB();
-  toast(`✅ DCA ${plan.name} ฿${plan.amount.toLocaleString()} เพิ่มในพอร์ตแล้ว${price?'':' (ราคา 0 — กรุณาอัปเดตราคา)'}`, 'success');
+  toast(`✅ DCA ${plan.name} ฿${plan.amount.toLocaleString()} ${tr('dca_added_to_port')}${price?'':' ('+tr('dca_price_zero_hint')+')'}`, 'success');
   _pendingDcaPlans=_pendingDcaPlans.filter(p=>p.id!==id);
   document.getElementById('dca-pend-row-'+id)?.remove();
   document.getElementById('dca-exec-all-btn')?.removeAttribute('disabled');
