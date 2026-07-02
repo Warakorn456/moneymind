@@ -12219,14 +12219,14 @@ function renderCalendarPage(){
       return '<span class="cal-color-opt" onclick="document.getElementById(\'cal-note-color\').value=\''+c+'\';document.querySelectorAll(\'.cal-color-opt\').forEach(function(x){x.style.boxShadow=\'none\'});this.style.boxShadow=\'0 0 0 2px white,0 0 0 4px '+NC[c]+'\'" style="display:inline-block;width:18px;height:18px;border-radius:50%;background:'+NC[c]+';cursor:pointer;flex-shrink:0;transition:transform .15s" onmouseover="this.style.transform=\'scale(1.2)\'" onmouseout="this.style.transform=\'scale(1)\'"></span>';
     }).join('')+'</div>';
 
-    var dowNames=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+    var dowNames=(typeof currentLang!=='undefined'&&currentLang==='en')?['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']:['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
     panel='<div class="cal-detail">'
       // ── header ──
       +'<div class="cal-detail-head">'
         +'<div style="display:flex;align-items:flex-start;justify-content:space-between">'
           +'<div>'
             +'<div style="font-size:20px;font-weight:800;line-height:1.2">'+selDate.getDate()+' '+monthFullArr()[selDate.getMonth()]+'</div>'
-            +'<div style="font-size:12px;color:var(--muted);margin-top:2px">วัน'+dowNames[selDate.getDay()]+' · '+(beYear(selDate.getFullYear()))+'</div>'
+            +'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+((typeof currentLang!=='undefined'&&currentLang==='en')?dowNames[selDate.getDay()]:'วัน'+dowNames[selDate.getDay()])+' · '+(beYear(selDate.getFullYear()))+'</div>'
           +'</div>'
           +(sIncAmt||sExpAmt?'<div style="text-align:right">'
             +(sIncAmt?'<div style="font-size:13px;font-weight:700;color:#34d399">+'+fmt(Math.round(sIncAmt))+'</div>':'')
