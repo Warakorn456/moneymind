@@ -4584,9 +4584,9 @@ function _refreshRcptUI(){
   document.getElementById('ai-items-list').innerHTML=_rcptItems.map((it,i)=>`
     <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;padding:8px;background:var(--surface2);border-radius:8px;flex-wrap:wrap">
       <input type="number" class="finput" style="width:90px;flex-shrink:0;min-width:70px" value="${it.amount||''}" placeholder="฿" oninput="updateRcptAmt(${i},this.value)">
-      <input type="text" class="finput" style="flex:1;min-width:120px" value="${(it.description||'').replace(/"/g,'&quot;')}" placeholder="ชื่อสินค้า/บริการ" oninput="updateRcptDesc(${i},this.value)">
+      <input type="text" class="finput" style="flex:1;min-width:120px" value="${(it.description||'').replace(/"/g,'&quot;')}" placeholder="${tr('scan_item_name_ph')}" oninput="updateRcptDesc(${i},this.value)">
       <select class="fselect" style="width:130px;flex-shrink:0;min-width:100px" onchange="updateRcptCat(${i},this.value)">
-        ${allCats.map(c=>`<option value="${c.id}"${c.id===it.category?' selected':''}>${c.label}</option>`).join('')}
+        ${allCats.map(c=>`<option value="${c.id}"${c.id===it.category?' selected':''}>${catLabel(c)}</option>`).join('')}
       </select>
       <button class="btn btn-ghost" style="padding:4px 8px;color:var(--red);flex-shrink:0" onclick="removeRcptItem(${i})"><i class="fas fa-trash-alt"></i></button>
     </div>`).join('');
