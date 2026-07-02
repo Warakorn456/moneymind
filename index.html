@@ -10685,7 +10685,7 @@ calcTaxLive=function(){ _origCalcTaxLive(); try{ taxOptimizer(); }catch(e){ cons
 function getIns(){ if(!DB.insurance) DB.insurance=[]; return DB.insurance; }
 function insMonthly(p){ var v=p.premium||0; if(p.cycle==='yearly')return v/12; if(p.cycle==='quarterly')return v/3; if(p.cycle==='onetime')return 0; return v; }
 var INS_TYPE={life:{l:'ประกันชีวิต',le:'Life',i:'fa-shield-halved',c:'#10b981'},health:{l:'สุขภาพ',le:'Health',i:'fa-heart-pulse',c:'#ef4444'},accident:{l:'อุบัติเหตุ',le:'Accident',i:'fa-truck-medical',c:'#f59e0b'},critical:{l:'โรคร้ายแรง',le:'Critical Illness',i:'fa-ribbon',c:'#ec4899'},annuity:{l:'บำนาญ',le:'Annuity',i:'fa-umbrella',c:'#fbbf24'},car:{l:'รถยนต์',le:'Car',i:'fa-car',c:'#3b82f6'},home:{l:'บ้าน/ทรัพย์สิน',le:'Home/Property',i:'fa-house',c:'#06b6d4'},travel:{l:'เดินทาง',le:'Travel',i:'fa-plane',c:'#a78bfa'},other:{l:'อื่นๆ',le:'Other',i:'fa-file-shield',c:'#94a3b8'}};
-Object.keys(INS_TYPE).forEach(function(k){ Object.defineProperty(INS_TYPE[k],'l',{get:function(){ return (typeof currentLang!=='undefined'&&currentLang==='en')?this._le:this._l; },set:function(v){ this._l=v; }}); INS_TYPE[k].l=INS_TYPE[k].l; INS_TYPE[k]._le=INS_TYPE[k].le; });
+function insTypeLabel(ty){ return (typeof currentLang!=='undefined'&&currentLang==='en'&&ty.le)?ty.le:ty.l; }
 var INS_INSURED={self:'ตัวเอง',spouse:'คู่สมรส',child:'บุตร',parent:'พ่อ/แม่',family:'ครอบครัว',other:'อื่นๆ'};
 var INS_INSURED_EN={self:'Self',spouse:'Spouse',child:'Child',parent:'Parent',family:'Family',other:'Other'};
 function insInsuredLabel(k){ return (typeof currentLang!=='undefined'&&currentLang==='en'&&INS_INSURED_EN[k])?INS_INSURED_EN[k]:(INS_INSURED[k]||k); }
