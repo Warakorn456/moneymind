@@ -8103,7 +8103,7 @@ function showTaxPreview(title, color, icon, rows, onConfirm){
 
 async function processPaySlip(file){
   if(!file) return;
-  if(!DB.settings.apiKey){ toast('ต้องมี Gemini API Key เพื่อสแกนเอกสาร — ไปที่ตั้งค่า','error'); return; }
+  if(!DB.settings.apiKey){ toast(tr('taxdoc_need_apikey'),'error'); return; }
   setZoneLoading('slip-zone',true);
   try{
     const dataURL=await readFileAsDataURL(file);
@@ -8159,7 +8159,7 @@ async function processPaySlip(file){
 
 async function processTawi50(file){
   if(!file) return;
-  if(!DB.settings.apiKey){ toast('ต้องมี Gemini API Key เพื่อสแกนเอกสาร — ไปที่ตั้งค่า','error'); return; }
+  if(!DB.settings.apiKey){ toast(tr('taxdoc_need_apikey'),'error'); return; }
   setZoneLoading('tawi-zone',true);
   try{
     const dataURL=await readFileAsDataURL(file);
