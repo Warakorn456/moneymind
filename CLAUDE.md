@@ -98,8 +98,8 @@ DB = {
 
 ## Pages & Navigation
 
-`const PAGE_TITLE` อยู่บรรทัด ~3215 — รวมทุก page key ไว้ที่เดียว  
-Navigation ผ่าน `nav(page)` — routing อยู่ใน `renderPage(p)` บรรทัด ~3233:
+`const PAGE_TITLE` อยู่บรรทัด ~3592 — รวมทุก page key ไว้ที่เดียว  
+Navigation ผ่าน `nav(page)` (~3595) — routing อยู่ใน `renderPage(p)` บรรทัด ~3611:
 
 | Page key | หน้า | render function |
 |----------|------|----------------|
