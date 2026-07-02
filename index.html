@@ -5370,30 +5370,30 @@ function selectPortColor(c){
 function savePort(){
   const id=document.getElementById('port-edit-id').value||uid();
   const name=document.getElementById('port-name').value.trim();
-  if(!name){toast('กรุณาใส่ชื่อพอร์ต','error');return;}
+  if(!name){toast(tr('port_need_name'),'error');return;}
   const ports=getPortfolios();
   const linkedSavingId=document.getElementById('port-saving-id').value||null;
   const entry={id,name,purpose:document.getElementById('port-purpose').value,color:document.getElementById('port-color').value,note:document.getElementById('port-note').value.trim(),linkedSavingId};
   const idx=ports.findIndex(p=>p.id===id);
   if(idx>=0) ports[idx]=entry; else ports.push(entry);
   saveDB(); closeModal('port-modal-bg'); renderInv();
-  toast(idx>=0?'แก้ไขพอร์ตแล้ว':'สร้างพอร์ตใหม่แล้ว','success');
+  toast(idx>=0?tr('port_edited'):tr('port_created'),'success');
 }
 function deletePort(id){
-  if(!confirm('ลบพอร์ตนี้? การลงทุนในพอร์ตจะถูกย้ายไป "ไม่ระบุพอร์ต"')) return;
+  if(!confirm(tr('port_confirm_delete'))) return;
   DB.portfolios=getPortfolios().filter(p=>p.id!==id);
   DB.investments.forEach(i=>{ if(i.portId===id) i.portId=null; });
   saveDB(); openPortModal(); renderInv();
 }
 function syncPortToSaving(portId){
   const port=getPortfolios().find(p=>p.id===portId);
-  if(!port||!port.linkedSavingId){ toast('ไม่พบพอร์ตหรือยังไม่ได้ลิ้งเป้าหมาย','error'); return; }
+  if(!port||!port.linkedSavingId){ toast(tr('port_not_found_or_unlinked'),'error'); return; }
   const sv=(DB.savings||[]).find(s=>s.id===port.linkedSavingId);
-  if(!sv){ toast('ไม่พบเป้าหมายออมที่ลิ้งไว้','error'); return; }
+  if(!sv){ toast(tr('port_saving_goal_not_found'),'error'); return; }
   const totalVal=(DB.investments||[]).filter(i=>i.portId===portId).reduce((s,i)=>s+i.value,0);
   sv.current=totalVal;
   saveDB(); renderSavings();
-  toast(`ส่งยอด ${fmt(totalVal)} ไปยัง "${sv.name}" แล้ว`,'success');
+  toast(tr('port_sent_to_saving').replace('{amt}',fmt(totalVal)).replace('{name}',sv.name),'success');
 }
 function _updatePortDropdown(selectedId){
   const sel=document.getElementById('inv-portid');
