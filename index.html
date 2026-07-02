@@ -3250,15 +3250,6 @@ function switchToForgot(){
   document.getElementById('form-forgot').style.display='block';
   document.getElementById('login-mode-sub').textContent='รีเซ็ตรหัสผ่าน';
   document.getElementById('forgot-err').textContent='';
-  switchForgotTab('email');
-}
-function switchForgotTab(tab){
-  var isEmail=tab==='email';
-  document.getElementById('forgot-tab-email').style.display=isEmail?'block':'none';
-  document.getElementById('forgot-tab-direct').style.display=isEmail?'none':'block';
-  document.getElementById('ftab-email').style.cssText='flex:1;padding:8px;border-radius:8px;font-size:12px;font-family:Sarabun,sans-serif;cursor:pointer;border:1px solid rgba(245,158,11,.6);background:'+(isEmail?'rgba(245,158,11,.2)':'rgba(255,255,255,.05)')+';color:'+(isEmail?'#f59e0b':'#64748b')+';font-weight:'+(isEmail?'700':'400');
-  document.getElementById('ftab-direct').style.cssText='flex:1;padding:8px;border-radius:8px;font-size:12px;font-family:Sarabun,sans-serif;cursor:pointer;border:1px solid '+(isEmail?'rgba(255,255,255,.1)':'rgba(245,158,11,.6)')+';background:'+(isEmail?'rgba(255,255,255,.05)':'rgba(245,158,11,.2)')+';color:'+(isEmail?'#64748b':'#f59e0b')+';font-weight:'+(isEmail?'400':'700');
-  document.getElementById('forgot-err').textContent='';
 }
 
 async function doForgotEmail(){
