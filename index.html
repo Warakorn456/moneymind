@@ -2910,7 +2910,7 @@ async function tryRegister(){
           email:email,
           uid:fbUid,
           createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-          platform:(window._isAndroidApp?'android':'web')
+          platform:(window._isAndroidApp?'android':window._isIOSApp?'ios':'web')
         });
       }catch(e){ console.warn('[members] save error:',e.message); }
     }
