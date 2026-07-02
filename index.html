@@ -6306,26 +6306,26 @@ function saveBank(){
     obj.dueDate=parseInt(document.getElementById('bank-cc-due').value)||0;
   }
   const banks=getBanks();
-  if(id){ const i=banks.findIndex(b=>b.id===id); if(i>=0) banks[i]={...banks[i],...obj}; toast('แก้ไขแล้ว','success'); }
-  else { banks.push({id:uid(),...obj}); toast('เพิ่มบัญชีแล้ว','success'); }
+  if(id){ const i=banks.findIndex(b=>b.id===id); if(i>=0) banks[i]={...banks[i],...obj}; toast(tr('edited'),'success'); }
+  else { banks.push({id:uid(),...obj}); toast(tr('bank_added'),'success'); }
   saveDB(); closeM('m-bank'); renderBanks(); renderDashBanks();
 }
 
 function deleteBank(id){
-  if(!confirm('ลบบัญชีนี้?')) return;
+  if(!confirm(tr('bank_confirm_delete'))) return;
   DB.banks=getBanks().filter(b=>b.id!==id);
-  saveDB(); renderBanks(); renderDashBanks(); toast('ลบแล้ว','info');
+  saveDB(); renderBanks(); renderDashBanks(); toast(tr('deleted'),'info');
 }
 
 function openUpdateBalanceModal(id){
   const bank=getBanks().find(b=>b.id===id); if(!bank) return;
-  const newBal=prompt(`อัปเดตยอดเงิน — ${bank.name} (${bank.type})\n\nยอดปัจจุบัน: ${fmt(bank.balance)}\n\nใส่ยอดใหม่:`, bank.balance);
+  const newBal=prompt(`${tr('bank_update_prompt_title')} — ${bank.name} (${bank.type})\n\n${tr('bank_current_balance')}: ${fmt(bank.balance)}\n\n${tr('bank_enter_new_balance')}:`, bank.balance);
   if(newBal===null) return;
   const val=parseFloat(newBal);
-  if(isNaN(val)){ toast('ยอดเงินไม่ถูกต้อง','error'); return; }
+  if(isNaN(val)){ toast(tr('bank_invalid_balance'),'error'); return; }
   bank.balance=val;
   bank.updatedAt=new Date().toLocaleDateString('th-TH');
-  saveDB(); renderBanks(); renderDashBanks(); toast(`อัปเดตยอด ${bank.name} แล้ว`,'success');
+  saveDB(); renderBanks(); renderDashBanks(); toast(tr('bank_updated_name').replace('{name}',bank.name),'success');
 }
 
 function renderDashBanks(){
