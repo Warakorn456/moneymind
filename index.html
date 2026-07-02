@@ -3285,7 +3285,7 @@ async function tryAppleLogin(){
 function switchToRegister(){
   document.getElementById('form-login').style.display='none';
   document.getElementById('form-register').style.display='block';
-  document.getElementById('login-mode-sub').textContent='สร้างบัญชีใหม่';
+  document.getElementById('login-mode-sub').textContent=t('register_sub');
   document.getElementById('reg-err').textContent='';
   window._regFormShownAt=Date.now(); // กันบอทสมัครเร็วเกินคน (ใช้คู่กับ honeypot ใน tryRegister)
 }
