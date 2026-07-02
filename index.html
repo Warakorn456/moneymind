@@ -2516,7 +2516,7 @@ const _fbConfig={
   appId:'1:668138190451:web:d181da0bf022bcc0c09c06'
 };
 let _fs=null, _auth=null, _fsUnsub=null, _pendingRemoteSync=false, _lastSaveTs=0, _saveTimer=null;
-function _flushPendingSync(){ if(!_pendingRemoteSync) return; _pendingRemoteSync=false; setTimeout(()=>{ renderPage(curPage); toast('โหลดข้อมูลใหม่จากอุปกรณ์อื่นแล้ว ☁️','success'); },120); }
+function _flushPendingSync(){ if(!_pendingRemoteSync) return; _pendingRemoteSync=false; setTimeout(()=>{ renderPage(curPage); toast(tr('synced_new_device'),'success'); },120); }
 (function initFirebase(){
   try{
     if(typeof firebase==='undefined'){ console.error('[Firebase] SDK ไม่โหลด'); return; }
