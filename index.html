@@ -10210,14 +10210,14 @@ function renderOT(){
     return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">'
       +'<div style="min-width:80px"><div style="font-size:13px;font-weight:600">'+d.getDate()+' '+TH_MON[d.getMonth()]+'</div>'
         +'<div style="font-size:11px;color:var(--muted)">'+(OT_LABEL[l.type]||l.type)+'</div></div>'
-      +'<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--primary-l)">'+h+' ชม.</div>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--primary-l)">'+h+' '+tr('ot_hr_unit')+'</div>'
         +(l.note?'<div style="font-size:11px;color:var(--muted)">'+l.note+'</div>':'')+'</div>'
       +'<div style="text-align:right;min-width:90px"><div style="font-size:13px;font-weight:700;color:#10b981">'+fmt(Math.round(pay))+'</div>'
-        +'<div style="font-size:11px;color:var(--muted)">'+fmt(Math.round(hourlyRate*(OT_MULT[l.type]||1.5)))+'/ชม.</div></div>'
+        +'<div style="font-size:11px;color:var(--muted)">'+fmt(Math.round(hourlyRate*(OT_MULT[l.type]||1.5)))+'/'+tr('ot_hr_unit')+'</div></div>'
       +'<button class="btn btn-ghost" style="padding:4px 8px;color:var(--red);flex-shrink:0" onclick="deleteOTLog(\''+l.id+'\')"><i class="fas fa-trash-alt"></i></button>'
     +'</div>';
   }).join('')
-  :'<div class="empty" style="padding:24px 0"><i class="fas fa-clock"></i><p>ยังไม่มีรายการ OT ในรอบนี้</p></div>';
+  :'<div class="empty" style="padding:24px 0"><i class="fas fa-clock"></i><p>'+tr('ot_no_logs')+'</p></div>';
 
   el.innerHTML=
   // Settings card
