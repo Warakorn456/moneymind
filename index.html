@@ -14897,7 +14897,7 @@ function _saveGmailUrl(){
   DB.settings.gmailImportUrl=val.trim();
   saveDB();
   _gmailStartPoll();
-  toast('บันทึก URL แล้ว','success');
+  toast(tr('url_saved'),'success');
 }
 
 // ── start polling after login ──
