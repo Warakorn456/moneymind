@@ -1429,11 +1429,11 @@
   <div id="pg-debts" class="page">
     <div class="sec-hd" style="margin-bottom:16px;flex-wrap:wrap;gap:10px">
       <div>
-        <div class="sec-title">หนี้สิน</div>
+        <div class="sec-title" data-i18n="debts">หนี้สิน</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-ghost" id="debt-planner-btn" onclick="toggleDebtPlanner(this)"><i class="fas fa-calculator"></i> Payoff Planner</button>
-        <button class="btn btn-primary" onclick="openDebtModal()"><i class="fas fa-plus"></i> เพิ่มหนี้</button>
+        <button class="btn btn-primary" onclick="openDebtModal()"><i class="fas fa-plus"></i> <span data-i18n="debt_add">เพิ่มหนี้</span></button>
       </div>
     </div>
     <div id="debt-planner-panel" style="display:none;margin-bottom:18px"></div>
