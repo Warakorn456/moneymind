@@ -3961,10 +3961,10 @@ function openCatDrill(cat){
   document.getElementById('catdrill-title').innerHTML=
     `<i class="fas ${c.icon}" style="color:${c.color}"></i> ${c.label}`;
   document.getElementById('catdrill-sub').textContent=
-    `${list.length} รายการ · รวม ${fmt(total)}`;
+    `${list.length} ${tr('items_unit')} · ${tr('total_label')} ${fmt(total)}`;
   document.getElementById('catdrill-body').innerHTML=
     list.length?list.map(t=>txHTML(t,true)).join('')
-    :'<div class="empty"><p>ไม่มีรายการ</p></div>';
+    :'<div class="empty"><p>'+tr('no_items')+'</p></div>';
   openM('m-catdrill');
 }
 
