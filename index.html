@@ -3850,11 +3850,11 @@ function renderAiUsage(){
   if(!u||!Array.isArray(u.days)||!u.days.length){
     el.innerHTML=tabs+'<div class="card" style="padding:28px;text-align:center">'
       +'<i class="fas fa-robot" style="font-size:34px;color:'+(_aiUsageTab==='claude'?'#d97757':'#10b981')+';margin-bottom:12px"></i>'
-      +'<div style="font-weight:700;margin-bottom:6px">ยังไม่มีข้อมูล'+(_aiUsageTab==='claude'?' Claude Code':' AI')+'</div>'
+      +'<div style="font-weight:700;margin-bottom:6px">'+tr('aiu_no_data')+(_aiUsageTab==='claude'?' Claude Code':' AI')+'</div>'
       +'<div style="color:var(--muted);font-size:13px;line-height:1.7">'
       +(_aiUsageTab==='claude'
-        ?'รัน <code>python claude_usage_report.py --firestore</code> บนโน้ตบุ๊ก (transcript อยู่ในเครื่อง ไม่ใช่ VM)'
-        :'อัปเดตทุกวันจาก Cloud Monitoring · หรือรัน <code>python gemini_usage_report.py --firestore</code> บน VM')
+        ?tr('aiu_claude_hint')
+        :tr('aiu_gemini_hint'))
       +'</div></div>';
     return;
   }
