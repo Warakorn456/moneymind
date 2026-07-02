@@ -4324,7 +4324,7 @@ function editTx(id){
   const tx=DB.transactions.find(t=>t.id===id); if(!tx) return;
   editTxId=id;
   document.getElementById('tx-eid').value=id;
-  document.getElementById('tx-m-title').textContent='แก้ไขรายการ';
+  document.getElementById('tx-m-title').textContent=tr('tx_edit_title');
   document.getElementById('tx-amt').value=tx.amount;
   document.getElementById('tx-desc').value=tx.description;
   document.getElementById('tx-date').value=tx.date;
