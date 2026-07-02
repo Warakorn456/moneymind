@@ -12727,7 +12727,7 @@ renderTx=function(appendMore=false){
   if(!_txCatFilter && !_bulkMode){ _renderTxBase(appendMore); _renderBulkBar(); return; }
   const el=document.getElementById('tx-list'); if(!el) return;
   const txs=[...DB.transactions].sort((a,b)=>new Date(b.date)-new Date(a.date)).filter(_txMatchesFilters);
-  if(!txs.length){ el.innerHTML='<div class="empty"><i class="fas fa-filter"></i><p>ไม่พบรายการตามตัวกรอง</p></div>'; _renderBulkBar(); return; }
+  if(!txs.length){ el.innerHTML='<div class="empty"><i class="fas fa-filter"></i><p>'+tr('no_items_match_filter')+'</p></div>'; _renderBulkBar(); return; }
   const cap=txs.slice(0,300);
   el.innerHTML=cap.map(t=>{
     if(_bulkMode){
@@ -12735,7 +12735,7 @@ renderTx=function(appendMore=false){
       return `<label style="display:flex;align-items:center;gap:10px;cursor:pointer"><input type="checkbox" ${ck} onchange="toggleBulkSel('${t.id}',this.checked)" style="width:18px;height:18px;flex-shrink:0;accent-color:#a78bfa"><div style="flex:1;min-width:0">${txHTML(t,false)}</div></label>`;
     }
     return txHTML(t,true);
-  }).join('')+(txs.length>300?`<div style="text-align:center;color:var(--muted);padding:10px;font-size:12px">แสดง 300 จาก ${txs.length} รายการ (กรองให้แคบลงเพื่อดูครบ)</div>`:'');
+  }).join('')+(txs.length>300?`<div style="text-align:center;color:var(--muted);padding:10px;font-size:12px">${tr('showing_n_of').replace('{n}','300').replace('{total}',txs.length)}</div>`:'');
   _renderBulkBar();
 };
 
