@@ -10729,7 +10729,7 @@ function openInsModal(id){
 function saveIns(){
   var id=document.getElementById('ins-eid').value;
   var name=document.getElementById('ins-name').value.trim();
-  if(!name){ toast('กรุณากรอกชื่อกรมธรรม์','error'); return; }
+  if(!name){ toast(tr('ins_need_name'),'error'); return; }
   var o={name:name,type:document.getElementById('ins-type').value,insured:document.getElementById('ins-insured').value,
     insuredName:document.getElementById('ins-insured-name').value.trim(),benefits:document.getElementById('ins-benefits').value.trim(),
     coverage:parseFloat(document.getElementById('ins-coverage').value)||0,premium:parseFloat(document.getElementById('ins-premium').value)||0,
