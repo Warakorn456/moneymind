@@ -3613,7 +3613,8 @@ const I18N = {
     set_cloud_title:'Firebase Cloud Sync',set_cloud_desc:'Sync data across devices via Firebase Firestore',set_test_conn:'Test Connection',set_upload_cloud:'Upload to Cloud',set_load_cloud:'Load from Cloud',set_recover:'Recover Data',
     set_pin_title:'Set Unlock PIN',set_pin_none:'No PIN set',set_pin_active:'✅ PIN is set — use it to unlock instead of password',set_pin_new:'New PIN (6 digits)',set_pin_confirm:'Confirm PIN',set_pin_save:'Save PIN',set_pin_delete:'Delete PIN',
     set_security_title:'Security',set_autolock:'Auto-lock app after inactivity',set_lock_off:'Off (no lock)',set_lock_5:'5 minutes',set_lock_10:'10 minutes',set_lock_15:'15 minutes (recommended)',set_lock_30:'30 minutes',set_lock_60:'1 hour',set_lock_now:'Lock App Now',set_session_expire:"Session expires after 30 days — you'll need to log in again",
-    set_data_title:'Data Management',set_export_json:'Export JSON',set_export_csv:'Export CSV',set_print_report:'Print Report',set_shareable:'Shareable Summary',set_import_json:'Import JSON',set_clear_all:'Clear All Data'},
+    set_data_title:'Data Management',set_export_json:'Export JSON',set_export_csv:'Export CSV',set_print_report:'Print Report',set_shareable:'Shareable Summary',set_import_json:'Import JSON',set_clear_all:'Clear All Data',
+    dh_networth:'Net Worth',dh_assets_minus_debts:'Assets − Liabilities',dh_income:'Income',dh_expense:'Expense',dh_this_month:'This Month',dh_saving:'Saved',dh_remaining:'Remaining',dh_remaining_formula:'Income − Expense − Savings',dh_portfolio:'Portfolio',dh_current_value:'Current Value',dh_exp_by_cat:'Expenses by Category',dh_hide_transfer:'Hide Transfer/Cash',dh_income_vs_exp:'Income vs Expense (6 Months)'},
 };
 let currentLang=(function(){ try{ return localStorage.getItem('mm_lang')||'th'; }catch(e){ return 'th'; } })();
 function t(key){ return (I18N[currentLang]||I18N.th)[key] || (I18N.th[key]||key); }
