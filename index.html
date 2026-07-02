@@ -10378,14 +10378,14 @@ function renderSpendingAnomaly(){
     var c=getCat(a.cat,'expense');
     return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'
       +'<div style="width:32px;height:32px;border-radius:8px;background:rgba(239,68,68,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas '+(c.icon||'fa-circle')+'" style="color:#ef4444;font-size:12px"></i></div>'
-      +'<div style="flex:1"><div style="font-size:13px;font-weight:600">'+c.label+'</div><div style="font-size:11px;color:var(--muted)">เฉลี่ย 3 เดือน: '+fmt(a.avg)+'</div></div>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:600">'+c.label+'</div><div style="font-size:11px;color:var(--muted)">'+tr('avg_3mo')+': '+fmt(a.avg)+'</div></div>'
       +'<div style="text-align:right"><div style="font-size:13px;font-weight:700;color:#ef4444">'+fmt(a.amt)+'</div><div style="font-size:11px;color:#f87171">+'+a.pct+'%</div></div>'
     +'</div>';
   }).join('');
   el.innerHTML='<div class="comparison-card">'
     +'<div class="sec-hd" style="margin-bottom:10px">'
-    +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(239,68,68,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-exclamation-triangle" style="color:#ef4444;font-size:12px"></i></div><div class="sec-title">แจ้งเตือนการใช้จ่าย</div></div>'
-    +'<div style="font-size:12px;color:var(--muted)">เทียบ 3 เดือนย้อนหลัง</div></div>'
+    +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(239,68,68,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-exclamation-triangle" style="color:#ef4444;font-size:12px"></i></div><div class="sec-title">'+tr('spending_alert')+'</div></div>'
+    +'<div style="font-size:12px;color:var(--muted)">'+tr('vs_3mo_ago')+'</div></div>'
     +rows+'</div>';
 }
 
