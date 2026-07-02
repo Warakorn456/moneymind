@@ -8010,7 +8010,7 @@ function saveWorkEntry(){
 // Skill CRUD
 function saveSkillEntry(){
   const name=document.getElementById('skill-name').value.trim();
-  if(!name){toast('กรุณาใส่ชื่อทักษะ','error');return;}
+  if(!name){toast(tr('prof_need_skill_name'),'error');return;}
   const p=getProfile();
   p.skills.push({id:'s'+Date.now(),name,cat:document.getElementById('skill-cat').value,level:parseInt(document.getElementById('skill-level').value)});
   saveDB(); closeModal('skill-modal-bg'); renderProfile();
