@@ -9164,7 +9164,7 @@ function renderTxTagFilters(){
   const active=el.dataset.active||'';
   el.innerHTML='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+
     allTags.slice(0,10).map(t=>`<span class="tag-chip" style="background:${t===active?tagColor(t):tagColor(t)+'22'};color:${t===active?'#fff':tagColor(t)};border-color:${tagColor(t)}44" onclick="filterByTag('${t}')">${t}</span>`).join('')+
-    (active?`<span class="tag-chip" style="background:rgba(255,255,255,.08);color:var(--muted);border-color:var(--border)" onclick="filterByTag('')">✕ ล้างแท็ก</span>`:'')+'</div>';
+    (active?`<span class="tag-chip" style="background:rgba(255,255,255,.08);color:var(--muted);border-color:var(--border)" onclick="filterByTag('')">✕ ${tr('clear_tag')}</span>`:'')+'</div>';
 }
 function filterByTag(tag){
   const el=document.getElementById('tx-tag-filters'); if(!el) return;
