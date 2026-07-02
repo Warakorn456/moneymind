@@ -9113,25 +9113,25 @@ function confirmPinPress(d){
 function confirmPinDelete(){ if(_setupBuffer2.length){ _setupBuffer2=_setupBuffer2.slice(0,-1); _updateSetupDots(2); } }
 function _finishPinSetup(){
   if(_setupBuffer1!==_setupBuffer2){
-    document.getElementById('pin-setup-err2').textContent='PIN ไม่ตรงกัน กรุณาลองใหม่';
+    document.getElementById('pin-setup-err2').textContent=tr('pin_mismatch_retry');
     _setupBuffer2=''; _updateSetupDots(2); return;
   }
   DB.settings.pinHash=_hashPin(_setupBuffer1);
   saveDB(); closeM('m-pin-setup'); renderSettings();
-  toast('ตั้ง PIN เรียบร้อยแล้ว','success');
+  toast(tr('pin_set_success'),'success');
 }
 function clearPin(){
-  if(!confirm('ต้องการลบ PIN?')) return;
+  if(!confirm(tr('pin_confirm_delete'))) return;
   delete DB.settings.pinHash; saveDB(); renderPinSettings();
-  toast('ลบ PIN แล้ว','info');
+  toast(tr('pin_deleted'),'info');
 }
 function saveInlinePin(){
   const p1=(document.getElementById('pin-new-inp')?.value||'').trim();
   const p2=(document.getElementById('pin-confirm-inp')?.value||'').trim();
   const errEl=document.getElementById('pin-inline-err');
   if(!errEl) return;
-  if(!/^\d{6}$/.test(p1)){ errEl.textContent='PIN ต้องเป็นตัวเลข 6 หลัก'; return; }
-  if(p1!==p2){ errEl.textContent='PIN ไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง'; return; }
+  if(!/^\d{6}$/.test(p1)){ errEl.textContent=tr('pin_must_be_6_digits'); return; }
+  if(p1!==p2){ errEl.textContent=tr('pin_mismatch_check'); return; }
   errEl.textContent='';
   if(!DB.settings) DB.settings={};
   DB.settings.pinHash=_hashPin(p1);
@@ -9139,7 +9139,7 @@ function saveInlinePin(){
   document.getElementById('pin-new-inp').value='';
   document.getElementById('pin-confirm-inp').value='';
   renderPinSettings();
-  toast('ตั้ง PIN เรียบร้อยแล้ว','success');
+  toast(tr('pin_set_success'),'success');
 }
 
 function renderPinSettings(){
