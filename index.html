@@ -4279,7 +4279,7 @@ function _populateTxBankDropdown(selectedId='', ccOnly=false){
   const sel=document.getElementById('tx-bank'); if(!sel) return;
   const ccBanks=getBanks().filter(b=>b.type==='บัตรเครดิต');
   const regularBanks=getBanks().filter(b=>b.type!=='บัตรเครดิต');
-  let opts='<option value="">— ไม่ระบุ —</option>';
+  let opts=`<option value="">— ${tr('not_specified')} —</option>`;
   if(!ccOnly){
     regularBanks.forEach(b=>{
       const m=BANK_META[b.name]||BANK_META['อื่นๆ'];
@@ -4287,7 +4287,7 @@ function _populateTxBankDropdown(selectedId='', ccOnly=false){
       opts+=`<option value="${b.id}"${b.id===selectedId?' selected':''}>[${m.abbr}] ${b.name}${last4} (${fmt(b.balance)})</option>`;
     });
     if(ccBanks.length){
-      opts+=`<optgroup label="💳 บัตรเครดิต">`;
+      opts+=`<optgroup label="💳 ${tr('credit_card')}">`;
       ccBanks.forEach(b=>{
         const last4=b.accountNo?` ····${b.accountNo}`:'';
         opts+=`<option value="${b.id}"${b.id===selectedId?' selected':''}>💳 ${b.name}${last4} (ค้าง:${fmt(b.balance)})</option>`;
