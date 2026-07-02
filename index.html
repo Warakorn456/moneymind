@@ -3627,7 +3627,14 @@ const I18N = {
     dh_networth:'Net Worth',dh_assets_minus_debts:'Assets − Liabilities',dh_income:'Income',dh_expense:'Expense',dh_this_month:'This Month',dh_saving:'Saved',dh_remaining:'Remaining',dh_remaining_formula:'Income − Expense − Savings',dh_portfolio:'Portfolio',dh_current_value:'Current Value',dh_exp_by_cat:'Expenses by Category',dh_hide_transfer:'Hide Transfer/Cash',dh_income_vs_exp:'Income vs Expense (6 Months)',
     vs_month:'vs.',budget_per_month:'Budget/month',baht_per_month:'฿/month',budget_by_cat:'Budget by Category',over_budget:'Over!',
     hs_savings_rate:'Savings Rate',hs_of_income:'of income',hs_debt_burden:'Debt Burden',hs_debt:'Debt',hs_no_debt:'No debt',hs_emergency_fund:'Emergency Fund',hs_months:'months',hs_investment:'Investment',hs_portfolio:'Portfolio',hs_excellent:'Excellent',hs_good:'Good',hs_fair:'Fair',hs_needs_work:'Needs Work',hs_calc_note:'Calculated from 6-month average',
-    target:'Target',other:'Other',top5_exp_month:'Top 5 Expenses This Month'},
+    target:'Target',other:'Other',top5_exp_month:'Top 5 Expenses This Month',
+    compare_6mo:'6-Month Comparison',net_balance:'Net Balance',
+    avg_3mo:'3-month avg',spending_alert:'Spending Alert',vs_3mo_ago:'vs. last 3 months',
+    freq_monthly:'Monthly',freq_weekly:'Weekly',freq_yearly:'Yearly',year_short:'yr',recurring_exp:'Recurring Expenses',month_short:'mo',total_yearly:'Total Yearly',
+    fund_ssf:'SSF Fund',fund_rmf:'RMF Fund',life_insurance:'Life Insurance',health_insurance:'Health Insurance',deduct_more:'Can deduct more',
+    tax_more_deduct:'More Tax Deductions Available',view_tax:'View Tax',
+    ef_critical:'Critical',ef_low:'Low',ef_fair:'Fair',ef_safe:'Safe',ef_need_more:'Need to save more',ef_to_reach:'to reach',ef_title:'Emergency Fund',ef_target_months:'Target Months',ef_bank_balance:'Bank Balance',ef_avg_expense:'Avg. Expense',
+    r503020_needs:'Needs',r503020_wants:'Wants',r503020_save:'Save/Invest',r503020_over:'Over target',r503020_under:'Under target',r503020_ontarget:'On target',r503020_title:'50/30/20 Rule',r503020_footer:'Needs = food/transport/fuel/housing/health/insurance/debt • Save = investments+surplus'},
 };
 let currentLang=(function(){ try{ return localStorage.getItem('mm_lang')||'th'; }catch(e){ return 'th'; } })();
 function tr(key){ return (I18N[currentLang]||I18N.th)[key] || (I18N.th[key]||key); }
