@@ -4306,7 +4306,7 @@ function _populateTxBankDropdown(selectedId='', ccOnly=false){
 function openTxModal(pre=null){
   editTxId=null;
   document.getElementById('tx-eid').value='';
-  document.getElementById('tx-m-title').textContent='เพิ่มรายการ';
+  document.getElementById('tx-m-title').textContent=tr('tx_add_item');
   document.getElementById('tx-amt').value='';
   document.getElementById('tx-desc').value='';
   document.getElementById('tx-date').value=new Date().toISOString().split('T')[0];
