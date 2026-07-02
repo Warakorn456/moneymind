@@ -2779,6 +2779,8 @@ function enterApp(){
   setTimeout(checkDcaSchedule,2000); // ตรวจ DCA ถึงกำหนดหลัง login
   setTimeout(recoverData,800); // auto-recover หากข้อมูลว่างหลัง login
   if(typeof applyTheme==='function') applyTheme();
+  if(DB.settings&&DB.settings.lang) currentLang=DB.settings.lang;
+  if(typeof applyLang==='function') applyLang();
   setTimeout(()=>{ if(typeof applyRecurringTx==='function') applyRecurringTx(); },1500);
   setTimeout(()=>{ if(typeof checkNotifications==='function') checkNotifications(); },2000);
   // แสดง Admin nav + AI Usage nav เฉพาะ owner
