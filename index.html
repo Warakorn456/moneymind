@@ -6264,7 +6264,7 @@ function openBankModal(id, presetCC=false){
   const bank=id?getBanks().find(b=>b.id===id):null;
   const isCC=bank?.type==='บัตรเครดิต'||(!id&&presetCC);
   document.getElementById('bank-eid').value=id||'';
-  document.getElementById('bank-m-title').textContent=id?(isCC?'แก้ไขบัตรเครดิต':'แก้ไขบัญชีธนาคาร'):(isCC?'เพิ่มบัตรเครดิต':'เพิ่มบัญชีธนาคาร');
+  document.getElementById('bank-m-title').textContent=id?(isCC?tr('bank_edit_card'):tr('bank_edit_account')):(isCC?tr('bank_add_card'):tr('bank_add_account'));
   document.getElementById('bank-name').value=bank?.name||'กสิกรไทย';
   document.getElementById('bank-type').value=bank?.type||(presetCC?'บัตรเครดิต':'ออมทรัพย์');
   document.getElementById('bank-accno').value=bank?.accountNo||'';
