@@ -2207,7 +2207,7 @@
 <!-- Bank Statement Modal -->
 <div id="m-stmt" class="overlay">
   <div class="modal" style="max-width:860px;width:95%">
-    <div class="modal-title"><i class="fas fa-file-alt" style="color:var(--cyan)"></i> นำเข้า Bank Statement</div>
+    <div class="modal-title"><i class="fas fa-file-alt" style="color:var(--cyan)"></i> <span data-i18n="stmt_title">นำเข้า Bank Statement</span></div>
 
     <!-- Step 1: Upload -->
     <div id="stmt-step1">
@@ -2215,8 +2215,8 @@
         <input type="file" id="stmt-file" accept="image/*,application/pdf" onchange="handleStmt(event)">
         <div id="stmt-ph">
           <i class="fas fa-file-upload" style="font-size:40px;color:var(--muted);display:block;margin-bottom:12px"></i>
-          <div style="font-size:15px;font-weight:600;margin-bottom:4px">อัปโหลด Bank Statement</div>
-          <div style="font-size:13px;color:var(--muted)">รองรับ PDF, JPG, PNG — ลากวางหรือคลิกเลือกไฟล์</div>
+          <div style="font-size:15px;font-weight:600;margin-bottom:4px" data-i18n="stmt_upload">อัปโหลด Bank Statement</div>
+          <div style="font-size:13px;color:var(--muted)" data-i18n="stmt_upload_hint">รองรับ PDF, JPG, PNG — ลากวางหรือคลิกเลือกไฟล์</div>
         </div>
         <div id="stmt-file-info" style="display:none;padding:4px 0">
           <i class="fas fa-file-check" style="color:var(--green);font-size:28px;display:block;margin-bottom:8px"></i>
@@ -2226,8 +2226,8 @@
       </div>
       <div id="stmt-proc" style="display:none;text-align:center;padding:28px">
         <div class="spinner" style="margin:0 auto 14px;width:32px;height:32px;border-width:3px"></div>
-        <div style="font-size:15px;font-weight:600;margin-bottom:6px">AI กำลังอ่าน Statement...</div>
-        <div style="font-size:13px;color:var(--muted)">อาจใช้เวลา 10–30 วินาที</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px" data-i18n="stmt_reading">AI กำลังอ่าน Statement...</div>
+        <div style="font-size:13px;color:var(--muted)" data-i18n="stmt_reading_time">อาจใช้เวลา 10–30 วินาที</div>
       </div>
       <div id="stmt-warn" style="display:none;margin-top:14px;padding:13px 16px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:10px;font-size:13px;color:var(--amber)"></div>
     </div>
@@ -2237,15 +2237,15 @@
       <!-- Summary -->
       <div class="stmt-summary">
         <div class="stmt-sum-item">
-          <div class="stmt-sum-l">รายการทั้งหมด</div>
+          <div class="stmt-sum-l" data-i18n="stmt_total_items">รายการทั้งหมด</div>
           <div class="stmt-sum-v" id="ss-count" style="color:var(--text)">0</div>
         </div>
         <div class="stmt-sum-item">
-          <div class="stmt-sum-l">รายรับรวม</div>
+          <div class="stmt-sum-l" data-i18n="stmt_total_income">รายรับรวม</div>
           <div class="stmt-sum-v" id="ss-inc" style="color:var(--green)">฿0</div>
         </div>
         <div class="stmt-sum-item">
-          <div class="stmt-sum-l">รายจ่ายรวม</div>
+          <div class="stmt-sum-l" data-i18n="stmt_total_expense">รายจ่ายรวม</div>
           <div class="stmt-sum-v" id="ss-exp" style="color:var(--red)">฿0</div>
         </div>
       </div>
@@ -2253,14 +2253,14 @@
       <!-- Filter & select all -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
         <div class="filter-tabs" style="padding:3px">
-          <button class="ftab active" onclick="filterStmt('all',this)">ทั้งหมด</button>
-          <button class="ftab" onclick="filterStmt('income',this)">รายรับ</button>
-          <button class="ftab" onclick="filterStmt('expense',this)">รายจ่าย</button>
+          <button class="ftab active" onclick="filterStmt('all',this)" data-i18n="tx_filter_all">ทั้งหมด</button>
+          <button class="ftab" onclick="filterStmt('income',this)" data-i18n="dh_income">รายรับ</button>
+          <button class="ftab" onclick="filterStmt('expense',this)" data-i18n="dh_expense">รายจ่าย</button>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <label style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;cursor:pointer">
             <input type="checkbox" id="stmt-check-all" checked onchange="toggleAllStmt(this.checked)" style="accent-color:var(--primary)">
-            เลือกทั้งหมด
+            <span data-i18n="stmt_select_all">เลือกทั้งหมด</span>
           </label>
           <span id="stmt-selected-count" style="font-size:12px;color:var(--muted)"></span>
         </div>
@@ -2272,11 +2272,11 @@
           <thead>
             <tr>
               <th style="width:32px"></th>
-              <th>วันที่</th>
-              <th>รายละเอียด</th>
-              <th>จำนวน</th>
-              <th>ประเภท</th>
-              <th style="min-width:130px">หมวดหมู่</th>
+              <th data-i18n="tx_date">วันที่</th>
+              <th data-i18n="tx_description">รายละเอียด</th>
+              <th data-i18n="stmt_amount">จำนวน</th>
+              <th data-i18n="stmt_type">ประเภท</th>
+              <th style="min-width:130px" data-i18n="tx_category">หมวดหมู่</th>
             </tr>
           </thead>
           <tbody id="stmt-tbody"></tbody>
@@ -2285,9 +2285,9 @@
     </div>
 
     <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeM('m-stmt')">ยกเลิก</button>
-      <button class="btn btn-ghost" id="stmt-reupload" onclick="resetStmt()" style="display:none"><i class="fas fa-redo"></i> อัปโหลดใหม่</button>
-      <button class="btn btn-primary" id="stmt-import-btn" onclick="importStmt()" style="display:none"><i class="fas fa-file-import"></i> นำเข้ารายการที่เลือก</button>
+      <button class="btn btn-ghost" onclick="closeM('m-stmt')" data-i18n="cancel">ยกเลิก</button>
+      <button class="btn btn-ghost" id="stmt-reupload" onclick="resetStmt()" style="display:none"><i class="fas fa-redo"></i> <span data-i18n="stmt_reupload">อัปโหลดใหม่</span></button>
+      <button class="btn btn-primary" id="stmt-import-btn" onclick="importStmt()" style="display:none"><i class="fas fa-file-import"></i> <span data-i18n="stmt_import_selected">นำเข้ารายการที่เลือก</span></button>
     </div>
   </div>
 </div>
