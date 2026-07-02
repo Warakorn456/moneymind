@@ -2551,7 +2551,7 @@ const _FS_DOC_WARN_BYTES=900000; // เผื่อ headroom ก่อนชน 
 function _checkDbSizeWarn(dbJson){
   if(dbJson.length<=_FS_DOC_WARN_BYTES || _sizeWarnedThisSession) return;
   _sizeWarnedThisSession=true;
-  toast('⚠️ ข้อมูลของคุณใกล้เต็มขีดจำกัดระบบ (Firestore 1MB/บัญชี) แนะนำ Export ข้อมูลเก่าเก็บไว้ แล้วลบรายการที่ไม่จำเป็นในหน้าตั้งค่า ไม่งั้น sync ข้ามอุปกรณ์อาจล้มเหลว','error',8000);
+  toast('⚠️ '+tr('db_size_warn'),'error',8000);
 }
 async function fsSave(){
   if(!currentUser||!_fs){ setSyncStatus('error'); return; }
