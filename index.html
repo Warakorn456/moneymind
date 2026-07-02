@@ -10112,7 +10112,7 @@ function checkNWMilestones(){
   list.forEach(function(m){
     if(!m.reached&&nw>=m.target){
       m.reached=true; saveDB();
-      toast('🏆 ยินดีด้วย! Net Worth ถึง '+fmt(m.target)+' แล้ว!','success',8000);
+      toast('🏆 '+tr('milestone_congrats').replace('{amt}',fmt(m.target)),'success',8000);
     }
   });
 }
