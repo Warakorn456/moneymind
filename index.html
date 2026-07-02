@@ -6629,7 +6629,7 @@ function autoFillTax(){
   t.lifeIns=Math.min(100000,Math.round(txs.filter(tx=>tx.category==='insurance'&&/ชีวิต|life/i.test(tx.description||'')).reduce((s,tx)=>s+tx.amount,0)));
   t.donation=Math.round(txs.filter(tx=>tx.type==='expense'&&tx.category==='donation').reduce((s,tx)=>s+tx.amount,0)); // cap 10% ของเงินได้หลังหักลดหย่อน คิดตอนคำนวณจริง ไม่ต้อง cap ตรงนี้
   saveDB(); renderTax();
-  const note=`ดึงรายได้ปี ${y}: เงินเดือน ฿${t.salary.toLocaleString()} | อิสระ ฿${t.freelance.toLocaleString()} | อื่นๆ ฿${t.otherInc.toLocaleString()}`;
+  const note=`${tr('tax_autofill_note').replace('{y}',y)}: ${tr('tax_salary_short')} ฿${t.salary.toLocaleString()} | ${tr('tax_freelance_short')} ฿${t.freelance.toLocaleString()} | ${tr('tax_other_income')} ฿${t.otherInc.toLocaleString()}`;
   document.getElementById('tax-autofill-note').textContent=note;
 }
 
