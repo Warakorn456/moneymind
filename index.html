@@ -2398,15 +2398,15 @@
 <!-- Custom Category Modal -->
 <div id="m-customcat" class="overlay">
   <div class="modal" style="max-width:440px">
-    <div class="modal-title"><i class="fas fa-tags" style="color:var(--amber)"></i><span id="customcat-m-title">เพิ่มหมวดหมู่</span></div>
+    <div class="modal-title"><i class="fas fa-tags" style="color:var(--amber)"></i><span id="customcat-m-title" data-i18n="customcat_add">เพิ่มหมวดหมู่</span></div>
     <input type="hidden" id="customcat-eid">
     <div class="type-toggle" style="grid-template-columns:1fr 1fr">
-      <button class="type-btn inc active" id="customcat-inc-btn" onclick="setCustomCatType('income',this)"><i class="fas fa-arrow-down"></i> รายรับ</button>
-      <button class="type-btn exp" id="customcat-exp-btn" onclick="setCustomCatType('expense',this)"><i class="fas fa-arrow-up"></i> รายจ่าย</button>
+      <button class="type-btn inc active" id="customcat-inc-btn" onclick="setCustomCatType('income',this)"><i class="fas fa-arrow-down"></i> <span data-i18n="dh_income">รายรับ</span></button>
+      <button class="type-btn exp" id="customcat-exp-btn" onclick="setCustomCatType('expense',this)"><i class="fas fa-arrow-up"></i> <span data-i18n="dh_expense">รายจ่าย</span></button>
     </div>
     <input type="hidden" id="customcat-type" value="income">
-    <div class="fg"><label class="flabel">ชื่อหมวดหมู่</label><input type="text" id="customcat-label" class="finput" placeholder="เช่น ค่าเลี้ยงสัตว์, รายรับจากยูทูป"></div>
-    <div class="fg"><label class="flabel">สี</label>
+    <div class="fg"><label class="flabel" data-i18n="customcat_name">ชื่อหมวดหมู่</label><input type="text" id="customcat-label" class="finput" placeholder="เช่น ค่าเลี้ยงสัตว์, รายรับจากยูทูป" data-i18n-ph="customcat_name_ph"></div>
+    <div class="fg"><label class="flabel" data-i18n="sav_color">สี</label>
       <div id="customcat-color-picker" style="display:flex;gap:8px;flex-wrap:wrap;padding:6px 0">
         <div onclick="selectCustomCatColor('#ef4444')" data-color="#ef4444" style="width:26px;height:26px;border-radius:50%;background:#ef4444;cursor:pointer;border:2px solid white"></div>
         <div onclick="selectCustomCatColor('#f97316')" data-color="#f97316" style="width:26px;height:26px;border-radius:50%;background:#f97316;cursor:pointer;border:2px solid transparent"></div>
