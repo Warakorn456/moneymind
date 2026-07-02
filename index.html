@@ -3645,7 +3645,8 @@ const I18N = {
     bank_of_total:'of total',credit_card:'Credit Card',owed:'Owed',used_of_limit:'{pct}% used of {limit} limit',bank_accounts_title:'Bank Accounts',accounts_unit:'accounts',card_owed:'Card owed',total_amount:'Total',view_all:'View All',
     no_portfolio:'Unassigned Portfolio',other_asset:'Other Asset',no_data_yet:'No data yet',other_debt:'Other Debt',no_debt_msg:'No debts',bs_title:'Balance Sheet & Net Worth',details:'Details',assets:'Assets',total_label:'Total',liabilities:'Liabilities',net_worth_full:'Net Worth',
     budget_used:'used',carried_from_prev:'Carried from last month',budget_over:'Over budget',budget_near:'Near limit',budget_normal:'Normal',hide_transfer_cash:'Hide Transfer/Cash',show_transfer_cash:'Show Transfer/Cash',no_expense_this_month:'No expenses this month',click_to_view:'click to view',items_unit:'items',no_items:'No items',no_items_yet:'No items yet',no_debt_excellent:'No debts, excellent!',total_debt_remaining:'Total Remaining Debt',
-    sort_dashboard:'Sort Dashboard',toggle_money_move:'Toggle transfer/cash withdrawal counting'},
+    sort_dashboard:'Sort Dashboard',toggle_money_move:'Toggle transfer/cash withdrawal counting',
+    tx_filter_all:'All',tx_scan_receipt:'Scan Receipt',tx_print_pdf:'Print PDF Report',tx_add_item:'Add Item',tx_search_ph:'Search items, categories, tags...',tx_bulk_manage:'Bulk Manage'},
 };
 let currentLang=(function(){ try{ return localStorage.getItem('mm_lang')||'th'; }catch(e){ return 'th'; } })();
 function tr(key){ return (I18N[currentLang]||I18N.th)[key] || (I18N.th[key]||key); }
