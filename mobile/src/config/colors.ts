@@ -1,0 +1,16 @@
+export const C = {
+  bg: '#0d0d1a',
+  surface: '#13131f',
+  surface2: '#1a1a2e',
+  border: 'rgba(255,255,255,0.08)',
+  text: '#e2e8f0',
+  muted: '#94a3b8',
+  primary: '#7c3aed',
+  primaryL: '#a78bfa',
+  cyan: '#06b6d4',
+  green: '#10b981',
+  red: '#ef4444',
+  yellow: '#f59e0b',
+  income: '#10b981',
+  expense: '#ef4444',
+};

@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "MoneyMind",
+    "slug": "moneymind",
+    "scheme": "moneymind",
+    "version": "1.3.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0d0d1a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.moneymind.th",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "app.moneymind.th",
+      "versionCode": 6,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1f292a"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7575ae4b-4dc3-4412-9ffa-f6e98893371c"
+      }
+    },
+    "owner": "warakorn456",
+    "plugins": [
+      "expo-web-browser",
+      "@react-native-google-signin/google-signin"
+    ]
+  }
+}
