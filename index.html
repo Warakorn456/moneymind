@@ -14736,6 +14736,68 @@ setTimeout(function(){ if(typeof _gmailStartPoll==='function') _gmailStartPoll()
   }, 0);
 })();
 
+// ══════════════════════════════════════════
+//  NATIVE APP BRIDGE — back button, file save, print (WebApp.tsx ฝั่ง Android/iOS)
+// ══════════════════════════════════════════
+function _isNativeApp(){ return !!((window._isAndroidApp||window._isIOSApp) && window.ReactNativeWebView); }
+
+// บันทึกไฟล์ (Blob หรือ dataURL) ผ่าน native แทน <a download> ที่ WebView ไม่รองรับ
+// คืน true ถ้า native จัดการให้แล้ว (caller ไม่ต้อง fallback), false ถ้าไม่ได้อยู่ในแอป
+function _nativeSaveFile(blobOrDataUrl, filename, mime){
+  if(!_isNativeApp()) return false;
+  function post(base64){
+    window.ReactNativeWebView.postMessage(JSON.stringify({action:'saveFile',filename:filename,mime:mime||'application/octet-stream',base64:base64}));
+  }
+  if(typeof blobOrDataUrl==='string'){
+    // dataURL: "data:<mime>;base64,XXXX"
+    var idx=blobOrDataUrl.indexOf(',');
+    post(idx>=0?blobOrDataUrl.slice(idx+1):blobOrDataUrl);
+  } else {
+    var reader=new FileReader();
+    reader.onload=function(){
+      var s=String(reader.result); var idx=s.indexOf(',');
+      post(idx>=0?s.slice(idx+1):s);
+    };
+    reader.onerror=function(){ toast('บันทึกไฟล์ไม่สำเร็จ','error'); };
+    reader.readAsDataURL(blobOrDataUrl);
+  }
+  return true;
+}
+
+// พิมพ์/บันทึก PDF ผ่าน native (expo-print) แทน window.open+print ที่ WebView บล็อก
+function _nativePrintHtml(html){
+  if(!_isNativeApp()) return false;
+  window.ReactNativeWebView.postMessage(JSON.stringify({action:'printHtml',html:html}));
+  return true;
+}
+
+// เรียกจาก native (WebApp.tsx) ทุกครั้งที่กด hardware back — คืน true ถ้าจัดการในเว็บแล้ว (native ไม่ต้องออกแอป)
+window.handleBackButton=function(){
+  try{
+    var dynOv=document.getElementById('_rankPopupOv')||document.getElementById('_onboard-ov')||document.getElementById('gmail-overlay');
+    if(dynOv){ dynOv.remove(); return true; }
+    var chat=document.getElementById('chat-panel');
+    if(chat && !chat.classList.contains('hidden')){ toggleChat(); return true; }
+    var sbOv=document.getElementById('sb-overlay');
+    if(sbOv && sbOv.classList.contains('show')){ closeSidebar(); return true; }
+    var openModals=[].slice.call(document.querySelectorAll('.modal.show, .overlay.show, .modal.open'));
+    if(openModals.length){
+      var m=openModals[openModals.length-1];
+      m.classList.remove('show'); m.classList.remove('open');
+      if(typeof _flushPendingSync==='function') _flushPendingSync();
+      return true;
+    }
+    if(typeof curPage!=='undefined' && curPage && curPage!=='dashboard'){ nav('dashboard'); return true; }
+  }catch(e){ console.error('[handleBackButton]',e); }
+  return false;
+};
+
+// ══════════════════════════════════════════
+//  OFFLINE DETECTION
+// ══════════════════════════════════════════
+window.addEventListener('offline',function(){ toast('ขาดการเชื่อมต่ออินเทอร์เน็ต — ข้อมูลจะยังบันทึกในเครื่อง','error',4000); });
+window.addEventListener('online',function(){ toast('เชื่อมต่ออินเทอร์เน็ตแล้ว','success'); });
+
 </script>
 
 <!-- Subscription Modal -->
