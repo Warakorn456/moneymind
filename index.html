@@ -3835,7 +3835,7 @@ function renderAiUsage(){
   // self-fetch ถ้า source ที่เลือกยังว่าง (ดึงทั้ง 2 field พร้อมกัน)
   if((!sel()||!Array.isArray(sel().days)||!sel().days.length) && !_aiUsageFetching && _fs && currentUser){
     _aiUsageFetching=true;
-    el.innerHTML='<div class="card" style="padding:24px;text-align:center;color:var(--muted)"><i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูลการใช้ AI...</div>';
+    el.innerHTML='<div class="card" style="padding:24px;text-align:center;color:var(--muted)"><i class="fas fa-spinner fa-spin"></i> '+tr('aiu_loading')+'</div>';
     _fs.collection('userdata').doc(currentUser).get().then(doc=>{
       try{ const d=(doc.exists&&doc.data())||{}; if(d.aiUsage) _aiUsage=JSON.parse(d.aiUsage); if(d.claudeUsage) _claudeUsage=JSON.parse(d.claudeUsage); }catch(e){}
       _aiUsageFetching=false; if(curPage==='aiusage') renderAiUsage();
