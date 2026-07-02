@@ -2778,7 +2778,7 @@ function _sendHeartbeat(){
     lastSeen:firebase.firestore.FieldValue.serverTimestamp(),
     username:currentUser,
     isOwner:isOwner||false,
-    currentPlatform:(window._isAndroidApp?'android':'web')
+    currentPlatform:(window._isAndroidApp?'android':window._isIOSApp?'ios':'web')
   },{merge:true}).catch(()=>{});
 }
 
