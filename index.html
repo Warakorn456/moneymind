@@ -5455,7 +5455,7 @@ function renderInv(){
   // ไม่ระบุพอร์ต
   const uncat=allInv.filter(x=>!x.portId||!getPortById(x.portId));
   if(uncat.length||!ports.length){
-    html+=_portSection({id:'',name:'ไม่ระบุพอร์ต',purpose:'',color:'#64748b',note:''},uncat,'#64748b');
+    html+=_portSection({id:'',name:tr('no_portfolio'),purpose:'',color:'#64748b',note:''},uncat,'#64748b');
   }
 
   el.innerHTML=html;
