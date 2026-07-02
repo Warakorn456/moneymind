@@ -7248,12 +7248,12 @@ function renderRetireResults(){
 
   const needEl=document.getElementById('r-res-monthly-need');
   needEl.parentElement.style.display=onTrack?'none':'flex';
-  needEl.textContent=fmtB(c.monthlyNeeded)+'/เดือน';
+  needEl.textContent=fmtB(c.monthlyNeeded)+'/'+tr('month_short');
 
   const badge=document.getElementById('r-status-badge');
   badge.innerHTML=onTrack
-    ?'<i class="fas fa-check-circle" style="color:var(--green)"></i> <span style="color:var(--green)">อยู่ในเส้นทางที่ดี!</span>'
-    :'<i class="fas fa-exclamation-triangle" style="color:var(--amber)"></i> <span style="color:var(--amber)">ต้องเพิ่มการออม/ลงทุน</span>';
+    ?'<i class="fas fa-check-circle" style="color:var(--green)"></i> <span style="color:var(--green)">'+tr('ret_on_track')+'</span>'
+    :'<i class="fas fa-exclamation-triangle" style="color:var(--amber)"></i> <span style="color:var(--amber)">'+tr('ret_need_more_saving')+'</span>';
 
   // progress bar
   const pct=Math.min(100,(c.portAtRetire/c.fundNeeded)*100);
