@@ -9914,10 +9914,10 @@ function quickAdd(){
   if(forceIncome) raw=raw.slice(1).trim();
   // หาตัวเลขสุดท้าย
   var m=raw.match(/^(.*?)\s+([\d,]+(?:\.\d+)?)\s*$/);
-  if(!m){ toast('รูปแบบไม่ถูกต้อง เช่น "กาแฟ 60" หรือ "+เงินเดือน 25000"','error'); return; }
+  if(!m){ toast(tr('quickadd_invalid_format'),'error'); return; }
   var desc=m[1].trim();
   var amount=parseFloat(m[2].replace(/,/g,''));
-  if(!desc||isNaN(amount)||amount<=0){ toast('กรุณาระบุชื่อและจำนวนเงิน','error'); return; }
+  if(!desc||isNaN(amount)||amount<=0){ toast(tr('quickadd_need_name_amount'),'error'); return; }
   var type=forceIncome?'income':'expense';
   if(!forceIncome){ var low=desc.toLowerCase(); for(var i=0;i<_INCOME_KW.length;i++){ if(low.includes(_INCOME_KW[i].toLowerCase())){ type='income'; break; } } }
   var today=new Date().toISOString().slice(0,10);
