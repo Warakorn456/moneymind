@@ -4379,10 +4379,10 @@ function onPayByCCChange(){
   const checked=document.getElementById('tx-paybycard').checked;
   const lbl=document.getElementById('tx-bank-label');
   if(checked){
-    lbl.textContent='บัตรเครดิต (เลือกบัตรที่ใช้จ่าย)';
+    lbl.textContent=tr('cc_select_hint');
     _populateTxBankDropdown('',true);
   } else {
-    lbl.textContent='ธนาคาร (ไม่บังคับ — จะอัปเดตยอดอัตโนมัติ)';
+    lbl.textContent=tr('bank_optional_hint');
     _populateTxBankDropdown('',false);
   }
 }
