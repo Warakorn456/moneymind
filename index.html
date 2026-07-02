@@ -1910,29 +1910,29 @@
 <!-- Savings Modal -->
 <div id="m-sav" class="overlay">
   <div class="modal">
-    <div class="modal-title"><i class="fas fa-piggy-bank" style="color:var(--cyan)"></i><span id="sav-m-title">เพิ่มเป้าหมายออม</span></div>
+    <div class="modal-title"><i class="fas fa-piggy-bank" style="color:var(--cyan)"></i><span id="sav-m-title" data-i18n="sav_add_goal_title">เพิ่มเป้าหมายออม</span></div>
     <input type="hidden" id="sav-eid">
-    <div class="fg"><label class="flabel">ชื่อเป้าหมาย</label><input type="text" id="sav-name" class="finput" placeholder="เช่น ซื้อมือถือ, ท่องเที่ยวญี่ปุ่น"></div>
+    <div class="fg"><label class="flabel" data-i18n="sav_goal_name">ชื่อเป้าหมาย</label><input type="text" id="sav-name" class="finput" placeholder="เช่น ซื้อมือถือ, ท่องเที่ยวญี่ปุ่น" data-i18n-ph="sav_goal_name_ph"></div>
     <div class="frow">
-      <div class="fg"><label class="flabel">เป้าหมาย (บาท)</label><input type="number" id="sav-tgt" class="finput" placeholder="0"></div>
-      <div class="fg"><label class="flabel">ออมแล้ว (บาท)</label><input type="number" id="sav-cur" class="finput" placeholder="0"></div>
+      <div class="fg"><label class="flabel" data-i18n="sav_target_amt">เป้าหมาย (บาท)</label><input type="number" id="sav-tgt" class="finput" placeholder="0"></div>
+      <div class="fg"><label class="flabel" data-i18n="sav_saved_amt">ออมแล้ว (บาท)</label><input type="number" id="sav-cur" class="finput" placeholder="0"></div>
     </div>
     <div class="frow">
-      <div class="fg"><label class="flabel">กำหนดเสร็จ</label><input type="date" id="sav-dl" class="finput"></div>
-      <div class="fg"><label class="flabel">สี</label>
+      <div class="fg"><label class="flabel" data-i18n="sav_deadline">กำหนดเสร็จ</label><input type="date" id="sav-dl" class="finput"></div>
+      <div class="fg"><label class="flabel" data-i18n="sav_color">สี</label>
         <select id="sav-color" class="fselect">
-          <option value="cyan">🔵 ฟ้า</option><option value="green">🟢 เขียว</option>
-          <option value="purple">🟣 ม่วง</option><option value="pink">🩷 ชมพู</option><option value="amber">🟡 ทอง</option>
+          <option value="cyan">🔵 <span data-i18n="color_blue">ฟ้า</span></option><option value="green">🟢 <span data-i18n="color_green">เขียว</span></option>
+          <option value="purple">🟣 <span data-i18n="color_purple">ม่วง</span></option><option value="pink">🩷 <span data-i18n="color_pink">ชมพู</span></option><option value="amber">🟡 <span data-i18n="color_gold">ทอง</span></option>
         </select>
       </div>
     </div>
     <div class="fg">
-      <label class="flabel"><i class="fas fa-layer-group" style="color:var(--cyan)"></i> ลิ้งกับพอร์ตลงทุน (ตัวเลขวิ่งมาอัตโนมัติ)</label>
-      <select class="finput" id="sav-port-id" onchange="onSavPortChange()"><option value="">— ไม่ลิ้ง —</option></select>
+      <label class="flabel"><i class="fas fa-layer-group" style="color:var(--cyan)"></i> <span data-i18n="sav_link_portfolio">ลิ้งกับพอร์ตลงทุน (ตัวเลขวิ่งมาอัตโนมัติ)</span></label>
+      <select class="finput" id="sav-port-id" onchange="onSavPortChange()"><option value="">— <span data-i18n="sav_no_link">ไม่ลิ้ง</span> —</option></select>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeM('m-sav')">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="saveSav()">บันทึก</button>
+      <button class="btn btn-ghost" onclick="closeM('m-sav')" data-i18n="cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveSav()" data-i18n="save">บันทึก</button>
     </div>
   </div>
 </div>
