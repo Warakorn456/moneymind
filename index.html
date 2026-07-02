@@ -10076,9 +10076,9 @@ function getMilestones(){ if(!DB.settings.nwMilestones) DB.settings.nwMilestones
 function addNWMilestone(){
   var inp=document.getElementById('nw-milestone-inp');
   var val=parseFloat(inp.value);
-  if(isNaN(val)||val<=0){ toast('กรุณาระบุจำนวนเงิน','error'); return; }
+  if(isNaN(val)||val<=0){ toast(tr('milestone_need_amount'),'error'); return; }
   var list=getMilestones();
-  if(list.find(function(m){return m.target===val;})){ toast('มีเป้านี้อยู่แล้ว','info'); return; }
+  if(list.find(function(m){return m.target===val;})){ toast(tr('milestone_exists'),'info'); return; }
   list.push({target:val,reached:false});
   list.sort(function(a,b){return a.target-b.target;});
   inp.value=''; saveDB(); renderNWMilestoneSettings();
