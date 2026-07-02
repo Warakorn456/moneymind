@@ -9729,7 +9729,7 @@ function printMonthlyReport(){
     <script>window.onload=()=>window.print()<\/script>
   </body></html>`;
   const w=window.open('','_blank'); if(w){ w.document.write(html); w.document.close(); }
-  else toast('กรุณาอนุญาต popup เพื่อพิมพ์รายงาน','info');
+  else toast(tr('allow_popup_print'),'info');
 }
 
 // ══════════════════════════════════════════
