@@ -7306,14 +7306,14 @@ function renderRetireChart(r,c,extraMonthly=0){
     data:{labels,datasets:[
       {label:tr('ret_current_port_no_extra'),data:portLine,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.10)',fill:true,tension:.4,pointRadius:0,pointHoverRadius:4,borderWidth:2},
       ...(showWhatIf?[{label:`${tr('ret_if_add')} ฿${extraMonthly.toLocaleString('th-TH')}/${tr('month_short')}`,data:whatIfLine,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.10)',fill:true,tension:.4,pointRadius:0,pointHoverRadius:4,borderWidth:2.5,borderDash:[]}]:[]),
-      {label:'เป้าหมาย ณ วันเกษียณ',data:targetLine,borderColor:'#ef4444',borderDash:[6,4],backgroundColor:'transparent',fill:false,tension:0,pointRadius:0,borderWidth:1.5},
+      {label:tr('ret_target_at_retire'),data:targetLine,borderColor:'#ef4444',borderDash:[6,4],backgroundColor:'transparent',fill:false,tension:0,pointRadius:0,borderWidth:1.5},
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
       plugins:{
         legend:{display:false},
         tooltip:{callbacks:{label:c=>' '+c.dataset.label+': ฿'+Math.round(c.raw).toLocaleString('th-TH')}},
-        annotation:{annotations:{retireLine:{type:'line',xMin:retireIdx,xMax:retireIdx,borderColor:'rgba(245,158,11,.7)',borderWidth:2,borderDash:[4,4],label:{content:'เกษียณ อายุ '+r.retireAge+' ปี',enabled:true,position:'start',color:'#f59e0b',font:{size:11,family:'Sarabun'}}}}}
+        annotation:{annotations:{retireLine:{type:'line',xMin:retireIdx,xMax:retireIdx,borderColor:'rgba(245,158,11,.7)',borderWidth:2,borderDash:[4,4],label:{content:tr('ret_retire_at_age')+' '+r.retireAge+' '+tr('year_short'),enabled:true,position:'start',color:'#f59e0b',font:{size:11,family:'Sarabun'}}}}}
       },
       scales:{
         x:{ticks:{color:'#94a3b8',font:{family:'Sarabun',size:11},maxTicksLimit:12},grid:{display:false}},
