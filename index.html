@@ -6060,7 +6060,7 @@ function saveDcaBuy(){
     DB.investments.push({id:usedInvId,name:plan.name,type:plan.type,qty:units,buyPrice:price,curPrice:price,cost:amount,value:units*price,currency:'THB',fxRate:1,updatedAt:date,portId:plan.portId||null});
   }
   plan.records.push({id:uid(),date,amount,units,price,note,invId:usedInvId});
-  saveDB(); closeM('m-dca-buy'); toast('บันทึกการซื้อแล้ว','success'); renderDcaView();
+  saveDB(); closeM('m-dca-buy'); toast(tr('dca_buy_recorded'),'success'); renderDcaView();
 }
 
 function deleteDcaBuy(planId,recordId){
