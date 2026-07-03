@@ -11293,7 +11293,7 @@ function _renderAdminUsageSection(summary){
   </div>
   ${(window._adminHistory&&window._adminHistory.length>1)?`
   <div style="background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(16,185,129,.02));border:1px solid rgba(16,185,129,.22);border-radius:14px;padding:16px;margin-bottom:14px">
-    <div style="font-size:10px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px"><i class="fas fa-chart-area" style="margin-right:5px"></i>เทรนด์ Net Worth รวมย้อนหลัง</div>
+    <div style="font-size:10px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px"><i class="fas fa-chart-area" style="margin-right:5px"></i>${tr('admin_nw_trend')}</div>
     <div style="position:relative;height:140px;width:100%"><canvas id="admin-nw-trend-chart"></canvas></div>
   </div>`:''}
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:8px">
