@@ -1737,6 +1737,36 @@
     </div>
   </div>
 
+  <!-- ════ AI SUBSCRIPTION CHECKOUT MODAL ════ -->
+  <div id="m-subscribe" class="overlay">
+    <div class="modal" style="max-width:420px">
+      <div class="modal-title"><i class="fas fa-crown" style="color:#f59e0b"></i><span data-i18n="sub_modal_title">สมัคร AI Subscription</span> <i class="fas fa-times" style="margin-left:auto;cursor:pointer;color:var(--muted)" onclick="closeM('m-subscribe')"></i></div>
+      <div id="sub-modal-body">
+        <div style="text-align:center;margin-bottom:18px">
+          <div style="font-size:28px;font-weight:900;color:#f59e0b">฿299<span style="font-size:13px;color:var(--muted);font-weight:400"> / <span data-i18n="sub_per_month">เดือน</span></span></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:16px">
+          <button class="btn btn-primary" style="flex:1" onclick="_subShowCardForm()"><i class="fas fa-credit-card"></i> <span data-i18n="sub_pay_card">บัตรเครดิต/เดบิต</span></button>
+          <button class="btn btn-ghost" style="flex:1" onclick="subscribeWithPromptPay()"><i class="fas fa-qrcode"></i> PromptPay</button>
+        </div>
+        <div id="sub-card-form" style="display:none">
+          <div class="fg"><label class="flabel" data-i18n="sub_card_name">ชื่อบนบัตร</label><input type="text" id="sub-card-name" class="finput" placeholder="SOMCHAI JAIDEE"></div>
+          <div class="fg"><label class="flabel" data-i18n="sub_card_number">หมายเลขบัตร</label><input type="text" id="sub-card-number" class="finput" placeholder="4242 4242 4242 4242" maxlength="19"></div>
+          <div style="display:flex;gap:8px">
+            <div class="fg" style="flex:1"><label class="flabel">MM/YY</label><input type="text" id="sub-card-exp" class="finput" placeholder="12/29" maxlength="5"></div>
+            <div class="fg" style="flex:1"><label class="flabel">CVV</label><input type="text" id="sub-card-cvv" class="finput" placeholder="123" maxlength="4"></div>
+          </div>
+          <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="subscribeWithCard()"><i class="fas fa-lock"></i> <span data-i18n="sub_pay_now">ชำระเงิน ฿299</span></button>
+        </div>
+        <div id="sub-promptpay-box" style="display:none;text-align:center">
+          <div id="sub-qr-wrap"></div>
+          <div style="font-size:13px;color:var(--muted);margin-top:10px" data-i18n="sub_waiting_payment">สแกน QR เพื่อชำระเงิน — กำลังรอการยืนยัน...</div>
+        </div>
+        <div id="sub-error" style="color:var(--red);font-size:13px;margin-top:10px"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ════ ADMIN ════ -->
   <div id="pg-admin" class="page">
     <div id="admin-content"></div>
