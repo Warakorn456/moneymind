@@ -11345,6 +11345,15 @@ async function renderAdmin(){
     let summary=null;
     try{ const sd=await _fs.collection('admin').doc('summary').get(); if(sd.exists){ const raw=sd.data()||{}; summary=raw.json?JSON.parse(raw.json):raw; } }catch(e){}
 
+    // ── snapshot รายวัน Net Worth รวม (adminHistory/{YYYY-MM-DD} เขียนโดย admin_stats.py ผ่าน SA) → กราฟเทรนด์ ──
+    let history=[];
+    try{
+      const hs=await _fs.collection('adminHistory').orderBy('date','desc').limit(90).get();
+      hs.forEach(d=>history.push(d.data()));
+      history.reverse(); // เรียงเก่า→ใหม่ สำหรับกราฟ
+    }catch(e){}
+    window._adminHistory=history;
+
     const onlineMs=10*60*1000; // ออนไลน์ถ้า lastSeen ≤ 10 นาทีที่แล้ว
     const dayMs=24*3600*1000;
     const todayStart=new Date(); todayStart.setHours(0,0,0,0);
