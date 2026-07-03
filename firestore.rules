@@ -44,6 +44,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Snapshot รายวันของ Net Worth รวม (เขียนโดย admin_stats.py ผ่าน SA) — ใช้ทำกราฟเทรนด์ในหน้า Admin ──
+    match /adminHistory/{doc} {
+      allow read: if ownsAccount('warakorn');
+      allow write: if false;
+    }
+
     // ── Feedback + client error reports (สร้างได้อย่างเดียว อ่านคืนไม่ได้จาก client) ──
     // แทนที่การส่ง Telegram ตรงจาก client ด้วย hardcode bot token (เดิม view-source เห็น token ได้)
     // สคริปต์ฝั่ง VM (auth ผ่าน SA) เป็นคนอ่าน collection นี้แล้วส่งต่อ Telegram แทน
