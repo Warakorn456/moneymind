@@ -11206,6 +11206,82 @@ function filterAdminTable(q){
     tr.style.display=(!q||tr.getAttribute('data-u').includes(q))?'':'none';
   });
 }
+function _adminUsageSortLabel(key){
+  const s=window._adminUsageSort||{key:'nw',dir:'desc'};
+  if(s.key!==key) return '<i class="fas fa-sort" style="opacity:.3;margin-left:4px"></i>';
+  return s.dir==='desc'?'<i class="fas fa-sort-down" style="margin-left:4px"></i>':'<i class="fas fa-sort-up" style="margin-left:4px"></i>';
+}
+function _adminSortUsage(key){
+  const s=window._adminUsageSort||{key:'nw',dir:'desc'};
+  if(s.key===key){ s.dir=s.dir==='desc'?'asc':'desc'; } else { s.key=key; s.dir='desc'; }
+  window._adminUsageSort=s;
+  const wrap=document.getElementById('admin-usage-wrap');
+  if(wrap&&window._adminSummary) wrap.innerHTML=_renderAdminUsageSection(window._adminSummary);
+}
+function _renderAdminUsageSection(summary){
+  if(!(summary&&Array.isArray(summary.users))){
+    return `<div style="margin:24px 0;padding:16px;background:var(--surface);border:1px dashed var(--border);border-radius:14px;font-size:12px;color:var(--muted);line-height:1.7">
+      <i class="fas fa-circle-info" style="color:#a78bfa"></i> ${tr('admin_no_server_usage')}</div>`;
+  }
+  const statCard=(val,label,color)=>`<div style="background:var(--surface);border:1px solid ${color}33;border-radius:14px;padding:14px;text-align:center">
+    <div style="font-size:28px;font-weight:800;color:${color}">${val}</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:2px">${label}</div></div>`;
+  const t=summary.totals||{};
+  const sortSt=window._adminUsageSort||(window._adminUsageSort={key:'nw',dir:'desc'});
+  const sortFns={
+    user:(a,b)=>a.username.localeCompare(b.username),
+    tx:(a,b)=>(a.txCount||0)-(b.txCount||0),
+    nw:(a,b)=>(a.netWorth||0)-(b.netWorth||0),
+    last:(a,b)=>(a.lastTxDate||'').localeCompare(b.lastTxDate||'')
+  };
+  const su=summary.users.slice().sort(sortFns[sortSt.key]||sortFns.nw);
+  if(sortSt.dir==='desc') su.reverse();
+  // เหรียญ Top 3 ตาม Net Worth จริง — อิงลำดับคงที่ ไม่ผูกกับ sort ที่แสดงผล
+  const byNw=summary.users.slice().sort((a,b)=>(b.netWorth||0)-(a.netWorth||0));
+  const medal={}; byNw.slice(0,3).forEach((u,i)=>{ medal[u.username]=['🥇','🥈','🥉'][i]; });
+  const fmtB=n=>'฿'+Math.round(n||0).toLocaleString('en-US');
+  const upd=summary.updatedAt?new Date(summary.updatedAt).toLocaleString('th-TH'):'-';
+  const featChip=(on,label)=>`<span style="font-size:10px;padding:1px 6px;border-radius:8px;margin:1px;display:inline-block;${on?'background:rgba(16,185,129,.15);color:#10b981':'background:rgba(255,255,255,.04);color:#475569'}">${label}</span>`;
+  const urows=su.map(u=>{
+    const f=u.features||{};
+    // Badge อันดับความมั่งคั่ง — ใช้ระบบ Wealth Ranking เดิม (_calcPercentile/_getRank, ขอบเขตไทย) ตัวเดียวกับที่ user เห็นในหน้าตัวเอง
+    const rankTier=_calcPercentile(u.netWorth||0,'th').tier;
+    const rank=_getRank(rankTier.lv);
+    return `<tr style="border-bottom:1px solid rgba(255,255,255,.05)">
+      <td style="padding:10px 14px;font-size:12px"><strong>${medal[u.username]?medal[u.username]+' ':''}${u.username}</strong></td>
+      <td style="padding:10px 14px;font-size:12px;text-align:right">${(u.txCount||0).toLocaleString()}</td>
+      <td style="padding:10px 14px;font-size:12px;text-align:right;white-space:nowrap">
+        ${fmtB(u.netWorth)}
+        <span style="display:inline-flex;align-items:center;gap:3px;margin-left:6px;font-size:10px;color:${rank.color};background:${rank.color}18;border:1px solid ${rank.color}35;border-radius:8px;padding:1px 6px">
+          <i class="fas ${rank.icon}"></i>${rank.th}
+        </span>
+      </td>
+      <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${u.lastTxDate||'-'}</td>
+      <td style="padding:10px 14px;font-size:11px">${featChip(f.inv,tr('investments'))}${featChip(f.debt,tr('debts'))}${featChip(f.save,tr('savings'))}${featChip(f.insurance,tr('insurance'))}${featChip(f.travel,tr('travel'))}${featChip(f.sub,'subs')}</td>
+    </tr>`;
+  }).join('');
+  const th=(key,label,align)=>`<th onclick="_adminSortUsage('${key}')" style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:${align||'left'};cursor:pointer;user-select:none">${label}${_adminUsageSortLabel(key)}</th>`;
+  return `
+  <div style="margin:24px 0 10px;font-size:15px;font-weight:800"><i class="fas fa-database" style="color:#a78bfa"></i> ${tr('admin_server_usage')}</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:14px">
+    ${statCard((t.txCount||0).toLocaleString(),tr('admin_total_tx'),'#a78bfa')}
+    ${statCard(fmtB(t.netWorthSum),tr('admin_total_nw'),'#10b981')}
+    ${statCard((t.activeUsers||0),tr('admin_has_real_data'),'#06b6d4')}
+    ${statCard((t.avgTx||0).toLocaleString(),tr('admin_avg_tx_per_user'),'#f59e0b')}
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:8px">
+    <div style="padding:14px 16px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span>${tr('admin_usage_per_user')}</span><span style="font-size:11px;color:var(--muted);font-weight:400">${tr('bank_updated')}: ${upd}</span></div>
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:rgba(255,255,255,.03)">
+        ${th('user',tr('admin_user'))}
+        ${th('tx',tr('cal_items'),'right')}
+        ${th('nw','Net Worth','right')}
+        ${th('last',tr('admin_last_tx'))}
+        <th style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:left">${tr('admin_features_used')}</th>
+      </tr></thead><tbody>${urows}</tbody></table></div>
+  </div>`;
+}
+
 async function renderAdmin(){
   const el=document.getElementById('admin-content');
   if(!el) return;
