@@ -355,8 +355,10 @@ Static file — ไม่ต้อง build:
 | Domain | ใช้ **sslip.io** (ฟรี ไม่ต้องซื้อโดเมน) — `<IP-ขีดคั่น>.sslip.io` เช่น IP ปัจจุบัน `34.134.61.137` → `34-134-61-137.sslip.io` — **⚠️ ถ้า VM IP เปลี่ยนอีก (ephemeral) ต้องแก้ `/etc/caddy/Caddyfile` ให้ตรง IP ใหม่ + `sudo systemctl reload caddy` ไม่งั้น TLS cert ขอไม่ผ่าน (Let's Encrypt ต่อ IP เดิมไม่ได้)** |
 | Firewall | GCP firewall rule `allow-ai-proxy-https` (tcp:80,443 จาก 0.0.0.0/0) ผูกกับ network tag `ai-proxy-server` บน VM instance นี้ — เดิม VM เปิดแค่ SSH/RDP เท่านั้น |
 | ทดสอบแล้ว | `curl https://34-134-61-137.sslip.io/healthz` → 200 (cert Let's Encrypt จริง, ยืนยันด้วย `openssl s_client`) + `/v1/chat` ไม่มี auth → 401 ถูกต้อง |
+| Client wiring | `mayaAgent()` ใน index.html แก้แล้ว (2026-07-03) — เช็ค `DB.settings.apiKey` ก่อน ถ้าไม่มีเช็ค `_hasActiveSubscription()` (อ่าน `members/{currentUser}.subscriptionActive`+`subscriptionExpiry`, public read ตาม rules เดิม) ถ้า true → เรียก `MAYA_PROXY_URL` (ค่าคงที่ต้นไฟล์ ผูกกับ IP ปัจจุบัน ต้องแก้ถ้า VM IP เปลี่ยน) ด้วย Firebase ID token (`getIdToken()`) แทน key ตรง; ถ้าไม่มีทั้งคู่ → fallback `rulesAI()` เหมือนเดิม (ยังไม่กระทบ user ปัจจุบันเลยเพราะไม่มีใคร subscriptionActive=true) — **สแกนใบเสร็จ/statement/ภาษี ยังไม่ได้ต่อ proxy** (ยัง gate ด้วย apiKey ส่วนตัวอย่างเดียว ขอบเขตงบนี้จำกัดแค่ Maya chat ก่อน) |
+| Manual grant (ทดสอบ/ชั่วคราวก่อนมีระบบจ่ายเงิน) | `grant_subscription.py` (เหมือน `admin_stats.py` — เขียนผ่าน SA ไม่เปิด client-write path ใหม่) `python grant_subscription.py <user> --days 30` / `--until YYYY-MM-DD` / `--revoke` / `--status` |
 
-**สิ่งที่เหลือทำก่อนเปิดใช้จริง:** สร้าง Gemini key ใหม่ → ใส่ `.env` ทั้งโน้ตบุค+VM → แก้ `mayaAgent()` ในเว็บให้เรียก proxy แทน Gemini ตรงสำหรับ user ที่มี subscription → ออกแบบ+เขียนระบบรับเงิน (Omise/2C2P/พร้อมเพย์) → เพิ่ม UI ตั้ง `subscriptionActive`/`subscriptionExpiry` ใน `members/{username}` ตอนจ่ายเงินสำเร็จ
+**สิ่งที่เหลือทำก่อนเปิดใช้จริง:** (1) สร้าง Gemini key ใหม่ (user ทำเอง) → ใส่ `.env` ทั้งโน้ตบุค+VM (2) สมัคร Omise/Opn Payments merchant account (user ทำเอง, KYC 2-3 วัน) → เขียนโค้ด checkout+webhook → ต่อกับ flow ตั้ง `subscriptionActive`/`subscriptionExpiry` อัตโนมัติ (ตอนนี้ตั้งได้แค่ manual ผ่าน `grant_subscription.py`)
 
 ---
 
