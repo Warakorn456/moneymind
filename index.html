@@ -14034,7 +14034,7 @@ function _showRankPopup(){
 
 window._showAllRanksDetail=function(){
   try{
-    const g=typeof window._fcGender!=='undefined'?window._fcGender:0;
+    const g=_fcResolveGender();
     const nw=calcNetWorth().netWorth;
     const myLv=(function(){
       const t=(_WT_DATA.th.tiers||[]).find(function(t){return nw>=t.min&&nw<t.max;});
