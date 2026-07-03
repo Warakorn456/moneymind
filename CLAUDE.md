@@ -335,7 +335,7 @@ Static file — ไม่ต้อง build:
 | **Gmail (OAuth2)** | credential ID `v7EQvnFH4mbTwfHL` ใน n8n | ดัก bank email |
 | **Telegram Bot** | `@moneymind_alert_bot` token: **ดูใน `.env` (`MM_TG_TOKEN`)** — ไม่จดตรงนี้อีก (rotate แล้ว 2026-07-02 เพราะ token เก่าโชว์อยู่ใน public repo มานาน) chat_id: `8172260229` | แจ้งเตือนและตอบคำสั่ง |
 | **Telegram Group** | MoneyMind Hub — group_id: `-1004296300749` topic หุ้น: thread_id=`3`, topic การเงิน: thread_id=`4`, topic แชทคุย: thread_id=`689` | รับแจ้งเตือนทุก script + AI chat ใน topic 689 |
-| **Google Cloud VM** | e2-micro, us-central1-a, IP: `34.16.55.125` project: `teak-perigee-497404-b7` | รัน Telegram bot 24/7 |
+| **Google Cloud VM** | e2-micro, us-central1-a, IP: `34.134.61.137` (⚠️ ephemeral — เคยเปลี่ยนมาแล้วครั้งหนึ่งจาก `34.16.55.125` ตอน VM restart ทำให้ TLS setup พังไปพักหนึ่งเพราะ domain ผูกกับ IP เก่า **เช็ค IP จริงด้วย `gcloud compute instances describe moneymind-bot --zone=us-central1-a --format="value(networkInterfaces[0].accessConfigs[0].natIP)"` ก่อนอ้างอิงทุกครั้ง** ถ้าจะกันปัญหานี้ถาวรต้อง reserve static IP เพิ่ม) project: `teak-perigee-497404-b7` | รัน Telegram bot 24/7 + AI proxy (Caddy TLS) |
 
 ---
 
