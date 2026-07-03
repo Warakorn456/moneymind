@@ -11527,6 +11527,7 @@ async function renderAdmin(){
             scales:{y:{beginAtZero:true,ticks:{color:'#94a3b8',precision:0},grid:{color:'rgba(148,163,184,.1)'}},x:{ticks:{color:'#94a3b8',maxTicksLimit:8},grid:{display:false}}}}});
       }
     }catch(e){ console.error('admin chart',e); }
+    _drawAdminNwTrendChart(history);
   }catch(e){
     el.innerHTML=`<div style="padding:20px;color:var(--red)"><i class="fas fa-exclamation-triangle"></i> ${tr('admin_load_failed')}: ${e.message}</div>`;
   }
