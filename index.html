@@ -11257,6 +11257,7 @@ function _renderAdminUsageSection(summary){
     debts:(a,b)=>(a.totalDebts||0)-(b.totalDebts||0),
     nw:(a,b)=>(a.netWorth||0)-(b.netWorth||0),
     age:(a,b)=>(a.age??-1)-(b.age??-1),
+    job:(a,b)=>(a.jobTitle||'').localeCompare(b.jobTitle||''),
     last:(a,b)=>(a.lastTxDate||'').localeCompare(b.lastTxDate||'')
   };
   const su=summary.users.slice().sort(sortFns[sortSt.key]||sortFns.nw);
