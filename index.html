@@ -11275,17 +11275,21 @@ function _renderAdminUsageSection(summary){
     return `<tr style="border-bottom:1px solid rgba(255,255,255,.05)">
       <td style="padding:10px 14px;font-size:12px"><strong>${medal[u.username]?medal[u.username]+' ':''}${u.username}</strong></td>
       <td style="padding:10px 14px;font-size:12px;text-align:right">${(u.txCount||0).toLocaleString()}</td>
+      <td style="padding:10px 14px;font-size:12px;text-align:right;color:#10b981">${u.totalAssets!=null?fmtB(u.totalAssets):'-'}</td>
+      <td style="padding:10px 14px;font-size:12px;text-align:right;color:#ef4444">${u.totalDebts!=null?fmtB(u.totalDebts):'-'}</td>
       <td style="padding:10px 14px;font-size:12px;text-align:right;white-space:nowrap">
         ${fmtB(u.netWorth)}
         <span style="display:inline-flex;align-items:center;gap:3px;margin-left:6px;font-size:10px;color:${rank.color};background:${rank.color}18;border:1px solid ${rank.color}35;border-radius:8px;padding:1px 6px">
           <i class="fas ${rank.icon}"></i>${rank.th}
         </span>
       </td>
+      <td style="padding:10px 14px;font-size:12px;text-align:right;color:var(--muted)">${u.age??'-'}</td>
+      <td style="padding:10px 14px;font-size:12px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.jobTitle||'-'}</td>
       <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${u.lastTxDate||'-'}</td>
       <td style="padding:10px 14px;font-size:11px">${featChip(f.inv,tr('investments'))}${featChip(f.debt,tr('debts'))}${featChip(f.save,tr('savings'))}${featChip(f.insurance,tr('insurance'))}${featChip(f.travel,tr('travel'))}${featChip(f.sub,'subs')}</td>
     </tr>`;
   }).join('');
-  const th=(key,label,align)=>`<th onclick="_adminSortUsage('${key}')" style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:${align||'left'};cursor:pointer;user-select:none">${label}${_adminUsageSortLabel(key)}</th>`;
+  const th=(key,label,align)=>`<th onclick="_adminSortUsage('${key}')" style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:${align||'left'};cursor:pointer;user-select:none;white-space:nowrap">${label}${_adminUsageSortLabel(key)}</th>`;
   return `
   <div style="margin:24px 0 10px;font-size:15px;font-weight:800"><i class="fas fa-database" style="color:#a78bfa"></i> ${tr('admin_server_usage')}</div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:14px">
