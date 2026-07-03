@@ -12961,6 +12961,127 @@ async function _hasActiveSubscription(){
   }catch(e){ return false; }
 }
 
+// ══════════════════════════════════════════
+//  AI SUBSCRIPTION CHECKOUT (Omise) — เพิ่ม 2026-07-03
+// ══════════════════════════════════════════
+// public key ปลอดภัยฝัง client ได้ (คนละแบบกับ secret key ที่อยู่ ai_proxy.py เท่านั้น)
+// ⚠️ ตอนนี้เป็น test-mode key — รอ Omise KYC ผ่านแล้วต้องสลับเป็น live key (pkey_live_...)
+const OMISE_PUBLIC_KEY='pkey_test_687yjtg5eyyn7qpswzz';
+const CHECKOUT_URL='https://34-134-61-137.sslip.io/v1/checkout';
+if(typeof Omise!=='undefined') Omise.setPublicKey(OMISE_PUBLIC_KEY);
+
+async function _getSubscriptionInfo(){
+  try{
+    if(!_fs||!currentUser) return {active:false};
+    const doc=await _fs.collection('members').doc(currentUser).get();
+    if(!doc.exists) return {active:false};
+    const d=doc.data();
+    const expiry=d.subscriptionExpiry||'';
+    const today=new Date().toISOString().slice(0,10);
+    return {active:!!d.subscriptionActive&&expiry>=today, expiry};
+  }catch(e){ return {active:false}; }
+}
+
+async function renderSubscriptionBox(){
+  const el=document.getElementById('subscription-status-box');
+  if(!el) return;
+  const info=await _getSubscriptionInfo();
+  if(info.active){
+    el.innerHTML=`<div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+      <i class="fas fa-check-circle" style="color:#10b981;font-size:18px"></i>
+      <div><div style="font-weight:700;color:#10b981" data-i18n="sub_active">Subscription ใช้งานอยู่</div>
+      <div style="font-size:12px;color:var(--muted)"><span data-i18n="sub_until">ถึงวันที่</span> ${info.expiry}</div></div>
+    </div>`;
+  } else {
+    el.innerHTML=`<button class="btn btn-primary" onclick="openSubscribeModal()"><i class="fas fa-crown"></i> <span data-i18n="sub_subscribe_btn">สมัคร Subscription ฿299/เดือน</span></button>`;
+  }
+}
+
+function openSubscribeModal(){
+  document.getElementById('sub-card-form').style.display='none';
+  document.getElementById('sub-promptpay-box').style.display='none';
+  document.getElementById('sub-error').textContent='';
+  openM('m-subscribe');
+}
+
+function _subShowCardForm(){
+  document.getElementById('sub-card-form').style.display='block';
+}
+
+async function _subGetIdToken(){
+  if(!window._auth||!window._auth.currentUser) throw new Error(tr('sub_need_relogin'));
+  return await window._auth.currentUser.getIdToken();
+}
+
+async function subscribeWithCard(){
+  const errEl=document.getElementById('sub-error');
+  errEl.textContent='';
+  const name=document.getElementById('sub-card-name').value.trim();
+  const number=document.getElementById('sub-card-number').value.replace(/\s/g,'');
+  const exp=document.getElementById('sub-card-exp').value.trim();
+  const cvv=document.getElementById('sub-card-cvv').value.trim();
+  const expParts=exp.split('/');
+  const mm=expParts[0], yy=expParts[1];
+  if(!name||!number||!mm||!yy||!cvv){ errEl.textContent=tr('sub_fill_all'); return; }
+  if(typeof Omise==='undefined'){ errEl.textContent='Omise.js load failed'; return; }
+
+  errEl.textContent=tr('sub_processing');
+  Omise.createToken('card',{
+    name:name, number:number, expiration_month:mm, expiration_year:'20'+yy.slice(-2), security_code:cvv
+  }, async function(statusCode, response){
+    if(statusCode!==200){
+      errEl.textContent=(response&&response.message)||tr('sub_card_invalid');
+      return;
+    }
+    try{
+      const idToken=await _subGetIdToken();
+      const r=await fetch(CHECKOUT_URL,{method:'POST',headers:{'Authorization':'Bearer '+idToken,'Content-Type':'application/json'},
+        body:JSON.stringify({username:currentUser, method:'card', token:response.id})});
+      const j=await r.json();
+      if(!r.ok){ errEl.textContent=j.error||tr('sub_payment_failed'); return; }
+      if(j.status==='successful'){
+        closeM('m-subscribe');
+        toast(tr('sub_success'),'success');
+        renderSubscriptionBox();
+      } else {
+        errEl.textContent=tr('sub_pending');
+      }
+    }catch(e){ errEl.textContent=e.message; }
+  });
+}
+
+async function subscribeWithPromptPay(){
+  const errEl=document.getElementById('sub-error');
+  errEl.textContent='';
+  document.getElementById('sub-card-form').style.display='none';
+  try{
+    const idToken=await _subGetIdToken();
+    errEl.textContent=tr('sub_processing');
+    const r=await fetch(CHECKOUT_URL,{method:'POST',headers:{'Authorization':'Bearer '+idToken,'Content-Type':'application/json'},
+      body:JSON.stringify({username:currentUser, method:'promptpay'})});
+    const j=await r.json();
+    errEl.textContent='';
+    if(!r.ok){ errEl.textContent=j.error||tr('sub_qr_failed'); return; }
+    if(!j.qrImage){ errEl.textContent=tr('sub_qr_failed'); return; }
+    document.getElementById('sub-qr-wrap').innerHTML=`<img src="${j.qrImage}" style="width:220px;height:220px;border-radius:10px;border:1px solid var(--border)">`;
+    document.getElementById('sub-promptpay-box').style.display='block';
+    _subPollStatus(20); // เช็คทุก 3 วิ นาน ~60 วิ รอ webhook ยืนยัน
+  }catch(e){ errEl.textContent=e.message; }
+}
+
+async function _subPollStatus(triesLeft){
+  if(triesLeft<=0) return;
+  if(!document.getElementById('m-subscribe').classList.contains('open')) return; // ปิด modal แล้วหยุด poll
+  const info=await _getSubscriptionInfo();
+  if(info.active){
+    closeM('m-subscribe');
+    toast(tr('sub_success'),'success');
+    renderSubscriptionBox();
+    return;
+  }
+  setTimeout(()=>_subPollStatus(triesLeft-1), 3000);
+}
+
 // agent loop — เรียก Gemini (OpenAI-compat) ป้อนผล tool กลับจนได้คำตอบ
 // key ส่วนตัว (DB.settings.apiKey) → เรียก Gemini ตรง | ไม่มี key → ต้องมี subscription (เช็คมาก่อนแล้ว
 // จากจุดเรียกใน sendChat) → เรียกผ่าน ai_proxy.py ด้วย Firebase ID token แทน key
