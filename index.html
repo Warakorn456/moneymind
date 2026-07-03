@@ -11253,7 +11253,10 @@ function _renderAdminUsageSection(summary){
   const sortFns={
     user:(a,b)=>a.username.localeCompare(b.username),
     tx:(a,b)=>(a.txCount||0)-(b.txCount||0),
+    assets:(a,b)=>(a.totalAssets||0)-(b.totalAssets||0),
+    debts:(a,b)=>(a.totalDebts||0)-(b.totalDebts||0),
     nw:(a,b)=>(a.netWorth||0)-(b.netWorth||0),
+    age:(a,b)=>(a.age??-1)-(b.age??-1),
     last:(a,b)=>(a.lastTxDate||'').localeCompare(b.lastTxDate||'')
   };
   const su=summary.users.slice().sort(sortFns[sortSt.key]||sortFns.nw);
