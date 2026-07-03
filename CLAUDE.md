@@ -339,6 +339,27 @@ Static file — ไม่ต้อง build:
 
 ---
 
+## AI Proxy — Gemini key กลางสำหรับ subscription (เริ่ม 2026-07-03, ยังไม่เปิดใช้จริง)
+
+**เป้าหมาย:** แผนอนาคตให้ผู้ใช้ subscription ใช้ AI (Maya chat/สแกนใบเสร็จ/ภาษี) ได้โดยไม่ต้องมี Gemini API key ของตัวเอง — ใช้ key "ของเรา" ผ่าน proxy กลาง (ห้าม key หลุดไปฝั่ง client เด็ดขาด บทเรียนจาก Telegram token เดิม)
+
+**สถานะ:** infra พร้อมหมดแล้ว แต่ **ยังไม่เปิดใช้งานจริง** เพราะ (1) ยังไม่มี Gemini key จริงใส่ `.env` (2) เว็บ (`mayaAgent()` ใน index.html) ยังไม่ได้แก้ให้เรียก proxy นี้แทน Gemini ตรง (3) ยังไม่มีระบบรับเงิน subscription
+
+| ส่วนประกอบ | รายละเอียด |
+|---|---|
+| `ai_proxy.py` | Flask app — endpoint `POST /v1/chat` (pass-through ไป Gemini OpenAI-compat) + `GET /healthz`; source of truth `C:\Users\warakorn\Documents\ai_proxy.py` |
+| Auth flow | verify Firebase ID token (`google.oauth2.id_token`, ไม่ใช้ firebase-admin SDK) → เช็ค uid ตรงกับ `members/{username}.uid` → เช็ค `subscriptionActive`+`subscriptionExpiry` (field ใหม่ใน `members/{username}` ยังไม่มี user ไหนตั้งจริง) → เช็ค/เพิ่ม quota เดือนละครั้งใน `aiUsage/{username}` (default 200 req/เดือน) → forward Gemini |
+| Secrets | `mm_secrets.PROXY_GEMINI_KEY` (`.env` → `MM_PROXY_GEMINI_KEY`, **ว่างอยู่** — ต้องสร้าง Gemini key ใหม่แยกจาก key ส่วนตัวที่ใช้ทำ Maya/reports ถึงจะ enable ได้จริง) + `MM_PROXY_MONTHLY_LIMIT` (default 200) |
+| Deploy บน VM | `/home/warakornbest6/moneymind/ai_proxy.py` รันผ่าน **systemd `moneymind-ai-proxy`** (`waitress-serve --host=127.0.0.1 --port=8081 ai_proxy:app`, log ที่ `ai_proxy.log`) — bind localhost เท่านั้น ไม่เปิดสู่ภายนอกตรง |
+| Reverse proxy + TLS | **Caddy** (`/etc/caddy/Caddyfile`, systemd service `caddy` ติดตั้งจาก apt repo ทางการ) reverse proxy `https://<sslip-domain>` → `127.0.0.1:8081`, ออก cert อัตโนมัติจาก Let's Encrypt (auto-renew) |
+| Domain | ใช้ **sslip.io** (ฟรี ไม่ต้องซื้อโดเมน) — `<IP-ขีดคั่น>.sslip.io` เช่น IP ปัจจุบัน `34.134.61.137` → `34-134-61-137.sslip.io` — **⚠️ ถ้า VM IP เปลี่ยนอีก (ephemeral) ต้องแก้ `/etc/caddy/Caddyfile` ให้ตรง IP ใหม่ + `sudo systemctl reload caddy` ไม่งั้น TLS cert ขอไม่ผ่าน (Let's Encrypt ต่อ IP เดิมไม่ได้)** |
+| Firewall | GCP firewall rule `allow-ai-proxy-https` (tcp:80,443 จาก 0.0.0.0/0) ผูกกับ network tag `ai-proxy-server` บน VM instance นี้ — เดิม VM เปิดแค่ SSH/RDP เท่านั้น |
+| ทดสอบแล้ว | `curl https://34-134-61-137.sslip.io/healthz` → 200 (cert Let's Encrypt จริง, ยืนยันด้วย `openssl s_client`) + `/v1/chat` ไม่มี auth → 401 ถูกต้อง |
+
+**สิ่งที่เหลือทำก่อนเปิดใช้จริง:** สร้าง Gemini key ใหม่ → ใส่ `.env` ทั้งโน้ตบุค+VM → แก้ `mayaAgent()` ในเว็บให้เรียก proxy แทน Gemini ตรงสำหรับ user ที่มี subscription → ออกแบบ+เขียนระบบรับเงิน (Omise/2C2P/พร้อมเพย์) → เพิ่ม UI ตั้ง `subscriptionActive`/`subscriptionExpiry` ใน `members/{username}` ตอนจ่ายเงินสำเร็จ
+
+---
+
 ## Telegram Bot — ฟังก์ชันทั้งหมด
 
 Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ปิดเครื่องได้ bot ยังทำงาน
