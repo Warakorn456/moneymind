@@ -13963,20 +13963,13 @@ function _buildRankPopupBody(nw, scope){
     </div>`;
   }).join('');
 
-  window._fcGender=_fcResolveGender();
-  const _gBtn=(g,lbl,em)=>{
-    const a=window._fcGender===g;
-    return `<button onclick="window._fcGender=${g};localStorage.setItem('_fcGender','${g}');_setRankPopupScope('${scope}');if(typeof _renderTierBadge==='function')_renderTierBadge()" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:${a?700:500};border:1.5px solid ${a?rank.color+'80':'var(--border)'};background:${a?rank.color+'22':'transparent'};color:${a?rank.color:'var(--muted)'};cursor:pointer;transition:.15s">${em} ${lbl}</button>`;
-  };
+  const fcGender=_fcResolveGender();
 
   return `
   <button onclick="document.getElementById('_rankPopupOv').remove()" style="position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--muted);font-size:15px;display:flex;align-items:center;justify-content:center">✕</button>
   <button onclick="_showAllRanksDetail()" title="ดูตัวละครทุกแรงค์" style="position:absolute;top:12px;left:12px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">👥</button>
   <!-- header -->
   <div style="text-align:center;margin-bottom:16px">
-    <div style="display:flex;justify-content:center;gap:8px;margin-bottom:10px">
-      ${_gBtn(0,'หญิง','♀')}${_gBtn(1,'ชาย','♂')}
-    </div>
     <div style="width:158px;height:250px;display:flex;align-items:flex-end;justify-content:center;
       margin:0 auto 12px;border-radius:22px;
       box-shadow:0 10px 32px ${rank.glow},inset 0 0 0 1.5px ${rank.color}45;
@@ -13984,7 +13977,7 @@ function _buildRankPopupBody(nw, scope){
       overflow:hidden;position:relative">
       <div style="position:absolute;top:12%;left:50%;transform:translateX(-50%);width:62%;height:52%;background:radial-gradient(circle,${rank.color}4d,transparent 70%);filter:blur(10px)"></div>
       <div style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);width:50%;height:10px;background:radial-gradient(ellipse,rgba(0,0,0,.55),transparent 75%)"></div>
-      <div style="position:relative;line-height:0">${(window._fcSvgG||window._fcSVG||function(){return '';})(tier.lv, window._fcGender||0)}</div>
+      <div style="position:relative;line-height:0">${(window._fcSvgG||window._fcSVG||function(){return '';})(tier.lv, fcGender)}</div>
     </div>
     <div style="font-size:24px;font-weight:900;color:${rank.color}">${rank.name}</div>
     <div style="font-size:12px;color:var(--muted);margin-top:3px">${rank.th} · Lv.${tier.lv}/8 · ${sm.label} (${sm.pop})</div>
