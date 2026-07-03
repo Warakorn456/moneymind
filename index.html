@@ -14088,7 +14088,7 @@ function _renderTierBadge(){
     // chibi character above badge
     let charHtml='';
     if(window._fcSvgG){
-      const g=typeof window._fcGender!=='undefined'?window._fcGender:0;
+      const g=_fcResolveGender();
       const svgRaw=window._fcSvgG(tier.lv,g);
       const vbM=svgRaw.match(/viewBox="[\d.]+ [\d.]+ ([\d.]+) ([\d.]+)"/);
       const vbW=vbM?parseFloat(vbM[1]):192,vbH=vbM?parseFloat(vbM[2]):244;
