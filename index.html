@@ -6588,6 +6588,7 @@ function renderSettings(){
   if(lt) lt.value=String(DB.settings.lockTimeout??15);
   if(typeof renderCustomCatList==='function') renderCustomCatList();
   if(typeof renderCatBudgetSettings==='function') renderCatBudgetSettings();
+  if(typeof renderSubscriptionBox==='function') renderSubscriptionBox();
 }
 
 function saveLockTimeout(val){
