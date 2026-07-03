@@ -358,6 +358,10 @@
     .prof-field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
     .prof-field input,.prof-field select,.prof-field textarea{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:#e2e8f0;font-family:'Sarabun',sans-serif;outline:none;transition:border-color .2s;width:100%;box-sizing:border-box}
     .prof-field input:focus,.prof-field select:focus,.prof-field textarea:focus{border-color:rgba(124,58,237,.5)}
+    /* select ต่างจาก input/textarea — พื้นหลังโปร่งใส 4% ตอนปิดดูดี แต่ popup ตัวเลือกใช้พื้นทึบของ native
+       widget ซึ่งไม่ผสมกับพื้นหลังเว็บ ทำให้ดูขาวเกือบสนิท ต้องให้พื้นหลัง select ทึบแทน + สั่ง option ตรงๆ ด้วย */
+    .prof-field select{background:var(--surface2)}
+    .prof-field select option{background:var(--surface2);color:#e2e8f0}
     .prof-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px}
     .prof-entry{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px;margin-bottom:10px;position:relative}
     .fam-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:14px}
