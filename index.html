@@ -11235,7 +11235,10 @@ function _adminSortUsage(key){
   if(s.key===key){ s.dir=s.dir==='desc'?'asc':'desc'; } else { s.key=key; s.dir='desc'; }
   window._adminUsageSort=s;
   const wrap=document.getElementById('admin-usage-wrap');
-  if(wrap&&window._adminSummary) wrap.innerHTML=_renderAdminUsageSection(window._adminSummary);
+  if(wrap&&window._adminSummary){
+    wrap.innerHTML=_renderAdminUsageSection(window._adminSummary);
+    _drawAdminNwTrendChart(window._adminHistory); // innerHTML replace ทำลาย canvas เดิม ต้องวาดใหม่
+  }
 }
 function _renderAdminUsageSection(summary){
   if(!(summary&&Array.isArray(summary.users))){
