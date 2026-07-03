@@ -13893,6 +13893,15 @@ function _calcPercentile(nw, scopeKey){
 
 let _rankPopupScope='th';
 
+// เพศตัวละคร Finance Character — ลำดับความสำคัญ: ค่าที่เคย toggle ไว้เอง (localStorage) > เพศในโปรไฟล์ > female (default)
+// เรียกครั้งแรกที่ไหนก็ได้ (rank popup / sidebar avatar) — cache ผลไว้ที่ window._fcGender ให้ทุกจุดอ่านค่าเดียวกัน
+function _fcResolveGender(){
+  if(typeof window._fcGender!=='undefined') return window._fcGender;
+  const saved=localStorage.getItem('_fcGender');
+  if(saved!==null) return parseInt(saved);
+  const pg=(typeof getProfile==='function')?_profGenderToFc(getProfile().gender):null;
+  return pg!==null?pg:0;
+}
 function _buildRankPopupBody(nw, scope){
   const scopeMeta={th:{label:'🇹🇭 ไทย',pop:'55 ล้านคน'},asean:{label:'🌏 อาเซียน',pop:'~700 ล้านคน'},world:{label:'🌍 โลก',pop:'~5,400 ล้านคน'}};
   const {tier,percentile}=_calcPercentile(nw,scope);
