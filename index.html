@@ -7839,14 +7839,7 @@ function _profGenderToFc(val){
 }
 function profSave(key,val){
   getProfile()[key]=val; saveDB();
-  if(key==='gender'){
-    const g=_profGenderToFc(val);
-    if(g!==null){
-      window._fcGender=g;
-      try{ localStorage.setItem('_fcGender',String(g)); }catch(e){}
-      if(typeof _renderTierBadge==='function') _renderTierBadge();
-    }
-  }
+  if(key==='gender'&&typeof _renderTierBadge==='function') _renderTierBadge();
 }
 function profField(key,label,type='text',placeholder='',opts={}){
   const p=getProfile(); const v=p[key]||'';
