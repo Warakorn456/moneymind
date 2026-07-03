@@ -13893,12 +13893,9 @@ function _calcPercentile(nw, scopeKey){
 
 let _rankPopupScope='th';
 
-// เพศตัวละคร Finance Character — ลำดับความสำคัญ: ค่าที่เคย toggle ไว้เอง (localStorage) > เพศในโปรไฟล์ > female (default)
-// เรียกครั้งแรกที่ไหนก็ได้ (rank popup / sidebar avatar) — cache ผลไว้ที่ window._fcGender ให้ทุกจุดอ่านค่าเดียวกัน
+// เพศตัวละคร Finance Character — คุมผ่านเพศในหน้าประวัติส่วนตัวอย่างเดียว (ไม่มีปุ่มสลับเองแล้ว)
+// female (default) ถ้ายังไม่ได้กรอกเพศในโปรไฟล์
 function _fcResolveGender(){
-  if(typeof window._fcGender!=='undefined') return window._fcGender;
-  const saved=localStorage.getItem('_fcGender');
-  if(saved!==null) return parseInt(saved);
   const pg=(typeof getProfile==='function')?_profGenderToFc(getProfile().gender):null;
   return pg!==null?pg:0;
 }
