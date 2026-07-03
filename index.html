@@ -11184,7 +11184,26 @@ async function doChangePassword(){
 //  ADMIN DASHBOARD
 // ══════════════════════════════════════════
 let _adminChart=null;
+let _adminNwChart=null;
 window._adminMembers=[];
+
+// วาด/redraw กราฟเทรนด์ Net Worth รวมย้อนหลัง — เรียกทุกครั้งที่ #admin-nw-trend-chart ถูกสร้างใหม่
+// (ตอน renderAdmin ครั้งแรก และตอน sort ตารางเพราะ innerHTML replace ทำลาย canvas เดิม)
+function _drawAdminNwTrendChart(history){
+  try{
+    if(_adminNwChart){ _adminNwChart.destroy(); _adminNwChart=null; }
+    const cv=document.getElementById('admin-nw-trend-chart');
+    if(!cv||!window.Chart||!history||!history.length) return;
+    const labels=history.map(h=>h.date.slice(5));
+    const data=history.map(h=>h.netWorthSum||0);
+    _adminNwChart=new Chart(cv,{type:'line',
+      data:{labels,datasets:[{label:'Net Worth รวม',data,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.15)',fill:true,tension:.3,pointRadius:2}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>'฿'+Math.round(c.parsed.y).toLocaleString('en-US')}}},
+        scales:{y:{beginAtZero:false,ticks:{color:'#94a3b8',callback:v=>'฿'+(v/1000).toLocaleString('en-US')+'k'},grid:{color:'rgba(148,163,184,.1)'}},
+          x:{ticks:{color:'#94a3b8',maxTicksLimit:10},grid:{display:false}}}}});
+  }catch(e){ console.error('admin nw trend chart',e); }
+}
 function exportAdminCsv(){
   const ms=window._adminMembers||[]; if(!ms.length){ toast(tr('no_data_yet'),'info'); return; }
   const rows=[['username','email','platform','currentPlatform','isOwner','createdAt','lastSeen']];
