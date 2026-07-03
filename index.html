@@ -12898,11 +12898,35 @@ const MAYA_IMPLS={
   },
 };
 
+// URL ของ ai_proxy.py บน GCP VM (Caddy + TLS ผ่าน sslip.io) — ใช้เฉพาะ user ที่ไม่มี apiKey
+// ส่วนตัวแต่มี subscription active (เช็คก่อนเรียก mayaAgent เสมอ ที่จุดเรียกใน sendChat)
+// ⚠️ IP ของ VM เป็น ephemeral เคยเปลี่ยนมาแล้ว — ถ้า proxy เรียกไม่ติดให้เช็ค IP ปัจจุบันก่อน
+// (gcloud compute instances describe moneymind-bot ...) แล้วอัปเดต URL นี้ให้ตรง
+const MAYA_PROXY_URL='https://34-134-61-137.sslip.io/v1/chat';
+
+// เช็ค subscription จาก members/{currentUser} (อ่าน public ได้ตาม firestore.rules ไม่ต้อง auth)
+// คืน false ทันทีถ้าอ่านไม่ได้/ไม่มี doc/หมดอายุ — ปลอดภัยไว้ก่อน (fail closed)
+async function _hasActiveSubscription(){
+  try{
+    if(!_fs||!currentUser) return false;
+    const doc=await _fs.collection('members').doc(currentUser).get();
+    if(!doc.exists) return false;
+    const d=doc.data();
+    if(!d.subscriptionActive) return false;
+    const expiry=d.subscriptionExpiry||'';
+    const today=new Date().toISOString().slice(0,10);
+    return expiry>=today;
+  }catch(e){ return false; }
+}
+
 // agent loop — เรียก Gemini (OpenAI-compat) ป้อนผล tool กลับจนได้คำตอบ
+// key ส่วนตัว (DB.settings.apiKey) → เรียก Gemini ตรง | ไม่มี key → ต้องมี subscription (เช็คมาก่อนแล้ว
+// จากจุดเรียกใน sendChat) → เรียกผ่าน ai_proxy.py ด้วย Firebase ID token แทน key
 async function mayaAgent(userMsg){
   const key=DB.settings.apiKey;
+  const useProxy=!key;
   const model=(DB.settings.geminiModel&&!/tts|embedding|aqa/i.test(DB.settings.geminiModel))?DB.settings.geminiModel:'gemini-2.5-flash';
-  const url='https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+  const url=useProxy?MAYA_PROXY_URL:'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
   const sys=buildFinanceContext()+`
 
 == กฎการใช้ tool ==
