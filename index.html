@@ -3803,13 +3803,13 @@ function setLang(lang){
 }
 function toggleLang(){ setLang(currentLang==='th'?'en':'th'); }
 // เดือน/ปี พ.ศ. ใช้ซ้ำหลายสิบจุดทั่วไฟล์ — รวมเป็น helper กลางแทนการประกาศ MN=[...] ซ้ำในทุกฟังก์ชัน
-const MN_SHORT_TH=monthShortArr();
+const MN_SHORT_TH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const MN_SHORT_EN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const MN_FULL_TH=monthFullArr();
+const MN_FULL_TH=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const MN_FULL_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 function monthShortArr(){ return currentLang==='en'?MN_SHORT_EN:MN_SHORT_TH; }
 function monthFullArr(){ return currentLang==='en'?MN_FULL_EN:MN_FULL_TH; }
-function beYear(y){ return currentLang==='en'?y:beYear(y); } // พ.ศ. เฉพาะภาษาไทย, อังกฤษใช้ ค.ศ. ตรงๆ
+function beYear(y){ return currentLang==='en'?y:y+543; } // พ.ศ. เฉพาะภาษาไทย, อังกฤษใช้ ค.ศ. ตรงๆ
 function applyLang(){
   document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=tr(el.getAttribute('data-i18n')); });
   document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ el.placeholder=tr(el.getAttribute('data-i18n-ph')); });
