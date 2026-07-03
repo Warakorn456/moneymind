@@ -8633,15 +8633,17 @@ async function sendChat(){
   document.getElementById('chat-send').disabled=true;
   showTyping();
 
-  // ── ไม่มี API Key → ใช้ Rule-based AI ──
-  if(!DB.settings.apiKey){
+  // ── ไม่มี API Key ส่วนตัว → เช็ค subscription ก่อนตกไป Rule-based AI ──
+  // (subscription ผ่าน ai_proxy.py ยังไม่เปิดใช้จริง — _hasActiveSubscription() จะ false เสมอ
+  // จนกว่าจะมี user ที่ subscriptionActive=true ใน Firestore จริง ดู CLAUDE.md "AI Proxy")
+  if(!DB.settings.apiKey && !(await _hasActiveSubscription())){
     await new Promise(r=>setTimeout(r,400)); // simulate thinking
     hideTyping();
     addChatMsg('ai', rulesAI(msg)+'\n\n<span style="font-size:11px;color:#64748b">🤖 AI ในตัว — ใส่ Gemini API Key ในตั้งค่าเพื่อใช้ AI เต็มรูปแบบ</span>');
     chatBusy=false; document.getElementById('chat-send').disabled=false; inp.focus(); return;
   }
 
-  // ── มี API Key → ใช้ Maya agent (tool calling) ก่อน fallback ไป rules ──
+  // ── มี API Key ส่วนตัว หรือมี subscription active → ใช้ Maya agent (tool calling) ──
   try{
     _mayaDirty=false;
     const reply=await mayaAgent(msg);
