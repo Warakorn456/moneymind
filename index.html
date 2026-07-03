@@ -4059,9 +4059,10 @@ function renderBudgetCard(){
   const left=budget-spent;
   const pct=budget>0?Math.min(100,(spent/budget)*100):0;
 
-  // ซ่อน card ถ้ายังไม่มีข้อมูล carryover เลย
-  const hasCarryover=DB.transactions.some(t=>t.carryover);
-  document.getElementById('budget-card').style.display=hasCarryover||budget>0?'block':'none';
+  // การ์ดนี้ถอดออกจาก UI แล้ว (ข้อมูลซ้ำกับการ์ดรายรับ/รายจ่าย/คงเหลือด้านบนอยู่แล้ว) — เดิม toggle
+  // display เป็น 'block' ตอนมี budget>0 ทำให้โผล่ขึ้นมาแบบไม่มี class="budget-card" (ไม่ได้ styling)
+  // เห็นเป็นตัวเลขลอยไม่มีกรอบการ์ด บังคับซ่อนตลอดแทน — ฟังก์ชันนี้ยังรันต่อเผื่อมีที่อื่นอ้างอิงค่าที่คำนวณ
+  document.getElementById('budget-card').style.display='none';
 
   document.getElementById('b-budget').textContent=fmt(budget);
   document.getElementById('b-spent').textContent=fmt(spent);
