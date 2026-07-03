@@ -343,7 +343,7 @@ Static file — ไม่ต้อง build:
 
 **เป้าหมาย:** แผนอนาคตให้ผู้ใช้ subscription ใช้ AI (Maya chat/สแกนใบเสร็จ/ภาษี) ได้โดยไม่ต้องมี Gemini API key ของตัวเอง — ใช้ key "ของเรา" ผ่าน proxy กลาง (ห้าม key หลุดไปฝั่ง client เด็ดขาด บทเรียนจาก Telegram token เดิม)
 
-**สถานะ:** infra พร้อมหมดแล้ว แต่ **ยังไม่เปิดใช้งานจริง** เพราะ (1) ยังไม่มี Gemini key จริงใส่ `.env` (2) เว็บ (`mayaAgent()` ใน index.html) ยังไม่ได้แก้ให้เรียก proxy นี้แทน Gemini ตรง (3) ยังไม่มีระบบรับเงิน subscription
+**สถานะ:** infra + client wiring พร้อมหมดแล้ว แต่ **ยังไม่เปิดใช้งานจริง** เพราะ (1) ยังไม่มี Gemini key จริงใส่ `.env` (ต้องสร้างเองผ่าน AI Studio — Claude ทำแทนไม่ได้เพราะต้อง login Google) (2) ยังไม่มีระบบรับเงิน subscription (เลือก provider ยังไม่เสร็จ — แนะนำ Omise/Opn Payments รอ user สมัคร KYC เอง)
 
 | ส่วนประกอบ | รายละเอียด |
 |---|---|
