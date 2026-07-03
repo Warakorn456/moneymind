@@ -13071,7 +13071,7 @@ async function subscribeWithPromptPay(){
 
 async function _subPollStatus(triesLeft){
   if(triesLeft<=0) return;
-  if(!document.getElementById('m-subscribe').classList.contains('open')) return; // ปิด modal แล้วหยุด poll
+  if(!document.getElementById('m-subscribe').classList.contains('show')) return; // ปิด modal แล้วหยุด poll
   const info=await _getSubscriptionInfo();
   if(info.active){
     closeM('m-subscribe');
