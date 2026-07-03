@@ -7828,7 +7828,26 @@ function getProfile(){
 function closeModal(id){ document.getElementById(id).classList.remove('open'); _flushPendingSync(); }
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 
-function profSave(key,val){ getProfile()[key]=val; saveDB(); }
+// ค่าเพศในโปรไฟล์เก็บเป็น label ที่แปลแล้ว (ผูกกับภาษาตอนเลือก) — เทียบกับทั้ง TH/EN
+// เผื่อ user สลับภาษาแอปหลังเลือกเพศไปแล้ว ค่าที่เคยบันทึกจะเป็นคนละภาษากับ currentLang ปัจจุบัน
+// คืน 1=ชาย 0=หญิง null=ไม่ระบุ/ว่าง (ตรงกับ window._fcGender ของ Finance Character)
+function _profGenderToFc(val){
+  if(!val) return null;
+  if(val===I18N.th.prof_male||val===I18N.en.prof_male) return 1;
+  if(val===I18N.th.prof_female||val===I18N.en.prof_female) return 0;
+  return null;
+}
+function profSave(key,val){
+  getProfile()[key]=val; saveDB();
+  if(key==='gender'){
+    const g=_profGenderToFc(val);
+    if(g!==null){
+      window._fcGender=g;
+      try{ localStorage.setItem('_fcGender',String(g)); }catch(e){}
+      if(typeof _renderTierBadge==='function') _renderTierBadge();
+    }
+  }
+}
 function profField(key,label,type='text',placeholder='',opts={}){
   const p=getProfile(); const v=p[key]||'';
   if(type==='textarea') return `<div class="prof-field ${opts.full?'style="grid-column:1/-1"':''}">
