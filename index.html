@@ -4190,7 +4190,7 @@ function renderCatChart(){
       onClick:(e,els)=>{ if(els&&els.length) openCatDrill(cats[els[0].index]); },
       onHover:(e,els)=>{ e.native.target.style.cursor=els&&els.length?'pointer':'default'; },
       plugins:{
-      legend:{position:'right',onClick:(e,item)=>openCatDrill(cats[item.index]),labels:{color:'#e2e8f0',font:{family:'Sarabun',size:12},padding:12,boxWidth:9,boxHeight:9}},
+      legend:{position:'right',onClick:(e,item)=>openCatDrill(cats[item.index]),labels:{color:_chartTickColor(),font:{family:'Sarabun',size:12},padding:12,boxWidth:9,boxHeight:9}},
       tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.raw)} (${tr('click_to_view')})`}}
     },cutout:'64%'}
   });
