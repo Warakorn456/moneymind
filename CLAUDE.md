@@ -298,6 +298,8 @@ renderDash = function(){
 - **Single `<script>` block:** บรรทัด 2478–14739 (ปัจจุบัน, จะขยับขึ้นเรื่อยๆ) — อย่า add `<script>` tag ใหม่
 - **Admin nav:** แสดงเฉพาะ owner (`currentUser === _ENC.user`) — จัดการโดย `_syncAdminNav()`
 - **Dashboard flash fix:** `renderDash` ซ่อน container ก่อน reorder แล้ว restore เพื่อไม่ให้กระพริบ
+- **`renderCatChart()` null-check (แก้ 2026-07-06):** เจอ crash จริงผ่านช่อง feedback/error-report ของ user "test1" — `document.getElementById('ch-cat')` คืน null ถ้า canvas ไม่อยู่ใน DOM ตอนฟังก์ชันรัน (`.getContext()` บน null พังทันที); เพิ่ม guard `if(!canvasEl) return;` ก่อนเรียก `getContext` แล้ว — ฟังก์ชันอื่นที่เรียก `getElementById(...).getContext('2d')` ตรงๆ (ch-trend, ch-port ฯลฯ) ยังไม่มี guard เดียวกัน ถ้าเจอ crash ซ้ำให้เติมแบบเดียวกัน
+- **Push debug spam ลบแล้ว (2026-07-06):** `_requestPushTokenIfNative()` เคยมีบรรทัด debug ชั่วคราว (ใส่ไว้ 2026-07-02) ที่ยิง `_sendReport({kind:'error',message:'push debug: ...'})` ทุกครั้งที่ login ทำให้ช่อง feedback/error-report ใน Telegram เต็มไปด้วย noise — ลบออกแล้ว ปัญหา push token ไม่เข้า Firestore (ถ้ายังไม่ได้แก้) ต้อง debug วิธีอื่นแทน
 
 ## วิธี Deploy
 
