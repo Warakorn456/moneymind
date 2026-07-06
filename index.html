@@ -4713,12 +4713,12 @@ function handleReceipt(e){ const f=e.target.files[0]; if(f) processFile(f); }
 
 function processFile(file){
   const r=new FileReader();
-  r.onload=e=>{
+  r.onload=async e=>{
     rcptURL=e.target.result;
     document.getElementById('rcpt-prev').src=rcptURL;
     document.getElementById('rcpt-prev').style.display='block';
     document.getElementById('up-ph').style.display='none';
-    if(DB.settings.apiKey) aiReadReceipt(rcptURL);
+    if(DB.settings.apiKey || await _hasActiveSubscription()) aiReadReceipt(rcptURL);
     else { showWarn('<i class="fas fa-info-circle"></i> '+tr('scan_no_apikey')+' — <button onclick="nav(\'settings\');closeM(\'m-img\')" style="background:none;border:none;color:var(--amber);cursor:pointer;text-decoration:underline;font-family:Sarabun,sans-serif;font-size:13px">'+tr('scan_setup_here')+'</button> '+tr('scan_or_manual')); document.getElementById('ai-manual-btn').style.display='inline-flex'; }
   };
   r.readAsDataURL(file);
