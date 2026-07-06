@@ -13059,6 +13059,8 @@ function openSubscribeModal(){
 
 function _subShowCardForm(){
   document.getElementById('sub-card-form').style.display='block';
+  document.getElementById('sub-promptpay-box').style.display='none';
+  document.getElementById('sub-error').textContent='';
 }
 
 async function _subGetIdToken(){
