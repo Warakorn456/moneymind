@@ -3548,10 +3548,31 @@ async function getModel(){
   return 'gemini-2.0-flash-lite';
 }
 
+// URL proxy สำหรับเรียก Gemini native generateContent (สแกนใบเสร็จ/statement/ภาษี) ผ่าน subscription
+// แยกจาก MAYA_PROXY_URL (OpenAI-compat, ใช้กับ mayaAgent tool-calling เท่านั้น) — endpoint คนละแบบ
+// ⚠️ IP เดียวกับ MAYA_PROXY_URL/CHECKOUT_URL — แก้พร้อมกันถ้า VM IP เปลี่ยน
+const GEMINI_PROXY_URL='https://34-134-61-137.sslip.io/v1/generate';
+
+// เรียก Gemini ผ่าน ai_proxy.py แทน key ตรง (ใช้เมื่อไม่มี apiKey ส่วนตัวแต่มี subscription active)
+// ไม่มี retry/model-fallback loop เหมือน path ปกติ — ใช้ model เดียวคงที่ (เพียงพอสำหรับ path สำรอง)
+async function _callGeminiProxy(contents, genConfig, modelPref){
+  if(!_auth||!_auth.currentUser) throw new Error(tr('sub_need_relogin'));
+  const idToken=await _auth.currentUser.getIdToken();
+  const model=(modelPref&&modelPref[0])||'gemini-2.5-flash';
+  const r=await fetch(GEMINI_PROXY_URL,{method:'POST',headers:{'Authorization':'Bearer '+idToken,'Content-Type':'application/json'},
+    body:JSON.stringify({username:currentUser,model,contents,generationConfig:genConfig})});
+  if(r.ok) return {data:await r.json(), model};
+  const e=await r.json().catch(()=>({}));
+  throw new Error(e.error||('proxy error '+r.status));
+}
+
 // wrapper — retry อัตโนมัติถ้า quota หมด
 // modelPref: optional string[] — ลอง model เหล่านี้ก่อน getModel() (ใช้สำหรับงานที่ต้องการโมเดลที่ไม่ใช่ thinking)
 async function callGemini(contents, genConfig={temperature:0.7,maxOutputTokens:8192}, modelPref=null){
-  if(!DB.settings.apiKey) throw new Error('ยังไม่ได้ตั้งค่า API Key — ไปที่ Settings ก่อน');
+  if(!DB.settings.apiKey){
+    if(await _hasActiveSubscription()) return await _callGeminiProxy(contents, genConfig, modelPref);
+    throw new Error(tr('need_apikey_or_sub'));
+  }
   for(let attempt=0;attempt<6;attempt++){
     const model=modelPref
       ? (modelPref.find(m=>!_failedModels.has(m)) || await getModel())
