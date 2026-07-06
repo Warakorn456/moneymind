@@ -369,6 +369,26 @@ Static file — ไม่ต้อง build:
 
 ---
 
+## Marketing Automation — เขียนสคริปต์โปรโมทรายวัน (เริ่ม 2026-07-06)
+
+**เป้าหมาย:** โปรโมทแอปทาง TikTok/IG ด้วยคลิปสั้นตัวการ์ตูน (มายา มาสคอต chibi ผมม่วง) แบบ (กึ่ง)อัตโนมัติ — แบ่ง 3 ช่วง ตั้งใจให้อัตโนมัติแค่ช่วงแรก เพราะโพสต์ IG/TikTok ผ่านบอทตรงๆ เสี่ยงโดนแบนบัญชี (โดยเฉพาะบัญชีใหม่)
+
+| ช่วง | สถานะ | รายละเอียด |
+|------|-------|-----------|
+| **1. เขียนสคริปต์** | ✅ เขียน+ทดสอบผ่านจริงแล้ว 2 รอบ (n8n + Python) **ยังไม่ deploy ขึ้น VM cron** | หมุน 3 template (ปัญหา→ทางแก้/โชว์ Rank/Hook เร็ว) × 9 ฟีเจอร์เด่น ตาม day-of-year (deterministic ไม่ต้องมี DB state) → Gemini เขียนสคริปต์ไทย 3 ฉาก + Veo prompt อังกฤษ → ส่ง Telegram (personal chat) ให้ตรวจก่อนเอาไปสร้างวิดีโอ |
+| **2. สร้างวิดีโอ** | กึ่งมือ | เอา Veo prompt จาก Telegram ไปวางที่ gemini.google.com/app (โหมดสร้างวิดีโอ, ใช้ Gemini Pro subscription ที่มีอยู่) — ยังไม่มี API เรียกอัตโนมัติ |
+| **3. โพสต์ IG/TikTok** | มือทั้งหมด (ตั้งใจ) | โพสต์เองผ่านแอป/เว็บจริง ไม่ใช้บอท/API อัตโนมัติ — ต้อง official Content Publishing API + business account approval ถ้าจะทำอัตโนมัติจริงในอนาคต (ยังไม่เริ่ม) |
+
+**ไฟล์:**
+- `D:\MoneyMind_Marketing\` — โฟลเดอร์แยกสำหรับงานนี้ (`videos\`, `scripts\`, `config\`), มี `.gitignore` กัน `config/.env` และ `videos/` หลุด git
+- `D:\MoneyMind_Marketing\config\.env.example` — template เปล่า (IG/TikTok username+password) — **ผู้ใช้กรอกเองในไฟล์ `.env` เท่านั้น ห้ามพิมพ์รหัสผ่านในแชทกับ Claude เด็ดขาด** (เคยเกิดเหตุพิมพ์รหัสผ่าน IG ใส่แชทตรงๆ 2026-07-06 — ต้องถือว่ารหัสนั้นหลุดแล้วเปลี่ยนใหม่)
+- `D:\MoneyMind_Marketing\scripts\create_marketing_workflow.py` — สร้าง n8n workflow `mm-marketing-script-01` "MoneyMind Marketing - Daily Script Writer" (ทดสอบผ่านจริง, ส่ง Telegram ได้) — รันบนโน้ตบุ๊กเท่านั้น (ต้องเปิดเครื่อง+`npx n8n` เอง) ไม่เหมาะเป็น automation ทุกวันจริง
+- `C:\Users\warakorn\Documents\marketing_daily_script.py` — พอร์ต Python จาก n8n workflow ตัวเดียวกัน ออกแบบให้รันเป็น VM cron แทน (`30 0 * * *` = 07:30 Bangkok); ทดสอบ `--dry` และรันจริงผ่านแล้ว (ส่ง Telegram HTTP 200); ใช้ `mm_secrets.GEMINI_KEY`/`TG_TOKEN` เดิม; retry ทั้ง 429/503 ตาม convention เดิมของโปรเจกต์; ส่งเข้า personal chat (`8172260229`) ไม่ใช่ group
+
+**ยังไม่ทำ:** (1) deploy `marketing_daily_script.py` ขึ้น VM (`gcloud compute scp` + sync เข้า `moneymind-bot` repo + เพิ่ม crontab + เพิ่ม log เข้า `cron_health.py` REGISTRY) (2) browser automation สำหรับสร้างวิดีโอ Veo (3) official API application สำหรับโพสต์อัตโนมัติ
+
+---
+
 ## Telegram Bot — ฟังก์ชันทั้งหมด
 
 Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ปิดเครื่องได้ bot ยังทำงาน
