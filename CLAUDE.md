@@ -350,7 +350,7 @@ Static file — ไม่ต้อง build:
 |---|---|
 | `ai_proxy.py` | Flask app — endpoint `POST /v1/chat` (pass-through ไป Gemini OpenAI-compat) + `GET /healthz`; source of truth `C:\Users\warakorn\Documents\ai_proxy.py` |
 | Auth flow | verify Firebase ID token (`google.oauth2.id_token`, ไม่ใช้ firebase-admin SDK) → เช็ค uid ตรงกับ `members/{username}.uid` → เช็ค `subscriptionActive`+`subscriptionExpiry` (field ใหม่ใน `members/{username}` ยังไม่มี user ไหนตั้งจริง) → เช็ค/เพิ่ม quota เดือนละครั้งใน `aiUsage/{username}` (default 200 req/เดือน) → forward Gemini |
-| Secrets | `mm_secrets.PROXY_GEMINI_KEY` (`.env` → `MM_PROXY_GEMINI_KEY`, **ว่างอยู่** — ต้องสร้าง Gemini key ใหม่แยกจาก key ส่วนตัวที่ใช้ทำ Maya/reports ถึงจะ enable ได้จริง) + `MM_PROXY_MONTHLY_LIMIT` (default 200) |
+| Secrets | `mm_secrets.PROXY_GEMINI_KEY` (`.env` → `MM_PROXY_GEMINI_KEY`, **ตั้งแล้ว** — key แยกจาก key ส่วนตัวที่ใช้ทำ Maya/reports, สร้างผ่าน AI Studio 2026-07-03) + `MM_PROXY_MONTHLY_LIMIT` (default 200) |
 | Deploy บน VM | `/home/warakornbest6/moneymind/ai_proxy.py` รันผ่าน **systemd `moneymind-ai-proxy`** (`waitress-serve --host=127.0.0.1 --port=8081 ai_proxy:app`, log ที่ `ai_proxy.log`) — bind localhost เท่านั้น ไม่เปิดสู่ภายนอกตรง |
 | Reverse proxy + TLS | **Caddy** (`/etc/caddy/Caddyfile`, systemd service `caddy` ติดตั้งจาก apt repo ทางการ) reverse proxy `https://<sslip-domain>` → `127.0.0.1:8081`, ออก cert อัตโนมัติจาก Let's Encrypt (auto-renew) |
 | Domain | ใช้ **sslip.io** (ฟรี ไม่ต้องซื้อโดเมน) — `<IP-ขีดคั่น>.sslip.io` เช่น IP ปัจจุบัน `34.134.61.137` → `34-134-61-137.sslip.io` — **⚠️ ถ้า VM IP เปลี่ยนอีก (ephemeral) ต้องแก้ `/etc/caddy/Caddyfile` ให้ตรง IP ใหม่ + `sudo systemctl reload caddy` ไม่งั้น TLS cert ขอไม่ผ่าน (Let's Encrypt ต่อ IP เดิมไม่ได้)** |
