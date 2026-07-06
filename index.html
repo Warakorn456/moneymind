@@ -9356,7 +9356,7 @@ function renderNWHistory(){
     </div>`;
   requestAnimationFrame(()=>{
     const ctx=document.getElementById('ch-nw-history')?.getContext('2d'); if(!ctx) return;
-    new Chart(ctx,{type:'line',data:{labels,datasets:[{data:vals,borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.1)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#06b6d4',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b',font:{size:10}},grid:{display:false}},y:{ticks:{color:'#64748b',font:{size:10},callback:v=>v>=1000000?'฿'+(v/1000000).toFixed(1)+'M':v>=1000?'฿'+(v/1000).toFixed(0)+'K':'฿'+v},grid:{color:'rgba(255,255,255,.04)'}}}}});
+    new Chart(ctx,{type:'line',data:{labels,datasets:[{data:vals,borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.1)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#06b6d4',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:_chartTickColor(),font:{size:10}},grid:{display:false}},y:{ticks:{color:_chartTickColor(),font:{size:10},callback:v=>v>=1000000?'฿'+(v/1000000).toFixed(1)+'M':v>=1000?'฿'+(v/1000).toFixed(0)+'K':'฿'+v},grid:{color:_chartGridColor(.04)}}}}});
   });
 }
 
