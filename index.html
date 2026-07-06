@@ -7706,7 +7706,7 @@ function renderBalance(){
         const isNow=ym===curYM;
         const chips=mitems.map(it=>`<span style="display:inline-flex;align-items:center;gap:3px;background:${it.type==='income'?'rgba(16,185,129,.15)':'rgba(239,68,68,.12)'};color:${it.type==='income'?'#10b981':'#f87171'};border-radius:6px;padding:2px 8px;font-size:11px;white-space:nowrap">${it.name} ${it.type==='income'?'+':'−'}${fmt(it.amount)}${it.auto?'':`<span onclick="event.stopPropagation();deletePlanItem('${it.id}')" style="cursor:pointer;margin-left:3px;opacity:.7;font-size:13px;line-height:1">×</span>`}</span>`).join('');
         planRows+=`<tr class="mo-row${isNow?' mo-cur':''}">
-          <td style="text-align:left;padding-left:22px;white-space:nowrap;font-size:12px">${isNow?'<span style="color:#a78bfa;margin-right:4px">●</span>':''}<span style="color:${isNow?'#a78bfa':'#cbd5e1'}">${MN[m-1]} ${beYear(yr)}</span></td>
+          <td style="text-align:left;padding-left:22px;white-space:nowrap;font-size:12px">${isNow?'<span style="color:#a78bfa;margin-right:4px">●</span>':''}<span style="color:${isNow?'#a78bfa':'var(--muted)'}">${MN[m-1]} ${beYear(yr)}</span></td>
           <td></td>
           ${hasAge?'<td></td>':''}
           <td style="color:#10b981;font-size:12px">${fmt(mInc)}</td>
