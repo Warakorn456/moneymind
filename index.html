@@ -4156,7 +4156,9 @@ function renderCatChart(){
   const by={};
   txs.forEach(t=>{ by[t.category]=(by[t.category]||0)+t.amount; });
   const cats=Object.keys(by);
-  const ctx=document.getElementById('ch-cat').getContext('2d');
+  const canvasEl=document.getElementById('ch-cat');
+  if(!canvasEl) return;
+  const ctx=canvasEl.getContext('2d');
   if(chCat) chCat.destroy();
   if(!cats.length){
     ctx.canvas.parentElement.innerHTML='<div class="empty" style="padding:30px 0"><i class="fas fa-chart-pie"></i><p>'+tr('no_expense_this_month')+'</p></div>';
