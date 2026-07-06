@@ -13113,8 +13113,8 @@ async function mayaAgent(userMsg){
     const bodyObj={model,messages,tools:MAYA_TOOLS,tool_choice:'auto',temperature:0.5};
     let headers;
     if(useProxy){
-      if(!window._auth||!window._auth.currentUser) throw new Error('Session AI หมดอายุ — ลอง login ใหม่อีกครั้ง');
-      const idToken=await window._auth.currentUser.getIdToken();
+      if(!_auth||!_auth.currentUser) throw new Error('Session AI หมดอายุ — ลอง login ใหม่อีกครั้ง');
+      const idToken=await _auth.currentUser.getIdToken();
       headers={'Authorization':'Bearer '+idToken,'Content-Type':'application/json'};
       bodyObj.username=currentUser;
     } else {
