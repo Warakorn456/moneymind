@@ -344,7 +344,7 @@ Static file — ไม่ต้อง build:
 
 **เป้าหมาย:** แผนอนาคตให้ผู้ใช้ subscription ใช้ AI (Maya chat/สแกนใบเสร็จ/ภาษี) ได้โดยไม่ต้องมี Gemini API key ของตัวเอง — ใช้ key "ของเรา" ผ่าน proxy กลาง (ห้าม key หลุดไปฝั่ง client เด็ดขาด บทเรียนจาก Telegram token เดิม)
 
-**สถานะ:** infra + client wiring + Gemini proxy key พร้อมหมดแล้ว **ยังไม่เปิดใช้งานจริง** เพราะยังไม่มีระบบรับเงิน — Omise KYC **submit แล้ว** (2026-07-03) รอผลตรวจ 2-3 วันทำการ, มี test-mode key ใช้พัฒนาได้แล้ว ยังไม่มีโค้ด checkout/webhook
+**สถานะ:** infra + client wiring + Gemini proxy key + checkout/webhook + auth bug fix พร้อมหมดแล้ว **ทดสอบ end-to-end ผ่านจริงแล้ว 2026-07-06** (subscription active + AI chat ผ่าน proxy ได้คำตอบจริง) **ยังไม่เปิดใช้จริงกับผู้ใช้ทั่วไป** เพราะยังไม่มีระบบรับเงินจริง (Omise KYC submit แล้ว 2026-07-03 รอผลตรวจ, ตอนนี้ใช้ได้แค่ test-mode + manual grant ผ่าน `grant_subscription.py`)
 
 | ส่วนประกอบ | รายละเอียด |
 |---|---|
