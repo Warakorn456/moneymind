@@ -11296,8 +11296,8 @@ function _drawAdminNwTrendChart(history){
       data:{labels,datasets:[{label:'Net Worth รวม',data,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.15)',fill:true,tension:.3,pointRadius:2}]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
         tooltip:{callbacks:{label:c=>'฿'+Math.round(c.parsed.y).toLocaleString('en-US')}}},
-        scales:{y:{beginAtZero:false,ticks:{color:'#94a3b8',callback:v=>'฿'+(v/1000).toLocaleString('en-US')+'k'},grid:{color:'rgba(148,163,184,.1)'}},
-          x:{ticks:{color:'#94a3b8',maxTicksLimit:10},grid:{display:false}}}}});
+        scales:{y:{beginAtZero:false,ticks:{color:_chartTickColor(),callback:v=>'฿'+(v/1000).toLocaleString('en-US')+'k'},grid:{color:_chartGridColor(.1)}},
+          x:{ticks:{color:_chartTickColor(),maxTicksLimit:10},grid:{display:false}}}}});
   }catch(e){ console.error('admin nw trend chart',e); }
 }
 function exportAdminCsv(){
