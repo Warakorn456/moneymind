@@ -4864,8 +4864,8 @@ function dDrop(e){ e.preventDefault(); document.getElementById('ua').classList.r
 let stmtRows=[];
 let stmtFilter='all';
 
-function openStmtModal(){
-  if(!DB.settings.apiKey){ toast(tr('need_apikey_first'),'error'); nav('settings'); return; }
+async function openStmtModal(){
+  if(!DB.settings.apiKey && !(await _hasActiveSubscription())){ toast(tr('need_apikey_or_sub'),'error'); nav('settings'); return; }
   resetStmt();
   openM('m-stmt');
 }
