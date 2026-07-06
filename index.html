@@ -5684,8 +5684,8 @@ function renderPortChart(){
   chPort=new Chart(c2,{type:'doughnut',
     data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:2,borderColor:'#13131f',hoverOffset:10}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{
-      legend:{position:'bottom',labels:{color:'#e2e8f0',font:{family:'Sarabun',size:11},padding:10,boxWidth:9,boxHeight:9,
-        generateLabels:chart=>labels.map((l,i)=>({text:`${l}  ${((data[i]/total)*100).toFixed(1)}%`,fillStyle:colors[i],strokeStyle:'transparent',fontColor:'#e2e8f0',index:i}))
+      legend:{position:'bottom',labels:{color:_chartTickColor(),font:{family:'Sarabun',size:11},padding:10,boxWidth:9,boxHeight:9,
+        generateLabels:chart=>labels.map((l,i)=>({text:`${l}  ${((data[i]/total)*100).toFixed(1)}%`,fillStyle:colors[i],strokeStyle:'transparent',fontColor:_chartTickColor(),index:i}))
       }},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.raw)} (${((c.raw/total)*100).toFixed(1)}%)`}}
     },cutout:'60%'}
   });
