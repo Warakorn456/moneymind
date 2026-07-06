@@ -10281,8 +10281,8 @@ function renderMonthComparison(){
         tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': ฿'+Number(ctx.raw).toLocaleString('th-TH');}}}
       },
       scales:{
-        x:{ticks:{color:'rgba(255,255,255,.6)',font:{family:'Sarabun',size:11}},grid:{color:'rgba(255,255,255,.04)'}},
-        y:{ticks:{color:'rgba(255,255,255,.6)',font:{family:'Sarabun',size:11},callback:function(v){return v>=1000?(v/1000).toFixed(0)+'k':v;}},grid:{color:'rgba(255,255,255,.06)'}}
+        x:{ticks:{color:_chartTickColor(),font:{family:'Sarabun',size:11}},grid:{color:_chartGridColor(.04)}},
+        y:{ticks:{color:_chartTickColor(),font:{family:'Sarabun',size:11},callback:function(v){return v>=1000?(v/1000).toFixed(0)+'k':v;}},grid:{color:_chartGridColor(.06)}}
       }
     }
   });
