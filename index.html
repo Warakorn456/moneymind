@@ -5019,6 +5019,9 @@ async function aiReadStatement(b64,mime){
     // Image: ใช้ inline_data ได้เลย
     let part;
     if(mime==='application/pdf'){
+      // Gemini File API upload ต้องใช้ apiKey ตรงเสมอ (multipart upload endpoint แยกจาก
+      // generateContent ที่ proxy รองรับ) — subscription ยังไม่ครอบคลุมไฟล์ PDF
+      if(!DB.settings.apiKey) throw new Error(tr('stmt_pdf_needs_apikey'));
       document.querySelector('#stmt-proc div:last-child').textContent=tr('stmt_uploading_pdf');
       const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
       const fileUri=await uploadToGeminiFileAPI(bytes,mime,DB.settings.apiKey);
