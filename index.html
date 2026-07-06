@@ -5330,7 +5330,7 @@ function renderDebts(){
     const pct=d.total>0?Math.min(100,paidAmt/d.total*100):0;
     const chips=months.map(m=>{
       const paid=pm.includes(m.ym);
-      return `<button onclick="toggleDebtMonth('${d.id}','${m.ym}')" style="padding:4px 9px;border-radius:8px;font-size:11px;font-weight:${m.isCur?700:400};cursor:pointer;font-family:Sarabun,sans-serif;border:1px solid;transition:.15s;background:${paid?'rgba(16,185,129,.18)':m.isCur?'rgba(124,58,237,.12)':'rgba(255,255,255,.03)'};color:${paid?'#10b981':m.isCur?'#a78bfa':'#64748b'};border-color:${paid?'rgba(16,185,129,.45)':m.isCur?'rgba(124,58,237,.4)':'rgba(255,255,255,.08)'}">${paid?'✓ ':''}${m.label}</button>`;
+      return `<button onclick="toggleDebtMonth('${d.id}','${m.ym}')" style="padding:4px 9px;border-radius:8px;font-size:11px;font-weight:${m.isCur?700:400};cursor:pointer;font-family:Sarabun,sans-serif;border:1px solid;transition:.15s;background:${paid?'rgba(16,185,129,.18)':m.isCur?'rgba(124,58,237,.12)':'rgba(255,255,255,.03)'};color:${paid?'#10b981':m.isCur?'#a78bfa':'var(--muted)'};border-color:${paid?'rgba(16,185,129,.45)':m.isCur?'rgba(124,58,237,.4)':'var(--border)'}">${paid?'✓ ':''}${m.label}</button>`;
     }).join('');
     return `<div class="dcard">
       <div class="dcard-hd">
