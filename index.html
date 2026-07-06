@@ -8261,7 +8261,7 @@ async function processPaySlip(file){
 
 async function processTawi50(file){
   if(!file) return;
-  if(!DB.settings.apiKey){ toast(tr('taxdoc_need_apikey'),'error'); return; }
+  if(!DB.settings.apiKey && !(await _hasActiveSubscription())){ toast(tr('need_apikey_or_sub'),'error'); return; }
   setZoneLoading('tawi-zone',true);
   try{
     const dataURL=await readFileAsDataURL(file);
