@@ -9028,6 +9028,11 @@ function applyTheme(){
   if(icon) icon.className=isLight?'fas fa-moon':'fas fa-sun';
 }
 
+// Chart.js สร้าง canvas ใหม่ทุกครั้งที่ re-render หน้า — เรียกฟังก์ชันนี้ตอนสร้าง chart
+// เพื่อให้สีแกน/grid เข้ากับธีมปัจจุบันเสมอ (ของเดิม hardcode สีขาวโปร่งแสง ซึ่งมองไม่เห็นบนพื้นขาวโหมดสว่าง)
+function _chartTickColor(){ return document.body.classList.contains('light-mode')?'#475569':'#64748b'; }
+function _chartGridColor(op){ op=op||0.06; return document.body.classList.contains('light-mode')?`rgba(0,0,0,${op})`:`rgba(255,255,255,${op})`; }
+
 // ══════════════════════════════════════════
 //  FEATURE 8 — SHAREABLE WIDGET
 // ══════════════════════════════════════════
