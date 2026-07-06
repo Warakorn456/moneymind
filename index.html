@@ -2579,7 +2579,7 @@ function setSyncStatus(s){
   const lb=document.getElementById('sync-label');
   if(!ic||!lb) return;
   const map={
-    idle:   ['#64748b','fa-cloud','ยังไม่ได้ซิงค์'],
+    idle:   ['var(--muted)','fa-cloud','ยังไม่ได้ซิงค์'],
     syncing:['#f59e0b','fa-sync fa-spin','กำลังซิงค์...'],
     ok:     ['#10b981','fa-cloud','ซิงค์แล้ว ✓'],
     error:  ['#ef4444','fa-cloud-slash','ซิงค์ไม่ได้'],
