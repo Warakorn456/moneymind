@@ -7212,7 +7212,7 @@ function renderPlanChart(year){
           if(els.length){ renderPlanChart(sy+els[0].index); }
         },
         plugins:{
-          legend:{labels:{color:'#cbd5e1',font:{family:'Sarabun',size:12}}},
+          legend:{labels:{color:_chartTickColor(),font:{family:'Sarabun',size:12}}},
           tooltip:{callbacks:{label:tooltipFmt}},
         },
         scales:{...scaleOpts,
@@ -7244,7 +7244,7 @@ function renderPlanChart(year){
       options:{
         responsive:true,maintainAspectRatio:false,
         plugins:{
-          legend:{labels:{color:'#cbd5e1',font:{family:'Sarabun',size:12}}},
+          legend:{labels:{color:_chartTickColor(),font:{family:'Sarabun',size:12}}},
           tooltip:{callbacks:{label:tooltipFmt}},
         },
         scales:scaleOpts,
