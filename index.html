@@ -11632,7 +11632,7 @@ async function renderAdmin(){
         _adminChart=new Chart(cv,{type:'line',
           data:{labels:gkeys.map(k=>k.slice(5)),datasets:[{label:tr('admin_cumulative_users'),data:gcum,borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.15)',fill:true,tension:.3,pointRadius:2}]},
           options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-            scales:{y:{beginAtZero:true,ticks:{color:'#94a3b8',precision:0},grid:{color:'rgba(148,163,184,.1)'}},x:{ticks:{color:'#94a3b8',maxTicksLimit:8},grid:{display:false}}}}});
+            scales:{y:{beginAtZero:true,ticks:{color:_chartTickColor(),precision:0},grid:{color:_chartGridColor(.1)}},x:{ticks:{color:_chartTickColor(),maxTicksLimit:8},grid:{display:false}}}}});
       }
     }catch(e){ console.error('admin chart',e); }
     _drawAdminNwTrendChart(history);
