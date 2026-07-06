@@ -13012,8 +13012,8 @@ function _subShowCardForm(){
 }
 
 async function _subGetIdToken(){
-  if(!window._auth||!window._auth.currentUser) throw new Error(tr('sub_need_relogin'));
-  return await window._auth.currentUser.getIdToken();
+  if(!_auth||!_auth.currentUser) throw new Error(tr('sub_need_relogin'));
+  return await _auth.currentUser.getIdToken();
 }
 
 async function subscribeWithCard(){
