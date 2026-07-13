@@ -2593,6 +2593,34 @@ function _flushPendingSync(){ if(!_pendingRemoteSync) return; _pendingRemoteSync
   }catch(e){ console.error('[Firebase] init error:',e.message); }
 })();
 
+// ── Global error capture — ย้ายมาไว้เร็วที่สุดเท่าที่ทำได้ (เดิมอยู่ท้ายไฟล์บรรทัด ~14977
+//    ทำให้ error ที่เกิดระหว่าง checkLogin()/init ช่วงต้น ก่อน handler ถูกลงทะเบียน ไม่มีวันถูกจับ/รายงาน
+//    ย้ายมาไว้หลัง initFirebase ทันที เพื่อให้ _sendReport (hoisted function ท้ายไฟล์) ส่งผ่าน _fs ได้ตั้งแต่ต้น) ──
+(function(){
+  var _seenErrors=new Set();
+  function _reportOnce(key,payload){
+    if(_seenErrors.has(key)) return; // กัน error เดิมยิงซ้ำรัวๆ ในเซสชันเดียว (เช่น error ในลูป)
+    _seenErrors.add(key);
+    _sendReport(Object.assign({kind:'error'},payload));
+  }
+  window.addEventListener('error',function(e){
+    var msg=String(e.message||'');
+    _reportOnce('e:'+msg+':'+e.filename+':'+e.lineno,{
+      message:msg,
+      source:(e.filename||'')+':'+(e.lineno||'')+':'+(e.colno||''),
+      stack:(e.error&&e.error.stack)?String(e.error.stack).slice(0,2000):''
+    });
+  });
+  window.addEventListener('unhandledrejection',function(e){
+    var reason=e.reason;
+    var msg=(reason&&reason.message)?String(reason.message):String(reason);
+    _reportOnce('r:'+msg,{
+      message:'unhandledrejection: '+msg,
+      stack:(reason&&reason.stack)?String(reason.stack).slice(0,2000):''
+    });
+  });
+})();
+
 function setSyncStatus(s){
   const ic=document.getElementById('sync-icon');
   const lb=document.getElementById('sync-label');
@@ -8368,6 +8396,10 @@ let _notifs=[];
 //  INIT
 // ══════════════════════════════════════════
 checkLogin();
+// แจ้ง native wrapper (WebApp.tsx) ว่า UI ตัดสินใจแล้วว่าจะโชว์อะไร (login screen หรือ app-root)
+// ใช้เป็น safety-net ฝั่ง native: ถ้าไม่ได้รับสัญญาณนี้ภายใน timeout หลัง onLoadEnd จะโชว์หน้า retry
+// แทนปล่อยให้ผู้ใช้ค้างอยู่กับจอว่างเปล่าถาวร (สาเหตุที่ Apple reject ด้วย Guideline 2.1.0 "blank screen")
+try{ if(window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify({action:'appReady'})); }catch(e){}
 if(currentUser){
   initDate(); setTxType('income'); renderDash();
   setTimeout(checkDcaSchedule,2000);
@@ -14973,33 +15005,6 @@ async function _sendReport(payload){
     return true;
   }catch(e){ console.warn('[report]',e.message); return false; }
 }
-
-// ── Global error capture (เงียบๆ ไม่รบกวนผู้ใช้ แค่ให้เจ้าของแอปรู้ว่ามี error เกิดขึ้นจริง) ──
-(function(){
-  var _seenErrors=new Set();
-  function _reportOnce(key,payload){
-    if(_seenErrors.has(key)) return; // กัน error เดิมยิงซ้ำรัวๆ ในเซสชันเดียว (เช่น error ในลูป)
-    _seenErrors.add(key);
-    _sendReport(Object.assign({kind:'error'},payload));
-  }
-  window.addEventListener('error',function(e){
-    var msg=String(e.message||'');
-    _reportOnce('e:'+msg+':'+e.filename+':'+e.lineno,{
-      message:msg,
-      source:(e.filename||'')+':'+(e.lineno||'')+':'+(e.colno||''),
-      stack:(e.error&&e.error.stack)?String(e.error.stack).slice(0,2000):''
-    });
-  });
-  window.addEventListener('unhandledrejection',function(e){
-    var reason=e.reason;
-    var msg=(reason&&reason.message)?String(reason.message):String(reason);
-    _reportOnce('r:'+msg,{
-      message:'unhandledrejection: '+msg,
-      stack:(reason&&reason.stack)?String(reason.stack).slice(0,2000):''
-    });
-  });
-})();
-
 
 // ══════════════════════════════════════════
 //  GMAIL BANK AUTO-IMPORT

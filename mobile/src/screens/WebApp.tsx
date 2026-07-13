@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { View, ActivityIndicator, StyleSheet, BackHandler, Platform, Text, Alert } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, BackHandler, Platform, Text, Alert, Linking, Pressable } from 'react-native';
 import { WebView } from 'react-native-webview';
+import type { WebViewErrorEvent, WebViewHttpErrorEvent, ShouldStartLoadRequest } from 'react-native-webview/lib/WebViewTypes';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as Print from 'expo-print';
@@ -25,7 +26,12 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export const WEB_URL = 'https://warakorn456.github.io/moneymind/';
+export const WEB_URL = 'https://app.moneymindth.com/';
+const WEB_HOST = 'app.moneymindth.com';
+
+// เวอร์ชันแอป native ปัจจุบัน (app.json) — ส่งเข้าเว็บให้เช็คว่า action ไหนเรียกได้
+// เพราะเว็บ deploy ใหม่ทุกวันแต่แอปในเครื่อง user เป็นเวอร์ชันเก่ากว่าได้เสมอ
+const APP_VERSION = Constants.expoConfig?.version ?? '0.0.0';
 
 // ─────────────────────────────────────────────────────────────────────────
 // Google Sign-In ผ่าน native SDK (@react-native-google-signin) — ไม่ใช้ browser
@@ -51,6 +57,7 @@ const PLATFORM_FLAG = Platform.OS === 'ios' ? 'window._isIOSApp = true;' : 'wind
 // Script ที่ inject ก่อน page load — บอก web app ว่าอยู่ใน native + define callback
 const INJECT = `(function(){
   ${PLATFORM_FLAG}
+  window._appVersion = ${JSON.stringify(APP_VERSION)};
 
   // เรียกจาก native เมื่อ Google Sign-In สำเร็จ
   window.handleNativeGoogleAuth = function(idToken, accessToken) {
@@ -91,7 +98,84 @@ const INJECT = `(function(){
 export default function WebApp() {
   const webViewRef = useRef<WebView>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  // เปลี่ยน key เพื่อ force remount WebView — ต้องทำแบบนี้หลัง renderer crash
+  // (แค่ .reload() ไม่พอ เพราะ process ที่ตายไปแล้วไม่รับคำสั่งอะไรอีก)
+  const [webViewKey, setWebViewKey] = useState(0);
   const canGoBack = useRef(false);
+
+  // Safety-net สำหรับ Apple Guideline 2.1.0 "App launches into a blank screen":
+  // onLoadEnd ของ WebView บอกแค่ว่า HTML โหลดเสร็จ ไม่ได้แปลว่าเว็บแอป render UI สำเร็จจริง
+  // ถ้า JS ฝั่งเว็บ crash ระหว่าง init (ก่อน checkLogin()/render เสร็จ) หน้าจอจะว่างเปล่าค้างถาวร
+  // โดยที่ native ไม่รู้ตัวเลยเพราะ onLoadEnd ยิงไปแล้ว — ใช้ 'appReady' ping จากเว็บ (ยิงหลัง
+  // checkLogin() เสร็จ) เป็นสัญญาณยืนยัน ถ้าไม่ได้รับภายใน timeout ให้ถือว่าล้มเหลวและโชว์ retry
+  const appReadyRef = useRef(false);
+  const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearWatchdog = useCallback(() => {
+    if (watchdogRef.current) {
+      clearTimeout(watchdogRef.current);
+      watchdogRef.current = null;
+    }
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    clearWatchdog();
+    appReadyRef.current = false;
+    setLoadError(null);
+    setLoading(true);
+    setWebViewKey((k) => k + 1);
+  }, [clearWatchdog]);
+
+  const handleLoadEnd = useCallback(() => {
+    setLoading(false);
+    clearWatchdog();
+    appReadyRef.current = false;
+    watchdogRef.current = setTimeout(() => {
+      if (!appReadyRef.current) {
+        setLoadError('แอปโหลดไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+      }
+    }, 15000);
+  }, [clearWatchdog]);
+
+  useEffect(() => () => clearWatchdog(), [clearWatchdog]);
+
+  // onError ยิงเฉพาะตอน navigation หลักของ WebView ล้มเหลว (เช่น ไม่มีเน็ต, DNS ล้มเหลว)
+  // ไม่ยิงตอน sub-resource (CDN script/font) โหลดพลาด — นั่นเป็นเรื่องของหน้าเว็บเอง
+  const handleLoadError = useCallback((e: WebViewErrorEvent) => {
+    clearWatchdog();
+    setLoading(false);
+    setLoadError(e.nativeEvent.description || 'ไม่สามารถเชื่อมต่อได้ กรุณาตรวจสอบอินเทอร์เน็ต');
+  }, [clearWatchdog]);
+
+  const handleHttpError = useCallback((e: WebViewHttpErrorEvent) => {
+    if (e.nativeEvent.statusCode >= 400) {
+      setLoading(false);
+      setLoadError(`เซิร์ฟเวอร์ตอบกลับผิดพลาด (${e.nativeEvent.statusCode})`);
+    }
+  }, []);
+
+  // Android เท่านั้น — WebView renderer crash (เจอได้จริงบนเครื่อง RAM น้อยกับ Chart.js/3D globe หนักๆ)
+  // ไม่ remount จอจะขาวค้างถาวรจนกว่า user จะ force close เอง
+  const handleRenderProcessGone = useCallback(() => {
+    clearWatchdog();
+    appReadyRef.current = false;
+    setLoading(true);
+    setLoadError(null);
+    setWebViewKey((k) => k + 1);
+  }, [clearWatchdog]);
+
+  // จำกัดให้ WebView นำทางเฉพาะโดเมนของแอปเอง — ลิงก์ภายนอก (ข่าว, external link ในหน้าเว็บ)
+  // เปิดด้วยเบราว์เซอร์นอกแทน กัน user หลุดออกจากแอปไปติดอยู่หน้าเว็บอื่นที่ไม่มีทางกลับ
+  const handleShouldStartLoad = useCallback((req: ShouldStartLoadRequest) => {
+    const { url } = req;
+    if (url.startsWith('about:') || url.startsWith('data:') || url.startsWith('blob:')) return true;
+    const m = /^https?:\/\/([^/]+)/i.exec(url);
+    const host = m ? m[1].toLowerCase() : null;
+    if (host === WEB_HOST) return true;
+    Linking.openURL(url).catch(() => {});
+    return false;
+  }, []);
 
   // ส่งผลกลับเข้า WebView
   const injectAuth = useCallback((idToken: string | null, accessToken: string | null) => {
@@ -235,9 +319,12 @@ export default function WebApp() {
         printHtml(data.html);
       } else if (data.action === 'requestPushToken') {
         registerForPushNotifications();
+      } else if (data.action === 'appReady') {
+        appReadyRef.current = true;
+        clearWatchdog();
       }
     } catch (_) {}
-  }, [startGoogleSignIn, saveFile, printHtml, registerForPushNotifications]);
+  }, [startGoogleSignIn, saveFile, printHtml, registerForPushNotifications, clearWatchdog]);
 
   // Android hardware back button — ถามหน้าเว็บก่อนเสมอว่ามี modal/หน้าย่อยให้ปิด/ย้อนกลับไหม
   // (SPA ไม่ใช้ pushState ทำให้ webView.canGoBack() เป็น false เกือบตลอด — ถ้าใช้ default
@@ -263,9 +350,14 @@ export default function WebApp() {
   return (
     <View style={s.wrap}>
       <WebView
+        key={webViewKey}
         ref={webViewRef}
         source={{ uri: WEB_URL }}
-        onLoadEnd={() => setLoading(false)}
+        onLoadEnd={handleLoadEnd}
+        onError={handleLoadError}
+        onHttpError={handleHttpError}
+        onRenderProcessGone={handleRenderProcessGone}
+        onShouldStartLoadWithRequest={handleShouldStartLoad}
         onNavigationStateChange={(n) => { canGoBack.current = n.canGoBack; }}
         onMessage={handleMessage}
         startInLoadingState
@@ -277,10 +369,20 @@ export default function WebApp() {
         thirdPartyCookiesEnabled
         style={s.web}
       />
-      {loading && (
+      {loading && !loadError && (
         <View style={s.loader} pointerEvents="none">
           <Text style={s.logo}>💰 MoneyMind</Text>
           <ActivityIndicator size="large" color={C.primaryL} />
+        </View>
+      )}
+      {loadError && (
+        <View style={s.loader}>
+          <Text style={s.logo}>💰 MoneyMind</Text>
+          <Text style={s.errTitle}>เชื่อมต่อไม่ได้</Text>
+          <Text style={s.errMsg}>{loadError}</Text>
+          <Pressable style={s.retryBtn} onPress={handleRetry}>
+            <Text style={s.retryText}>ลองใหม่</Text>
+          </Pressable>
         </View>
       )}
     </View>
@@ -298,4 +400,14 @@ const s = StyleSheet.create({
     gap: 18,
   },
   logo: { fontSize: 22, fontWeight: '800', color: C.primaryL },
+  errTitle: { fontSize: 16, fontWeight: '700', color: C.text },
+  errMsg: { fontSize: 13, color: C.muted, textAlign: 'center', paddingHorizontal: 32 },
+  retryBtn: {
+    marginTop: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 10,
+    backgroundColor: C.primary,
+  },
+  retryText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 });
