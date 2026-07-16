@@ -127,15 +127,21 @@ export default function WebApp() {
     setWebViewKey((k) => k + 1);
   }, [clearWatchdog]);
 
+  // ⚠️ ห้ามรีเซ็ต appReadyRef ที่นี่เด็ดขาด — inline script ของเว็บรันระหว่าง parse หน้า
+  // ทำให้ 'appReady' มาถึง *ก่อน* onLoadEnd เสมอบนเน็ตปกติ ถ้ารีเซ็ตทับตรงนี้ flag ที่เพิ่งตั้ง
+  // จะหาย แล้ว watchdog จะเตะผู้ใช้ออกจากแอปที่ทำงานปกติไปหน้า error หลัง 15 วิ
+  // (คือบั๊กที่ทำให้ Apple reject รอบสอง 2026-07-16: "app redirects to an error page")
+  // จุดรีเซ็ต flag ที่ถูกต้องมีแค่ตอน WebView remount จริง: handleRetry / handleRenderProcessGone
   const handleLoadEnd = useCallback(() => {
     setLoading(false);
     clearWatchdog();
-    appReadyRef.current = false;
-    watchdogRef.current = setTimeout(() => {
-      if (!appReadyRef.current) {
-        setLoadError('แอปโหลดไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
-      }
-    }, 15000);
+    if (!appReadyRef.current) {
+      watchdogRef.current = setTimeout(() => {
+        if (!appReadyRef.current) {
+          setLoadError('แอปโหลดไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+        }
+      }, 15000);
+    }
   }, [clearWatchdog]);
 
   useEffect(() => () => clearWatchdog(), [clearWatchdog]);

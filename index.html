@@ -3082,7 +3082,11 @@ async function handleNativeGoogleToken(idToken, email, displayName, photoUrl){
     const snap=await _fs.collection('members').where('email','==',email).limit(1).get();
     if(!snap.empty){
       const memberData=snap.docs[0].data();
+      // uid ผูกไว้ไม่ตรง session = คนละบัญชี/คนละวิธี → ปฏิเสธ (ดู _handleOAuthResult)
+      if((memberData.uid||'') && memberData.uid!==fbUser.uid){ await _rejectOAuthCollision(memberData, errEl); return; }
       currentUser=memberData.username;
+      // uid เขียนทุกครั้ง (self-heal unclaimed legacy) — ผ่าน rules เพราะ uid ตรง/ยังว่าง
+      try{ await _fs.collection('members').doc(currentUser).update({uid:fbUser.uid,lastSeen:firebase.firestore.FieldValue.serverTimestamp(),provider:'google',platform:'android'}); }catch(e){}
       DB={ transactions:[],savings:[],debts:[],investments:[],settings:{apiKey:''},tax:{},plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]},profile:{} };
       loadDB();
       const _synced=await fsLoad();
@@ -3098,7 +3102,7 @@ async function handleNativeGoogleToken(idToken, email, displayName, photoUrl){
       }
       await _fs.collection('members').doc(autoUser).set({
         username:autoUser, email:email, uid:fbUser.uid,
-        displayName:displayName||'', photoURL:photoUrl||'',
+        displayName:displayName||'', photoURL:photoUrl||'', provider:'google',
         createdAt:firebase.firestore.FieldValue.serverTimestamp(), platform:'android'
       });
       const salt=randB64(16);
@@ -3144,6 +3148,19 @@ function _activeLoginErr(){
   return document.getElementById('login-err');
 }
 
+// อีเมลนี้ผูกกับ Firebase account อื่นอยู่แล้ว (สมัครไว้ด้วยวิธี login อื่น) →
+// ปฏิเสธ ไม่ยึด uid ทับ (กัน 403 mismatch + account takeover) แล้วบอกให้ใช้วิธีเดิม
+// 1 อีเมล = 1 วิธี login เสมอ
+async function _rejectOAuthCollision(memberData, errEl){
+  try{ await _auth.signOut(); }catch(e){}
+  const p=(memberData&&memberData.provider)||'';
+  const how = p==='google' ? 'ปุ่ม Google' : p==='apple' ? 'ปุ่ม Apple' : 'Username / Password';
+  const el=errEl||(typeof _activeLoginErr==='function'?_activeLoginErr():null);
+  if(el) el.innerHTML='<div style="background:#1e1a2e;border:1px solid #ef444455;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.7">'
+    +'⚠️ <b>อีเมลนี้ลงทะเบียนไว้แล้ว</b><br>กรุณาเข้าสู่ระบบด้วย <b>'+how+'</b> ที่ใช้ครั้งแรก</div>';
+  document.querySelectorAll('.google-btn,.apple-btn').forEach(b=>{ b.disabled=false; b.style.opacity=''; });
+}
+
 // helper: สร้าง/login ด้วย Firebase OAuth provider แล้ว sync ข้อมูล
 async function _handleOAuthResult(result, providerName){
   const fbUser=result.user;
@@ -3152,9 +3169,11 @@ async function _handleOAuthResult(result, providerName){
   if(!snap.empty){
     // มีบัญชีแล้ว — login
     const memberData=snap.docs[0].data();
+    // uid ที่ผูกไว้ไม่ตรงกับ session ที่เพิ่ง login = คนละบัญชี/คนละวิธี → ปฏิเสธ
+    if((memberData.uid||'') && memberData.uid!==fbUser.uid){ await _rejectOAuthCollision(memberData); return; }
     currentUser=memberData.username;
-    // อัปเดต lastSeen + provider
-    try{ await _fs.collection('members').doc(currentUser).update({lastSeen:firebase.firestore.FieldValue.serverTimestamp(),provider:providerName,platform:(window._isAndroidApp?'android':window._isIOSApp?'ios':'web')}); }catch(e){}
+    // uid เขียนทุกครั้ง (self-heal เคส unclaimed legacy) — ผ่าน rules เพราะ uid ตรง/ยังว่าง
+    try{ await _fs.collection('members').doc(currentUser).update({uid:fbUser.uid,lastSeen:firebase.firestore.FieldValue.serverTimestamp(),provider:providerName,platform:(window._isAndroidApp?'android':window._isIOSApp?'ios':'web')}); }catch(e){}
     loadDB();
     const _synced=await fsLoad();
     enterApp();
@@ -8399,7 +8418,15 @@ checkLogin();
 // แจ้ง native wrapper (WebApp.tsx) ว่า UI ตัดสินใจแล้วว่าจะโชว์อะไร (login screen หรือ app-root)
 // ใช้เป็น safety-net ฝั่ง native: ถ้าไม่ได้รับสัญญาณนี้ภายใน timeout หลัง onLoadEnd จะโชว์หน้า retry
 // แทนปล่อยให้ผู้ใช้ค้างอยู่กับจอว่างเปล่าถาวร (สาเหตุที่ Apple reject ด้วย Guideline 2.1.0 "blank screen")
-try{ if(window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify({action:'appReady'})); }catch(e){}
+// ส่งซ้ำหลายจังหวะ (ทันที / load event / 3s / 10s) — ฝั่ง native รับซ้ำได้ไม่มีผลข้างเคียง
+// กันเคส message แรกหลุดจาก race กับ native bridge หรือถูก event ฝั่ง native ที่มาทีหลังกลบ
+try{
+  var _notifyAppReady=function(){ try{ if(window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify({action:'appReady'})); }catch(e){} };
+  _notifyAppReady();
+  window.addEventListener('load',_notifyAppReady);
+  setTimeout(_notifyAppReady,3000);
+  setTimeout(_notifyAppReady,10000);
+}catch(e){}
 if(currentUser){
   initDate(); setTxType('income'); renderDash();
   setTimeout(checkDcaSchedule,2000);
