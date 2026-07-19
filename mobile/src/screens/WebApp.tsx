@@ -14,6 +14,8 @@ import {
   isSuccessResponse,
   isErrorWithCode,
 } from '@react-native-google-signin/google-signin';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
 import { C } from '../config/colors';
 
 // แจ้งเตือนที่มาถึงตอนแอปเปิดอยู่ (foreground) ให้โชว์แบนเนอร์+เสียงเหมือนตอนแอปปิดอยู่
@@ -89,6 +91,40 @@ const INJECT = `(function(){
   window.handleNativeGoogleError = function(msg) {
     var el = window._activeLoginErr ? window._activeLoginErr() : null;
     if (el) el.textContent = msg === 'cancel' ? '' : ('Google Sign-In ล้มเหลว: ' + msg);
+    document.querySelectorAll('.google-btn,.apple-btn').forEach(function(b){
+      b.disabled=false; b.style.opacity='';
+    });
+  };
+
+  // เรียกจาก native เมื่อ Apple Sign-In สำเร็จ — idToken + rawNonce (ไม่ hash) ตามที่
+  // Firebase OAuthProvider('apple.com').credential({idToken, rawNonce}) ต้องการ
+  window.handleNativeAppleAuth = function(idToken, rawNonce) {
+    try {
+      function doSignIn() {
+        if (!window._auth || !window.firebase) { setTimeout(doSignIn, 300); return; }
+        var provider = new firebase.auth.OAuthProvider('apple.com');
+        var credential = provider.credential({ idToken: idToken, rawNonce: rawNonce });
+        window._auth.signInWithCredential(credential)
+          .then(function(result) {
+            if (window._handleOAuthResult) window._handleOAuthResult(result, 'apple');
+          })
+          .catch(function(err) {
+            console.error('[nativeApple]', err);
+            var el = window._activeLoginErr ? window._activeLoginErr() : null;
+            if (el) el.textContent = 'เกิดข้อผิดพลาด: ' + (err.code || err.message);
+            document.querySelectorAll('.google-btn,.apple-btn').forEach(function(b){
+              b.disabled=false; b.style.opacity='';
+            });
+          });
+      }
+      doSignIn();
+    } catch(e) { console.error('[nativeApple setup]', e); }
+  };
+
+  // เรียกจาก native เมื่อ Apple Sign-In ยกเลิก/error
+  window.handleNativeAppleError = function(msg) {
+    var el = window._activeLoginErr ? window._activeLoginErr() : null;
+    if (el) el.textContent = msg === 'cancel' ? '' : ('Apple Sign-In ล้มเหลว: ' + msg);
     document.querySelectorAll('.google-btn,.apple-btn').forEach(function(b){
       b.disabled=false; b.style.opacity='';
     });
@@ -226,6 +262,52 @@ export default function WebApp() {
     }
   }, [injectAuth, injectError]);
 
+  // ส่งผล Apple Sign-In กลับเข้า WebView
+  const injectAppleAuth = useCallback((idToken: string, rawNonce: string) => {
+    const js = `(function(){ if(window.handleNativeAppleAuth) window.handleNativeAppleAuth(${JSON.stringify(idToken)},${JSON.stringify(rawNonce)}); })(); true;`;
+    webViewRef.current?.injectJavaScript(js);
+  }, []);
+
+  const injectAppleError = useCallback((msg: string) => {
+    const js = `(function(){ if(window.handleNativeAppleError) window.handleNativeAppleError(${JSON.stringify(msg)}); })(); true;`;
+    webViewRef.current?.injectJavaScript(js);
+  }, []);
+
+  // เริ่ม native Apple Sign-In (iOS เท่านั้น) — แทนที่ signInWithPopup() ฝั่งเว็บที่ใช้ไม่ได้ใน
+  // WebView (Apple reject 2.1(a) 2026-07-19: "app only displayed a blank screen when we tapped
+  // the Sign in with Apple button" — เพราะ WebView ไม่รองรับ true popup window)
+  // nonce: ต้อง hash (SHA-256) ก่อนส่งให้ Apple เป็น anti-replay, แล้วส่ง raw nonce (ไม่ hash)
+  // ให้ Firebase ตรวจสอบตอนแลก credential — ตาม spec ของ Sign in with Apple + Firebase
+  const startAppleSignIn = useCallback(async () => {
+    try {
+      const isAvailable = await AppleAuthentication.isAvailableAsync();
+      if (!isAvailable) {
+        injectAppleError('Apple Sign-In ไม่รองรับบนอุปกรณ์นี้');
+        return;
+      }
+      const rawNonce = Crypto.randomUUID() + Crypto.randomUUID();
+      const hashedNonce = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, rawNonce);
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+        nonce: hashedNonce,
+      });
+      if (!credential.identityToken) {
+        injectAppleError('ไม่ได้รับ identityToken จาก Apple');
+        return;
+      }
+      injectAppleAuth(credential.identityToken, rawNonce);
+    } catch (err: any) {
+      if (err?.code === 'ERR_REQUEST_CANCELED') {
+        injectAppleError('cancel');
+        return;
+      }
+      injectAppleError(err?.message || String(err));
+    }
+  }, [injectAppleAuth, injectAppleError]);
+
   // บันทึกไฟล์ (CSV/JSON/PNG) ที่ web ส่ง base64 มาให้ ผ่าน expo-file-system + แชร์/บันทึกด้วย expo-sharing
   // (จำเป็นเพราะ <a download> ของ blob: URL ใน react-native-webview ไม่ทำงาน — ไม่มี download listener ให้ blob URI)
   const saveFile = useCallback(async (filename: string, mime: string, base64: string) => {
@@ -311,12 +393,14 @@ export default function WebApp() {
     }
   }, [injectPushToken, injectPushError]);
 
-  // รับ message จาก WebView (action: 'googleSignIn' | 'exitApp' | 'saveFile' | 'printHtml' | 'requestPushToken')
+  // รับ message จาก WebView (action: 'googleSignIn' | 'appleSignIn' | 'exitApp' | 'saveFile' | 'printHtml' | 'requestPushToken')
   const handleMessage = useCallback((event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.action === 'googleSignIn') {
         startGoogleSignIn();
+      } else if (data.action === 'appleSignIn') {
+        startAppleSignIn();
       } else if (data.action === 'exitApp') {
         BackHandler.exitApp();
       } else if (data.action === 'saveFile') {
@@ -330,7 +414,7 @@ export default function WebApp() {
         clearWatchdog();
       }
     } catch (_) {}
-  }, [startGoogleSignIn, saveFile, printHtml, registerForPushNotifications, clearWatchdog]);
+  }, [startGoogleSignIn, startAppleSignIn, saveFile, printHtml, registerForPushNotifications, clearWatchdog]);
 
   // Android hardware back button — ถามหน้าเว็บก่อนเสมอว่ามี modal/หน้าย่อยให้ปิด/ย้อนกลับไหม
   // (SPA ไม่ใช้ pushState ทำให้ webView.canGoBack() เป็น false เกือบตลอด — ถ้าใช้ default

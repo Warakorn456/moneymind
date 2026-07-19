@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.moneymind.th",
-      "buildNumber": "3",
+      "buildNumber": "4",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -43,6 +43,7 @@
     "owner": "warakorn456",
     "plugins": [
       "expo-web-browser",
+      "expo-apple-authentication",
       "@react-native-google-signin/google-signin",
       [
         "expo-notifications",

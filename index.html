@@ -3353,11 +3353,20 @@ async function tryGoogleLogin(){
 }
 
 async function tryAppleLogin(){
-  if(window._isIOSApp && window.webkit?.messageHandlers?.appleSignIn){ window.webkit.messageHandlers.appleSignIn.postMessage({}); return; }
   const errEl=_activeLoginErr();
   const allBtns=[...document.querySelectorAll('.google-btn,.apple-btn')];
   allBtns.forEach(b=>{ b.disabled=true; b.style.opacity='.5'; });
   if(errEl) errEl.textContent='';
+  // แอป iOS (WebView) → ใช้ native Sign in with Apple ผ่าน expo-apple-authentication แทน
+  // signInWithPopup() ด้านล่างที่ใช้ไม่ได้ใน WebView (ไม่มี true popup window — Apple reject
+  // 2.1(a) 2026-07-19: "app only displayed a blank screen when we tapped the Sign in with Apple button")
+  // ผลลัพธ์กลับมาทาง window.handleNativeAppleAuth/handleNativeAppleError (inject โดย native ฝั่ง WebApp.tsx)
+  // allBtns จะถูก re-enable โดย handleNativeAppleAuth (error case) / handleNativeAppleError
+  if(window._isIOSApp && window.ReactNativeWebView){
+    if(errEl) errEl.textContent='กำลังเปิด Sign in with Apple...';
+    window.ReactNativeWebView.postMessage(JSON.stringify({action:'appleSignIn'}));
+    return;
+  }
   if(!_auth||!_fs){
     if(errEl) errEl.textContent='ระบบยังไม่พร้อม ลองใหม่';
     allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
