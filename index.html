@@ -28,7 +28,16 @@
     .apple-btn:hover{opacity:.88}.apple-btn:disabled{opacity:.5}
     .apple-btn svg{fill:#000}
     .login-user-info{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(124,58,237,.15);border-radius:10px;margin-bottom:8px;font-size:13px;color:#a78bfa;font-weight:600}
+    /* iOS (แอป App Store): ซ่อน social login (แก้ crash Google/Apple sign-in + เลี่ยง 4.8)
+       และซ่อนระบบซื้อ subscription (เลี่ยง 3.1.1 — ต้องผ่าน Apple IAP เท่านั้น)
+       AI features บน iOS ใช้ Gemini API key ของ user เองแทน */
+    html.ios-app .ios-hide{display:none !important}
   </style>
+  <script>
+    // ตั้ง class ios-app ให้เร็วที่สุด (native inject window._isIOSApp ก่อน content load แล้ว)
+    // เพื่อซ่อน social login + subscription บน iOS โดยไม่ให้กระพริบโผล่ก่อน
+    try{ if(window._isIOSApp) document.documentElement.classList.add('ios-app'); }catch(e){}
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -1058,8 +1067,8 @@
         onkeydown="if(event.key==='Enter') tryLogin()">
       <button class="login-btn" id="login-btn" onclick="tryLogin()" data-i18n="login_btn">เข้าสู่ระบบ</button>
       <div class="login-err" id="login-err"></div>
-      <div class="login-divider" data-i18n="login_divider">หรือเข้าสู่ระบบด้วย</div>
-      <div style="display:flex;gap:8px">
+      <div class="login-divider ios-hide" data-i18n="login_divider">หรือเข้าสู่ระบบด้วย</div>
+      <div class="ios-hide" style="display:flex;gap:8px">
         <button class="google-btn" id="google-login-btn" onclick="tryGoogleLogin()" style="flex:1;justify-content:center;gap:8px">
           <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
           Google
@@ -1084,8 +1093,8 @@
         onkeydown="if(event.key==='Enter') tryRegister()">
       <button class="login-btn" id="reg-btn" onclick="tryRegister()" data-i18n="register_btn">สมัครใช้งาน</button>
       <div class="login-err" id="reg-err"></div>
-      <div class="login-divider" data-i18n="register_divider">หรือสมัครด้วย</div>
-      <div style="display:flex;gap:8px">
+      <div class="login-divider ios-hide" data-i18n="register_divider">หรือสมัครด้วย</div>
+      <div class="ios-hide" style="display:flex;gap:8px">
         <button class="google-btn" id="google-reg-btn" onclick="tryGoogleLogin()" style="flex:1;justify-content:center;gap:8px">
           <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
           Google
@@ -1686,7 +1695,7 @@
         <div id="model-status" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
       </div>
     </div>
-    <div class="set-card">
+    <div class="set-card ios-hide">
       <div class="set-title"><i class="fas fa-crown" style="color:#f59e0b"></i> <span data-i18n="set_sub_title">AI Subscription</span></div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7" data-i18n="set_sub_desc">
         ไม่อยากหา Gemini API Key เอง? สมัคร subscription ใช้ AI ของแอปได้เลย ไม่ต้องมี key ส่วนตัว
@@ -13119,6 +13128,9 @@ async function renderSubscriptionBox(){
 }
 
 function openSubscribeModal(){
+  // iOS (App Store): ห้ามขาย digital subscription นอก Apple IAP (Guideline 3.1.1)
+  // บน iOS ให้ใช้ Gemini API key ของตัวเองแทน — พาไปหน้า Settings
+  if(window._isIOSApp){ toast(tr('need_apikey_first')||'กรุณาใส่ Gemini API Key ในหน้าตั้งค่า','info'); nav('settings'); return; }
   document.getElementById('sub-card-form').style.display='none';
   document.getElementById('sub-promptpay-box').style.display='none';
   document.getElementById('sub-error').textContent='';

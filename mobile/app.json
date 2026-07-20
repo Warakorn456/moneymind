@@ -16,9 +16,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.moneymind.th",
-      "buildNumber": "4",
+      "buildNumber": "5",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "MoneyMind ใช้กล้องเพื่อถ่ายรูปโปรไฟล์ และสแกนใบเสร็จ/สลิป/เอกสารภาษีด้วย AI",
+        "NSPhotoLibraryUsageDescription": "MoneyMind ขอเข้าถึงคลังรูปภาพเพื่อเลือกรูปโปรไฟล์ และเลือกรูปใบเสร็จ/สลิป/เอกสารสำหรับสแกนด้วย AI",
+        "NSPhotoLibraryAddUsageDescription": "MoneyMind ขอบันทึกรูปภาพ/ไฟล์ที่ส่งออก (เช่น รายงาน) ลงในคลังรูปภาพของคุณ"
       }
     },
     "android": {
