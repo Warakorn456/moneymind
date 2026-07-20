@@ -2954,9 +2954,32 @@ async function tryLogin(){
   if(user.includes('@')){
     if(!_auth){ errEl.textContent='ระบบ Auth ยังไม่พร้อม ลองใหม่'; btn.disabled=false; btn.textContent=tr('login_btn'); return; }
     try{
-      await _auth.signInWithEmailAndPassword(user,pass);
+      const fbCredLogin=await _auth.signInWithEmailAndPassword(user,pass);
       const snap=await _fs.collection('members').where('email','==',user).limit(1).get();
-      if(snap.empty){ errEl.textContent='ไม่พบบัญชีที่ใช้ Email นี้'; btn.disabled=false; btn.textContent=tr('login_btn'); return; }
+      if(snap.empty){
+        // Auto-heal: Firebase Auth มี user แต่ไม่มี members doc ที่ผูก email นี้
+        // (เช่นบัญชีที่ mapping username↔email/uid หลุด — ทำให้ login ด้วย email ไม่ได้ทั้งที่รหัสถูก)
+        // สร้าง members doc ใหม่ผูกกับ uid ปัจจุบัน เพื่อให้เข้าใช้งานได้ แทนที่จะขึ้น "ไม่พบบัญชี"
+        const fbUser=(fbCredLogin&&fbCredLogin.user)||_auth.currentUser;
+        let autoUser=(user.split('@')[0]||'user').toLowerCase().replace(/[^a-z0-9_]/g,'_').substring(0,16);
+        if(autoUser.length<3) autoUser='user'+Date.now().toString().slice(-5);
+        try{
+          const existDoc=await _fs.collection('members').doc(autoUser).get();
+          // ถ้ามี doc ชื่อนี้อยู่แล้วแต่ผูก uid คนอื่น → เลี่ยงไปใช้ชื่อไม่ชนกัน (ห้ามทับของคนอื่น)
+          if(existDoc.exists && (existDoc.data().uid||'')!==fbUser.uid){ autoUser=autoUser.substring(0,11)+'_'+Date.now().toString().slice(-4); }
+        }catch(e){}
+        try{
+          await _fs.collection('members').doc(autoUser).set({ username:autoUser, email:user, uid:fbUser.uid, createdAt:firebase.firestore.FieldValue.serverTimestamp(), platform:(window._isAndroidApp?'android':window._isIOSApp?'ios':'web') });
+        }catch(e){ errEl.textContent='ไม่พบบัญชีที่ใช้ Email นี้'; btn.disabled=false; btn.textContent=tr('login_btn'); return; }
+        currentUser=autoUser;
+        DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
+        loadDB();
+        const _syncedHeal=await fsLoad();
+        enterApp();
+        if(!_syncedHeal) fsSave();
+        fsListen();
+        return;
+      }
       const memberData=snap.docs[0].data();
       currentUser=memberData.username;
       DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
