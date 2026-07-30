@@ -1714,6 +1714,11 @@
         <button class="btn btn-ghost" style="border-color:#f59e0b;color:#f59e0b" onclick="recoverData().then(r=>{ if(!r) toast(tr('no_recoverable_data'),'info'); })"><i class="fas fa-life-ring"></i> <span data-i18n="set_recover">กู้คืนข้อมูล</span></button>
       </div>
     </div>
+    <div class="set-card" style="border-color:rgba(239,68,68,.35)">
+      <div class="set-title"><i class="fas fa-user-slash" style="color:#ef4444"></i> <span data-i18n="set_delacc_title">ลบบัญชี</span></div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.7" data-i18n="set_delacc_desc">ลบบัญชีและข้อมูลทั้งหมดของคุณอย่างถาวร ทั้งในเครื่องและบนคลาวด์ — การกระทำนี้ไม่สามารถกู้คืนได้</div>
+      <button class="btn" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ef4444" onclick="deleteMyAccount()"><i class="fas fa-trash-alt"></i> <span data-i18n="set_delacc_btn">ลบบัญชีของฉันอย่างถาวร</span></button>
+    </div>
     <div class="set-card">
       <div class="set-title"><i class="fas fa-keypad" style="color:#a78bfa"></i> <span data-i18n="set_pin_title">ตั้ง PIN สำหรับปลดล็อก</span></div>
       <div id="pin-status" style="font-size:13px;margin-bottom:14px;color:var(--muted)" data-i18n="set_pin_none">ยังไม่ได้ตั้ง PIN</div>
@@ -3676,6 +3681,7 @@ async function _callGeminiProxy(contents, genConfig, modelPref){
 // wrapper — retry อัตโนมัติถ้า quota หมด
 // modelPref: optional string[] — ลอง model เหล่านี้ก่อน getModel() (ใช้สำหรับงานที่ต้องการโมเดลที่ไม่ใช่ thinking)
 async function callGemini(contents, genConfig={temperature:0.7,maxOutputTokens:8192}, modelPref=null){
+  if(!await ensureAIConsent()) throw new Error(currentLang==='en'?'AI use cancelled — consent required':'ยกเลิกการใช้ AI — ต้องยินยอมก่อน');
   if(!DB.settings.apiKey){
     if(await _hasActiveSubscription()) return await _callGeminiProxy(contents, genConfig, modelPref);
     throw new Error(tr('need_apikey_or_sub'));
@@ -3701,6 +3707,114 @@ async function callGemini(contents, genConfig={temperature:0.7,maxOutputTokens:8
     throw new Error(`[${model}] ${msg}`);
   }
   throw new Error('ไม่มี Gemini model ที่ใช้งานได้ — ตรวจสอบ API Key หรือโควต้า');
+}
+
+// ══════════════════════════════════════════
+//  AI DATA-SHARING CONSENT (Apple Guideline 5.1.1(i) / 5.1.2(i))
+//  แสดง popup ครั้งแรกที่ผู้ใช้จะใช้ฟีเจอร์ AI — เปิดเผยว่าส่งข้อมูลอะไร ให้ใคร และขออนุญาตก่อน
+// ══════════════════════════════════════════
+function _aiConsentGiven(){ return !!(DB.settings && DB.settings.aiConsent); }
+function ensureAIConsent(){
+  return new Promise(resolve=>{
+    if(_aiConsentGiven()){ resolve(true); return; }
+    const en = (typeof currentLang!=='undefined' && currentLang==='en');
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px';
+    ov.innerHTML='<div style="background:var(--card,#1e293b);border:1px solid #334155;border-radius:16px;max-width:460px;width:100%;padding:24px;color:#e2e8f0;font-family:\'Sarabun\',sans-serif;max-height:85vh;overflow:auto">'
+      +'<div style="font-size:18px;font-weight:700;color:#a78bfa;margin-bottom:12px"><i class="fas fa-wand-magic-sparkles"></i> '+(en?'Enable AI features?':'เปิดใช้ฟีเจอร์ AI?')+'</div>'
+      +'<div style="font-size:14px;line-height:1.7;color:#cbd5e1">'+(en
+        ?'To use AI features (receipt / bank-statement scanning and the financial assistant), the data you provide will be sent to <b>Google Gemini AI</b> (Google LLC), a third-party AI service, for processing.'
+        :'เพื่อใช้ฟีเจอร์ AI (สแกนใบเสร็จ / สเตทเมนต์ธนาคาร และผู้ช่วยการเงิน) ข้อมูลที่คุณส่งจะถูกส่งไปประมวลผลที่ <b>Google Gemini AI</b> (Google LLC) ซึ่งเป็นบริการ AI ของบุคคลที่สาม')+'</div>'
+      +'<div style="font-size:13px;color:#94a3b8;margin:14px 0 4px">'+(en?'Data that may be sent:':'ข้อมูลที่อาจถูกส่ง:')+'</div>'
+      +'<ul style="font-size:13px;color:#cbd5e1;line-height:1.6;padding-left:18px;margin:0 0 12px">'
+        +'<li>'+(en?'Receipt / bank-statement images you choose to upload':'รูปใบเสร็จ / สเตทเมนต์ธนาคารที่คุณเลือกอัปโหลด')+'</li>'
+        +'<li>'+(en?'Transaction text and financial summaries for the assistant':'ข้อความรายการและสรุปข้อมูลการเงินสำหรับผู้ช่วย AI')+'</li>'
+      +'</ul>'
+      +'<div style="font-size:12px;color:#94a3b8;margin-bottom:18px">'+(en?'The data is used only to return results to you and is not used for advertising. See our':'ข้อมูลถูกใช้เพื่อส่งผลลัพธ์กลับให้คุณเท่านั้น ไม่ถูกนำไปใช้เพื่อโฆษณา ดูรายละเอียดใน')+' <a href="privacy.html" target="_blank" style="color:#818cf8">'+(en?'Privacy Policy':'นโยบายความเป็นส่วนตัว')+'</a>.</div>'
+      +'<div style="display:flex;gap:10px;justify-content:flex-end">'
+        +'<button id="_aic-no" style="background:transparent;border:1px solid #475569;color:#cbd5e1;border-radius:10px;padding:9px 16px;cursor:pointer;font-family:\'Sarabun\',sans-serif">'+(en?'Not now':'ยังไม่ใช้')+'</button>'
+        +'<button id="_aic-yes" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:#fff;border-radius:10px;padding:9px 18px;cursor:pointer;font-family:\'Sarabun\',sans-serif;font-weight:600">'+(en?'Agree & Continue':'ยอมรับและใช้งาน')+'</button>'
+      +'</div></div>';
+    document.body.appendChild(ov);
+    const close=v=>{ try{ov.remove();}catch(e){} resolve(v); };
+    ov.querySelector('#_aic-no').onclick=()=>close(false);
+    ov.querySelector('#_aic-yes').onclick=()=>{
+      if(!DB.settings) DB.settings={};
+      DB.settings.aiConsent=true; DB.settings.aiConsentAt=new Date().toISOString();
+      try{ saveDB(); }catch(e){ try{ saveLocalOnly(); }catch(e2){} }
+      close(true);
+    };
+    ov.addEventListener('click',e=>{ if(e.target===ov) close(false); });
+  });
+}
+
+// ══════════════════════════════════════════
+//  ACCOUNT DELETION (Apple Guideline 5.1.1(v))
+//  ลบบัญชี + ข้อมูลทั้งหมดอย่างถาวร: Firestore userdata/members + Firebase Auth user + local cache
+// ══════════════════════════════════════════
+async function deleteMyAccount(){
+  const en = (typeof currentLang!=='undefined' && currentLang==='en');
+  if(!currentUser){ toast(en?'Please log in first':'กรุณาเข้าสู่ระบบก่อน','info'); return; }
+  const warn = en
+    ? 'Permanently DELETE your account "'+currentUser+'"?\n\nThis erases ALL your data (transactions, savings, debts, investments, settings) from this device and the cloud. This CANNOT be undone.'
+    : 'ต้องการลบบัญชี "'+currentUser+'" อย่างถาวรใช่ไหม?\n\nข้อมูลทั้งหมดของคุณ (รายรับรายจ่าย เงินออม หนี้สิน การลงทุน การตั้งค่า) จะถูกลบทั้งในเครื่องและบนคลาวด์ และไม่สามารถกู้คืนได้';
+  if(!confirm(warn)) return;
+  // ยืนยันซ้ำด้วยการพิมพ์ DELETE เพื่อกันการกดพลาด
+  const typed=prompt(en?'To confirm, type DELETE below:':'พิมพ์คำว่า DELETE เพื่อยืนยันการลบ:','');
+  if((typed||'').trim().toUpperCase()!=='DELETE'){ toast(en?'Cancelled':'ยกเลิกแล้ว','info'); return; }
+  const uname=currentUser;
+  try{
+    toast(en?'Deleting account…':'กำลังลบบัญชี…','info');
+    // 1) ลบข้อมูลบนคลาวด์ (best-effort) ก่อนลบ auth user
+    if(_fs){
+      try{ await _fs.collection('userdata').doc(uname).delete(); }catch(e){ console.warn('[del] userdata',e.message); }
+      try{ await _fs.collection('members').doc(uname).delete(); }catch(e){ console.warn('[del] members',e.message); }
+    }
+    // 2) ลบ Firebase Auth user (อาจต้อง reauth ถ้า login มานาน)
+    if(_auth && _auth.currentUser){
+      try{
+        await _auth.currentUser.delete();
+      }catch(e){
+        if(e && e.code==='auth/requires-recent-login'){
+          const pass=prompt(en?'For security, re-enter your password to finish deleting your account:':'เพื่อความปลอดภัย กรุณากรอกรหัสผ่านอีกครั้งเพื่อลบบัญชีให้เสร็จ:','');
+          if(pass){
+            try{
+              const cred=firebase.auth.EmailAuthProvider.credential(_auth.currentUser.email, pass);
+              await _auth.currentUser.reauthenticateWithCredential(cred);
+              await _auth.currentUser.delete();
+            }catch(e2){
+              console.error('[del] reauth',e2);
+              toast((en?'Could not delete account: ':'ลบบัญชีไม่สำเร็จ: ')+(e2.message||e2.code||''),'error');
+              return;
+            }
+          }else{ toast(en?'Cancelled':'ยกเลิกแล้ว','info'); return; }
+        }else{
+          console.error('[del] auth',e);
+          toast((en?'Could not delete account: ':'ลบบัญชีไม่สำเร็จ: ')+(e.message||e.code||''),'error');
+          return;
+        }
+      }
+    }
+    // 3) ลบข้อมูลในเครื่อง + session
+    try{ fsStop(); }catch(e){}
+    try{ localStorage.removeItem(userDataKey(uname)); }catch(e){}
+    try{ localStorage.removeItem(SESS_KEY); }catch(e){}
+    try{ if(_auth) await _auth.signOut(); }catch(e){}
+    // 4) reset state แล้วกลับหน้า login
+    currentUser=null;
+    DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
+    const appRoot=document.getElementById('app-root'); if(appRoot) appRoot.style.display='none';
+    const loginScr=document.getElementById('login-screen'); if(loginScr) loginScr.style.display='flex';
+    const lu=document.getElementById('login-user'); if(lu) lu.value='';
+    const lp=document.getElementById('login-pass'); if(lp) lp.value='';
+    const le=document.getElementById('login-err'); if(le) le.textContent='';
+    try{ switchToLogin(); }catch(e){}
+    try{ stopInvAutoRefresh(); }catch(e){}
+    alert(en?'Your account and all data have been permanently deleted.':'บัญชีและข้อมูลทั้งหมดของคุณถูกลบถาวรเรียบร้อยแล้ว');
+  }catch(e){
+    console.error('[deleteMyAccount]',e);
+    toast((en?'Error deleting account: ':'เกิดข้อผิดพลาดในการลบบัญชี: ')+(e.message||''),'error');
+  }
 }
 
 // ══════════════════════════════════════════
@@ -3775,6 +3889,7 @@ const I18N = {
     set_ai_scan_title:'AI สแกนใบเสร็จ',set_ai_scan_desc:'ใส่ Google Gemini API Key เพื่อให้ AI อ่านข้อมูลจากรูปใบเสร็จอัตโนมัติ<br>กุญแจเก็บใน browser ของคุณเท่านั้น ไม่มีการส่งออกไปที่อื่น',save:'บันทึก',set_get_key_hint:'รับ Key ฟรีได้ที่ aistudio.google.com → Get API Key',set_model_hint:'(ปล่อยว่างให้ระบบเลือกอัตโนมัติ)',
     set_sub_title:'AI Subscription',set_sub_desc:'ไม่อยากหา Gemini API Key เอง? สมัคร subscription ใช้ AI ของแอปได้เลย ไม่ต้องมี key ส่วนตัว',sub_active:'Subscription ใช้งานอยู่',sub_until:'ถึงวันที่',sub_subscribe_btn:'สมัคร Subscription ฿299/เดือน',sub_modal_title:'สมัคร AI Subscription',sub_per_month:'เดือน',sub_pay_card:'บัตรเครดิต/เดบิต',sub_card_name:'ชื่อบนบัตร',sub_card_number:'หมายเลขบัตร',sub_pay_now:'ชำระเงิน ฿299',sub_waiting_payment:'สแกน QR เพื่อชำระเงิน — กำลังรอการยืนยัน...',sub_need_relogin:'ต้อง login ใหม่เพื่อสมัคร subscription',sub_fill_all:'กรอกข้อมูลบัตรให้ครบ',sub_processing:'กำลังดำเนินการ...',sub_card_invalid:'ข้อมูลบัตรไม่ถูกต้อง',sub_payment_failed:'ชำระเงินไม่สำเร็จ',sub_pending:'รอการยืนยันการชำระเงิน...',sub_success:'สมัคร Subscription สำเร็จ!',sub_qr_failed:'สร้าง QR ไม่สำเร็จ',
     set_cloud_title:'Firebase Cloud Sync',set_cloud_desc:'ซิงค์ข้อมูลข้ามอุปกรณ์ผ่าน Firebase Firestore',set_test_conn:'ทดสอบการเชื่อมต่อ',set_upload_cloud:'อัปโหลดขึ้น Cloud',set_load_cloud:'โหลดจาก Cloud',set_recover:'กู้คืนข้อมูล',
+    set_delacc_title:'ลบบัญชี',set_delacc_desc:'ลบบัญชีและข้อมูลทั้งหมดของคุณอย่างถาวร ทั้งในเครื่องและบนคลาวด์ — การกระทำนี้ไม่สามารถกู้คืนได้',set_delacc_btn:'ลบบัญชีของฉันอย่างถาวร',
     set_pin_title:'ตั้ง PIN สำหรับปลดล็อก',set_pin_none:'ยังไม่ได้ตั้ง PIN',set_pin_active:'✅ ตั้ง PIN แล้ว — ใช้ปลดล็อกแทนรหัสผ่านได้',set_pin_new:'PIN ใหม่ (6 หลัก)',set_pin_confirm:'ยืนยัน PIN',set_pin_save:'บันทึก PIN',set_pin_delete:'ลบ PIN',
     set_security_title:'ความปลอดภัย',set_autolock:'ล็อกแอปอัตโนมัติหลังไม่ใช้งาน',set_lock_off:'ปิด (ไม่ล็อก)',set_lock_5:'5 นาที',set_lock_10:'10 นาที',set_lock_15:'15 นาที (แนะนำ)',set_lock_30:'30 นาที',set_lock_60:'1 ชั่วโมง',set_lock_now:'ล็อกแอปทันที',set_session_expire:'Session หมดอายุหลัง 30 วัน — ต้อง login ใหม่',
     set_data_title:'จัดการข้อมูล',set_export_json:'ส่งออก JSON',set_export_csv:'ส่งออก CSV',set_print_report:'พิมพ์รายงาน',set_shareable:'สรุปแชร์ได้',set_import_json:'นำเข้า JSON',set_clear_all:'ล้างข้อมูลทั้งหมด',
@@ -3877,6 +3992,7 @@ const I18N = {
     set_ai_scan_title:'AI Receipt Scan',set_ai_scan_desc:'Enter your Google Gemini API Key to let AI read receipt images automatically<br>The key is stored only in your browser, never sent anywhere else',save:'Save',set_get_key_hint:'Get a free key at aistudio.google.com → Get API Key',set_model_hint:'(leave blank for auto-select)',
     set_sub_title:'AI Subscription',set_sub_desc:'Don\'t want to get your own Gemini API Key? Subscribe to use the app\'s AI without a personal key',sub_active:'Subscription active',sub_until:'until',sub_subscribe_btn:'Subscribe ฿299/month',sub_modal_title:'Subscribe to AI',sub_per_month:'month',sub_pay_card:'Credit/Debit Card',sub_card_name:'Name on card',sub_card_number:'Card number',sub_pay_now:'Pay ฿299',sub_waiting_payment:'Scan QR to pay — waiting for confirmation...',sub_need_relogin:'Please log in again to subscribe',sub_fill_all:'Please fill in all card details',sub_processing:'Processing...',sub_card_invalid:'Invalid card details',sub_payment_failed:'Payment failed',sub_pending:'Waiting for payment confirmation...',sub_success:'Subscription successful!',sub_qr_failed:'Failed to generate QR code',
     set_cloud_title:'Firebase Cloud Sync',set_cloud_desc:'Sync data across devices via Firebase Firestore',set_test_conn:'Test Connection',set_upload_cloud:'Upload to Cloud',set_load_cloud:'Load from Cloud',set_recover:'Recover Data',
+    set_delacc_title:'Delete Account',set_delacc_desc:'Permanently delete your account and all your data, both on this device and in the cloud — this cannot be undone.',set_delacc_btn:'Delete My Account Permanently',
     set_pin_title:'Set Unlock PIN',set_pin_none:'No PIN set',set_pin_active:'✅ PIN is set — use it to unlock instead of password',set_pin_new:'New PIN (6 digits)',set_pin_confirm:'Confirm PIN',set_pin_save:'Save PIN',set_pin_delete:'Delete PIN',
     set_security_title:'Security',set_autolock:'Auto-lock app after inactivity',set_lock_off:'Off (no lock)',set_lock_5:'5 minutes',set_lock_10:'10 minutes',set_lock_15:'15 minutes (recommended)',set_lock_30:'30 minutes',set_lock_60:'1 hour',set_lock_now:'Lock App Now',set_session_expire:"Session expires after 30 days — you'll need to log in again",
     set_data_title:'Data Management',set_export_json:'Export JSON',set_export_csv:'Export CSV',set_print_report:'Print Report',set_shareable:'Shareable Summary',set_import_json:'Import JSON',set_clear_all:'Clear All Data',
@@ -13244,6 +13360,7 @@ async function _subPollStatus(triesLeft){
 // key ส่วนตัว (DB.settings.apiKey) → เรียก Gemini ตรง | ไม่มี key → ต้องมี subscription (เช็คมาก่อนแล้ว
 // จากจุดเรียกใน sendChat) → เรียกผ่าน ai_proxy.py ด้วย Firebase ID token แทน key
 async function mayaAgent(userMsg){
+  if(!await ensureAIConsent()) return (currentLang==='en'?'AI features are turned off. Tap an AI feature again to enable them anytime.':'ฟีเจอร์ AI ถูกปิดอยู่ กดใช้ฟีเจอร์ AI อีกครั้งเพื่อเปิดใช้งานได้ทุกเมื่อ');
   const key=DB.settings.apiKey;
   const useProxy=!key;
   const model=(DB.settings.geminiModel&&!/tts|embedding|aqa/i.test(DB.settings.geminiModel))?DB.settings.geminiModel:'gemini-2.5-flash';
