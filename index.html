@@ -2817,17 +2817,23 @@ function saveUsers(u){ localStorage.setItem(USERS_KEY,JSON.stringify(u)); }
 // รองรับ legacy users ที่ไม่มี email จริง ผ่าน synthetic email (<username>@moneymind.local)
 async function ensureAuthForUser(username, email, pass){
   if(!_auth || !_fs) return null;
-  // มี session ที่ถูกต้องอยู่แล้ว → แค่ผูก uid ให้ครบ
-  if(_auth.currentUser){
-    try{ await _fs.collection('members').doc(username).set({uid:_auth.currentUser.uid,username},{merge:true}); }catch(e){}
-    return _auth.currentUser;
-  }
-  // ดู uid/email เดิมใน members เพื่อกันการสร้างบัญชี synthetic ทับบัญชี email จริง
+  // ดู uid/email เดิมใน members ก่อนเสมอ เพื่อเทียบกับ session ที่ค้างอยู่ในเบราว์เซอร์
+  // (กันเซสชันคนละบัญชี/อุปกรณ์ทับ uid ที่ผูกถูกต้องไว้แล้ว — เคยทำให้ sync ล้มเป็นพักๆ เพราะ session ผิดเครื่อง
+  // แย่งชิงการผูกบัญชีไปแบบเงียบๆ ทุกครั้งที่เปิดแอป)
   let existingUid='', memEmail='';
   try{
     const m=await _fs.collection('members').doc(username).get();
     if(m.exists){ existingUid=(m.data().uid||''); memEmail=(m.data().email||''); }
   }catch(e){}
+  // มี session ที่ถูกต้องอยู่แล้ว (ยังไม่เคยผูก หรือผูกตรงกับ session นี้อยู่แล้ว) → ใช้ session นี้ได้เลย
+  if(_auth.currentUser && (!existingUid || existingUid===_auth.currentUser.uid)){
+    try{ await _fs.collection('members').doc(username).set({uid:_auth.currentUser.uid,username},{merge:true}); }catch(e){}
+    return _auth.currentUser;
+  }
+  // session ที่ค้างอยู่เป็นคนละบัญชีกับที่ผูกไว้ → ห้าม self-heal ทับ, sign out แล้ว sign-in ใหม่ให้ตรงบัญชีด้วยรหัสผ่านที่กรอก
+  if(_auth.currentUser && existingUid && existingUid!==_auth.currentUser.uid){
+    try{ await _auth.signOut(); }catch(e){}
+  }
   const candidates=[];
   if(email) candidates.push(email);
   else if(memEmail) candidates.push(memEmail);
@@ -2838,7 +2844,9 @@ async function ensureAuthForUser(username, email, pass){
   for(const em of candidates){
     try{ cred=await _auth.signInWithEmailAndPassword(em,pass); break; }
     catch(e){
-      if(['auth/user-not-found','auth/invalid-credential','auth/invalid-login-credentials'].includes(e.code)){
+      // สร้างบัญชีใหม่ได้เฉพาะตอนที่ยังไม่เคยผูก uid (unclaimed) เท่านั้น — ถ้าผูกแล้วแต่ sign-in ไม่ผ่าน
+      // ห้ามสร้างทับ เพราะจะกลายเป็นบัญชี Firebase คนละใบแยกจากของเดิม (uid ไม่ตรง member เดิมอยู่ดี)
+      if(!existingUid && ['auth/user-not-found','auth/invalid-credential','auth/invalid-login-credentials'].includes(e.code)){
         try{ cred=await _auth.createUserWithEmailAndPassword(em,pass); break; }
         catch(e2){ /* email-already-in-use ด้วยรหัสอื่น → ลอง candidate ถัดไป */ }
       }

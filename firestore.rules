@@ -34,7 +34,9 @@ service cloud.firestore {
       // login ต้อง lookup username จาก email; admin (เจ้าของ ไม่ auth) list members
       allow read: if true;
       // เขียน: เจ้าของ doc, หรือ claim บัญชีที่ยังไม่ผูก uid
-      allow write: if userId == 'warakorn' || ownsAccount(userId) || unclaimed(userId);
+      // (เดิมมี exception `userId == 'warakorn'` ให้เขียนได้แบบไม่ต้อง auth เลย — เป็นช่องโหว่ให้ session/อุปกรณ์
+      // ไหนก็ได้ (หรือแม้แต่ผู้ไม่ auth) แย่งชิง uid ของ owner ได้ ตัดออกแล้ว ไม่มี code path ใดพึ่งพา exception นี้)
+      allow write: if ownsAccount(userId) || unclaimed(userId);
     }
 
     // ── สรุป usage หลังบ้าน (เขียนโดย admin_stats.py ผ่าน SA เท่านั้น) ──
