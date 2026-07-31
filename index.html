@@ -9187,7 +9187,7 @@ function onRecurTypeChange(){
   const list=type==='income'?[...INC_CATS,...custom]:[...EXP_CATS,...custom];
   const sel=document.getElementById('recur-category');
   const keep=sel.value;
-  sel.innerHTML=list.map(c=>'<option value="'+c.id+'">'+c.icon+' '+catLabel(c)+'</option>').join('');
+  sel.innerHTML=list.map(c=>'<option value="'+c.id+'">'+catLabel(c)+'</option>').join('');
   if(list.some(c=>c.id===keep)) sel.value=keep;
 }
 
