@@ -1145,6 +1145,7 @@
     <div class="nav-item" data-nav="subscriptions" draggable="true" onclick="nav('subscriptions')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-credit-card"></i> <span data-i18n="subscriptions">Subscriptions</span></div>
     <div class="nav-item" data-nav="recurring" draggable="true" onclick="nav('recurring')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-sync-alt"></i> <span data-i18n="recurring">รายการซ้ำ</span></div>
     <div class="nav-item" data-nav="split" draggable="true" onclick="nav('split')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-users"></i> <span data-i18n="split_nav">หารบิลเพื่อน</span></div>
+    <div class="nav-item" data-nav="household" draggable="true" onclick="nav('household')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-house-user"></i> <span data-i18n="household_nav">ครัวเรือน</span></div>
     <div class="nav-item" data-nav="savings" draggable="true" onclick="nav('savings')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-piggy-bank"></i> <span data-i18n="savings">เงินออม</span></div>
     <div class="nav-item" data-nav="banks" draggable="true" onclick="nav('banks')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-university"></i> <span data-i18n="banks">ธนาคาร</span></div>
     <div class="nav-item" data-nav="debts" draggable="true" onclick="nav('debts')"><span class="nav-drag-handle"><i class="fas fa-grip-lines"></i></span><i class="fas fa-credit-card"></i> <span data-i18n="debts">หนี้สิน</span></div>
@@ -1382,6 +1383,11 @@
   <!-- ════ BILL SPLITTING / FRIEND IOU ════ -->
   <div id="pg-split" class="page">
     <div id="split-content"></div>
+  </div>
+
+  <!-- ════ HOUSEHOLD / SHARED FINANCE ════ -->
+  <div id="pg-household" class="page">
+    <div id="household-content"></div>
   </div>
 
   <!-- ════ AI USAGE ════ -->
@@ -2950,6 +2956,7 @@ function _enterAppReal(){
   if(typeof applyLang==='function') applyLang();
   setTimeout(()=>{ if(typeof applyRecurringTx==='function') applyRecurringTx(); },1500);
   setTimeout(()=>{ if(typeof checkNotifications==='function') checkNotifications(); },2000);
+  setTimeout(()=>{ if(_auth&&_auth.currentUser&&typeof loadMyHouseholds==='function') loadMyHouseholds().then(list=>{ if(list.length===1) selectHousehold(list[0].id); }); },1200);
   // แสดง Admin nav + AI Usage nav เฉพาะ owner
   const _isOwnerNav=(_ENC&&currentUser===_ENC.user);
   const adminNav=document.getElementById('nav-admin');
@@ -4175,7 +4182,7 @@ const I18N = {
     inv_need_name_first:'กรุณาใส่ชื่อ/Ticker ก่อน',inv_fetching:'กำลังดึง',inv_price:'ราคา',inv_fetch_price_failed:'ดึงราคาไม่ได้',inv_updating_price:'กำลังอัปเดตราคา',inv_update_failed:'อัปเดตไม่ได้',inv_edit:'แก้ไขการลงทุน',inv_need_name:'กรุณาใส่ชื่อ',inv_need_qty:'กรุณาใส่จำนวน',inv_need_buyprice:'กรุณาใส่ราคาซื้อ',inv_added:'เพิ่มการลงทุนแล้ว',inv_confirm_delete:'ต้องการลบการลงทุนนี้?',inv_field_type:'ประเภท',inv_field_linked_debt:'เชื่อมโยงสินเชื่อบ้าน (ไม่บังคับ)',inv_no_linked_debt:'ไม่เชื่อมโยง',inv_linked_debt_hint:'ถ้าเลือก ระบบจะคำนวณส่วนของเจ้าของ (equity) = มูลค่า − หนี้คงเหลือ ให้อัตโนมัติ',inv_equity:'ส่วนของเจ้าของ:',inv_equity_hint:'ส่วนของเจ้าของ = มูลค่า − หนี้คงเหลือของสินเชื่อที่เชื่อมโยง',
     dca_need_asset_name:'กรุณาใส่ชื่อสินทรัพย์',dca_need_amount_per_time:'กรุณาใส่จำนวนเงินต่อครั้ง',dca_plan_edited:'แก้ไขแผนแล้ว',dca_plan_created:'สร้างแผน DCA แล้ว',dca_confirm_delete:'ลบแผน DCA นี้? ประวัติการซื้อทั้งหมดจะหายไป',dca_plan_deleted:'ลบแผนแล้ว',dca_record_buy:'บันทึกซื้อ',dca_buy_recorded:'บันทึกการซื้อแล้ว',item_deleted:'ลบรายการแล้ว',dca_auto:'DCA อัตโนมัติ',dca_added_to_port:'เพิ่มในพอร์ตแล้ว',dca_price_zero_hint:'ราคา 0 — กรุณาอัปเดตราคา',
     lock_auto_off:'ปิดการล็อกอัตโนมัติ',lock_auto_after:'ล็อกอัตโนมัติหลัง {n} นาที',apikey_saved:'บันทึก API Key แล้ว',model_set:'ตั้ง model',model_reset_auto:'รีเซ็ต — ระบบจะเลือกอัตโนมัติ',data_exported:'ส่งออกข้อมูลแล้ว',data_imported:'นำเข้าข้อมูลสำเร็จ',invalid_file:'ไฟล์ไม่ถูกต้อง',clear_all_confirm1:'ต้องการล้างข้อมูลทั้งหมด? ไม่สามารถย้อนกลับได้',clear_all_confirm2:'ยืนยันอีกครั้ง: ลบข้อมูลทั้งหมด?',data_cleared:'ล้างข้อมูลแล้ว',pm_item_added:'เพิ่มรายการแล้ว',
-    taxdoc_fill_in:'ใส่ข้อมูลลงช่อง',taxdoc_reading:'กำลังอ่าน',taxdoc_need_apikey:'ต้องมี Gemini API Key เพื่อสแกนเอกสาร — ไปที่ตั้งค่า',taxdoc_no_data_found:'ไม่พบข้อมูล — ลองใช้รูปที่ชัดขึ้น',taxdoc_salary_slip:'สลิปเงินเดือน',taxdoc_month:'เดือน',taxdoc_salary_gross:'เงินเดือน (gross)',taxdoc_bonus:'โบนัส',taxdoc_withheld_this_month:'ภาษีหัก ณ ที่จ่ายเดือนนี้',taxdoc_slip_filled:'ใส่ข้อมูลสลิปแล้ว',taxdoc_slip_failed:'อ่านสลิปไม่สำเร็จ',taxdoc_tawi50:'ทวิ 50',taxdoc_payer:'ผู้จ่ายเงิน',taxdoc_income_type:'ประเภทเงินได้',taxdoc_total_income_yr:'รายได้รวมทั้งปี',taxdoc_total_tax_yr:'ภาษีที่ถูกหักทั้งปี',taxdoc_tawi50_filled:'ใส่ข้อมูล ทวิ 50 แล้ว',taxdoc_tawi50_failed:'อ่าน ทวิ 50 ไม่สำเร็จ',customcat_need_name:'กรุณาใส่ชื่อหมวดหมู่',customcat_saved:'บันทึกหมวดหมู่แล้ว',customcat_confirm_delete:'ลบหมวดหมู่นี้?',recur_auto_added:'เพิ่มรายการซ้ำ {n} รายการอัตโนมัติ',recurring:'รายการซ้ำ',recur_page_desc:'รายการที่เกิดซ้ำทุกเดือน — บันทึกอัตโนมัติตามวันที่ตั้งไว้',recur_add_title:'เพิ่มรายการซ้ำ',recur_edit_title:'แก้ไขรายการซ้ำ',recur_monthly_income:'รายรับซ้ำ/เดือน',recur_monthly_expense:'รายจ่ายซ้ำ/เดือน',recur_none_yet:'ยังไม่มีรายการซ้ำ — เพิ่มค่าเช่า ค่างวด หรือเงินเดือนที่เข้าทุกเดือนได้เลย',recur_paused_section:'หยุดชั่วคราว',recur_day_of_month:'ทุกวันที่ {d}',recur_resume:'เปิดใช้ต่อ',recur_pause:'หยุดชั่วคราว',recur_no_bank:'ไม่ระบุ',recur_need_fields:'กรุณาใส่ชื่อ จำนวนเงิน และวันที่ให้ถูกต้อง',recur_confirm_delete:'ลบรายการซ้ำนี้?',recur_field_name:'ชื่อรายการ',recur_field_name_ph:'เช่น ค่าเช่าห้อง, เงินเดือน',recur_field_amount:'จำนวนเงิน (บาท)',recur_field_type:'ประเภท',recur_field_day:'วันที่ของเดือน',recur_field_bank:'ธนาคาร (ไม่บังคับ)',type_expense:'รายจ่าย',type_income:'รายรับ',set_2fa_title:'ยืนยันตัวตน 2 ขั้นตอน (2FA)',set_2fa_desc:'เพิ่มความปลอดภัยอีกชั้นให้บัญชีของคุณ ด้วยรหัส 6 หลักจากแอป Authenticator ทุกครั้งที่เข้าสู่ระบบ',totp_enable_btn:'เปิดใช้ 2FA',totp_active:'เปิดใช้งานอยู่',totp_backup_remaining:'เหลือรหัสสำรอง {n} รหัส',totp_regen_backup:'สร้างรหัสสำรองใหม่',totp_disable_btn:'ปิดใช้ 2FA',totp_wrong_code:'รหัสไม่ถูกต้อง กรุณาลองใหม่',totp_enabled:'เปิดใช้ 2FA แล้ว ✓',totp_confirm_disable:'ต้องการปิดใช้ 2FA? บัญชีจะปลอดภัยน้อยลง',totp_disabled:'ปิดใช้ 2FA แล้ว',totp_confirm_regen:'สร้างรหัสสำรองใหม่? รหัสชุดเก่าจะใช้ไม่ได้อีก',totp_backup_used:'ใช้รหัสสำรองเข้าสู่ระบบแล้ว',totp_setup_title:'ตั้งค่า 2FA',totp_setup_step1:'1. เปิดแอป Authenticator (Google Authenticator, Authy, ฯลฯ) แล้วเพิ่มบัญชีใหม่ด้วยการกรอกรหัสนี้เอง (manual entry):',totp_setup_link_text:'หรือแตะที่นี่ถ้าเปิดหน้านี้บนมือถือเครื่องเดียวกับแอป Authenticator',totp_setup_step2:'2. กรอกรหัส 6 หลักที่แอป Authenticator แสดงตอนนี้ เพื่อยืนยันว่าตั้งค่าถูกต้อง:',totp_verify_enable:'ยืนยันและเปิดใช้',totp_backup_title:'รหัสสำรอง',totp_backup_desc:'เก็บรหัสเหล่านี้ไว้ในที่ปลอดภัย — ใช้เข้าระบบได้เมื่อเข้าถึงแอป Authenticator ไม่ได้ (ใช้ได้ครั้งเดียวต่อรหัส) รหัสชุดนี้จะไม่แสดงซ้ำอีก',totp_backup_saved:'บันทึกไว้แล้ว',totp_login_title:'ยืนยันตัวตน 2 ขั้นตอน',totp_login_desc:'กรอกรหัส 6 หลักจากแอป Authenticator หรือรหัสสำรอง',totp_verify_btn:'ยืนยัน',split_nav:'หารบิลเพื่อน',split_page_desc:'บันทึกค่าใช้จ่ายที่จ่ายแทนเพื่อน แล้วติดตามว่าใครติดหนี้ใครอยู่เท่าไร',split_friend_add:'เพิ่มเพื่อน',split_friend_edit:'แก้ไขเพื่อน',split_friend_name:'ชื่อเพื่อน',split_friend_name_ph:'เช่น เอ, บี, น้องมิ้นท์',split_friend_need_name:'กรุณาใส่ชื่อเพื่อน',split_friend_confirm_delete:'ลบเพื่อนคนนี้? ประวัติบิลและยอดค้างที่เกี่ยวข้องจะถูกลบด้วย',split_friend_settle_first:'ยังมียอดค้างอยู่ กรุณาชำระให้เรียบร้อยก่อนลบ',split_expense_add:'เพิ่มรายการหารบิล',split_expense_edit:'แก้ไขรายการหารบิล',split_field_desc:'รายการ',split_field_desc_ph:'เช่น ค่าอาหารเย็น, ค่าที่พัก',split_field_amount:'จำนวนเงินรวม (บาท)',split_field_paidby:'ใครจ่ายก่อน',split_field_splittype:'วิธีแบ่ง',split_type_equal:'แบ่งเท่ากัน',split_type_custom:'กำหนดเอง',split_field_participants:'คนที่ร่วมจ่าย',split_me:'ฉัน',split_sum_hint:'รวม {sum} จาก {total}',split_need_fields:'กรุณาใส่ข้อมูลให้ครบถ้วน',split_need_participants:'กรุณาเลือกผู้ร่วมจ่ายอย่างน้อย 1 คน',split_sum_mismatch:'ยอดรวมที่กำหนดเองไม่เท่ากับจำนวนเงินรวม',split_confirm_delete:'ลบรายการหารบิลนี้?',split_settle_title:'บันทึกการชำระเงิน',split_settle_they_paid:'เพื่อนจ่ายคืนฉัน',split_settle_i_paid:'ฉันจ่ายคืนเพื่อน',split_settle_btn:'ชำระเงิน',split_total_owed_to_me:'ยอดที่เพื่อนติดค้าง',split_total_i_owe:'ยอดที่ฉันติดค้าง',split_settled:'เคลียร์ยอดแล้ว',split_owes_you:'ติดค้าง {amt}',split_you_owe:'คุณติดหนี้ {amt}',split_no_friends:'ยังไม่มีเพื่อน — เพิ่มเพื่อนก่อนเพื่อเริ่มบันทึกบิลที่หารกัน',split_expenses_section:'รายการหารบิล',split_no_expenses:'ยังไม่มีรายการหารบิล',split_paid_by:'{who} จ่ายก่อน',csv_exported:'ส่งออก CSV แล้ว',image_saved:'บันทึกรูปแล้ว',image_create_failed:'ไม่สามารถสร้างรูปได้ ต้องเชื่อมต่ออินเทอร์เน็ต',pin_mismatch_retry:'PIN ไม่ตรงกัน กรุณาลองใหม่',pin_set_success:'ตั้ง PIN เรียบร้อยแล้ว',pin_confirm_delete:'ต้องการลบ PIN?',pin_deleted:'ลบ PIN แล้ว',pin_must_be_6_digits:'PIN ต้องเป็นตัวเลข 6 หลัก',pin_mismatch_check:'PIN ไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง',rebal_deviates:'เบี่ยงจากเป้า',allow_popup_print:'กรุณาอนุญาต popup เพื่อพิมพ์รายงาน',login_email_first:'กรุณา Login ด้วย Email ก่อน',verify_email_sent:'ส่งอีเมลยืนยันแล้ว ตรวจสอบกล่องจดหมาย',send_failed:'ส่งไม่ได้',quickadd_invalid_format:'รูปแบบไม่ถูกต้อง เช่น "กาแฟ 60" หรือ "+เงินเดือน 25000"',quickadd_need_name_amount:'กรุณาระบุชื่อและจำนวนเงิน',quickadd_no_item_to_undo:'ไม่มีรายการที่ยกเลิกได้',quickadd_undone:'ยกเลิกรายการแล้ว',milestone_need_amount:'กรุณาระบุจำนวนเงิน',milestone_exists:'มีเป้านี้อยู่แล้ว',milestone_congrats:'ยินดีด้วย! Net Worth ถึง {amt} แล้ว!',ot_need_hours:'กรุณาใส่จำนวนชั่วโมง',ot_added_hours:'เพิ่ม OT {n} ชม. แล้ว',ot_confirm_delete:'ลบรายการ OT นี้?',split_total_mismatch:'ยอดรวมไม่ตรงกัน กรุณาตรวจสอบ',split_n_categories:'แยก {n} หมวดหมู่แล้ว',password_changed:'เปลี่ยนรหัสผ่านสำเร็จ ✓',dash_drag_hint:'ลากเพื่อจัดเรียง — กดเครื่องหมายถูกเมื่อเสร็จ',order_saved:'บันทึกลำดับแล้ว',bulk_select_first:'เลือกหมวดและรายการก่อน',bulk_changed_n:'เปลี่ยนหมวด {n} รายการแล้ว',bulk_confirm_delete:'ลบ {n} รายการที่เลือก? (ย้อนกลับไม่ได้)',bulk_deleted_n:'ลบ {n} รายการแล้ว',travel_coords_not_found:'ไม่พบพิกัดของ',travel_no_gps_support:'เบราว์เซอร์นี้ไม่รองรับ GPS',travel_finding_location:'กำลังหาตำแหน่ง',travel_allow_gps:'กรุณาอนุญาต GPS ในเบราว์เซอร์',travel_location_found:'พบตำแหน่งแล้ว',travel_location_found_toast:'พบตำแหน่งของคุณแล้ว',travel_location_failed:'ไม่สามารถหาตำแหน่งได้ — ตรวจสอบการอนุญาต GPS',travel_need_diff_points:'กรุณาเลือกจุดเริ่มต้นและปลายทางที่ต่างกัน',travel_place_coords_not_found:'ไม่พบพิกัดสถานที่',travel_calculating_route:'กำลังคำนวณเส้นทาง',url_saved:'บันทึก URL แล้ว',file_save_failed:'บันทึกไฟล์ไม่สำเร็จ',offline_msg:'ขาดการเชื่อมต่ออินเทอร์เน็ต — ข้อมูลจะยังบันทึกในเครื่อง',online_msg:'เชื่อมต่ออินเทอร์เน็ตแล้ว',
+    taxdoc_fill_in:'ใส่ข้อมูลลงช่อง',taxdoc_reading:'กำลังอ่าน',taxdoc_need_apikey:'ต้องมี Gemini API Key เพื่อสแกนเอกสาร — ไปที่ตั้งค่า',taxdoc_no_data_found:'ไม่พบข้อมูล — ลองใช้รูปที่ชัดขึ้น',taxdoc_salary_slip:'สลิปเงินเดือน',taxdoc_month:'เดือน',taxdoc_salary_gross:'เงินเดือน (gross)',taxdoc_bonus:'โบนัส',taxdoc_withheld_this_month:'ภาษีหัก ณ ที่จ่ายเดือนนี้',taxdoc_slip_filled:'ใส่ข้อมูลสลิปแล้ว',taxdoc_slip_failed:'อ่านสลิปไม่สำเร็จ',taxdoc_tawi50:'ทวิ 50',taxdoc_payer:'ผู้จ่ายเงิน',taxdoc_income_type:'ประเภทเงินได้',taxdoc_total_income_yr:'รายได้รวมทั้งปี',taxdoc_total_tax_yr:'ภาษีที่ถูกหักทั้งปี',taxdoc_tawi50_filled:'ใส่ข้อมูล ทวิ 50 แล้ว',taxdoc_tawi50_failed:'อ่าน ทวิ 50 ไม่สำเร็จ',customcat_need_name:'กรุณาใส่ชื่อหมวดหมู่',customcat_saved:'บันทึกหมวดหมู่แล้ว',customcat_confirm_delete:'ลบหมวดหมู่นี้?',recur_auto_added:'เพิ่มรายการซ้ำ {n} รายการอัตโนมัติ',recurring:'รายการซ้ำ',recur_page_desc:'รายการที่เกิดซ้ำทุกเดือน — บันทึกอัตโนมัติตามวันที่ตั้งไว้',recur_add_title:'เพิ่มรายการซ้ำ',recur_edit_title:'แก้ไขรายการซ้ำ',recur_monthly_income:'รายรับซ้ำ/เดือน',recur_monthly_expense:'รายจ่ายซ้ำ/เดือน',recur_none_yet:'ยังไม่มีรายการซ้ำ — เพิ่มค่าเช่า ค่างวด หรือเงินเดือนที่เข้าทุกเดือนได้เลย',recur_paused_section:'หยุดชั่วคราว',recur_day_of_month:'ทุกวันที่ {d}',recur_resume:'เปิดใช้ต่อ',recur_pause:'หยุดชั่วคราว',recur_no_bank:'ไม่ระบุ',recur_need_fields:'กรุณาใส่ชื่อ จำนวนเงิน และวันที่ให้ถูกต้อง',recur_confirm_delete:'ลบรายการซ้ำนี้?',recur_field_name:'ชื่อรายการ',recur_field_name_ph:'เช่น ค่าเช่าห้อง, เงินเดือน',recur_field_amount:'จำนวนเงิน (บาท)',recur_field_type:'ประเภท',recur_field_day:'วันที่ของเดือน',recur_field_bank:'ธนาคาร (ไม่บังคับ)',type_expense:'รายจ่าย',type_income:'รายรับ',set_2fa_title:'ยืนยันตัวตน 2 ขั้นตอน (2FA)',set_2fa_desc:'เพิ่มความปลอดภัยอีกชั้นให้บัญชีของคุณ ด้วยรหัส 6 หลักจากแอป Authenticator ทุกครั้งที่เข้าสู่ระบบ',totp_enable_btn:'เปิดใช้ 2FA',totp_active:'เปิดใช้งานอยู่',totp_backup_remaining:'เหลือรหัสสำรอง {n} รหัส',totp_regen_backup:'สร้างรหัสสำรองใหม่',totp_disable_btn:'ปิดใช้ 2FA',totp_wrong_code:'รหัสไม่ถูกต้อง กรุณาลองใหม่',totp_enabled:'เปิดใช้ 2FA แล้ว ✓',totp_confirm_disable:'ต้องการปิดใช้ 2FA? บัญชีจะปลอดภัยน้อยลง',totp_disabled:'ปิดใช้ 2FA แล้ว',totp_confirm_regen:'สร้างรหัสสำรองใหม่? รหัสชุดเก่าจะใช้ไม่ได้อีก',totp_backup_used:'ใช้รหัสสำรองเข้าสู่ระบบแล้ว',totp_setup_title:'ตั้งค่า 2FA',totp_setup_step1:'1. เปิดแอป Authenticator (Google Authenticator, Authy, ฯลฯ) แล้วเพิ่มบัญชีใหม่ด้วยการกรอกรหัสนี้เอง (manual entry):',totp_setup_link_text:'หรือแตะที่นี่ถ้าเปิดหน้านี้บนมือถือเครื่องเดียวกับแอป Authenticator',totp_setup_step2:'2. กรอกรหัส 6 หลักที่แอป Authenticator แสดงตอนนี้ เพื่อยืนยันว่าตั้งค่าถูกต้อง:',totp_verify_enable:'ยืนยันและเปิดใช้',totp_backup_title:'รหัสสำรอง',totp_backup_desc:'เก็บรหัสเหล่านี้ไว้ในที่ปลอดภัย — ใช้เข้าระบบได้เมื่อเข้าถึงแอป Authenticator ไม่ได้ (ใช้ได้ครั้งเดียวต่อรหัส) รหัสชุดนี้จะไม่แสดงซ้ำอีก',totp_backup_saved:'บันทึกไว้แล้ว',totp_login_title:'ยืนยันตัวตน 2 ขั้นตอน',totp_login_desc:'กรอกรหัส 6 หลักจากแอป Authenticator หรือรหัสสำรอง',totp_verify_btn:'ยืนยัน',split_nav:'หารบิลเพื่อน',split_page_desc:'บันทึกค่าใช้จ่ายที่จ่ายแทนเพื่อน แล้วติดตามว่าใครติดหนี้ใครอยู่เท่าไร',split_friend_add:'เพิ่มเพื่อน',split_friend_edit:'แก้ไขเพื่อน',split_friend_name:'ชื่อเพื่อน',split_friend_name_ph:'เช่น เอ, บี, น้องมิ้นท์',split_friend_need_name:'กรุณาใส่ชื่อเพื่อน',split_friend_confirm_delete:'ลบเพื่อนคนนี้? ประวัติบิลและยอดค้างที่เกี่ยวข้องจะถูกลบด้วย',split_friend_settle_first:'ยังมียอดค้างอยู่ กรุณาชำระให้เรียบร้อยก่อนลบ',split_expense_add:'เพิ่มรายการหารบิล',split_expense_edit:'แก้ไขรายการหารบิล',split_field_desc:'รายการ',split_field_desc_ph:'เช่น ค่าอาหารเย็น, ค่าที่พัก',split_field_amount:'จำนวนเงินรวม (บาท)',split_field_paidby:'ใครจ่ายก่อน',split_field_splittype:'วิธีแบ่ง',split_type_equal:'แบ่งเท่ากัน',split_type_custom:'กำหนดเอง',split_field_participants:'คนที่ร่วมจ่าย',split_me:'ฉัน',split_sum_hint:'รวม {sum} จาก {total}',split_need_fields:'กรุณาใส่ข้อมูลให้ครบถ้วน',split_need_participants:'กรุณาเลือกผู้ร่วมจ่ายอย่างน้อย 1 คน',split_sum_mismatch:'ยอดรวมที่กำหนดเองไม่เท่ากับจำนวนเงินรวม',split_confirm_delete:'ลบรายการหารบิลนี้?',split_settle_title:'บันทึกการชำระเงิน',split_settle_they_paid:'เพื่อนจ่ายคืนฉัน',split_settle_i_paid:'ฉันจ่ายคืนเพื่อน',split_settle_btn:'ชำระเงิน',split_total_owed_to_me:'ยอดที่เพื่อนติดค้าง',split_total_i_owe:'ยอดที่ฉันติดค้าง',split_settled:'เคลียร์ยอดแล้ว',split_owes_you:'ติดค้าง {amt}',split_you_owe:'คุณติดหนี้ {amt}',split_no_friends:'ยังไม่มีเพื่อน — เพิ่มเพื่อนก่อนเพื่อเริ่มบันทึกบิลที่หารกัน',split_expenses_section:'รายการหารบิล',split_no_expenses:'ยังไม่มีรายการหารบิล',split_paid_by:'{who} จ่ายก่อน',household_nav:'ครัวเรือน',household_page_desc:'แชร์รายจ่ายส่วนกลางกับคู่ของคุณ/สมาชิกครอบครัวแบบเรียลไทม์',household_need_login:'ต้อง Login ด้วย Email/Google/Apple เพื่อใช้ฟีเจอร์นี้ (ยืนยันตัวตนข้ามอุปกรณ์)',household_none_yet:'ยังไม่มีครัวเรือน — สร้างครัวเรือนใหม่เพื่อเริ่มแชร์รายจ่ายกับคนในครอบครัว',household_create_btn:'สร้างครัวเรือนใหม่',household_field_name:'ชื่อครัวเรือน',household_field_name_ph:'เช่น บ้านของเรา, ครอบครัวสมิท',household_need_name:'กรุณาใส่ชื่อครัวเรือน',household_add_tx:'เพิ่มรายจ่ายร่วม',household_tx_desc_ph:'เช่น ค่าไฟ, ค่าน้ำ, ของใช้ในบ้าน',household_total_expense:'รายจ่ายรวม',household_total_income:'รายรับรวม',household_members:'สมาชิก',household_owner_label:'เจ้าของ',household_invite_ph:'Username ของสมาชิก',household_invite_btn:'เชิญ',household_delete_btn:'ลบครัวเรือน',household_leave_btn:'ออกจากครัวเรือน',household_expenses_section:'รายจ่ายร่วม',household_no_expenses:'ยังไม่มีรายจ่ายร่วม',household_error:'เกิดข้อผิดพลาด',household_cant_invite_self:'ไม่สามารถเชิญตัวเองได้',household_already_member:'เป็นสมาชิกอยู่แล้ว',household_user_not_found:'ไม่พบผู้ใช้นี้ หรือยังไม่เคย Login บนอุปกรณ์ใดเลย',household_invited:'เชิญสมาชิกแล้ว',household_cant_remove_owner:'ไม่สามารถลบเจ้าของครัวเรือนได้',household_confirm_remove:'ลบ {name} ออกจากครัวเรือนนี้?',household_owner_cant_leave:'เจ้าของครัวเรือนออกไม่ได้ — ลบครัวเรือนแทนถ้าต้องการเลิกใช้',household_confirm_leave:'ออกจากครัวเรือนนี้? คุณจะไม่เห็นรายจ่ายร่วมอีกต่อไป',household_confirm_delete:'ลบครัวเรือนนี้? ข้อมูลรายจ่ายร่วมทั้งหมดจะหายไปสำหรับสมาชิกทุกคน ไม่สามารถย้อนกลับได้',household_need_fields:'กรุณาใส่ข้อมูลให้ครบถ้วน',household_confirm_delete_tx:'ลบรายจ่ายนี้?',csv_exported:'ส่งออก CSV แล้ว',image_saved:'บันทึกรูปแล้ว',image_create_failed:'ไม่สามารถสร้างรูปได้ ต้องเชื่อมต่ออินเทอร์เน็ต',pin_mismatch_retry:'PIN ไม่ตรงกัน กรุณาลองใหม่',pin_set_success:'ตั้ง PIN เรียบร้อยแล้ว',pin_confirm_delete:'ต้องการลบ PIN?',pin_deleted:'ลบ PIN แล้ว',pin_must_be_6_digits:'PIN ต้องเป็นตัวเลข 6 หลัก',pin_mismatch_check:'PIN ไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง',rebal_deviates:'เบี่ยงจากเป้า',allow_popup_print:'กรุณาอนุญาต popup เพื่อพิมพ์รายงาน',login_email_first:'กรุณา Login ด้วย Email ก่อน',verify_email_sent:'ส่งอีเมลยืนยันแล้ว ตรวจสอบกล่องจดหมาย',send_failed:'ส่งไม่ได้',quickadd_invalid_format:'รูปแบบไม่ถูกต้อง เช่น "กาแฟ 60" หรือ "+เงินเดือน 25000"',quickadd_need_name_amount:'กรุณาระบุชื่อและจำนวนเงิน',quickadd_no_item_to_undo:'ไม่มีรายการที่ยกเลิกได้',quickadd_undone:'ยกเลิกรายการแล้ว',milestone_need_amount:'กรุณาระบุจำนวนเงิน',milestone_exists:'มีเป้านี้อยู่แล้ว',milestone_congrats:'ยินดีด้วย! Net Worth ถึง {amt} แล้ว!',ot_need_hours:'กรุณาใส่จำนวนชั่วโมง',ot_added_hours:'เพิ่ม OT {n} ชม. แล้ว',ot_confirm_delete:'ลบรายการ OT นี้?',split_total_mismatch:'ยอดรวมไม่ตรงกัน กรุณาตรวจสอบ',split_n_categories:'แยก {n} หมวดหมู่แล้ว',password_changed:'เปลี่ยนรหัสผ่านสำเร็จ ✓',dash_drag_hint:'ลากเพื่อจัดเรียง — กดเครื่องหมายถูกเมื่อเสร็จ',order_saved:'บันทึกลำดับแล้ว',bulk_select_first:'เลือกหมวดและรายการก่อน',bulk_changed_n:'เปลี่ยนหมวด {n} รายการแล้ว',bulk_confirm_delete:'ลบ {n} รายการที่เลือก? (ย้อนกลับไม่ได้)',bulk_deleted_n:'ลบ {n} รายการแล้ว',travel_coords_not_found:'ไม่พบพิกัดของ',travel_no_gps_support:'เบราว์เซอร์นี้ไม่รองรับ GPS',travel_finding_location:'กำลังหาตำแหน่ง',travel_allow_gps:'กรุณาอนุญาต GPS ในเบราว์เซอร์',travel_location_found:'พบตำแหน่งแล้ว',travel_location_found_toast:'พบตำแหน่งของคุณแล้ว',travel_location_failed:'ไม่สามารถหาตำแหน่งได้ — ตรวจสอบการอนุญาต GPS',travel_need_diff_points:'กรุณาเลือกจุดเริ่มต้นและปลายทางที่ต่างกัน',travel_place_coords_not_found:'ไม่พบพิกัดสถานที่',travel_calculating_route:'กำลังคำนวณเส้นทาง',url_saved:'บันทึก URL แล้ว',file_save_failed:'บันทึกไฟล์ไม่สำเร็จ',offline_msg:'ขาดการเชื่อมต่ออินเทอร์เน็ต — ข้อมูลจะยังบันทึกในเครื่อง',online_msg:'เชื่อมต่ออินเทอร์เน็ตแล้ว',
     chat_ask_ai:'ถามผู้ช่วย AI',chat_maya_title:'มายา — เลขาการเงินส่วนตัว',chat_maya_sub:'รู้ข้อมูลการเงินทั้งหมดของคุณ',chat_clear:'เคลียร์แชท',
     chat_q1:'สรุปภาพรวมการเงินของฉันเดือนนี้',chat_q1_label:'สรุปเดือนนี้',
     chat_q2:'Net Worth ของฉันตอนนี้เป็นเท่าไร และควรปรับปรุงอะไรบ้าง?',
@@ -4278,7 +4285,7 @@ const I18N = {
     inv_need_name_first:'Please enter a name/ticker first',inv_fetching:'Fetching',inv_price:'Price',inv_fetch_price_failed:'Failed to fetch price',inv_updating_price:'Updating price for',inv_update_failed:'Update failed',inv_edit:'Edit Investment',inv_need_name:'Please enter a name',inv_need_qty:'Please enter a quantity',inv_need_buyprice:'Please enter a buy price',inv_added:'Investment added',inv_confirm_delete:'Delete this investment?',inv_field_type:'Type',inv_field_linked_debt:'Link to Mortgage (optional)',inv_no_linked_debt:'Not linked',inv_linked_debt_hint:'If selected, equity = value − remaining loan balance is calculated automatically',inv_equity:'Equity:',inv_equity_hint:'Equity = value − remaining balance of the linked loan',
     dca_need_asset_name:'Please enter an asset name',dca_need_amount_per_time:'Please enter an amount per time',dca_plan_edited:'Plan edited',dca_plan_created:'DCA plan created',dca_confirm_delete:'Delete this DCA plan? All purchase history will be lost',dca_plan_deleted:'Plan deleted',dca_record_buy:'Record Purchase',dca_buy_recorded:'Purchase recorded',item_deleted:'Item deleted',dca_auto:'Auto DCA',dca_added_to_port:'added to portfolio',dca_price_zero_hint:'price is 0 — please update the price',
     lock_auto_off:'Auto-lock disabled',lock_auto_after:'Auto-lock after {n} minutes',apikey_saved:'API Key saved',model_set:'Model set',model_reset_auto:'Reset — system will auto-select',data_exported:'Data exported',data_imported:'Data imported successfully',invalid_file:'Invalid file',clear_all_confirm1:'Clear all data? This cannot be undone',clear_all_confirm2:'Confirm again: delete all data?',data_cleared:'Data cleared',pm_item_added:'Item added',
-    taxdoc_fill_in:'Fill In Fields',taxdoc_reading:'Reading',taxdoc_need_apikey:'Gemini API Key required to scan documents — go to Settings',taxdoc_no_data_found:'No data found — try a clearer image',taxdoc_salary_slip:'Salary Slip',taxdoc_month:'Month',taxdoc_salary_gross:'Salary (gross)',taxdoc_bonus:'Bonus',taxdoc_withheld_this_month:'Tax Withheld This Month',taxdoc_slip_filled:'Slip data filled in',taxdoc_slip_failed:'Failed to read slip',taxdoc_tawi50:'50 Tawi',taxdoc_payer:'Payer',taxdoc_income_type:'Income Type',taxdoc_total_income_yr:'Total Yearly Income',taxdoc_total_tax_yr:'Total Yearly Tax Withheld',taxdoc_tawi50_filled:'50 Tawi data filled in',taxdoc_tawi50_failed:'Failed to read 50 Tawi',customcat_need_name:'Please enter a category name',customcat_saved:'Category saved',customcat_confirm_delete:'Delete this category?',recur_auto_added:'Auto-added {n} recurring items',recurring:'Recurring',recur_page_desc:'Items that repeat every month — logged automatically on the date you set',recur_add_title:'Add Recurring Item',recur_edit_title:'Edit Recurring Item',recur_monthly_income:'Recurring Income/mo',recur_monthly_expense:'Recurring Expense/mo',recur_none_yet:'No recurring items yet — add rent, installments, or salary that comes in every month',recur_paused_section:'Paused',recur_day_of_month:'Day {d} of month',recur_resume:'Resume',recur_pause:'Pause',recur_no_bank:'None',recur_need_fields:'Please enter a valid name, amount, and day',recur_confirm_delete:'Delete this recurring item?',recur_field_name:'Item Name',recur_field_name_ph:'e.g. Room rent, Salary',recur_field_amount:'Amount (THB)',recur_field_type:'Type',recur_field_day:'Day of Month',recur_field_bank:'Bank (optional)',type_expense:'Expense',type_income:'Income',set_2fa_title:'Two-Factor Authentication (2FA)',set_2fa_desc:'Add an extra layer of security to your account with a 6-digit code from an Authenticator app every time you log in',totp_enable_btn:'Enable 2FA',totp_active:'Active',totp_backup_remaining:'{n} backup codes remaining',totp_regen_backup:'Regenerate backup codes',totp_disable_btn:'Disable 2FA',totp_wrong_code:'Incorrect code, please try again',totp_enabled:'2FA enabled ✓',totp_confirm_disable:'Disable 2FA? Your account will be less secure',totp_disabled:'2FA disabled',totp_confirm_regen:'Regenerate backup codes? The old codes will stop working',totp_backup_used:'Logged in with a backup code',totp_setup_title:'Set Up 2FA',totp_setup_step1:'1. Open your Authenticator app (Google Authenticator, Authy, etc.) and add a new account by manually entering this key:',totp_setup_link_text:'Or tap here if opening this page on the same phone as your Authenticator app',totp_setup_step2:'2. Enter the 6-digit code your Authenticator app shows now, to confirm setup is correct:',totp_verify_enable:'Verify & Enable',totp_backup_title:'Backup Codes',totp_backup_desc:'Keep these somewhere safe — use them to log in if you lose access to your Authenticator app (each code works once). This set will not be shown again.',totp_backup_saved:"I've Saved These",totp_login_title:'Two-Factor Authentication',totp_login_desc:'Enter the 6-digit code from your Authenticator app or a backup code',totp_verify_btn:'Verify',split_nav:'Split Bills',split_page_desc:"Track expenses you covered for friends, and see who owes who how much",split_friend_add:'Add Friend',split_friend_edit:'Edit Friend',split_friend_name:"Friend's Name",split_friend_name_ph:'e.g. Alex, Sam, Jordan',split_friend_need_name:"Please enter the friend's name",split_friend_confirm_delete:'Delete this friend? Their bill history and outstanding balance will also be removed',split_friend_settle_first:'There is still an outstanding balance — please settle up before deleting',split_expense_add:'Add Split Expense',split_expense_edit:'Edit Split Expense',split_field_desc:'Description',split_field_desc_ph:'e.g. Dinner, Hotel',split_field_amount:'Total Amount (THB)',split_field_paidby:'Paid By',split_field_splittype:'Split Method',split_type_equal:'Split Equally',split_type_custom:'Custom Amounts',split_field_participants:'Participants',split_me:'Me',split_sum_hint:'Total {sum} of {total}',split_need_fields:'Please fill in all fields',split_need_participants:'Please select at least 1 participant',split_sum_mismatch:'Custom amounts do not add up to the total',split_confirm_delete:'Delete this split expense?',split_settle_title:'Record Payment',split_settle_they_paid:'Friend Paid Me Back',split_settle_i_paid:'I Paid Friend Back',split_settle_btn:'Settle Up',split_total_owed_to_me:"Friends Owe You",split_total_i_owe:'You Owe',split_settled:'Settled up',split_owes_you:'Owes you {amt}',split_you_owe:'You owe {amt}',split_no_friends:'No friends yet — add a friend to start tracking split bills',split_expenses_section:'Split Expenses',split_no_expenses:'No split expenses yet',split_paid_by:'Paid by {who}',csv_exported:'CSV exported',image_saved:'Image saved',image_create_failed:'Could not create image — internet connection required',pin_mismatch_retry:"PINs don't match, please try again",pin_set_success:'PIN set successfully',pin_confirm_delete:'Delete PIN?',pin_deleted:'PIN deleted',pin_must_be_6_digits:'PIN must be 6 digits',pin_mismatch_check:"PINs don't match, please check again",rebal_deviates:'deviates from target',allow_popup_print:'Please allow popups to print the report',login_email_first:'Please log in with Email first',verify_email_sent:'Verification email sent, check your inbox',send_failed:'Failed to send',quickadd_invalid_format:'Invalid format, e.g. "coffee 60" or "+salary 25000"',quickadd_need_name_amount:'Please specify a name and amount',quickadd_no_item_to_undo:'No item to undo',quickadd_undone:'Item undone',milestone_need_amount:'Please specify an amount',milestone_exists:'This target already exists',milestone_congrats:'Congratulations! Net Worth reached {amt}!',ot_need_hours:'Please enter the number of hours',ot_added_hours:'Added {n} hrs of OT',ot_confirm_delete:'Delete this OT entry?',split_total_mismatch:'Totals do not match, please check',split_n_categories:'Split into {n} categories',password_changed:'Password changed successfully ✓',dash_drag_hint:'Drag to reorder — click the checkmark when done',order_saved:'Order saved',bulk_select_first:'Select a category and items first',bulk_changed_n:'Changed category for {n} items',bulk_confirm_delete:'Delete {n} selected items? (cannot be undone)',bulk_deleted_n:'Deleted {n} items',travel_coords_not_found:'Coordinates not found for',travel_no_gps_support:'This browser does not support GPS',travel_finding_location:'Finding location',travel_allow_gps:'Please allow GPS access in your browser',travel_location_found:'Location found',travel_location_found_toast:'Your location was found',travel_location_failed:'Could not find location — check GPS permission',travel_need_diff_points:'Please select different start and end points',travel_place_coords_not_found:'Place coordinates not found',travel_calculating_route:'Calculating route',url_saved:'URL saved',file_save_failed:'Failed to save file',offline_msg:'Internet connection lost — data will be saved locally',online_msg:'Internet connection restored',
+    taxdoc_fill_in:'Fill In Fields',taxdoc_reading:'Reading',taxdoc_need_apikey:'Gemini API Key required to scan documents — go to Settings',taxdoc_no_data_found:'No data found — try a clearer image',taxdoc_salary_slip:'Salary Slip',taxdoc_month:'Month',taxdoc_salary_gross:'Salary (gross)',taxdoc_bonus:'Bonus',taxdoc_withheld_this_month:'Tax Withheld This Month',taxdoc_slip_filled:'Slip data filled in',taxdoc_slip_failed:'Failed to read slip',taxdoc_tawi50:'50 Tawi',taxdoc_payer:'Payer',taxdoc_income_type:'Income Type',taxdoc_total_income_yr:'Total Yearly Income',taxdoc_total_tax_yr:'Total Yearly Tax Withheld',taxdoc_tawi50_filled:'50 Tawi data filled in',taxdoc_tawi50_failed:'Failed to read 50 Tawi',customcat_need_name:'Please enter a category name',customcat_saved:'Category saved',customcat_confirm_delete:'Delete this category?',recur_auto_added:'Auto-added {n} recurring items',recurring:'Recurring',recur_page_desc:'Items that repeat every month — logged automatically on the date you set',recur_add_title:'Add Recurring Item',recur_edit_title:'Edit Recurring Item',recur_monthly_income:'Recurring Income/mo',recur_monthly_expense:'Recurring Expense/mo',recur_none_yet:'No recurring items yet — add rent, installments, or salary that comes in every month',recur_paused_section:'Paused',recur_day_of_month:'Day {d} of month',recur_resume:'Resume',recur_pause:'Pause',recur_no_bank:'None',recur_need_fields:'Please enter a valid name, amount, and day',recur_confirm_delete:'Delete this recurring item?',recur_field_name:'Item Name',recur_field_name_ph:'e.g. Room rent, Salary',recur_field_amount:'Amount (THB)',recur_field_type:'Type',recur_field_day:'Day of Month',recur_field_bank:'Bank (optional)',type_expense:'Expense',type_income:'Income',set_2fa_title:'Two-Factor Authentication (2FA)',set_2fa_desc:'Add an extra layer of security to your account with a 6-digit code from an Authenticator app every time you log in',totp_enable_btn:'Enable 2FA',totp_active:'Active',totp_backup_remaining:'{n} backup codes remaining',totp_regen_backup:'Regenerate backup codes',totp_disable_btn:'Disable 2FA',totp_wrong_code:'Incorrect code, please try again',totp_enabled:'2FA enabled ✓',totp_confirm_disable:'Disable 2FA? Your account will be less secure',totp_disabled:'2FA disabled',totp_confirm_regen:'Regenerate backup codes? The old codes will stop working',totp_backup_used:'Logged in with a backup code',totp_setup_title:'Set Up 2FA',totp_setup_step1:'1. Open your Authenticator app (Google Authenticator, Authy, etc.) and add a new account by manually entering this key:',totp_setup_link_text:'Or tap here if opening this page on the same phone as your Authenticator app',totp_setup_step2:'2. Enter the 6-digit code your Authenticator app shows now, to confirm setup is correct:',totp_verify_enable:'Verify & Enable',totp_backup_title:'Backup Codes',totp_backup_desc:'Keep these somewhere safe — use them to log in if you lose access to your Authenticator app (each code works once). This set will not be shown again.',totp_backup_saved:"I've Saved These",totp_login_title:'Two-Factor Authentication',totp_login_desc:'Enter the 6-digit code from your Authenticator app or a backup code',totp_verify_btn:'Verify',split_nav:'Split Bills',split_page_desc:"Track expenses you covered for friends, and see who owes who how much",split_friend_add:'Add Friend',split_friend_edit:'Edit Friend',split_friend_name:"Friend's Name",split_friend_name_ph:'e.g. Alex, Sam, Jordan',split_friend_need_name:"Please enter the friend's name",split_friend_confirm_delete:'Delete this friend? Their bill history and outstanding balance will also be removed',split_friend_settle_first:'There is still an outstanding balance — please settle up before deleting',split_expense_add:'Add Split Expense',split_expense_edit:'Edit Split Expense',split_field_desc:'Description',split_field_desc_ph:'e.g. Dinner, Hotel',split_field_amount:'Total Amount (THB)',split_field_paidby:'Paid By',split_field_splittype:'Split Method',split_type_equal:'Split Equally',split_type_custom:'Custom Amounts',split_field_participants:'Participants',split_me:'Me',split_sum_hint:'Total {sum} of {total}',split_need_fields:'Please fill in all fields',split_need_participants:'Please select at least 1 participant',split_sum_mismatch:'Custom amounts do not add up to the total',split_confirm_delete:'Delete this split expense?',split_settle_title:'Record Payment',split_settle_they_paid:'Friend Paid Me Back',split_settle_i_paid:'I Paid Friend Back',split_settle_btn:'Settle Up',split_total_owed_to_me:"Friends Owe You",split_total_i_owe:'You Owe',split_settled:'Settled up',split_owes_you:'Owes you {amt}',split_you_owe:'You owe {amt}',split_no_friends:'No friends yet — add a friend to start tracking split bills',split_expenses_section:'Split Expenses',split_no_expenses:'No split expenses yet',split_paid_by:'Paid by {who}',household_nav:'Household',household_page_desc:"Share joint expenses with your partner/family members in real time",household_need_login:'Log in with Email/Google/Apple to use this feature (requires cross-device authentication)',household_none_yet:'No households yet — create one to start sharing expenses with your family',household_create_btn:'Create Household',household_field_name:'Household Name',household_field_name_ph:'e.g. Our Home, The Smith Family',household_need_name:'Please enter a household name',household_add_tx:'Add Shared Expense',household_tx_desc_ph:'e.g. Electric bill, Water bill, Groceries',household_total_expense:'Total Expenses',household_total_income:'Total Income',household_members:'Members',household_owner_label:'Owner',household_invite_ph:"Member's Username",household_invite_btn:'Invite',household_delete_btn:'Delete Household',household_leave_btn:'Leave Household',household_expenses_section:'Shared Expenses',household_no_expenses:'No shared expenses yet',household_error:'An error occurred',household_cant_invite_self:'Cannot invite yourself',household_already_member:'Already a member',household_user_not_found:'User not found, or has never logged in on any device',household_invited:'Member invited',household_cant_remove_owner:'Cannot remove the household owner',household_confirm_remove:'Remove {name} from this household?',household_owner_cant_leave:"The owner can't leave — delete the household instead if you want to stop using it",household_confirm_leave:"Leave this household? You'll no longer see its shared expenses",household_confirm_delete:'Delete this household? All shared expense data will be lost for every member. This cannot be undone',household_need_fields:'Please fill in all fields',household_confirm_delete_tx:'Delete this expense?',csv_exported:'CSV exported',image_saved:'Image saved',image_create_failed:'Could not create image — internet connection required',pin_mismatch_retry:"PINs don't match, please try again",pin_set_success:'PIN set successfully',pin_confirm_delete:'Delete PIN?',pin_deleted:'PIN deleted',pin_must_be_6_digits:'PIN must be 6 digits',pin_mismatch_check:"PINs don't match, please check again",rebal_deviates:'deviates from target',allow_popup_print:'Please allow popups to print the report',login_email_first:'Please log in with Email first',verify_email_sent:'Verification email sent, check your inbox',send_failed:'Failed to send',quickadd_invalid_format:'Invalid format, e.g. "coffee 60" or "+salary 25000"',quickadd_need_name_amount:'Please specify a name and amount',quickadd_no_item_to_undo:'No item to undo',quickadd_undone:'Item undone',milestone_need_amount:'Please specify an amount',milestone_exists:'This target already exists',milestone_congrats:'Congratulations! Net Worth reached {amt}!',ot_need_hours:'Please enter the number of hours',ot_added_hours:'Added {n} hrs of OT',ot_confirm_delete:'Delete this OT entry?',split_total_mismatch:'Totals do not match, please check',split_n_categories:'Split into {n} categories',password_changed:'Password changed successfully ✓',dash_drag_hint:'Drag to reorder — click the checkmark when done',order_saved:'Order saved',bulk_select_first:'Select a category and items first',bulk_changed_n:'Changed category for {n} items',bulk_confirm_delete:'Delete {n} selected items? (cannot be undone)',bulk_deleted_n:'Deleted {n} items',travel_coords_not_found:'Coordinates not found for',travel_no_gps_support:'This browser does not support GPS',travel_finding_location:'Finding location',travel_allow_gps:'Please allow GPS access in your browser',travel_location_found:'Location found',travel_location_found_toast:'Your location was found',travel_location_failed:'Could not find location — check GPS permission',travel_need_diff_points:'Please select different start and end points',travel_place_coords_not_found:'Place coordinates not found',travel_calculating_route:'Calculating route',url_saved:'URL saved',file_save_failed:'Failed to save file',offline_msg:'Internet connection lost — data will be saved locally',online_msg:'Internet connection restored',
     chat_ask_ai:'Ask AI Assistant',chat_maya_title:'Maya — Personal Finance Secretary',chat_maya_sub:'Knows all your financial data',chat_clear:'Clear Chat',
     chat_q1:'Summarize my overall finances this month',chat_q1_label:"This Month's Summary",
     chat_q2:"What's my Net Worth right now, and what should I improve?",
@@ -4358,6 +4365,7 @@ function renderPage(p){
   else if(p==='subscriptions') renderSubscriptions();
   else if(p==='recurring') renderRecurring();
   else if(p==='split') renderSplit();
+  else if(p==='household') renderHousehold();
   else if(p==='admin') renderAdmin();
   else if(p==='travel') renderTravel();
   else if(p==='aiusage') renderAiUsage();
@@ -9797,6 +9805,227 @@ function renderSplit(){
     +'<div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:10px" data-i18n="split_expenses_section">รายการหารบิล</div>'
     +(expenses.length?'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">'+expenses.map(expenseRow).join('')+'</div>'
       :'<div class="empty"><i class="fas fa-receipt"></i><p data-i18n="split_no_expenses">ยังไม่มีรายการหารบิล</p></div>');
+  applyLang();
+}
+
+// ══════════════════════════════════════════
+//  FEATURE 3c — HOUSEHOLD / SHARED FINANCE
+//  ครัวเรือน: บัญชี MoneyMind จริง 2 บัญชีขึ้นไป แชร์รายจ่ายส่วนกลางแบบเรียลไทม์ผ่าน Firestore
+//  แยก collection ต่างหาก (households) — ไม่แตะ userdata เดิมของแต่ละคนเลย ข้อมูลส่วนตัวยังส่วนตัว 100%
+// ══════════════════════════════════════════
+let _household=null, _householdUnsub=null, _myHouseholds=[];
+
+function _householdsCol(){ return _fs.collection('households'); }
+
+async function loadMyHouseholds(){
+  if(!_fs||!_auth||!_auth.currentUser) return [];
+  try{
+    const uid=_auth.currentUser.uid;
+    const snap=await _householdsCol().where('memberUids','array-contains',uid).get();
+    _myHouseholds=snap.docs.map(d=>({id:d.id,...d.data()}));
+    return _myHouseholds;
+  }catch(e){ console.error('[Household] load:',e); return []; }
+}
+
+function householdListen(householdId){
+  if(_householdUnsub){ _householdUnsub(); _householdUnsub=null; }
+  if(!_fs||!householdId) return;
+  _householdUnsub=_householdsCol().doc(householdId).onSnapshot(snap=>{
+    if(!snap.exists) return;
+    _household={id:snap.id,...snap.data()};
+    if(curPage==='household') renderHousehold();
+  },e=>console.error('[Household] listen:',e));
+}
+
+function selectHousehold(id){
+  const h=_myHouseholds.find(x=>x.id===id);
+  if(!h) return;
+  _household=h;
+  householdListen(id);
+  if(curPage==='household') renderHousehold();
+}
+
+async function createHousehold(){
+  if(!_auth||!_auth.currentUser){ toast(tr('household_need_login'),'error'); return; }
+  const name=document.getElementById('household-create-name').value.trim();
+  if(!name){ toast(tr('household_need_name'),'error'); return; }
+  const uidv=_auth.currentUser.uid;
+  try{
+    const ref=await _householdsCol().add({
+      ownerUid:uidv, ownerUsername:currentUser, name,
+      memberUids:[uidv], memberUsernames:[currentUser],
+      transactions:[],
+      createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeM('m-household-create');
+    await loadMyHouseholds();
+    selectHousehold(ref.id);
+    toast(tr('saved'),'success');
+  }catch(e){ toast(tr('household_error')+': '+e.message,'error'); }
+}
+
+async function inviteHouseholdMember(){
+  if(!_household) return;
+  const username=document.getElementById('household-invite-username').value.trim();
+  if(!username) return;
+  if(username===currentUser){ toast(tr('household_cant_invite_self'),'error'); return; }
+  if((_household.memberUsernames||[]).includes(username)){ toast(tr('household_already_member'),'error'); return; }
+  try{
+    const memberDoc=await _fs.collection('members').doc(username).get();
+    const targetUid=memberDoc.exists?memberDoc.data().uid:null;
+    if(!targetUid){ toast(tr('household_user_not_found'),'error'); return; }
+    await _householdsCol().doc(_household.id).update({
+      memberUids:firebase.firestore.FieldValue.arrayUnion(targetUid),
+      memberUsernames:firebase.firestore.FieldValue.arrayUnion(username),
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.getElementById('household-invite-username').value='';
+    toast(tr('household_invited'),'success');
+  }catch(e){ toast(tr('household_error')+': '+e.message,'error'); }
+}
+
+async function removeHouseholdMember(uidv,username){
+  if(!_household) return;
+  if(uidv===_household.ownerUid){ toast(tr('household_cant_remove_owner'),'error'); return; }
+  if(!confirm(tr('household_confirm_remove').replace('{name}',username))) return;
+  try{
+    await _householdsCol().doc(_household.id).update({
+      memberUids:firebase.firestore.FieldValue.arrayRemove(uidv),
+      memberUsernames:firebase.firestore.FieldValue.arrayRemove(username),
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }catch(e){ toast(tr('household_error')+': '+e.message,'error'); }
+}
+
+async function leaveHousehold(){
+  if(!_household||!_auth.currentUser) return;
+  if(_auth.currentUser.uid===_household.ownerUid){ toast(tr('household_owner_cant_leave'),'error'); return; }
+  if(!confirm(tr('household_confirm_leave'))) return;
+  try{
+    await _householdsCol().doc(_household.id).update({
+      memberUids:firebase.firestore.FieldValue.arrayRemove(_auth.currentUser.uid),
+      memberUsernames:firebase.firestore.FieldValue.arrayRemove(currentUser),
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    if(_householdUnsub){ _householdUnsub(); _householdUnsub=null; }
+    _household=null;
+    await loadMyHouseholds();
+    renderHousehold();
+  }catch(e){ toast(tr('household_error')+': '+e.message,'error'); }
+}
+
+async function deleteHousehold(){
+  if(!_household||!_auth.currentUser||_auth.currentUser.uid!==_household.ownerUid) return;
+  if(!confirm(tr('household_confirm_delete'))) return;
+  try{
+    await _householdsCol().doc(_household.id).delete();
+    if(_householdUnsub){ _householdUnsub(); _householdUnsub=null; }
+    _household=null;
+    await loadMyHouseholds();
+    renderHousehold();
+  }catch(e){ toast(tr('household_error')+': '+e.message,'error'); }
+}
+
+function openHouseholdTxModal(){
+  document.getElementById('household-tx-desc').value='';
+  document.getElementById('household-tx-amount').value='';
+  document.getElementById('household-tx-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('household-tx-type').value='expense';
+  openM('m-household-tx');
+}
+
+async function saveHouseholdTx(){
+  if(!_household||!_auth.currentUser) return;
+  const description=document.getElementById('household-tx-desc').value.trim();
+  const amount=parseFloat(document.getElementById('household-tx-amount').value);
+  const date=document.getElementById('household-tx-date').value;
+  const type=document.getElementById('household-tx-type').value;
+  if(!description||isNaN(amount)||amount<=0||!date){ toast(tr('household_need_fields'),'error'); return; }
+  const tx={id:uid(),description,amount,type,date,addedByUid:_auth.currentUser.uid,addedByUsername:currentUser};
+  try{
+    await _householdsCol().doc(_household.id).update({
+      transactions:firebase.firestore.FieldValue.arrayUnion(tx),
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeM('m-household-tx');
+    toast(tr('saved'),'success');
+  }catch(e){ toast(tr('household_error')+': '+e.message,'error'); }
+}
+
+async function deleteHouseholdTx(txId){
+  if(!_household) return;
+  if(!confirm(tr('household_confirm_delete_tx'))) return;
+  const target=(_household.transactions||[]).find(t=>t.id===txId);
+  if(!target) return;
+  try{
+    await _householdsCol().doc(_household.id).update({
+      transactions:firebase.firestore.FieldValue.arrayRemove(target),
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }catch(e){ toast(tr('household_error')+': '+e.message,'error'); }
+}
+
+function renderHousehold(){
+  const el=document.getElementById('household-content'); if(!el) return;
+  if(!_fs||!_auth||!_auth.currentUser){
+    el.innerHTML='<div class="empty"><i class="fas fa-house-user"></i><p data-i18n="household_need_login">ต้อง Login ด้วย Email/Google/Apple เพื่อใช้ฟีเจอร์นี้ (ยืนยันตัวตนข้ามอุปกรณ์)</p></div>';
+    applyLang(); return;
+  }
+  if(!_household){
+    el.innerHTML=
+      '<div style="margin-bottom:16px"><h2 style="margin:0" data-i18n="household_nav">ครัวเรือน</h2><div style="font-size:12.5px;color:var(--muted)" data-i18n="household_page_desc">แชร์รายจ่ายส่วนกลางกับคู่ของคุณ/สมาชิกครอบครัวแบบเรียลไทม์</div></div>'
+      +(_myHouseholds.length?('<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:20px">'+_myHouseholds.map(h=>
+        '<div class="sub-card" style="cursor:pointer" onclick="selectHousehold(\''+h.id+'\')"><div style="font-weight:700">'+_escHtml(h.name)+'</div><div style="font-size:12px;color:var(--muted)">'+(h.memberUsernames||[]).join(', ')+'</div></div>'
+      ).join('')+'</div>'):'')
+      +'<div class="empty"><i class="fas fa-house-user"></i><p data-i18n="household_none_yet">ยังไม่มีครัวเรือน — สร้างครัวเรือนใหม่เพื่อเริ่มแชร์รายจ่ายกับคนในครอบครัว</p>'
+      +'<button class="btn btn-primary" onclick="openM(\'m-household-create\')" style="margin-top:10px"><i class="fas fa-plus"></i> <span data-i18n="household_create_btn">สร้างครัวเรือนใหม่</span></button></div>';
+    applyLang(); return;
+  }
+  const myUid=_auth.currentUser.uid;
+  const isOwner=myUid===_household.ownerUid;
+  const txs=(_household.transactions||[]).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const totalExpense=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const totalIncome=txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const byMember={};
+  txs.filter(t=>t.type==='expense').forEach(t=>{ byMember[t.addedByUsername]=(byMember[t.addedByUsername]||0)+t.amount; });
+
+  el.innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">'
+      +'<div><h2 style="margin:0">'+_escHtml(_household.name)+'</h2><div style="font-size:12.5px;color:var(--muted)" data-i18n="household_page_desc">แชร์รายจ่ายส่วนกลางกับคู่ของคุณ/สมาชิกครอบครัวแบบเรียลไทม์</div></div>'
+      +'<button class="btn btn-primary" onclick="openHouseholdTxModal()"><i class="fas fa-plus"></i> <span data-i18n="household_add_tx">เพิ่มรายจ่ายร่วม</span></button>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px">'
+      +'<div class="stat-card"><div class="stat-label" data-i18n="household_total_expense">รายจ่ายรวม</div><div class="stat-value" style="color:var(--red)">-'+fmt(totalExpense)+'</div></div>'
+      +'<div class="stat-card"><div class="stat-label" data-i18n="household_total_income">รายรับรวม</div><div class="stat-value" style="color:var(--green)">+'+fmt(totalIncome)+'</div></div>'
+      +Object.entries(byMember).map(([name,amt])=>'<div class="stat-card"><div class="stat-label">'+_escHtml(name)+'</div><div class="stat-value">'+fmt(amt)+'</div></div>').join('')
+    +'</div>'
+    +'<div class="sub-card" style="margin-bottom:20px">'
+      +'<div style="font-weight:700;margin-bottom:10px" data-i18n="household_members">สมาชิก</div>'
+      +(_household.memberUids||[]).map((uidX,i)=>{
+        const uname=(_household.memberUsernames||[])[i]||'?';
+        const owner=uidX===_household.ownerUid;
+        return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0">'
+          +'<div style="flex:1">'+_escHtml(uname)+(owner?' <span style="font-size:11px;color:var(--amber)">('+tr('household_owner_label')+')</span>':'')+'</div>'
+          +(isOwner&&!owner?'<button onclick="removeHouseholdMember(\''+uidX+'\',\''+uname+'\')" class="btn btn-ghost" style="padding:4px 8px;font-size:11px;color:var(--red)"><i class="fas fa-user-minus"></i></button>':'')
+        +'</div>';
+      }).join('')
+      +'<div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">'
+        +'<input type="text" id="household-invite-username" class="finput" placeholder="Username" data-i18n-ph="household_invite_ph" style="flex:1">'
+        +'<button onclick="inviteHouseholdMember()" class="btn btn-ghost"><i class="fas fa-user-plus"></i> <span data-i18n="household_invite_btn">เชิญ</span></button>'
+      +'</div>'
+      +'<div style="margin-top:10px">'
+        +(isOwner?'<button onclick="deleteHousehold()" class="btn btn-ghost" style="color:var(--red);font-size:12px"><i class="fas fa-trash"></i> <span data-i18n="household_delete_btn">ลบครัวเรือน</span></button>'
+          :'<button onclick="leaveHousehold()" class="btn btn-ghost" style="color:var(--red);font-size:12px"><i class="fas fa-sign-out-alt"></i> <span data-i18n="household_leave_btn">ออกจากครัวเรือน</span></button>')
+      +'</div>'
+    +'</div>'
+    +'<div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:10px" data-i18n="household_expenses_section">รายจ่ายร่วม</div>'
+    +(txs.length?'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">'+txs.map(t=>
+      '<div class="sub-card"><div style="display:flex;justify-content:space-between"><div><div style="font-weight:700">'+_escHtml(t.description)+'</div><div style="font-size:11.5px;color:var(--muted)">'+t.date+' · '+_escHtml(t.addedByUsername)+'</div></div>'
+      +'<div style="text-align:right"><div style="font-weight:700;color:'+(t.type==='income'?'var(--green)':'var(--red)')+'">'+(t.type==='income'?'+':'-')+fmt(t.amount)+'</div></div></div>'
+      +'<button onclick="deleteHouseholdTx(\''+t.id+'\')" class="btn btn-ghost" style="margin-top:8px;font-size:11px;color:var(--red)"><i class="fas fa-trash"></i> '+tr('delete')+'</button></div>'
+    ).join('')+'</div>'
+    :'<div class="empty"><i class="fas fa-receipt"></i><p data-i18n="household_no_expenses">ยังไม่มีรายจ่ายร่วม</p></div>');
   applyLang();
 }
 
@@ -16587,6 +16816,38 @@ window.addEventListener('online',function(){ toast(tr('online_msg'),'success'); 
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeM('m-split-settle')" data-i18n="cancel">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveSplitSettlement()" data-i18n="save">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Household Create Modal -->
+<div id="m-household-create" class="overlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title"><i class="fas fa-house-user" style="color:#06b6d4"></i> <span data-i18n="household_create_btn">สร้างครัวเรือนใหม่</span></div>
+    <div class="fg"><label class="flabel" data-i18n="household_field_name">ชื่อครัวเรือน</label><input type="text" id="household-create-name" class="finput" placeholder="เช่น บ้านของเรา, ครอบครัวสมิท" data-i18n-ph="household_field_name_ph"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-household-create')" data-i18n="cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="createHousehold()" data-i18n="save">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Household Shared Expense Modal -->
+<div id="m-household-tx" class="overlay">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title"><i class="fas fa-receipt" style="color:#06b6d4"></i> <span data-i18n="household_add_tx">เพิ่มรายจ่ายร่วม</span></div>
+    <div class="fg"><label class="flabel" data-i18n="split_field_desc">รายการ</label><input type="text" id="household-tx-desc" class="finput" placeholder="เช่น ค่าไฟ, ค่าน้ำ, ของใช้ในบ้าน" data-i18n-ph="household_tx_desc_ph"></div>
+    <div class="fg"><label class="flabel" data-i18n="split_field_amount">จำนวนเงินรวม (บาท)</label><input type="number" id="household-tx-amount" class="finput" placeholder="0"></div>
+    <div class="fg"><label class="flabel" data-i18n="tx_date">วันที่</label><input type="date" id="household-tx-date" class="finput"></div>
+    <div class="fg"><label class="flabel" data-i18n="recur_field_type">ประเภท</label>
+      <select id="household-tx-type" class="finput">
+        <option value="expense" data-i18n="type_expense">รายจ่าย</option>
+        <option value="income" data-i18n="type_income">รายรับ</option>
+      </select>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-household-tx')" data-i18n="cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveHouseholdTx()" data-i18n="save">บันทึก</button>
     </div>
   </div>
 </div>
