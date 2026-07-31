@@ -173,6 +173,29 @@
     #pg-dashboard .btn-primary{background:linear-gradient(145deg,#8b5cf6,#7c3aed);box-shadow:0 6px 20px -6px rgba(124,58,237,.6),inset 0 1px 0 rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.25)}
     #pg-dashboard .btn-ghost{background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.03));backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
 
+    /* Liquid Glass — light mode variant (white-on-white needs darker shadows/borders for definition instead of rim-light) */
+    body.light-mode.glass-dash #glass-bg-blobs{opacity:.55}
+    body.light-mode.glass-dash .topbar{background:rgba(255,255,255,.55);border-bottom:1px solid rgba(15,23,42,.08)}
+    body.light-mode.glass-dash .sidebar{background:rgba(255,255,255,.6)}
+    body.light-mode #pg-dashboard .dash-hero{
+      background:linear-gradient(115deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 40%),linear-gradient(135deg,rgba(124,58,237,.14) 0%,rgba(6,182,212,.1) 55%,rgba(16,185,129,.06) 100%);
+      border:1px solid rgba(124,58,237,.18);
+      box-shadow:0 12px 32px rgba(15,23,42,.1),inset 0 1px 0 rgba(255,255,255,.65);
+    }
+    body.light-mode #pg-dashboard .dash-hero-stat{
+      background:linear-gradient(115deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 45%),linear-gradient(145deg,rgba(255,255,255,.5),rgba(255,255,255,.15));
+      border:1px solid rgba(15,23,42,.07);
+      box-shadow:0 2px 10px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.7);
+    }
+    body.light-mode #pg-dashboard .dash-hero-stat:hover{background:linear-gradient(115deg,rgba(255,255,255,.6) 0%,rgba(255,255,255,0) 45%),linear-gradient(145deg,rgba(255,255,255,.6),rgba(255,255,255,.2))}
+    body.light-mode #pg-dashboard .stat-card,body.light-mode #pg-dashboard .chart-card{
+      background:linear-gradient(115deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,0) 40%),linear-gradient(145deg,rgba(255,255,255,.55),rgba(255,255,255,.2));
+      border:1px solid rgba(15,23,42,.07);
+      box-shadow:0 6px 20px rgba(15,23,42,.08),inset 0 1px 0 rgba(255,255,255,.7);
+    }
+    body.light-mode #pg-dashboard .stat-card:hover{box-shadow:0 10px 26px rgba(15,23,42,.12),inset 0 1px 0 rgba(255,255,255,.8)}
+    body.light-mode #pg-dashboard .btn-ghost{background:linear-gradient(145deg,rgba(255,255,255,.6),rgba(255,255,255,.25));border:1px solid rgba(15,23,42,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+
     /* ── Card ── */
     .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px}
     .bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
