@@ -1029,6 +1029,13 @@
     body:not(.light-mode) .topbar{background:rgba(17,17,29,.65);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
     body:not(.light-mode) .sidebar{background:linear-gradient(180deg, rgba(26,26,46,.6), rgba(15,15,26,.9));backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%)}
     body:not(.light-mode) .nav-item.active{background:linear-gradient(90deg, rgba(124,58,237,.26), rgba(124,58,237,.04));border-radius:0 12px 12px 0}
+    body:not(.light-mode) #login-screen{
+      background:
+        radial-gradient(1100px 560px at 8% -8%, rgba(124,58,237,.22), transparent 55%),
+        radial-gradient(900px 520px at 100% 0%, rgba(6,182,212,.16), transparent 52%),
+        radial-gradient(800px 480px at 30% 105%, rgba(236,72,153,.12), transparent 55%),
+        var(--bg);
+    }
     body:not(.light-mode) .login-box{
       background:linear-gradient(115deg,rgba(255,255,255,.1) 0%,rgba(255,255,255,0) 40%),linear-gradient(160deg, rgba(33,33,54,.75), rgba(17,17,29,.85));
       backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);
@@ -1093,6 +1100,13 @@
     }
     body.light-mode .topbar{background:rgba(255,255,255,.55);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-bottom:1px solid rgba(15,23,42,.08)}
     body.light-mode .sidebar{background:rgba(255,255,255,.6);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%)}
+    body.light-mode #login-screen{
+      background:
+        radial-gradient(1100px 560px at 8% -8%, rgba(124,58,237,.1), transparent 55%),
+        radial-gradient(900px 520px at 100% 0%, rgba(6,182,212,.08), transparent 52%),
+        radial-gradient(800px 480px at 30% 105%, rgba(236,72,153,.06), transparent 55%),
+        var(--bg);
+    }
     body.light-mode .login-box{
       background:linear-gradient(115deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 40%),linear-gradient(145deg,rgba(255,255,255,.6),rgba(255,255,255,.25));
       border:1px solid rgba(15,23,42,.08);
