@@ -4533,7 +4533,7 @@ function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(
 // ══════════════════════════════════════════
 //  DASHBOARD
 // ══════════════════════════════════════════
-let chCat,chTrend;
+let chCat,chTrend,_chNwHistory;
 
 function renderDash(){
   const txs=monthTx();
@@ -10798,7 +10798,7 @@ function snapshotNetWorth(){
 
 function renderNWHistory(){
   const el=document.getElementById('dash-nw-history-section'); if(!el) return;
-  if(!DB.nwHistory||Object.keys(DB.nwHistory).length<2){ el.innerHTML=''; return; }
+  if(!DB.nwHistory||Object.keys(DB.nwHistory).length<2){ if(_chNwHistory){ _chNwHistory.destroy(); _chNwHistory=null; } el.innerHTML=''; return; }
   const sorted=Object.entries(DB.nwHistory).sort(([a],[b])=>a.localeCompare(b)).slice(-12);
   const labels=sorted.map(([k])=>{ const [y,m]=k.split('-'); const mn=monthShortArr(); return mn[parseInt(m)-1]+'\''+String(parseInt(y)-2500+43).slice(-2); });
   const vals=sorted.map(([,v])=>v);
@@ -10817,7 +10817,8 @@ function renderNWHistory(){
     </div>`;
   requestAnimationFrame(()=>{
     const ctx=document.getElementById('ch-nw-history')?.getContext('2d'); if(!ctx) return;
-    new Chart(ctx,{type:'line',data:{labels,datasets:[{data:vals,borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.1)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#06b6d4',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:_chartTickColor(),font:{size:10}},grid:{display:false}},y:{ticks:{color:_chartTickColor(),font:{size:10},callback:v=>v>=1000000?'฿'+(v/1000000).toFixed(1)+'M':v>=1000?'฿'+(v/1000).toFixed(0)+'K':'฿'+v},grid:{color:_chartGridColor(.04)}}}}});
+    if(_chNwHistory){ _chNwHistory.destroy(); _chNwHistory=null; }
+    _chNwHistory=new Chart(ctx,{type:'line',data:{labels,datasets:[{data:vals,borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.1)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#06b6d4',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:_chartTickColor(),font:{size:10}},grid:{display:false}},y:{ticks:{color:_chartTickColor(),font:{size:10},callback:v=>v>=1000000?'฿'+(v/1000000).toFixed(1)+'M':v>=1000?'฿'+(v/1000).toFixed(0)+'K':'฿'+v},grid:{color:_chartGridColor(.04)}}}}});
   });
 }
 
