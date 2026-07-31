@@ -1779,6 +1779,11 @@
       <div style="font-size:12px;color:var(--muted);margin-top:8px"><i class="fas fa-info-circle"></i> <span data-i18n="set_session_expire">Session หมดอายุหลัง 30 วัน — ต้อง login ใหม่</span></div>
     </div>
     <div class="set-card">
+      <div class="set-title"><i class="fas fa-mobile-alt" style="color:#f59e0b"></i> <span data-i18n="set_2fa_title">ยืนยันตัวตน 2 ขั้นตอน (2FA)</span></div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px" data-i18n="set_2fa_desc">เพิ่มความปลอดภัยอีกชั้นตอน login — ใช้แอป Authenticator (Google Authenticator, Authy ฯลฯ) นอกเหนือจากรหัสผ่าน</div>
+      <div id="totp-status-box"></div>
+    </div>
+    <div class="set-card">
       <div class="set-title"><i class="fas fa-database" style="color:var(--amber)"></i> <span data-i18n="set_data_title">จัดการข้อมูล</span></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-ghost" onclick="exportData()"><i class="fas fa-download"></i> <span data-i18n="set_export_json">ส่งออก JSON</span></button>
@@ -2910,7 +2915,19 @@ async function recoverData(){
   return false;
 }
 
+// enterApp() คือจุดเดียวที่ login flow ทุกเส้นทาง (owner/email/username/Google/Apple/auto-heal
+// รวม 9 จุดเรียก) มาบรรจบกันหลัง verify รหัสผ่าน/OAuth สำเร็จแล้ว — ใช้เป็นจุดเดียวเช็ค 2FA
+// (เพิ่ม 2026-07-31) แทนที่จะต้องแก้ทุก login path แยกกัน; ตอนนี้ enterApp() เป็นแค่ gatekeeper
+// เนื้อหาจริงย้ายไป _enterAppReal()
 function enterApp(){
+  if(DB.settings&&DB.settings.totpEnabled&&DB.settings.totpSecret){
+    _show2FAPrompt(_enterAppReal);
+    return;
+  }
+  _enterAppReal();
+}
+
+function _enterAppReal(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-root').style.display='flex';
   // show username in sidebar
@@ -2935,6 +2952,156 @@ function enterApp(){
   if(aiusageNav) aiusageNav.style.display=_isOwnerNav?'flex':'none';
   // Heartbeat — บันทึก lastSeen ทุก 5 นาที
   _startHeartbeat();
+}
+
+// ══════════════════════════════════════════
+//  2FA — TOTP (RFC 6238) ยืนยันตัวตน 2 ขั้นตอน (เพิ่ม 2026-07-31)
+//  ใช้ Web Crypto API ล้วนๆ (HMAC-SHA1) ไม่พึ่ง library ภายนอก — secret เก็บใน DB.settings
+//  (sync ผ่าน Firestore เหมือนข้อมูลอื่น, เข้าถึงได้เฉพาะเจ้าของบัญชีตาม security rules เดิม)
+// ══════════════════════════════════════════
+const _B32_ALPHABET='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function _base32Encode(bytes){
+  let bits=''; for(const b of bytes) bits+=b.toString(2).padStart(8,'0');
+  let out='';
+  for(let i=0;i<bits.length;i+=5){
+    let chunk=bits.substr(i,5); if(chunk.length<5) chunk=chunk.padEnd(5,'0');
+    out+=_B32_ALPHABET[parseInt(chunk,2)];
+  }
+  return out;
+}
+function _base32Decode(str){
+  str=String(str||'').replace(/=+$/,'').replace(/\s+/g,'').toUpperCase();
+  let bits='';
+  for(const ch of str){ const idx=_B32_ALPHABET.indexOf(ch); if(idx===-1) continue; bits+=idx.toString(2).padStart(5,'0'); }
+  const bytes=[];
+  for(let i=0;i+8<=bits.length;i+=8) bytes.push(parseInt(bits.substr(i,8),2));
+  return new Uint8Array(bytes);
+}
+function _totpGenerateSecret(){
+  const bytes=new Uint8Array(20); // 160-bit — ค่ามาตรฐานของ TOTP
+  crypto.getRandomValues(bytes);
+  return _base32Encode(bytes);
+}
+async function _hotp(secretBytes,counter){
+  const buf=new ArrayBuffer(8);
+  const view=new DataView(buf);
+  view.setUint32(0,Math.floor(counter/4294967296)); // high 32 bits — JS bitwise ทำได้แค่ 32-bit
+  view.setUint32(4,counter>>>0);
+  const key=await crypto.subtle.importKey('raw',secretBytes,{name:'HMAC',hash:'SHA-1'},false,['sign']);
+  const sig=new Uint8Array(await crypto.subtle.sign('HMAC',key,buf));
+  const offset=sig[sig.length-1]&0xf;
+  const code=((sig[offset]&0x7f)<<24)|((sig[offset+1]&0xff)<<16)|((sig[offset+2]&0xff)<<8)|(sig[offset+3]&0xff);
+  return String(code%1000000).padStart(6,'0');
+}
+async function _totpCode(secretB32,forTimeMs){
+  const secretBytes=_base32Decode(secretB32);
+  const counter=Math.floor((forTimeMs||Date.now())/1000/30);
+  return _hotp(secretBytes,counter);
+}
+// อนุญาตคลาดเคลื่อน ±1 ช่วง (30 วิ) กันนาฬิกาเครื่อง authenticator ไม่ตรงเป๊ะ
+async function _totpVerify(secretB32,code){
+  code=String(code||'').trim();
+  if(!/^\d{6}$/.test(code)) return false;
+  const now=Date.now();
+  for(const delta of [0,-30000,30000]){
+    if(await _totpCode(secretB32,now+delta)===code) return true;
+  }
+  return false;
+}
+function _totpGenerateBackupCodes(n=10){
+  const codes=[];
+  for(let i=0;i<n;i++){
+    const bytes=new Uint8Array(5); crypto.getRandomValues(bytes);
+    const raw=_base32Encode(bytes).slice(0,8);
+    codes.push(raw.slice(0,4)+'-'+raw.slice(4,8));
+  }
+  return codes;
+}
+
+let _pending2FASecret='';
+function open2FASetupModal(){
+  _pending2FASecret=_totpGenerateSecret();
+  const issuer='MoneyMind', label=encodeURIComponent(currentUser||'user');
+  const otpauth='otpauth://totp/'+issuer+':'+label+'?secret='+_pending2FASecret+'&issuer='+issuer;
+  document.getElementById('totp-setup-secret').textContent=_pending2FASecret.match(/.{1,4}/g).join(' ');
+  document.getElementById('totp-setup-link').href=otpauth;
+  document.getElementById('totp-setup-code').value='';
+  document.getElementById('totp-setup-err').textContent='';
+  openM('m-totp-setup');
+}
+async function confirm2FASetup(){
+  const code=document.getElementById('totp-setup-code').value;
+  const errEl=document.getElementById('totp-setup-err');
+  const ok=await _totpVerify(_pending2FASecret,code);
+  if(!ok){ errEl.textContent=tr('totp_wrong_code'); return; }
+  if(!DB.settings) DB.settings={};
+  DB.settings.totpSecret=_pending2FASecret;
+  DB.settings.totpEnabled=true;
+  const backupCodes=_totpGenerateBackupCodes();
+  DB.settings.totpBackupCodes=backupCodes;
+  saveDB();
+  closeM('m-totp-setup');
+  _show2FABackupCodes(backupCodes);
+  renderSettings();
+  toast(tr('totp_enabled'),'success');
+}
+function _show2FABackupCodes(codes){
+  document.getElementById('totp-backup-list').innerHTML=codes.map(c=>'<div class="mono" style="font-family:monospace;font-size:14px;padding:6px 10px;background:var(--surface2);border-radius:6px;margin-bottom:6px;text-align:center;letter-spacing:1px">'+c+'</div>').join('');
+  openM('m-totp-backup');
+}
+function disable2FA(){
+  if(!confirm(tr('totp_confirm_disable'))) return;
+  delete DB.settings.totpSecret;
+  delete DB.settings.totpEnabled;
+  delete DB.settings.totpBackupCodes;
+  saveDB(); renderSettings();
+  toast(tr('totp_disabled'),'info');
+}
+function regenerate2FABackupCodes(){
+  if(!confirm(tr('totp_confirm_regen'))) return;
+  const codes=_totpGenerateBackupCodes();
+  DB.settings.totpBackupCodes=codes;
+  saveDB();
+  _show2FABackupCodes(codes);
+}
+
+// ── ยืนยัน 2FA ตอน login (เรียกจาก enterApp() gatekeeper) ──
+let _2faLoginCallback=null;
+function _show2FAPrompt(onSuccess){
+  _2faLoginCallback=onSuccess;
+  document.getElementById('totp-login-code').value='';
+  document.getElementById('totp-login-err').textContent='';
+  openM('m-totp-login');
+  setTimeout(()=>document.getElementById('totp-login-code').focus(),150);
+}
+async function confirm2FALogin(){
+  const raw=document.getElementById('totp-login-code').value.trim();
+  const errEl=document.getElementById('totp-login-err');
+  const secret=DB.settings.totpSecret;
+  let ok=await _totpVerify(secret,raw);
+  if(!ok){
+    // ลองเป็นรหัสสำรอง (backup code, ใช้ครั้งเดียว)
+    const backups=DB.settings.totpBackupCodes||[];
+    const idx=backups.findIndex(c=>c.toUpperCase()===raw.toUpperCase());
+    if(idx>=0){
+      ok=true;
+      backups.splice(idx,1);
+      DB.settings.totpBackupCodes=backups;
+      saveDB();
+      toast(tr('totp_backup_used'),'info');
+    }
+  }
+  if(!ok){ errEl.textContent=tr('totp_wrong_code'); return; }
+  closeM('m-totp-login');
+  const cb=_2faLoginCallback; _2faLoginCallback=null;
+  if(cb) cb();
+}
+function cancel2FALogin(){
+  closeM('m-totp-login');
+  _2faLoginCallback=null;
+  // ยังไม่ได้เข้าแอปจริง (enterApp ยังไม่ทำงาน) — เคลียร์ session กลับไปหน้า login เฉยๆ
+  currentUser=null;
+  try{ localStorage.removeItem(SESS_KEY); }catch(e){}
 }
 
 let _heartbeatTimer=null;
@@ -4002,7 +4169,7 @@ const I18N = {
     inv_need_name_first:'กรุณาใส่ชื่อ/Ticker ก่อน',inv_fetching:'กำลังดึง',inv_price:'ราคา',inv_fetch_price_failed:'ดึงราคาไม่ได้',inv_updating_price:'กำลังอัปเดตราคา',inv_update_failed:'อัปเดตไม่ได้',inv_edit:'แก้ไขการลงทุน',inv_need_name:'กรุณาใส่ชื่อ',inv_need_qty:'กรุณาใส่จำนวน',inv_need_buyprice:'กรุณาใส่ราคาซื้อ',inv_added:'เพิ่มการลงทุนแล้ว',inv_confirm_delete:'ต้องการลบการลงทุนนี้?',inv_field_type:'ประเภท',inv_field_linked_debt:'เชื่อมโยงสินเชื่อบ้าน (ไม่บังคับ)',inv_no_linked_debt:'ไม่เชื่อมโยง',inv_linked_debt_hint:'ถ้าเลือก ระบบจะคำนวณส่วนของเจ้าของ (equity) = มูลค่า − หนี้คงเหลือ ให้อัตโนมัติ',inv_equity:'ส่วนของเจ้าของ:',inv_equity_hint:'ส่วนของเจ้าของ = มูลค่า − หนี้คงเหลือของสินเชื่อที่เชื่อมโยง',
     dca_need_asset_name:'กรุณาใส่ชื่อสินทรัพย์',dca_need_amount_per_time:'กรุณาใส่จำนวนเงินต่อครั้ง',dca_plan_edited:'แก้ไขแผนแล้ว',dca_plan_created:'สร้างแผน DCA แล้ว',dca_confirm_delete:'ลบแผน DCA นี้? ประวัติการซื้อทั้งหมดจะหายไป',dca_plan_deleted:'ลบแผนแล้ว',dca_record_buy:'บันทึกซื้อ',dca_buy_recorded:'บันทึกการซื้อแล้ว',item_deleted:'ลบรายการแล้ว',dca_auto:'DCA อัตโนมัติ',dca_added_to_port:'เพิ่มในพอร์ตแล้ว',dca_price_zero_hint:'ราคา 0 — กรุณาอัปเดตราคา',
     lock_auto_off:'ปิดการล็อกอัตโนมัติ',lock_auto_after:'ล็อกอัตโนมัติหลัง {n} นาที',apikey_saved:'บันทึก API Key แล้ว',model_set:'ตั้ง model',model_reset_auto:'รีเซ็ต — ระบบจะเลือกอัตโนมัติ',data_exported:'ส่งออกข้อมูลแล้ว',data_imported:'นำเข้าข้อมูลสำเร็จ',invalid_file:'ไฟล์ไม่ถูกต้อง',clear_all_confirm1:'ต้องการล้างข้อมูลทั้งหมด? ไม่สามารถย้อนกลับได้',clear_all_confirm2:'ยืนยันอีกครั้ง: ลบข้อมูลทั้งหมด?',data_cleared:'ล้างข้อมูลแล้ว',pm_item_added:'เพิ่มรายการแล้ว',
-    taxdoc_fill_in:'ใส่ข้อมูลลงช่อง',taxdoc_reading:'กำลังอ่าน',taxdoc_need_apikey:'ต้องมี Gemini API Key เพื่อสแกนเอกสาร — ไปที่ตั้งค่า',taxdoc_no_data_found:'ไม่พบข้อมูล — ลองใช้รูปที่ชัดขึ้น',taxdoc_salary_slip:'สลิปเงินเดือน',taxdoc_month:'เดือน',taxdoc_salary_gross:'เงินเดือน (gross)',taxdoc_bonus:'โบนัส',taxdoc_withheld_this_month:'ภาษีหัก ณ ที่จ่ายเดือนนี้',taxdoc_slip_filled:'ใส่ข้อมูลสลิปแล้ว',taxdoc_slip_failed:'อ่านสลิปไม่สำเร็จ',taxdoc_tawi50:'ทวิ 50',taxdoc_payer:'ผู้จ่ายเงิน',taxdoc_income_type:'ประเภทเงินได้',taxdoc_total_income_yr:'รายได้รวมทั้งปี',taxdoc_total_tax_yr:'ภาษีที่ถูกหักทั้งปี',taxdoc_tawi50_filled:'ใส่ข้อมูล ทวิ 50 แล้ว',taxdoc_tawi50_failed:'อ่าน ทวิ 50 ไม่สำเร็จ',customcat_need_name:'กรุณาใส่ชื่อหมวดหมู่',customcat_saved:'บันทึกหมวดหมู่แล้ว',customcat_confirm_delete:'ลบหมวดหมู่นี้?',recur_auto_added:'เพิ่มรายการซ้ำ {n} รายการอัตโนมัติ',recurring:'รายการซ้ำ',recur_page_desc:'รายการที่เกิดซ้ำทุกเดือน — บันทึกอัตโนมัติตามวันที่ตั้งไว้',recur_add_title:'เพิ่มรายการซ้ำ',recur_edit_title:'แก้ไขรายการซ้ำ',recur_monthly_income:'รายรับซ้ำ/เดือน',recur_monthly_expense:'รายจ่ายซ้ำ/เดือน',recur_none_yet:'ยังไม่มีรายการซ้ำ — เพิ่มค่าเช่า ค่างวด หรือเงินเดือนที่เข้าทุกเดือนได้เลย',recur_paused_section:'หยุดชั่วคราว',recur_day_of_month:'ทุกวันที่ {d}',recur_resume:'เปิดใช้ต่อ',recur_pause:'หยุดชั่วคราว',recur_no_bank:'ไม่ระบุ',recur_need_fields:'กรุณาใส่ชื่อ จำนวนเงิน และวันที่ให้ถูกต้อง',recur_confirm_delete:'ลบรายการซ้ำนี้?',recur_field_name:'ชื่อรายการ',recur_field_name_ph:'เช่น ค่าเช่าห้อง, เงินเดือน',recur_field_amount:'จำนวนเงิน (บาท)',recur_field_type:'ประเภท',recur_field_day:'วันที่ของเดือน',recur_field_bank:'ธนาคาร (ไม่บังคับ)',type_expense:'รายจ่าย',type_income:'รายรับ',csv_exported:'ส่งออก CSV แล้ว',image_saved:'บันทึกรูปแล้ว',image_create_failed:'ไม่สามารถสร้างรูปได้ ต้องเชื่อมต่ออินเทอร์เน็ต',pin_mismatch_retry:'PIN ไม่ตรงกัน กรุณาลองใหม่',pin_set_success:'ตั้ง PIN เรียบร้อยแล้ว',pin_confirm_delete:'ต้องการลบ PIN?',pin_deleted:'ลบ PIN แล้ว',pin_must_be_6_digits:'PIN ต้องเป็นตัวเลข 6 หลัก',pin_mismatch_check:'PIN ไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง',rebal_deviates:'เบี่ยงจากเป้า',allow_popup_print:'กรุณาอนุญาต popup เพื่อพิมพ์รายงาน',login_email_first:'กรุณา Login ด้วย Email ก่อน',verify_email_sent:'ส่งอีเมลยืนยันแล้ว ตรวจสอบกล่องจดหมาย',send_failed:'ส่งไม่ได้',quickadd_invalid_format:'รูปแบบไม่ถูกต้อง เช่น "กาแฟ 60" หรือ "+เงินเดือน 25000"',quickadd_need_name_amount:'กรุณาระบุชื่อและจำนวนเงิน',quickadd_no_item_to_undo:'ไม่มีรายการที่ยกเลิกได้',quickadd_undone:'ยกเลิกรายการแล้ว',milestone_need_amount:'กรุณาระบุจำนวนเงิน',milestone_exists:'มีเป้านี้อยู่แล้ว',milestone_congrats:'ยินดีด้วย! Net Worth ถึง {amt} แล้ว!',ot_need_hours:'กรุณาใส่จำนวนชั่วโมง',ot_added_hours:'เพิ่ม OT {n} ชม. แล้ว',ot_confirm_delete:'ลบรายการ OT นี้?',split_total_mismatch:'ยอดรวมไม่ตรงกัน กรุณาตรวจสอบ',split_n_categories:'แยก {n} หมวดหมู่แล้ว',password_changed:'เปลี่ยนรหัสผ่านสำเร็จ ✓',dash_drag_hint:'ลากเพื่อจัดเรียง — กดเครื่องหมายถูกเมื่อเสร็จ',order_saved:'บันทึกลำดับแล้ว',bulk_select_first:'เลือกหมวดและรายการก่อน',bulk_changed_n:'เปลี่ยนหมวด {n} รายการแล้ว',bulk_confirm_delete:'ลบ {n} รายการที่เลือก? (ย้อนกลับไม่ได้)',bulk_deleted_n:'ลบ {n} รายการแล้ว',travel_coords_not_found:'ไม่พบพิกัดของ',travel_no_gps_support:'เบราว์เซอร์นี้ไม่รองรับ GPS',travel_finding_location:'กำลังหาตำแหน่ง',travel_allow_gps:'กรุณาอนุญาต GPS ในเบราว์เซอร์',travel_location_found:'พบตำแหน่งแล้ว',travel_location_found_toast:'พบตำแหน่งของคุณแล้ว',travel_location_failed:'ไม่สามารถหาตำแหน่งได้ — ตรวจสอบการอนุญาต GPS',travel_need_diff_points:'กรุณาเลือกจุดเริ่มต้นและปลายทางที่ต่างกัน',travel_place_coords_not_found:'ไม่พบพิกัดสถานที่',travel_calculating_route:'กำลังคำนวณเส้นทาง',url_saved:'บันทึก URL แล้ว',file_save_failed:'บันทึกไฟล์ไม่สำเร็จ',offline_msg:'ขาดการเชื่อมต่ออินเทอร์เน็ต — ข้อมูลจะยังบันทึกในเครื่อง',online_msg:'เชื่อมต่ออินเทอร์เน็ตแล้ว',
+    taxdoc_fill_in:'ใส่ข้อมูลลงช่อง',taxdoc_reading:'กำลังอ่าน',taxdoc_need_apikey:'ต้องมี Gemini API Key เพื่อสแกนเอกสาร — ไปที่ตั้งค่า',taxdoc_no_data_found:'ไม่พบข้อมูล — ลองใช้รูปที่ชัดขึ้น',taxdoc_salary_slip:'สลิปเงินเดือน',taxdoc_month:'เดือน',taxdoc_salary_gross:'เงินเดือน (gross)',taxdoc_bonus:'โบนัส',taxdoc_withheld_this_month:'ภาษีหัก ณ ที่จ่ายเดือนนี้',taxdoc_slip_filled:'ใส่ข้อมูลสลิปแล้ว',taxdoc_slip_failed:'อ่านสลิปไม่สำเร็จ',taxdoc_tawi50:'ทวิ 50',taxdoc_payer:'ผู้จ่ายเงิน',taxdoc_income_type:'ประเภทเงินได้',taxdoc_total_income_yr:'รายได้รวมทั้งปี',taxdoc_total_tax_yr:'ภาษีที่ถูกหักทั้งปี',taxdoc_tawi50_filled:'ใส่ข้อมูล ทวิ 50 แล้ว',taxdoc_tawi50_failed:'อ่าน ทวิ 50 ไม่สำเร็จ',customcat_need_name:'กรุณาใส่ชื่อหมวดหมู่',customcat_saved:'บันทึกหมวดหมู่แล้ว',customcat_confirm_delete:'ลบหมวดหมู่นี้?',recur_auto_added:'เพิ่มรายการซ้ำ {n} รายการอัตโนมัติ',recurring:'รายการซ้ำ',recur_page_desc:'รายการที่เกิดซ้ำทุกเดือน — บันทึกอัตโนมัติตามวันที่ตั้งไว้',recur_add_title:'เพิ่มรายการซ้ำ',recur_edit_title:'แก้ไขรายการซ้ำ',recur_monthly_income:'รายรับซ้ำ/เดือน',recur_monthly_expense:'รายจ่ายซ้ำ/เดือน',recur_none_yet:'ยังไม่มีรายการซ้ำ — เพิ่มค่าเช่า ค่างวด หรือเงินเดือนที่เข้าทุกเดือนได้เลย',recur_paused_section:'หยุดชั่วคราว',recur_day_of_month:'ทุกวันที่ {d}',recur_resume:'เปิดใช้ต่อ',recur_pause:'หยุดชั่วคราว',recur_no_bank:'ไม่ระบุ',recur_need_fields:'กรุณาใส่ชื่อ จำนวนเงิน และวันที่ให้ถูกต้อง',recur_confirm_delete:'ลบรายการซ้ำนี้?',recur_field_name:'ชื่อรายการ',recur_field_name_ph:'เช่น ค่าเช่าห้อง, เงินเดือน',recur_field_amount:'จำนวนเงิน (บาท)',recur_field_type:'ประเภท',recur_field_day:'วันที่ของเดือน',recur_field_bank:'ธนาคาร (ไม่บังคับ)',type_expense:'รายจ่าย',type_income:'รายรับ',set_2fa_title:'ยืนยันตัวตน 2 ขั้นตอน (2FA)',set_2fa_desc:'เพิ่มความปลอดภัยอีกชั้นให้บัญชีของคุณ ด้วยรหัส 6 หลักจากแอป Authenticator ทุกครั้งที่เข้าสู่ระบบ',totp_enable_btn:'เปิดใช้ 2FA',totp_active:'เปิดใช้งานอยู่',totp_backup_remaining:'เหลือรหัสสำรอง {n} รหัส',totp_regen_backup:'สร้างรหัสสำรองใหม่',totp_disable_btn:'ปิดใช้ 2FA',totp_wrong_code:'รหัสไม่ถูกต้อง กรุณาลองใหม่',totp_enabled:'เปิดใช้ 2FA แล้ว ✓',totp_confirm_disable:'ต้องการปิดใช้ 2FA? บัญชีจะปลอดภัยน้อยลง',totp_disabled:'ปิดใช้ 2FA แล้ว',totp_confirm_regen:'สร้างรหัสสำรองใหม่? รหัสชุดเก่าจะใช้ไม่ได้อีก',totp_backup_used:'ใช้รหัสสำรองเข้าสู่ระบบแล้ว',totp_setup_title:'ตั้งค่า 2FA',totp_setup_step1:'1. เปิดแอป Authenticator (Google Authenticator, Authy, ฯลฯ) แล้วเพิ่มบัญชีใหม่ด้วยการกรอกรหัสนี้เอง (manual entry):',totp_setup_link_text:'หรือแตะที่นี่ถ้าเปิดหน้านี้บนมือถือเครื่องเดียวกับแอป Authenticator',totp_setup_step2:'2. กรอกรหัส 6 หลักที่แอป Authenticator แสดงตอนนี้ เพื่อยืนยันว่าตั้งค่าถูกต้อง:',totp_verify_enable:'ยืนยันและเปิดใช้',totp_backup_title:'รหัสสำรอง',totp_backup_desc:'เก็บรหัสเหล่านี้ไว้ในที่ปลอดภัย — ใช้เข้าระบบได้เมื่อเข้าถึงแอป Authenticator ไม่ได้ (ใช้ได้ครั้งเดียวต่อรหัส) รหัสชุดนี้จะไม่แสดงซ้ำอีก',totp_backup_saved:'บันทึกไว้แล้ว',totp_login_title:'ยืนยันตัวตน 2 ขั้นตอน',totp_login_desc:'กรอกรหัส 6 หลักจากแอป Authenticator หรือรหัสสำรอง',totp_verify_btn:'ยืนยัน',csv_exported:'ส่งออก CSV แล้ว',image_saved:'บันทึกรูปแล้ว',image_create_failed:'ไม่สามารถสร้างรูปได้ ต้องเชื่อมต่ออินเทอร์เน็ต',pin_mismatch_retry:'PIN ไม่ตรงกัน กรุณาลองใหม่',pin_set_success:'ตั้ง PIN เรียบร้อยแล้ว',pin_confirm_delete:'ต้องการลบ PIN?',pin_deleted:'ลบ PIN แล้ว',pin_must_be_6_digits:'PIN ต้องเป็นตัวเลข 6 หลัก',pin_mismatch_check:'PIN ไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง',rebal_deviates:'เบี่ยงจากเป้า',allow_popup_print:'กรุณาอนุญาต popup เพื่อพิมพ์รายงาน',login_email_first:'กรุณา Login ด้วย Email ก่อน',verify_email_sent:'ส่งอีเมลยืนยันแล้ว ตรวจสอบกล่องจดหมาย',send_failed:'ส่งไม่ได้',quickadd_invalid_format:'รูปแบบไม่ถูกต้อง เช่น "กาแฟ 60" หรือ "+เงินเดือน 25000"',quickadd_need_name_amount:'กรุณาระบุชื่อและจำนวนเงิน',quickadd_no_item_to_undo:'ไม่มีรายการที่ยกเลิกได้',quickadd_undone:'ยกเลิกรายการแล้ว',milestone_need_amount:'กรุณาระบุจำนวนเงิน',milestone_exists:'มีเป้านี้อยู่แล้ว',milestone_congrats:'ยินดีด้วย! Net Worth ถึง {amt} แล้ว!',ot_need_hours:'กรุณาใส่จำนวนชั่วโมง',ot_added_hours:'เพิ่ม OT {n} ชม. แล้ว',ot_confirm_delete:'ลบรายการ OT นี้?',split_total_mismatch:'ยอดรวมไม่ตรงกัน กรุณาตรวจสอบ',split_n_categories:'แยก {n} หมวดหมู่แล้ว',password_changed:'เปลี่ยนรหัสผ่านสำเร็จ ✓',dash_drag_hint:'ลากเพื่อจัดเรียง — กดเครื่องหมายถูกเมื่อเสร็จ',order_saved:'บันทึกลำดับแล้ว',bulk_select_first:'เลือกหมวดและรายการก่อน',bulk_changed_n:'เปลี่ยนหมวด {n} รายการแล้ว',bulk_confirm_delete:'ลบ {n} รายการที่เลือก? (ย้อนกลับไม่ได้)',bulk_deleted_n:'ลบ {n} รายการแล้ว',travel_coords_not_found:'ไม่พบพิกัดของ',travel_no_gps_support:'เบราว์เซอร์นี้ไม่รองรับ GPS',travel_finding_location:'กำลังหาตำแหน่ง',travel_allow_gps:'กรุณาอนุญาต GPS ในเบราว์เซอร์',travel_location_found:'พบตำแหน่งแล้ว',travel_location_found_toast:'พบตำแหน่งของคุณแล้ว',travel_location_failed:'ไม่สามารถหาตำแหน่งได้ — ตรวจสอบการอนุญาต GPS',travel_need_diff_points:'กรุณาเลือกจุดเริ่มต้นและปลายทางที่ต่างกัน',travel_place_coords_not_found:'ไม่พบพิกัดสถานที่',travel_calculating_route:'กำลังคำนวณเส้นทาง',url_saved:'บันทึก URL แล้ว',file_save_failed:'บันทึกไฟล์ไม่สำเร็จ',offline_msg:'ขาดการเชื่อมต่ออินเทอร์เน็ต — ข้อมูลจะยังบันทึกในเครื่อง',online_msg:'เชื่อมต่ออินเทอร์เน็ตแล้ว',
     chat_ask_ai:'ถามผู้ช่วย AI',chat_maya_title:'มายา — เลขาการเงินส่วนตัว',chat_maya_sub:'รู้ข้อมูลการเงินทั้งหมดของคุณ',chat_clear:'เคลียร์แชท',
     chat_q1:'สรุปภาพรวมการเงินของฉันเดือนนี้',chat_q1_label:'สรุปเดือนนี้',
     chat_q2:'Net Worth ของฉันตอนนี้เป็นเท่าไร และควรปรับปรุงอะไรบ้าง?',
@@ -4105,7 +4272,7 @@ const I18N = {
     inv_need_name_first:'Please enter a name/ticker first',inv_fetching:'Fetching',inv_price:'Price',inv_fetch_price_failed:'Failed to fetch price',inv_updating_price:'Updating price for',inv_update_failed:'Update failed',inv_edit:'Edit Investment',inv_need_name:'Please enter a name',inv_need_qty:'Please enter a quantity',inv_need_buyprice:'Please enter a buy price',inv_added:'Investment added',inv_confirm_delete:'Delete this investment?',inv_field_type:'Type',inv_field_linked_debt:'Link to Mortgage (optional)',inv_no_linked_debt:'Not linked',inv_linked_debt_hint:'If selected, equity = value − remaining loan balance is calculated automatically',inv_equity:'Equity:',inv_equity_hint:'Equity = value − remaining balance of the linked loan',
     dca_need_asset_name:'Please enter an asset name',dca_need_amount_per_time:'Please enter an amount per time',dca_plan_edited:'Plan edited',dca_plan_created:'DCA plan created',dca_confirm_delete:'Delete this DCA plan? All purchase history will be lost',dca_plan_deleted:'Plan deleted',dca_record_buy:'Record Purchase',dca_buy_recorded:'Purchase recorded',item_deleted:'Item deleted',dca_auto:'Auto DCA',dca_added_to_port:'added to portfolio',dca_price_zero_hint:'price is 0 — please update the price',
     lock_auto_off:'Auto-lock disabled',lock_auto_after:'Auto-lock after {n} minutes',apikey_saved:'API Key saved',model_set:'Model set',model_reset_auto:'Reset — system will auto-select',data_exported:'Data exported',data_imported:'Data imported successfully',invalid_file:'Invalid file',clear_all_confirm1:'Clear all data? This cannot be undone',clear_all_confirm2:'Confirm again: delete all data?',data_cleared:'Data cleared',pm_item_added:'Item added',
-    taxdoc_fill_in:'Fill In Fields',taxdoc_reading:'Reading',taxdoc_need_apikey:'Gemini API Key required to scan documents — go to Settings',taxdoc_no_data_found:'No data found — try a clearer image',taxdoc_salary_slip:'Salary Slip',taxdoc_month:'Month',taxdoc_salary_gross:'Salary (gross)',taxdoc_bonus:'Bonus',taxdoc_withheld_this_month:'Tax Withheld This Month',taxdoc_slip_filled:'Slip data filled in',taxdoc_slip_failed:'Failed to read slip',taxdoc_tawi50:'50 Tawi',taxdoc_payer:'Payer',taxdoc_income_type:'Income Type',taxdoc_total_income_yr:'Total Yearly Income',taxdoc_total_tax_yr:'Total Yearly Tax Withheld',taxdoc_tawi50_filled:'50 Tawi data filled in',taxdoc_tawi50_failed:'Failed to read 50 Tawi',customcat_need_name:'Please enter a category name',customcat_saved:'Category saved',customcat_confirm_delete:'Delete this category?',recur_auto_added:'Auto-added {n} recurring items',recurring:'Recurring',recur_page_desc:'Items that repeat every month — logged automatically on the date you set',recur_add_title:'Add Recurring Item',recur_edit_title:'Edit Recurring Item',recur_monthly_income:'Recurring Income/mo',recur_monthly_expense:'Recurring Expense/mo',recur_none_yet:'No recurring items yet — add rent, installments, or salary that comes in every month',recur_paused_section:'Paused',recur_day_of_month:'Day {d} of month',recur_resume:'Resume',recur_pause:'Pause',recur_no_bank:'None',recur_need_fields:'Please enter a valid name, amount, and day',recur_confirm_delete:'Delete this recurring item?',recur_field_name:'Item Name',recur_field_name_ph:'e.g. Room rent, Salary',recur_field_amount:'Amount (THB)',recur_field_type:'Type',recur_field_day:'Day of Month',recur_field_bank:'Bank (optional)',type_expense:'Expense',type_income:'Income',csv_exported:'CSV exported',image_saved:'Image saved',image_create_failed:'Could not create image — internet connection required',pin_mismatch_retry:"PINs don't match, please try again",pin_set_success:'PIN set successfully',pin_confirm_delete:'Delete PIN?',pin_deleted:'PIN deleted',pin_must_be_6_digits:'PIN must be 6 digits',pin_mismatch_check:"PINs don't match, please check again",rebal_deviates:'deviates from target',allow_popup_print:'Please allow popups to print the report',login_email_first:'Please log in with Email first',verify_email_sent:'Verification email sent, check your inbox',send_failed:'Failed to send',quickadd_invalid_format:'Invalid format, e.g. "coffee 60" or "+salary 25000"',quickadd_need_name_amount:'Please specify a name and amount',quickadd_no_item_to_undo:'No item to undo',quickadd_undone:'Item undone',milestone_need_amount:'Please specify an amount',milestone_exists:'This target already exists',milestone_congrats:'Congratulations! Net Worth reached {amt}!',ot_need_hours:'Please enter the number of hours',ot_added_hours:'Added {n} hrs of OT',ot_confirm_delete:'Delete this OT entry?',split_total_mismatch:'Totals do not match, please check',split_n_categories:'Split into {n} categories',password_changed:'Password changed successfully ✓',dash_drag_hint:'Drag to reorder — click the checkmark when done',order_saved:'Order saved',bulk_select_first:'Select a category and items first',bulk_changed_n:'Changed category for {n} items',bulk_confirm_delete:'Delete {n} selected items? (cannot be undone)',bulk_deleted_n:'Deleted {n} items',travel_coords_not_found:'Coordinates not found for',travel_no_gps_support:'This browser does not support GPS',travel_finding_location:'Finding location',travel_allow_gps:'Please allow GPS access in your browser',travel_location_found:'Location found',travel_location_found_toast:'Your location was found',travel_location_failed:'Could not find location — check GPS permission',travel_need_diff_points:'Please select different start and end points',travel_place_coords_not_found:'Place coordinates not found',travel_calculating_route:'Calculating route',url_saved:'URL saved',file_save_failed:'Failed to save file',offline_msg:'Internet connection lost — data will be saved locally',online_msg:'Internet connection restored',
+    taxdoc_fill_in:'Fill In Fields',taxdoc_reading:'Reading',taxdoc_need_apikey:'Gemini API Key required to scan documents — go to Settings',taxdoc_no_data_found:'No data found — try a clearer image',taxdoc_salary_slip:'Salary Slip',taxdoc_month:'Month',taxdoc_salary_gross:'Salary (gross)',taxdoc_bonus:'Bonus',taxdoc_withheld_this_month:'Tax Withheld This Month',taxdoc_slip_filled:'Slip data filled in',taxdoc_slip_failed:'Failed to read slip',taxdoc_tawi50:'50 Tawi',taxdoc_payer:'Payer',taxdoc_income_type:'Income Type',taxdoc_total_income_yr:'Total Yearly Income',taxdoc_total_tax_yr:'Total Yearly Tax Withheld',taxdoc_tawi50_filled:'50 Tawi data filled in',taxdoc_tawi50_failed:'Failed to read 50 Tawi',customcat_need_name:'Please enter a category name',customcat_saved:'Category saved',customcat_confirm_delete:'Delete this category?',recur_auto_added:'Auto-added {n} recurring items',recurring:'Recurring',recur_page_desc:'Items that repeat every month — logged automatically on the date you set',recur_add_title:'Add Recurring Item',recur_edit_title:'Edit Recurring Item',recur_monthly_income:'Recurring Income/mo',recur_monthly_expense:'Recurring Expense/mo',recur_none_yet:'No recurring items yet — add rent, installments, or salary that comes in every month',recur_paused_section:'Paused',recur_day_of_month:'Day {d} of month',recur_resume:'Resume',recur_pause:'Pause',recur_no_bank:'None',recur_need_fields:'Please enter a valid name, amount, and day',recur_confirm_delete:'Delete this recurring item?',recur_field_name:'Item Name',recur_field_name_ph:'e.g. Room rent, Salary',recur_field_amount:'Amount (THB)',recur_field_type:'Type',recur_field_day:'Day of Month',recur_field_bank:'Bank (optional)',type_expense:'Expense',type_income:'Income',set_2fa_title:'Two-Factor Authentication (2FA)',set_2fa_desc:'Add an extra layer of security to your account with a 6-digit code from an Authenticator app every time you log in',totp_enable_btn:'Enable 2FA',totp_active:'Active',totp_backup_remaining:'{n} backup codes remaining',totp_regen_backup:'Regenerate backup codes',totp_disable_btn:'Disable 2FA',totp_wrong_code:'Incorrect code, please try again',totp_enabled:'2FA enabled ✓',totp_confirm_disable:'Disable 2FA? Your account will be less secure',totp_disabled:'2FA disabled',totp_confirm_regen:'Regenerate backup codes? The old codes will stop working',totp_backup_used:'Logged in with a backup code',totp_setup_title:'Set Up 2FA',totp_setup_step1:'1. Open your Authenticator app (Google Authenticator, Authy, etc.) and add a new account by manually entering this key:',totp_setup_link_text:'Or tap here if opening this page on the same phone as your Authenticator app',totp_setup_step2:'2. Enter the 6-digit code your Authenticator app shows now, to confirm setup is correct:',totp_verify_enable:'Verify & Enable',totp_backup_title:'Backup Codes',totp_backup_desc:'Keep these somewhere safe — use them to log in if you lose access to your Authenticator app (each code works once). This set will not be shown again.',totp_backup_saved:"I've Saved These",totp_login_title:'Two-Factor Authentication',totp_login_desc:'Enter the 6-digit code from your Authenticator app or a backup code',totp_verify_btn:'Verify',csv_exported:'CSV exported',image_saved:'Image saved',image_create_failed:'Could not create image — internet connection required',pin_mismatch_retry:"PINs don't match, please try again",pin_set_success:'PIN set successfully',pin_confirm_delete:'Delete PIN?',pin_deleted:'PIN deleted',pin_must_be_6_digits:'PIN must be 6 digits',pin_mismatch_check:"PINs don't match, please check again",rebal_deviates:'deviates from target',allow_popup_print:'Please allow popups to print the report',login_email_first:'Please log in with Email first',verify_email_sent:'Verification email sent, check your inbox',send_failed:'Failed to send',quickadd_invalid_format:'Invalid format, e.g. "coffee 60" or "+salary 25000"',quickadd_need_name_amount:'Please specify a name and amount',quickadd_no_item_to_undo:'No item to undo',quickadd_undone:'Item undone',milestone_need_amount:'Please specify an amount',milestone_exists:'This target already exists',milestone_congrats:'Congratulations! Net Worth reached {amt}!',ot_need_hours:'Please enter the number of hours',ot_added_hours:'Added {n} hrs of OT',ot_confirm_delete:'Delete this OT entry?',split_total_mismatch:'Totals do not match, please check',split_n_categories:'Split into {n} categories',password_changed:'Password changed successfully ✓',dash_drag_hint:'Drag to reorder — click the checkmark when done',order_saved:'Order saved',bulk_select_first:'Select a category and items first',bulk_changed_n:'Changed category for {n} items',bulk_confirm_delete:'Delete {n} selected items? (cannot be undone)',bulk_deleted_n:'Deleted {n} items',travel_coords_not_found:'Coordinates not found for',travel_no_gps_support:'This browser does not support GPS',travel_finding_location:'Finding location',travel_allow_gps:'Please allow GPS access in your browser',travel_location_found:'Location found',travel_location_found_toast:'Your location was found',travel_location_failed:'Could not find location — check GPS permission',travel_need_diff_points:'Please select different start and end points',travel_place_coords_not_found:'Place coordinates not found',travel_calculating_route:'Calculating route',url_saved:'URL saved',file_save_failed:'Failed to save file',offline_msg:'Internet connection lost — data will be saved locally',online_msg:'Internet connection restored',
     chat_ask_ai:'Ask AI Assistant',chat_maya_title:'Maya — Personal Finance Secretary',chat_maya_sub:'Knows all your financial data',chat_clear:'Clear Chat',
     chat_q1:'Summarize my overall finances this month',chat_q1_label:"This Month's Summary",
     chat_q2:"What's my Net Worth right now, and what should I improve?",
@@ -6930,6 +7097,23 @@ function renderSettings(){
   if(typeof renderCustomCatList==='function') renderCustomCatList();
   if(typeof renderCatBudgetSettings==='function') renderCatBudgetSettings();
   if(typeof renderSubscriptionBox==='function') renderSubscriptionBox();
+  if(typeof renderTotpStatusBox==='function') renderTotpStatusBox();
+}
+
+function renderTotpStatusBox(){
+  const el=document.getElementById('totp-status-box'); if(!el) return;
+  const enabled=!!(DB.settings&&DB.settings.totpEnabled);
+  if(!enabled){
+    el.innerHTML='<button class="btn btn-primary" onclick="open2FASetupModal()"><i class="fas fa-shield-alt"></i> '+tr('totp_enable_btn')+'</button>';
+    return;
+  }
+  const nBackup=(DB.settings.totpBackupCodes||[]).length;
+  el.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;color:var(--green);font-weight:600;font-size:13px"><i class="fas fa-check-circle"></i> '+tr('totp_active')+'</div>'
+    +'<div style="font-size:12px;color:var(--muted);margin-bottom:10px">'+tr('totp_backup_remaining').replace('{n}',nBackup)+'</div>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap">'
+    +'<button class="btn btn-ghost" onclick="regenerate2FABackupCodes()"><i class="fas fa-sync-alt"></i> '+tr('totp_regen_backup')+'</button>'
+    +'<button class="btn btn-ghost" style="color:var(--red);border-color:var(--red)" onclick="disable2FA()"><i class="fas fa-times"></i> '+tr('totp_disable_btn')+'</button>'
+    +'</div>';
 }
 
 function saveLockTimeout(val){
@@ -16009,6 +16193,51 @@ window.addEventListener('online',function(){ toast(tr('online_msg'),'success'); 
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeM('m-recur')" data-i18n="cancel">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveRecur()" data-i18n="save">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2FA Setup Modal -->
+<div id="m-totp-setup" class="overlay">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title"><i class="fas fa-shield-alt" style="color:#f59e0b"></i> <span data-i18n="totp_setup_title">ตั้งค่า 2FA</span></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px" data-i18n="totp_setup_step1">1. เปิดแอป Authenticator (Google Authenticator, Authy, ฯลฯ) แล้วเพิ่มบัญชีใหม่ด้วยการกรอกรหัสนี้เอง (manual entry):</div>
+    <div style="text-align:center;padding:14px;background:var(--surface2);border-radius:10px;margin-bottom:10px">
+      <div id="totp-setup-secret" style="font-family:monospace;font-size:18px;letter-spacing:2px;font-weight:700"></div>
+    </div>
+    <div style="text-align:center;margin-bottom:14px"><a id="totp-setup-link" href="#" style="font-size:12px" data-i18n="totp_setup_link_text">หรือแตะที่นี่ถ้าเปิดหน้านี้บนมือถือเครื่องเดียวกับแอป Authenticator</a></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:8px" data-i18n="totp_setup_step2">2. กรอกรหัส 6 หลักที่แอป Authenticator แสดงตอนนี้ เพื่อยืนยันว่าตั้งค่าถูกต้อง:</div>
+    <div class="fgroup"><input id="totp-setup-code" class="finput" inputmode="numeric" maxlength="6" placeholder="000000" style="text-align:center;font-size:20px;letter-spacing:4px"></div>
+    <div id="totp-setup-err" style="font-size:12px;color:var(--red);min-height:18px;text-align:center"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('m-totp-setup')" data-i18n="cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="confirm2FASetup()" data-i18n="totp_verify_enable">ยืนยันและเปิดใช้</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2FA Backup Codes Modal -->
+<div id="m-totp-backup" class="overlay">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title"><i class="fas fa-key" style="color:#f59e0b"></i> <span data-i18n="totp_backup_title">รหัสสำรอง</span></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px" data-i18n="totp_backup_desc">เก็บรหัสเหล่านี้ไว้ในที่ปลอดภัย — ใช้เข้าระบบได้เมื่อเข้าถึงแอป Authenticator ไม่ได้ (ใช้ได้ครั้งเดียวต่อรหัส) รหัสชุดนี้จะไม่แสดงซ้ำอีก</div>
+    <div id="totp-backup-list"></div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" onclick="closeM('m-totp-backup')" data-i18n="totp_backup_saved">บันทึกไว้แล้ว</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2FA Login Verification Modal -->
+<div id="m-totp-login" class="overlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title"><i class="fas fa-shield-alt" style="color:#f59e0b"></i> <span data-i18n="totp_login_title">ยืนยันตัวตน 2 ขั้นตอน</span></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px" data-i18n="totp_login_desc">กรอกรหัส 6 หลักจากแอป Authenticator หรือรหัสสำรอง</div>
+    <div class="fgroup"><input id="totp-login-code" class="finput" maxlength="9" placeholder="000000" style="text-align:center;font-size:20px;letter-spacing:4px" onkeydown="if(event.key==='Enter')confirm2FALogin()"></div>
+    <div id="totp-login-err" style="font-size:12px;color:var(--red);min-height:18px;text-align:center"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="cancel2FALogin()" data-i18n="cancel">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="confirm2FALogin()" data-i18n="totp_verify_btn">ยืนยัน</button>
     </div>
   </div>
 </div>
