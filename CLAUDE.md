@@ -306,6 +306,7 @@ renderDash = function(){
 - **Dashboard flash fix:** `renderDash` ซ่อน container ก่อน reorder แล้ว restore เพื่อไม่ให้กระพริบ
 - **`renderCatChart()` null-check (แก้ 2026-07-06):** เจอ crash จริงผ่านช่อง feedback/error-report ของ user "test1" — `document.getElementById('ch-cat')` คืน null ถ้า canvas ไม่อยู่ใน DOM ตอนฟังก์ชันรัน (`.getContext()` บน null พังทันที); เพิ่ม guard `if(!canvasEl) return;` ก่อนเรียก `getContext` แล้ว — ฟังก์ชันอื่นที่เรียก `getElementById(...).getContext('2d')` ตรงๆ (ch-trend, ch-port ฯลฯ) ยังไม่มี guard เดียวกัน ถ้าเจอ crash ซ้ำให้เติมแบบเดียวกัน
 - **Push debug spam ลบแล้ว (2026-07-06):** `_requestPushTokenIfNative()` เคยมีบรรทัด debug ชั่วคราว (ใส่ไว้ 2026-07-02) ที่ยิง `_sendReport({kind:'error',message:'push debug: ...'})` ทุกครั้งที่ login ทำให้ช่อง feedback/error-report ใน Telegram เต็มไปด้วย noise — ลบออกแล้ว ปัญหา push token ไม่เข้า Firestore (ถ้ายังไม่ได้แก้) ต้อง debug วิธีอื่นแทน
+- **🐛 target="_blank" ทำแอปมือถือเด้งออกไป Safari ทุกครั้งที่กด privacy/terms (เจอ+แก้ 2026-07-31)** — user รายงานว่าเปิดแอปบน iPhone (TestFlight build) แล้ว "เด้งไปเบราว์เซอร์ตลอด"; วินิจฉัยจาก error report จริงใน Firestore `reports`/Telegram feedback topic (ไม่เจอ error ตรงๆ ที่อธิบายอาการนี้) + ตรวจโค้ด `mobile/src/screens/WebApp.tsx` พบว่า `handleShouldStartLoad` เปิดเบราว์เซอร์นอกเฉพาะ host ที่ไม่ตรง `WEB_HOST` เท่านั้น (ถูกต้องอยู่แล้วสำหรับลิงก์ภายนอกจริง) แต่ไม่มี `onOpenWindow` handler — **react-native-webview (13.15.0) ไม่มี handler นี้ = ลิงก์ที่มี `target="_blank"` (แม้ href เป็นหน้าเดียวกัน/same-origin) จะ fallback ไปเปิด Safari เสมอ** เจอ 5 จุดในไฟล์ที่ href ชี้ privacy.html/terms.html (same-origin) แต่ใส่ `target="_blank"` ผิด: footer หน้า login (2 จุด, เจอทุกครั้งที่เปิดแอปครั้งแรกยังไม่ login), PDPA consent modal (2 จุด, โชว์ทุกบัญชีใหม่/เครื่องใหม่), AI consent modal ที่เพิ่งเพิ่มเมื่อวาน (1 จุด) — ตรงกับอาการ "ตัวทดลอง" (TestFlight ทดสอบบัญชีใหม่ๆ บ่อย) เจอบ่อยเป็นพิเศษ. **แก้แล้ว:** ลบ `target="_blank"` ออกทั้ง 5 จุด (ลิงก์ same-origin ให้ navigate ในหน้าเดิมผ่าน `handleShouldStartLoad` ปกติ ไม่ต้องแก้ native/rebuild). **เจอบั๊กที่สองระหว่างตรวจ error log:** `lockLogout()` (ปุ่ม "ออกจากระบบ" บนหน้าจอ PIN lock) เรียก `logout()` ที่ไม่มีอยู่จริง (`ReferenceError: logout is not defined`, ยืนยันจาก error report จริงของ user `demo_6815` 28 ก.ค.) — ที่ถูกต้องคือ `doLogout()` แก้แล้ว. ทั้งสองจุดเป็น web-only fix deploy ผ่าน GitHub Pages ทันที ไม่ต้อง submit build ใหม่
 
 ## วิธี Deploy
 
@@ -380,23 +381,13 @@ Static file — ไม่ต้อง build:
 
 ---
 
-## Marketing Automation — เขียนสคริปต์โปรโมทรายวัน (เริ่ม 2026-07-06)
+## Marketing Automation — ลบออกแล้ว 2026-07-30
 
-**เป้าหมาย:** โปรโมทแอปทาง TikTok/IG ด้วยคลิปสั้นตัวการ์ตูน (มายา มาสคอต chibi ผมม่วง) แบบ (กึ่ง)อัตโนมัติ — แบ่ง 3 ช่วง ตั้งใจให้อัตโนมัติแค่ช่วงแรก เพราะโพสต์ IG/TikTok ผ่านบอทตรงๆ เสี่ยงโดนแบนบัญชี (โดยเฉพาะบัญชีใหม่)
-
-| ช่วง | สถานะ | รายละเอียด |
-|------|-------|-----------|
-| **1. เขียนสคริปต์** | ✅ เขียน+ทดสอบผ่านจริงแล้ว 2 รอบ (n8n + Python) **ยังไม่ deploy ขึ้น VM cron** | หมุน 3 template (ปัญหา→ทางแก้/โชว์ Rank/Hook เร็ว) × 9 ฟีเจอร์เด่น ตาม day-of-year (deterministic ไม่ต้องมี DB state) → Gemini เขียนสคริปต์ไทย 3 ฉาก + Veo prompt อังกฤษ → ส่ง Telegram (personal chat) ให้ตรวจก่อนเอาไปสร้างวิดีโอ |
-| **2. สร้างวิดีโอ** | กึ่งมือ | เอา Veo prompt จาก Telegram ไปวางที่ gemini.google.com/app (โหมดสร้างวิดีโอ, ใช้ Gemini Pro subscription ที่มีอยู่) — ยังไม่มี API เรียกอัตโนมัติ |
-| **3. โพสต์ IG/TikTok** | มือทั้งหมด (ตั้งใจ) | โพสต์เองผ่านแอป/เว็บจริง ไม่ใช้บอท/API อัตโนมัติ — ต้อง official Content Publishing API + business account approval ถ้าจะทำอัตโนมัติจริงในอนาคต (ยังไม่เริ่ม) |
-
-**ไฟล์:**
-- `D:\MoneyMind_Marketing\` — โฟลเดอร์แยกสำหรับงานนี้ (`videos\`, `scripts\`, `config\`), มี `.gitignore` กัน `config/.env` และ `videos/` หลุด git
-- `D:\MoneyMind_Marketing\config\.env.example` — template เปล่า (IG/TikTok username+password) — **ผู้ใช้กรอกเองในไฟล์ `.env` เท่านั้น ห้ามพิมพ์รหัสผ่านในแชทกับ Claude เด็ดขาด** (เคยเกิดเหตุพิมพ์รหัสผ่าน IG ใส่แชทตรงๆ 2026-07-06 — ต้องถือว่ารหัสนั้นหลุดแล้วเปลี่ยนใหม่)
-- `D:\MoneyMind_Marketing\scripts\create_marketing_workflow.py` — สร้าง n8n workflow `mm-marketing-script-01` "MoneyMind Marketing - Daily Script Writer" (ทดสอบผ่านจริง, ส่ง Telegram ได้) — รันบนโน้ตบุ๊กเท่านั้น (ต้องเปิดเครื่อง+`npx n8n` เอง) ไม่เหมาะเป็น automation ทุกวันจริง
-- `C:\Users\warakorn\Documents\marketing_daily_script.py` — พอร์ต Python จาก n8n workflow ตัวเดียวกัน ออกแบบให้รันเป็น VM cron แทน (`30 0 * * *` = 07:30 Bangkok); ทดสอบ `--dry` และรันจริงผ่านแล้ว (ส่ง Telegram HTTP 200); ใช้ `mm_secrets.GEMINI_KEY`/`TG_TOKEN` เดิม; retry ทั้ง 429/503 ตาม convention เดิมของโปรเจกต์; ส่งเข้า personal chat (`8172260229`) ไม่ใช่ group
-
-**ยังไม่ทำ:** (1) deploy `marketing_daily_script.py` ขึ้น VM (`gcloud compute scp` + sync เข้า `moneymind-bot` repo + เพิ่ม crontab + เพิ่ม log เข้า `cron_health.py` REGISTRY) (2) browser automation สำหรับสร้างวิดีโอ Veo (3) official API application สำหรับโพสต์อัตโนมัติ
+เคยมีฟีเจอร์เขียนสคริปต์โปรโมทรายวัน (คลิปสั้น + Veo prompt ส่งเข้า Telegram) เริ่มทำ 2026-07-06 — ไม่ต้องการฟีเจอร์นี้แล้ว ลบทั้งหมด:
+- `D:\MoneyMind_Marketing\` (โฟลเดอร์ทั้งหมด รวม scripts/videos ตัวอย่างที่เคยสร้าง) — ลบแล้ว
+- `C:\Users\warakorn\Documents\marketing_daily_script.py` (ไม่เคย deploy ขึ้น VM/cron จริง) — ลบแล้ว
+- n8n workflow `mm-marketing-script-01` "MoneyMind Marketing - Daily Script Writer" (เคย active=1 ในเครื่อง — ตัวที่ "ใช้จริง" ตัวเดียวในฟีเจอร์นี้) — ลบออกจาก `~/.n8n/database.sqlite` แล้ว (พร้อม execution history/stats/shared_workflow ที่เกี่ยวข้อง); สำรอง DB ไว้ที่ `database.sqlite.bak-20260730-191733` ก่อนลบ
+- Telegram Group topic "🎬 วิดีโอโปรโมท" (thread_id=1143) ยังอยู่ในกลุ่ม MoneyMind Hub — ไม่มีอะไรส่งเข้ามาอีกแล้ว ลบ/เก็บ topic เองได้ผ่านแอป Telegram ถ้าต้องการ
 
 ---
 
@@ -409,7 +400,7 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 - topic `📈 หุ้น` → `message_thread_id=3`
 - topic `💰 การเงิน` → `message_thread_id=4`
 - topic `💬 แชทคุย` → `message_thread_id=689` — **AI chat** (สร้าง 2026-06-18)
-- topic `🎬 วิดีโอโปรโมท` → `message_thread_id=1143` — **Marketing automation** (สร้าง 2026-07-06, ดู [[project-marketing-automation]]) แยกจากแชทส่วนตัวกันปนกับ feedback/error report; `marketing_daily_script.py` (`TG_CHAT`/`TG_TOPIC` ในไฟล์) ส่งเข้า topic นี้แทนแชทส่วนตัวแล้ว
+- topic `🎬 วิดีโอโปรโมท` → `message_thread_id=1143` — เดิมใช้กับ Marketing automation (ดูหัวข้อด้านบน) **ลบฟีเจอร์แล้ว 2026-07-30** topic นี้ไม่มีอะไรส่งเข้ามาอีก เหลือ topic เปล่าไว้เฉยๆ
 - Stock scripts (9 ตัว) ส่งไป thread 3, Finance scripts (7 ตัว) ส่งไป thread 4
 - `stock_bot.py` รับคำสั่งจากทั้ง personal chat (`8172260229`) และ group; AI chat เปิดใน personal chat + topic 689; `TG_CHAT_TOPIC=689`
 
@@ -487,6 +478,7 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 - **`token_watchdog.py`** — ทำ OAuth refresh จริงกับ `gmail_token.json` + `drive_token.json`; `invalid_grant` = ถูก revoke → เตือนด่วน + บอก scripts ที่กระทบ
 - **`dup_cleanup.py`** — หา dup 2 ระดับ: HIGH (date+amount+desc เป๊ะ) + MED (date+amount ตรง คนละ `_import` source); report Telegram **ไม่ลบอัตโนมัติ** (ลบเองในเว็บแอป); ตรวจ 120 วันล่าสุด
 - **เหตุผล:** ระบบมี ~30 cron + 4 import pipelines → script พังเงียบ/token ตาย/data ซ้ำ เป็นความเสี่ยงจริง (เคยเจอ bug เงียบหลายตัว)
+- **🐛 ช่องโหว่ของระบบเฝ้าระวังเอง — REGISTRY ชื่อ log ไม่ตรงกับ crontab จริง ทำให้เตือน "ไม่รัน" ได้ทั้งที่สคริปต์รันจริง (เจอ+แก้ 2026-07-30)** — audit ทั้งระบบพบว่า `stock_support_resistance.py` เอกสารบอกว่า deploy แล้วแต่ไฟล์+cron ไม่มีอยู่บน VM จริงเลย (เขียนไว้ในเครื่อง 22 มิ.ย. ไม่เคย scp ขึ้น VM) — `cron_health.py` เตือน "ไม่มี log" ทุกวันมาแล้วหลายวันแต่ไม่มีใครหยิบมาแก้เพราะเป็นแค่ warning เงียบๆ ใน Telegram ที่ไม่มีคนอ่านทัน. แก้แล้ว: scp สคริปต์ขึ้น VM + เพิ่ม crontab `30 2 * * 1-5` — **แต่รอบแรกลง log ผิดชื่อ** (`support_resistance.log` ตามชื่อสคริปต์) ทั้งที่ REGISTRY เดิมรอไฟล์ชื่อ `pivot.log` (`80, 'Support/Resistance (จ.–ศ. 09:30)'`) ซึ่งจะทำให้ระบบเตือน "ไม่รัน" ต่อไปทั้งที่รันจริงแล้ว — แก้ crontab ให้ redirect ไป `pivot.log` ตรงกับ REGISTRY ถูกต้อง. **บทเรียน: ทุกครั้งที่เพิ่ม/แก้ cron ใหม่ ต้องเทียบชื่อ `.log` ในคำสั่ง crontab กับชื่อใน `cron_health.py` REGISTRY ให้ตรงกันเป๊ะ** ไม่งั้นระบบเฝ้าระวังจะ false-positive ถาวรโดยไม่มีใครรู้ (เหมือนที่เพิ่งเจอ). พร้อมกันนี้ลบ entry `marketing_script.log` ออกจาก REGISTRY ด้วย (ฟีเจอร์ Marketing Automation ถูกลบทั้งหมดแล้ว 2026-07-30 — ดูหัวข้อด้านบน) กัน false-positive ถาวรอีกตัว. Deploy แล้วทั้ง VM (`gcloud compute scp`) + sync เข้า `moneymind-bot` repo (commit `149a97d`, ยังไม่ push)
 
 ### หุ้นที่ติดตาม (dynamic — ดึงจาก Firestore, ปัจจุบัน ~43 ตัว)
 ไม่ใช่ hardcode แล้ว — bot ดึง symbols จาก `get_symbols_from_firestore()` (investments ที่มี qty > 0 และ type = USD)
@@ -549,7 +541,7 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 | `calendar_reminder.py` | `calendar_reminder.py` | deploy ได้ตามปกติ |
 | `bank_statement_analysis.py` | `bank_statement_analysis.py` | deploy ได้ตามปกติ |
 | `stock_advanced_alerts.py` | `stock_advanced_alerts.py` | deploy ได้ตามปกติ — SL/TP + 52W High/Low + Volume Spike, cron ทุก 30 นาที US market |
-| `stock_support_resistance.py` | `stock_support_resistance.py` | deploy ได้ตามปกติ — Pivot Points, cron 09:30 Bangkok จ.–ศ. |
+| `stock_support_resistance.py` | `stock_support_resistance.py` | ✅ deploy จริงแล้ว 2026-07-30 — เดิมเอกสารบอกว่า deploy แล้วแต่ไฟล์+cron ไม่เคยมีอยู่บน VM จริงมากว่าเดือน (เจอจาก system audit); ตอนนี้ scp ขึ้น VM + เพิ่ม crontab `30 2 * * 1-5` แล้ว, ทดสอบรันจริงสำเร็จ (ส่ง pivot points 43 หุ้น) ส่งไป personal chat (ไม่ใช่ topic 📈 — ตามแบบเดียวกับ `stock_advanced_alerts.py`) |
 | `stock_macro_calendar.py` | `stock_macro_calendar.py` | deploy ได้ตามปกติ — Fed/CPI/NFP 14 วัน, cron จันทร์ 08:00 |
 | `stock_earnings.py` | `stock_earnings.py` | deploy ได้ตามปกติ — Earnings + Post-Earnings summary, cron 2 รอบ/วัน |
 | `stock_watchlist_score.py` | `stock_watchlist_score.py` | deploy ได้ตามปกติ — Gemini score รายสัปดาห์, cron จันทร์ 09:00 |
