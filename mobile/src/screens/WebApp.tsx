@@ -209,7 +209,16 @@ export default function WebApp() {
 
   // จำกัดให้ WebView นำทางเฉพาะโดเมนของแอปเอง — ลิงก์ภายนอก (ข่าว, external link ในหน้าเว็บ)
   // เปิดด้วยเบราว์เซอร์นอกแทน กัน user หลุดออกจากแอปไปติดอยู่หน้าเว็บอื่นที่ไม่มีทางกลับ
+  //
+  // 🐛 (เจอ+แก้ 2026-07-31) เดิม check นี้ครอบทุก navigation request รวมถึง iframe ที่หน้าเว็บ
+  // สร้างเองในพื้นหลัง (ไม่ใช่ user แตะลิงก์) — Firebase Auth SDK โหลด hidden iframe ไปที่
+  // authDomain (`moneymind-d97f3.firebaseapp.com`, คนละ host กับ WEB_HOST) เองอัตโนมัติทุกครั้ง
+  // ที่ auth เริ่มทำงาน (ทุกครั้งที่เปิดแอป) ทำให้แอปทั้งแอปถูกเด้งออกไป Safari ทันทีที่เปิด
+  // (isTopFrame:false ก็ยังโดน host-check เดิมเหมือน user แตะลิงก์จริง) — แก้โดยเช็ค isTopFrame
+  // ก่อนเสมอ: อนุญาต iframe ทุกกรณีให้โหลดในตัวเอง ไม่ผ่าน host allowlist เลย บล็อกเฉพาะ
+  // top-level navigation (คือที่ user แตะลิงก์จริง เปลี่ยนทั้งหน้าออกจากแอป) เท่านั้น
   const handleShouldStartLoad = useCallback((req: ShouldStartLoadRequest) => {
+    if (!req.isTopFrame) return true;
     const { url } = req;
     if (url.startsWith('about:') || url.startsWith('data:') || url.startsWith('blob:')) return true;
     const m = /^https?:\/\/([^/]+)/i.exec(url);
