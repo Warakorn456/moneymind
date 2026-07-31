@@ -132,6 +132,47 @@
     .chart-title{font-size:14px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
     .chart-wrap{position:relative;height:210px}
 
+    /* ── Liquid Glass (preview — Dashboard only for now) ── */
+    #glass-bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity .5s ease}
+    body.glass-dash #glass-bg-blobs{opacity:1}
+    .glass-blob{position:absolute;border-radius:50%;filter:blur(90px)}
+    .glass-blob-1{width:480px;height:480px;top:-140px;left:8%;background:radial-gradient(circle,rgba(124,58,237,.4),transparent 70%)}
+    .glass-blob-2{width:420px;height:420px;top:15%;right:-120px;background:radial-gradient(circle,rgba(6,182,212,.32),transparent 70%)}
+    .glass-blob-3{width:400px;height:400px;bottom:-100px;left:32%;background:radial-gradient(circle,rgba(236,72,153,.24),transparent 70%)}
+    body.glass-dash .sidebar,body.glass-dash .main{position:relative;z-index:1}
+    body.glass-dash .topbar{background:rgba(19,19,31,.55);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-bottom:1px solid rgba(255,255,255,.1)}
+    body.glass-dash .sidebar{background:rgba(19,19,31,.6);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%)}
+
+    #pg-dashboard .dash-hero{
+      background:linear-gradient(115deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,0) 40%),linear-gradient(135deg,rgba(124,58,237,.28) 0%,rgba(6,182,212,.16) 55%,rgba(16,185,129,.08) 100%);
+      backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);
+      border:1px solid rgba(255,255,255,.2);border-radius:28px;
+      box-shadow:0 12px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(0,0,0,.12);
+    }
+    #pg-dashboard .dash-hero-stat{
+      background:linear-gradient(115deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,0) 45%),linear-gradient(145deg,rgba(255,255,255,.1),rgba(255,255,255,.02));
+      backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);
+      border:1px solid rgba(255,255,255,.15);border-radius:16px;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+    }
+    #pg-dashboard .dash-hero-stat:hover{background:linear-gradient(115deg,rgba(255,255,255,.2) 0%,rgba(255,255,255,0) 45%),linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.04))}
+    #pg-dashboard .stat-card{
+      background:linear-gradient(115deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,0) 40%),linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.015));
+      backdrop-filter:blur(20px) saturate(170%);-webkit-backdrop-filter:blur(20px) saturate(170%);
+      border:1px solid rgba(255,255,255,.13);border-radius:22px;
+      box-shadow:0 8px 28px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.12);
+    }
+    #pg-dashboard .stat-card:hover{transform:translateY(-3px);box-shadow:0 14px 38px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.16)}
+    #pg-dashboard .chart-card{
+      background:linear-gradient(115deg,rgba(255,255,255,.1) 0%,rgba(255,255,255,0) 35%),linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.015));
+      backdrop-filter:blur(20px) saturate(170%);-webkit-backdrop-filter:blur(20px) saturate(170%);
+      border:1px solid rgba(255,255,255,.13);border-radius:22px;
+      box-shadow:0 8px 28px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.12);
+    }
+    #pg-dashboard .btn{border-radius:100px}
+    #pg-dashboard .btn-primary{background:linear-gradient(145deg,#8b5cf6,#7c3aed);box-shadow:0 6px 20px -6px rgba(124,58,237,.6),inset 0 1px 0 rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.25)}
+    #pg-dashboard .btn-ghost{background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.03));backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+
     /* ── Card ── */
     .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px}
     .bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -1002,6 +1043,13 @@
   </style>
 </head>
 <body>
+
+<!-- Liquid Glass ambient background (currently only shown behind the Dashboard page) -->
+<div id="glass-bg-blobs" aria-hidden="true">
+  <div class="glass-blob glass-blob-1"></div>
+  <div class="glass-blob glass-blob-2"></div>
+  <div class="glass-blob glass-blob-3"></div>
+</div>
 
 <!-- Lock Screen (PIN + Password fallback) -->
 <div id="lock-screen" style="display:none;position:fixed;inset:0;background:rgba(13,13,26,.97);backdrop-filter:blur(12px);z-index:99998;align-items:center;justify-content:center;font-family:'Sarabun',sans-serif">
@@ -2961,6 +3009,7 @@ function _enterAppReal(){
   localStorage.setItem(SESS_KEY,JSON.stringify({username:currentUser,ts:Date.now()}));
   resetLockTimer();
   initDate(); setTxType('income'); renderDash();
+  document.body.classList.add('glass-dash');
   setTimeout(checkDcaSchedule,2000); // ตรวจ DCA ถึงกำหนดหลัง login
   setTimeout(recoverData,800); // auto-recover หากข้อมูลว่างหลัง login
   if(typeof applyTheme==='function') applyTheme();
@@ -4352,6 +4401,7 @@ function nav(page){
   document.getElementById('page-title').textContent=PAGE_TITLE[page];
   curPage=page;
   renderPage(page);
+  document.body.classList.toggle('glass-dash',page==='dashboard');
   if(window.innerWidth<=700) closeSidebar();
   // เริ่ม/หยุด auto-refresh ตามหน้า
   if(page==='investments') startInvAutoRefresh();
@@ -8890,6 +8940,7 @@ try{
 }catch(e){}
 if(currentUser){
   initDate(); setTxType('income'); renderDash();
+  document.body.classList.add('glass-dash');
   setTimeout(checkDcaSchedule,2000);
 }
 // ตรวจ redirect result เมื่อโหลดหน้า (สำหรับ mobile Chrome redirect flow)
