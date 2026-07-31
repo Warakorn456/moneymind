@@ -1726,6 +1726,21 @@
       <button class="btn" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ef4444" onclick="deleteMyAccount()"><i class="fas fa-trash-alt"></i> <span data-i18n="set_delacc_btn">ลบบัญชีของฉันอย่างถาวร</span></button>
     </div>
     <div class="set-card">
+      <div class="set-title"><i class="fas fa-wallet" style="color:#06b6d4"></i> <span data-i18n="set_budget_title">งบประมาณตามหมวดหมู่</span></div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px" data-i18n="set_budget_desc">ตั้งงบต่อเดือนแยกตามหมวดหมู่ — เปิด "จัดสรรทุกบาท" เพื่อดูว่ารายรับที่ยังไม่ได้จัดสรรเหลือเท่าไหร่ และเปิด "ทบงบไปเดือนถัดไป" ให้งบที่เหลือใช้จากเดือนก่อนรวมเข้าเดือนนี้อัตโนมัติ</div>
+      <div id="cat-budget-zerobase-summary" style="margin-bottom:14px"></div>
+      <div class="fg" style="max-width:280px">
+        <label class="flabel" data-i18n="set_budget_income_target">รายรับเป้าหมาย/เดือน (ว่าง = ใช้รายรับจริงเดือนนี้)</label>
+        <input type="number" id="budget-income-target-inp" class="finput" min="0" step="100" placeholder="0" onchange="saveBudgetIncomeTarget(this.value)">
+      </div>
+      <label class="fg" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:10px">
+        <input type="checkbox" id="budget-rollover-toggle" onchange="saveBudgetRolloverToggle(this.checked)">
+        <span data-i18n="set_budget_rollover">ทบงบที่เหลือไปเดือนถัดไป (Rollover)</span>
+      </label>
+      <div id="cat-budget-settings" style="margin-top:14px"></div>
+    </div>
+
+    <div class="set-card">
       <div class="set-title"><i class="fas fa-keypad" style="color:#a78bfa"></i> <span data-i18n="set_pin_title">ตั้ง PIN สำหรับปลดล็อก</span></div>
       <div id="pin-status" style="font-size:13px;margin-bottom:14px;color:var(--muted)" data-i18n="set_pin_none">ยังไม่ได้ตั้ง PIN</div>
       <div id="pin-inline-form">
@@ -3914,7 +3929,7 @@ const I18N = {
     set_security_title:'ความปลอดภัย',set_autolock:'ล็อกแอปอัตโนมัติหลังไม่ใช้งาน',set_lock_off:'ปิด (ไม่ล็อก)',set_lock_5:'5 นาที',set_lock_10:'10 นาที',set_lock_15:'15 นาที (แนะนำ)',set_lock_30:'30 นาที',set_lock_60:'1 ชั่วโมง',set_lock_now:'ล็อกแอปทันที',set_session_expire:'Session หมดอายุหลัง 30 วัน — ต้อง login ใหม่',
     set_data_title:'จัดการข้อมูล',set_export_json:'ส่งออก JSON',set_export_csv:'ส่งออก CSV',set_print_report:'พิมพ์รายงาน',set_shareable:'สรุปแชร์ได้',set_import_json:'นำเข้า JSON',set_clear_all:'ล้างข้อมูลทั้งหมด',
     dh_networth:'ความมั่งคั่งสุทธิ (Net Worth)',dh_assets_minus_debts:'สินทรัพย์ − หนี้สิน',dh_income:'รายรับ',dh_expense:'รายจ่าย',dh_this_month:'เดือนนี้',dh_saving:'ออม',dh_remaining:'คงเหลือ',dh_remaining_formula:'รายรับ − รายจ่าย − ออม',dh_portfolio:'พอร์ตลงทุน',dh_current_value:'มูลค่าปัจจุบัน',dh_exp_by_cat:'รายจ่ายแยกหมวด',dh_hide_transfer:'ซ่อนเงินโอน/ถอน',dh_income_vs_exp:'รายรับ vs รายจ่าย 6 เดือน',
-    vs_month:'เทียบกับ',budget_per_month:'งบ/เดือน',baht_per_month:'฿/เดือน',budget_by_cat:'งบประมาณแยกหมวด',over_budget:'เกิน!',
+    vs_month:'เทียบกับ',budget_per_month:'งบ/เดือน',baht_per_month:'฿/เดือน',budget_by_cat:'งบประมาณแยกหมวด',over_budget:'เกิน!',set_budget_title:'งบประมาณตามหมวดหมู่',set_budget_desc:'ตั้งงบต่อเดือนแยกตามหมวดหมู่ — เปิด "จัดสรรทุกบาท" เพื่อดูว่ารายรับที่ยังไม่ได้จัดสรรเหลือเท่าไหร่ และเปิด "ทบงบไปเดือนถัดไป" ให้งบที่เหลือใช้จากเดือนก่อนรวมเข้าเดือนนี้อัตโนมัติ',set_budget_income_target:'รายรับเป้าหมาย/เดือน (ว่าง = ใช้รายรับจริงเดือนนี้)',set_budget_rollover:'ทบงบที่เหลือไปเดือนถัดไป (Rollover)',budget_zb_income:'รายรับเป้าหมาย',budget_zb_assigned:'จัดสรรแล้ว',budget_zb_unassigned:'ยังไม่ได้จัดสรร',budget_zb_effective:'งบที่ใช้ได้จริง:',budget_zb_carry:'ทบมา',
     hs_savings_rate:'อัตราการออม',hs_of_income:'ของรายรับ',hs_debt_burden:'ภาระหนี้',hs_debt:'หนี้',hs_no_debt:'ไม่มีหนี้',hs_emergency_fund:'เงินสำรองฉุกเฉิน',hs_months:'เดือน',hs_investment:'การลงทุน',hs_portfolio:'พอร์ต',hs_excellent:'ดีเยี่ยม',hs_good:'ดี',hs_fair:'พอใช้',hs_needs_work:'ต้องปรับปรุง',hs_calc_note:'คำนวณจากค่าเฉลี่ย 6 เดือนย้อนหลัง',
     target:'เป้า',other:'อื่นๆ',top5_exp_month:'Top 5 รายจ่ายเดือนนี้',
     compare_6mo:'เปรียบเทียบ 6 เดือน',net_balance:'คงเหลือสุทธิ',
@@ -4017,7 +4032,7 @@ const I18N = {
     set_security_title:'Security',set_autolock:'Auto-lock app after inactivity',set_lock_off:'Off (no lock)',set_lock_5:'5 minutes',set_lock_10:'10 minutes',set_lock_15:'15 minutes (recommended)',set_lock_30:'30 minutes',set_lock_60:'1 hour',set_lock_now:'Lock App Now',set_session_expire:"Session expires after 30 days — you'll need to log in again",
     set_data_title:'Data Management',set_export_json:'Export JSON',set_export_csv:'Export CSV',set_print_report:'Print Report',set_shareable:'Shareable Summary',set_import_json:'Import JSON',set_clear_all:'Clear All Data',
     dh_networth:'Net Worth',dh_assets_minus_debts:'Assets − Liabilities',dh_income:'Income',dh_expense:'Expense',dh_this_month:'This Month',dh_saving:'Saved',dh_remaining:'Remaining',dh_remaining_formula:'Income − Expense − Savings',dh_portfolio:'Portfolio',dh_current_value:'Current Value',dh_exp_by_cat:'Expenses by Category',dh_hide_transfer:'Hide Transfer/Cash',dh_income_vs_exp:'Income vs Expense (6 Months)',
-    vs_month:'vs.',budget_per_month:'Budget/month',baht_per_month:'฿/month',budget_by_cat:'Budget by Category',over_budget:'Over!',
+    vs_month:'vs.',budget_per_month:'Budget/month',baht_per_month:'฿/month',budget_by_cat:'Budget by Category',over_budget:'Over!',set_budget_title:'Category Budget',set_budget_desc:'Set a monthly budget per category — turn on "Assign every baht" to see how much unassigned income is left, and "Roll over unused budget" to carry last month\'s leftover into this month automatically.',set_budget_income_target:'Target income/month (blank = use this month\'s actual income)',set_budget_rollover:'Roll over unused budget (Rollover)',budget_zb_income:'Target Income',budget_zb_assigned:'Assigned',budget_zb_unassigned:'Unassigned',budget_zb_effective:'Available:',budget_zb_carry:'rolled over',
     hs_savings_rate:'Savings Rate',hs_of_income:'of income',hs_debt_burden:'Debt Burden',hs_debt:'Debt',hs_no_debt:'No debt',hs_emergency_fund:'Emergency Fund',hs_months:'months',hs_investment:'Investment',hs_portfolio:'Portfolio',hs_excellent:'Excellent',hs_good:'Good',hs_fair:'Fair',hs_needs_work:'Needs Work',hs_calc_note:'Calculated from 6-month average',
     target:'Target',other:'Other',top5_exp_month:'Top 5 Expenses This Month',
     compare_6mo:'6-Month Comparison',net_balance:'Net Balance',
@@ -9466,19 +9481,67 @@ function _captureShareCard(card){
 }
 
 // ══════════════════════════════════════════
-//  FEATURE 9 — CATEGORY BUDGET
+//  FEATURE 9 — CATEGORY BUDGET (+ zero-based assignment, + rollover 2026-07-31)
 // ══════════════════════════════════════════
+
+// งบที่ทบมาจากเดือนก่อนๆ (ย้อนสูงสุด 6 เดือน หรือจนกว่าจะเจอเดือนที่ไม่มีธุรกรรมเลย = หยุดย้อน
+// เพราะถือว่าเป็นช่วงก่อนเริ่มใช้แอป ไม่ควรงอกงบเก่าที่ไม่มีข้อมูลจริงรองรับ)
+function _catBudgetRollover(catId,bud,m,y){
+  if(!DB.settings.budgetRolloverEnabled||!bud) return 0;
+  let carry=0,mm=m,yy=y;
+  for(let i=0;i<6;i++){
+    mm--; if(mm<0){ mm=11; yy--; }
+    const txs=monthTx(mm,yy);
+    if(!txs.length) break;
+    const spent=txs.filter(t=>t.type==='expense'&&t.category===catId).reduce((s,t)=>s+t.amount,0);
+    carry+=(bud-spent);
+  }
+  return carry;
+}
+
+function saveBudgetIncomeTarget(val){
+  DB.settings.budgetIncomeTarget=parseFloat(val)||0;
+  saveDB(); renderCatBudgetSettings();
+}
+
+function saveBudgetRolloverToggle(checked){
+  DB.settings.budgetRolloverEnabled=checked;
+  saveDB(); renderCatBudgetSettings(); renderCatBudgetProgress();
+}
+
 function renderCatBudgetSettings(){
   const el=document.getElementById('cat-budget-settings'); if(!el) return;
   if(!DB.settings.catBudgets) DB.settings.catBudgets={};
   const cats=getAllExpCats().filter(c=>c.id!=='other_exp');
+
+  const targetInp=document.getElementById('budget-income-target-inp');
+  if(targetInp) targetInp.value=DB.settings.budgetIncomeTarget||'';
+  const rolloverChk=document.getElementById('budget-rollover-toggle');
+  if(rolloverChk) rolloverChk.checked=!!DB.settings.budgetRolloverEnabled;
+
+  const totalAssigned=Object.values(DB.settings.catBudgets).reduce((s,v)=>s+(parseFloat(v)||0),0);
+  const actualIncome=monthTx(selMonth,selYear).filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const target=DB.settings.budgetIncomeTarget||actualIncome;
+  const unassigned=target-totalAssigned;
+  const summaryEl=document.getElementById('cat-budget-zerobase-summary');
+  if(summaryEl){
+    summaryEl.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+      <div class="stat-card" style="padding:12px"><div class="stat-label">${tr('budget_zb_income')}</div><div class="stat-value" style="font-size:17px">${fmt(target)}</div></div>
+      <div class="stat-card" style="padding:12px"><div class="stat-label">${tr('budget_zb_assigned')}</div><div class="stat-value" style="font-size:17px">${fmt(totalAssigned)}</div></div>
+      <div class="stat-card ${unassigned<0?'sc-red':unassigned===0?'sc-green':'sc-amber'}" style="padding:12px"><div class="stat-label">${tr('budget_zb_unassigned')}</div><div class="stat-value" style="font-size:17px">${fmt(unassigned)}</div></div>
+    </div>`;
+  }
+
   el.innerHTML=cats.map(c=>{
     const budgeted=DB.settings.catBudgets[c.id]||0;
+    const carry=budgeted?_catBudgetRollover(c.id,budgeted,selMonth,selYear):0;
+    const showCarry=DB.settings.budgetRolloverEnabled&&budgeted>0;
     return `<div class="catbud-row">
       <div class="catbud-label" title="${c.label}"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${c.color};margin-right:6px"></span>${c.label}</div>
       <input type="number" class="catbud-inp" value="${budgeted||''}" placeholder="0" min="0" step="100"
         onchange="saveCatBudget('${c.id}',this.value)" title="${tr('budget_per_month')}">
       <div style="font-size:11px;color:var(--muted);margin-left:4px">${tr('baht_per_month')}</div>
+      ${showCarry?`<div style="font-size:11px;color:${carry>=0?'var(--green)':'var(--red)'};width:100%;margin-left:26px">${tr('budget_zb_effective')} ${fmt(budgeted+carry)} (${carry>=0?'+':''}${fmt(carry)} ${tr('budget_zb_carry')})</div>`:''}
     </div>`;
   }).join('');
 }
@@ -9487,6 +9550,7 @@ function saveCatBudget(catId,val){
   if(!DB.settings.catBudgets) DB.settings.catBudgets={};
   DB.settings.catBudgets[catId]=parseFloat(val)||0;
   saveDB();
+  renderCatBudgetSettings();
   renderCatBudgetProgress();
   checkNotifications();
 }
@@ -9497,12 +9561,15 @@ function renderCatBudgetProgress(){
   const activeCats=Object.entries(budgets).filter(([,v])=>v>0);
   if(!activeCats.length){ el.innerHTML=''; return; }
   const txs=monthTx(selMonth,selYear).filter(t=>t.type==='expense');
+  const rollOn=!!DB.settings.budgetRolloverEnabled;
   const rows=activeCats.map(([catId,bud])=>{
     const cat=getCat(catId,'expense');
     const spent=txs.filter(t=>t.category===catId).reduce((s,t)=>s+t.amount,0);
-    const pct=Math.min(100,(spent/bud)*100);
+    const carry=rollOn?_catBudgetRollover(catId,bud,selMonth,selYear):0;
+    const effBud=bud+carry;
+    const pct=effBud>0?Math.min(100,(spent/effBud)*100):100;
     const barColor=pct>=100?'var(--red)':pct>=80?'var(--amber)':cat.color;
-    return {cat,bud,spent,pct,barColor};
+    return {cat,bud:effBud,spent,pct,barColor};
   }).filter(r=>r.spent>0||r.bud>0).sort((a,b)=>b.pct-a.pct);
   if(!rows.length){ el.innerHTML=''; return; }
   el.innerHTML=`
