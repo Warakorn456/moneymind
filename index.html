@@ -11064,9 +11064,17 @@ function renderFinancialCalendar(){
       events.push({date:due,label:'ครบกำหนด: '+d.name,type:'expense',amount:d.pay||0,color:'#f59e0b'});
     }
   });
+  // Subscriptions
+  (DB.subscriptions||[]).filter(function(s){ return s.active!==false&&s.nextDate; }).forEach(function(s){
+    var due=new Date(s.nextDate);
+    if(!isNaN(due)&&due>=now&&due<=in30){
+      events.push({date:due,label:s.name,type:'expense',amount:s.price||0,color:s.color||'#a78bfa'});
+    }
+  });
   events.sort(function(a,b){ return a.date-b.date; });
   if(!events.length){ el.innerHTML=''; return; }
-  var rows=events.slice(0,8).map(function(e){
+  var totalDue=events.reduce(function(s,e){ return s+(e.type==='expense'?(e.amount||0):0); },0);
+  var rows=events.slice(0,10).map(function(e){
     var daysLeft=Math.ceil((e.date-now)/86400000);
     return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'
       +'<div style="width:38px;height:38px;border-radius:8px;background:rgba(99,102,241,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">'
@@ -11080,8 +11088,9 @@ function renderFinancialCalendar(){
   }).join('');
   el.innerHTML='<div class="comparison-card">'
     +'<div class="sec-hd" style="margin-bottom:10px">'
-    +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-calendar-alt" style="color:var(--primary-l);font-size:12px"></i></div><div class="sec-title">ปฏิทินการเงิน</div></div>'
-    +'<div style="font-size:12px;color:var(--muted)">30 วันข้างหน้า</div></div>'
+    +'<div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:8px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center"><i class="fas fa-calendar-alt" style="color:var(--primary-l);font-size:12px"></i></div><div class="sec-title">บิลที่ต้องจ่าย (30 วันข้างหน้า)</div></div>'
+    +(totalDue>0?'<div style="font-size:13px;font-weight:700;color:var(--red)">รวม '+fmt(totalDue)+'</div>':'<div style="font-size:12px;color:var(--muted)">30 วันข้างหน้า</div>')
+    +'</div>'
     +rows+'</div>';
 }
 
