@@ -5638,6 +5638,10 @@ async function aiReadStatement(b64,mime){
 ตอบเฉพาะ JSON array เท่านั้น เริ่มด้วย [ จบด้วย ]`;
 
   try{
+    // ต้องขอความยินยอมก่อนส่งข้อมูลออกไปที่ไหนก็ตาม (Apple Guideline 5.1.2(i))
+    // สำคัญ: เช็คตรงนี้ ไม่ใช่แค่ใน callGemini() เพราะ path PDF ด้านล่างอัปโหลดไฟล์ตรงไปที่
+    // Gemini File API ก่อนจะเรียก callGemini() เสียอีก — ถ้าเช็คแค่ใน callGemini() ไฟล์จะถูกส่งไปแล้วก่อนขอความยินยอม
+    if(!await ensureAIConsent()) throw new Error(currentLang==='en'?'AI use cancelled — consent required':'ยกเลิกการใช้ AI — ต้องยินยอมก่อน');
     // PDF: ใช้ File API (รองรับทุก model และไม่มีจำกัดขนาด)
     // Image: ใช้ inline_data ได้เลย
     let part;
@@ -17171,7 +17175,7 @@ function saveTripLog(){
   closeTripLogModal();
   if(curPage==='travel') renderTravel();
   toast(tr('travel_journal_saved'),'success');
-  _tripLogSyncPin(place,province,country,visited);
+  _tripLogSyncPin(place,province,country,visited).then(function(){ if(curPage==='travel') renderTravel(); });
 }
 
 function deleteTripLog(id){
