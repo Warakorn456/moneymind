@@ -15306,7 +15306,8 @@ async function _geocodeNominatim(place){
 }
 
 async function _geocodePhoton(place){
-  const u='https://photon.komoot.io/api/?limit=8&lang=th&q='+encodeURIComponent(place);
+  // Photon ไม่รองรับ lang=th (รองรับแค่ default/de/en/fr) — ปล่อย default ไว้ คืนชื่อภาษาไทยจาก OSM name tag ได้ปกติอยู่แล้ว
+  const u='https://photon.komoot.io/api/?limit=8&q='+encodeURIComponent(place);
   const r=await fetch(u);
   const d=await r.json();
   const feats=d&&d.features;
