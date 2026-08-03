@@ -17141,7 +17141,8 @@ function _tripLogMergedList(){
   const logs=DB.travel.tripLogs.map(function(t){ return Object.assign({},t,{_simple:false}); });
   const loggedNames=new Set(logs.map(function(t){ return (t.place||'').toLowerCase(); }));
   const simplePins=(DB.travel.places||[]).filter(function(p){ return p.name && !loggedNames.has(p.name.toLowerCase()); }).map(function(p){
-    return {id:null,place:p.name,province:'',country:_simplePinCountry(p),startDate:'',endDate:'',desc:'',visited:!!p.visited,_simple:true};
+    const admin=_parseAdminFromLabel(p.label);
+    return {id:null,place:p.name,subdistrict:admin.subdistrict,district:admin.district,province:admin.province,country:admin.country||_simplePinCountry(p),startDate:'',endDate:'',desc:'',visited:!!p.visited,_simple:true};
   });
   return logs.concat(simplePins);
 }
