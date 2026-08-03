@@ -17253,6 +17253,24 @@ function closeTripLogModal(){
   const ov=document.getElementById('_tripLogModal'); if(ov) ov.remove();
 }
 
+// ค้นหาที่อยู่จากชื่อสถานที่ที่พิมพ์ไว้ แล้วใส่ ตำบล/อำเภอ/จังหวัด/ประเทศ ให้อัตโนมัติ (ปุ่มข้างช่อง "สถานที่" ใน modal)
+async function tripLogSearchPlace(){
+  const placeEl=document.getElementById('_tl-place');
+  const place=(placeEl&&placeEl.value||'').trim();
+  const statusEl=document.getElementById('_tl-search-status');
+  if(!place){ toast(tr('travel_journal_need_place'),'error'); return; }
+  if(statusEl) statusEl.innerHTML='<span style="color:var(--muted)"><i class="fas fa-spinner fa-spin"></i> '+tr('travel_journal_searching')+'</span>';
+  const geo=await _geocode(place,true);
+  if(!document.getElementById('_tl-search-status')) return; // modal ถูกปิดไปแล้วระหว่างรอผล
+  if(!geo){ if(statusEl) statusEl.innerHTML='<span style="color:#f87171">'+tr('travel_journal_search_notfound')+'</span>'; return; }
+  const admin=geo.admin||{};
+  const sd=document.getElementById('_tl-subdistrict'); if(sd) sd.value=admin.subdistrict||'';
+  const ds=document.getElementById('_tl-district'); if(ds) ds.value=admin.district||'';
+  const pv=document.getElementById('_tl-province'); if(pv) pv.value=admin.province||'';
+  const ct=document.getElementById('_tl-country'); if(ct) ct.value=admin.country||'';
+  if(statusEl) statusEl.innerHTML='<span style="color:#34d399"><i class="fas fa-check"></i> '+tr('travel_journal_search_found')+'</span>';
+}
+
 async function _tripLogSyncPin(place,province,country,visited){
   DB.travel=DB.travel||{places:[]};
   let p=DB.travel.places.find(function(x){return x.name.toLowerCase()===place.toLowerCase();});
