@@ -15312,7 +15312,9 @@ function _parseNominatimAdmin(addr){
     subdistrict: pick(['ตำบล','แขวง']),
     district: pick(['อำเภอ','เขต']),
     province: pick(['จังหวัด']) || addr.province || addr.state || (addr.city==='กรุงเทพมหานคร'?addr.city:'') || '',
-    country: pick(['ประเทศ']) || addr.country || '',
+    // ใช้ addr.country (key ตรงความหมาย เชื่อถือได้เสมอ) ก่อนเป็นหลัก — ไม่ใช้ prefix-search นำเพราะบางประเทศมีมากกว่า 1 ค่าที่ขึ้นต้นด้วย "ประเทศ"
+    // (เจอบั๊กจริง: ฝรั่งเศสมี addr.region="ประเทศฝรั่งเศสแผ่นดินใหญ่" อยู่ก่อน addr.country="ประเทศฝรั่งเศส" ใน object → prefix-search เดิมหยิบผิดตัว)
+    country: _stripThaiAdminPrefix(addr.country||'',['ประเทศ']) || pick(['ประเทศ']) || '',
   };
 }
 
