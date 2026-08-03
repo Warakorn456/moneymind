@@ -17043,6 +17043,166 @@ function _requestPushTokenIfNative(){
 window.addEventListener('offline',function(){ toast(tr('offline_msg'),'error',4000); });
 window.addEventListener('online',function(){ toast(tr('online_msg'),'success'); });
 
+// ══════════════════════════════════════════
+//  TRAVEL JOURNAL — บันทึกทริป (ประเทศ/จังหวัด/สถานที่/วันที่/คำบรรยาย)
+//  เสริมจาก DB.travel.places (หมุดแผนที่) — คนละก้อนข้อมูล เก็บใน DB.travel.tripLogs
+//  บันทึกแล้วพยายาม geocode ปักหมุดบนแผนที่ให้อัตโนมัติด้วย (ถ้าหาพิกัดได้)
+// ══════════════════════════════════════════
+function _tripLogDateRange(t){
+  if(!t.startDate) return '';
+  return _travelRange(t.startDate, t.endDate||t.startDate);
+}
+
+function _tripLogCard(t){
+  const color=t.visited?'#34d399':'#fbbf24';
+  const icon=t.visited?'fa-check-circle':'fa-star';
+  const sub=[t.province,t.country].filter(Boolean).join(', ');
+  const dateStr=_tripLogDateRange(t);
+  return '<div class="card" style="padding:14px 16px;margin-bottom:10px;border-left:3px solid '+color+'">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'
+      +'<div style="flex:1;min-width:0;cursor:pointer" onclick="travelFly(\''+_escAttr(t.place)+'\')">'
+        +'<div style="font-size:14px;font-weight:700"><i class="fas '+icon+'" style="color:'+color+';margin-right:6px"></i>'+_escHtml(t.place)+'</div>'
+        +(sub?'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+_escHtml(sub)+'</div>':'')
+        +(dateStr?'<div style="font-size:12px;color:var(--muted);margin-top:5px"><i class="fas fa-calendar-alt" style="width:14px"></i> '+dateStr+'</div>':'')
+      +'</div>'
+      +'<div style="display:flex;gap:6px;flex-shrink:0">'
+        +'<button class="icon-btn" title="'+tr('edit')+'" onclick="event.stopPropagation();openTripLogModal(\''+t.id+'\')"><i class="fas fa-pen"></i></button>'
+        +'<button class="icon-btn del" title="'+tr('delete')+'" onclick="event.stopPropagation();deleteTripLog(\''+t.id+'\')"><i class="fas fa-trash"></i></button>'
+      +'</div>'
+    +'</div>'
+    +(t.desc?'<div style="font-size:12.5px;margin-top:9px;line-height:1.65;white-space:pre-wrap">'+_escHtml(t.desc)+'</div>':'')
+    +(!t.visited?'<button class="btn btn-ghost" style="margin-top:10px;padding:5px 12px;font-size:11px" onclick="event.stopPropagation();markTripLogVisited(\''+t.id+'\')"><i class="fas fa-check"></i> '+tr('travel_journal_status_visited')+'</button>':'')
+  +'</div>';
+}
+
+function _tripJournalHtml(){
+  DB.travel=DB.travel||{places:[]};
+  if(!Array.isArray(DB.travel.tripLogs)) DB.travel.tripLogs=[];
+  const list=DB.travel.tripLogs;
+  const visited=list.filter(t=>t.visited).sort((a,b)=>(b.startDate||'').localeCompare(a.startDate||''));
+  const wishlist=list.filter(t=>!t.visited).sort((a,b)=>(a.startDate||'').localeCompare(b.startDate||'')||(a.place||'').localeCompare(b.place||''));
+  let body='';
+  if(!list.length){
+    body='<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px 0">'+tr('travel_journal_empty')+'</div>';
+  } else {
+    if(visited.length) body+='<div style="font-size:12px;font-weight:700;color:#34d399;margin:4px 0 8px"><i class="fas fa-check-circle"></i> '+tr('travel_visited')+' ('+visited.length+')</div>'+visited.map(_tripLogCard).join('');
+    if(wishlist.length) body+='<div style="font-size:12px;font-weight:700;color:#fbbf24;margin:14px 0 8px"><i class="fas fa-star"></i> '+tr('travel_want_to_go')+' ('+wishlist.length+')</div>'+wishlist.map(_tripLogCard).join('');
+  }
+  return '<div class="card" style="padding:16px;margin-bottom:18px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px">'
+      +'<div style="font-size:14px;font-weight:700"><i class="fas fa-book" style="color:#8b5cf6"></i> '+tr('travel_journal_title')+'</div>'
+      +'<button class="btn btn-primary" style="padding:7px 14px;font-size:12px" onclick="openTripLogModal()"><i class="fas fa-plus"></i> '+tr('travel_journal_add')+'</button>'
+    +'</div>'
+    +body
+  +'</div>';
+}
+
+function openTripLogModal(id){
+  DB.travel=DB.travel||{places:[]};
+  if(!Array.isArray(DB.travel.tripLogs)) DB.travel.tripLogs=[];
+  const it=id?DB.travel.tripLogs.find(function(x){return x.id===id;}):null;
+  closeTripLogModal();
+  const ov=document.createElement('div');
+  ov.id='_tripLogModal';
+  ov.className='overlay show';
+  ov.onclick=function(e){ if(e.target===ov) closeTripLogModal(); };
+  ov.innerHTML='<div class="modal" style="max-width:460px">'
+    +'<div class="modal-title"><i class="fas fa-book" style="color:#8b5cf6"></i> '+(it?tr('travel_journal_edit_title'):tr('travel_journal_add_title'))+'</div>'
+    +'<input type="hidden" id="_tl-id" value="'+(it?_escAttr(it.id):'')+'">'
+    +'<div class="fgroup"><label class="flabel">'+tr('travel_journal_field_place')+'</label><input id="_tl-place" class="finput" placeholder="'+tr('travel_journal_field_place_ph')+'" value="'+(it?_escAttr(it.place||''):'')+'"></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+      +'<div class="fgroup"><label class="flabel">'+tr('travel_journal_field_province')+'</label><input id="_tl-province" class="finput" value="'+(it?_escAttr(it.province||''):'')+'"></div>'
+      +'<div class="fgroup"><label class="flabel">'+tr('travel_journal_field_country')+'</label><input id="_tl-country" class="finput" value="'+(it?_escAttr(it.country||''):'')+'"></div>'
+    +'</div>'
+    +'<div class="fgroup"><label class="flabel">'+tr('travel_journal_field_status')+'</label>'
+      +'<select id="_tl-status" class="fselect">'
+        +'<option value="1" '+(!it||it.visited?'selected':'')+'>'+tr('travel_journal_status_visited')+'</option>'
+        +'<option value="0" '+(it&&!it.visited?'selected':'')+'>'+tr('travel_journal_status_wishlist')+'</option>'
+      +'</select></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+      +'<div class="fgroup"><label class="flabel">'+tr('travel_journal_field_start')+'</label><input id="_tl-start" type="date" class="finput" value="'+(it?(it.startDate||''):'')+'"></div>'
+      +'<div class="fgroup"><label class="flabel">'+tr('travel_journal_field_end')+'</label><input id="_tl-end" type="date" class="finput" value="'+(it?(it.endDate||''):'')+'"></div>'
+    +'</div>'
+    +'<div class="fgroup"><label class="flabel">'+tr('travel_journal_field_desc')+'</label><textarea id="_tl-desc" class="finput" rows="4" style="resize:vertical;font-family:inherit" placeholder="'+tr('travel_journal_field_desc_ph')+'">'+(it?_escHtml(it.desc||''):'')+'</textarea></div>'
+    +'<div class="modal-foot">'
+      +'<button class="btn btn-ghost" onclick="closeTripLogModal()">'+tr('cancel')+'</button>'
+      +'<button class="btn btn-primary" onclick="saveTripLog()"><i class="fas fa-save"></i> '+tr('save')+'</button>'
+    +'</div>'
+  +'</div>';
+  document.body.appendChild(ov);
+  const f=document.getElementById('_tl-place'); if(f) f.focus();
+}
+function closeTripLogModal(){
+  const ov=document.getElementById('_tripLogModal'); if(ov) ov.remove();
+}
+
+async function _tripLogSyncPin(place,province,country,visited){
+  DB.travel=DB.travel||{places:[]};
+  let p=DB.travel.places.find(function(x){return x.name.toLowerCase()===place.toLowerCase();});
+  if(p){
+    if(visited&&!p.visited){ p.visited=true; saveDB(); _refreshTravelGlobe(); }
+    return;
+  }
+  const q=[place,province,country].filter(Boolean).join(', ');
+  const geo=await _geocode(q,true);
+  if(!geo) return;
+  DB.travel.places.push({name:place,lat:geo.lat,lng:geo.lng,label:geo.label,type:geo.type,bbox:geo.bbox,visited:!!visited});
+  saveDB();
+  _refreshTravelGlobe();
+}
+
+function saveTripLog(){
+  const place=(document.getElementById('_tl-place').value||'').trim();
+  if(!place){ toast(tr('travel_journal_need_place'),'error'); return; }
+  const id=document.getElementById('_tl-id').value;
+  const province=(document.getElementById('_tl-province').value||'').trim();
+  const country=(document.getElementById('_tl-country').value||'').trim();
+  const visited=document.getElementById('_tl-status').value==='1';
+  const startDate=document.getElementById('_tl-start').value;
+  const endDate=document.getElementById('_tl-end').value;
+  const desc=(document.getElementById('_tl-desc').value||'').trim();
+  DB.travel=DB.travel||{places:[]};
+  if(!Array.isArray(DB.travel.tripLogs)) DB.travel.tripLogs=[];
+  const list=DB.travel.tripLogs;
+  const o={place,province,country,visited,startDate,endDate,desc};
+  if(id){ const it=list.find(function(x){return x.id===id;}); if(it) Object.assign(it,o); }
+  else { o.id=uid(); list.push(o); }
+  saveDB();
+  closeTripLogModal();
+  if(curPage==='travel') renderTravel();
+  toast(tr('travel_journal_saved'),'success');
+  _tripLogSyncPin(place,province,country,visited);
+}
+
+function deleteTripLog(id){
+  if(!confirm(tr('travel_journal_confirm_delete'))) return;
+  DB.travel.tripLogs=(DB.travel.tripLogs||[]).filter(function(x){return x.id!==id;});
+  saveDB();
+  if(curPage==='travel') renderTravel();
+  toast(tr('travel_journal_deleted'),'success');
+}
+
+function markTripLogVisited(id){
+  const it=(DB.travel.tripLogs||[]).find(function(x){return x.id===id;});
+  if(!it) return;
+  it.visited=true;
+  saveDB();
+  if(curPage==='travel') renderTravel();
+  toast(tr('travel_journal_marked_visited'),'success');
+  _tripLogSyncPin(it.place,it.province,it.country,true);
+}
+
+(function(){
+  const _origRenderTravel=renderTravel;
+  renderTravel=function(){
+    _origRenderTravel();
+    const el=document.getElementById('travel-content');
+    if(!el) return;
+    const secHd=el.querySelector('.sec-hd');
+    if(secHd) secHd.insertAdjacentHTML('afterend', _tripJournalHtml());
+  };
+})();
+
 </script>
 
 <!-- Subscription Modal -->
