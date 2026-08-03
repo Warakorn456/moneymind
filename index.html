@@ -17193,7 +17193,7 @@ function markTripLogVisited(id){
   saveDB();
   if(curPage==='travel') renderTravel();
   toast(tr('travel_journal_marked_visited'),'success');
-  _tripLogSyncPin(it.place,it.province,it.country,true);
+  _tripLogSyncPin(it.place,it.province,it.country,true).then(function(){ if(curPage==='travel') renderTravel(); });
 }
 
 (function(){
