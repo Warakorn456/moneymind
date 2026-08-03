@@ -17150,7 +17150,7 @@ function _tripLogMergedList(){
 function _tripLogCard(t){
   const color=t.visited?'#34d399':'#fbbf24';
   const icon=t.visited?'fa-check-circle':'fa-star';
-  const sub=[t.province,t.country].filter(Boolean).join(', ');
+  const sub=[t.subdistrict,t.district,t.province,t.country].filter(Boolean).join(', ');
   const dateStr=_tripLogDateRange(t);
   const editCall=t._simple?('openTripLogModal(null,\''+_escAttr(t.place)+'\')'):('openTripLogModal(\''+t.id+'\')');
   const delCall=t._simple?('travelRemovePlace(\''+_escAttr(t.place)+'\')'):('deleteTripLog(\''+t.id+'\')');
