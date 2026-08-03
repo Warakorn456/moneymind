@@ -17290,6 +17290,8 @@ function saveTripLog(){
   const place=(document.getElementById('_tl-place').value||'').trim();
   if(!place){ toast(tr('travel_journal_need_place'),'error'); return; }
   const id=document.getElementById('_tl-id').value;
+  const subdistrict=(document.getElementById('_tl-subdistrict').value||'').trim();
+  const district=(document.getElementById('_tl-district').value||'').trim();
   const province=(document.getElementById('_tl-province').value||'').trim();
   const country=(document.getElementById('_tl-country').value||'').trim();
   const visited=document.getElementById('_tl-status').value==='1';
@@ -17299,7 +17301,7 @@ function saveTripLog(){
   DB.travel=DB.travel||{places:[]};
   if(!Array.isArray(DB.travel.tripLogs)) DB.travel.tripLogs=[];
   const list=DB.travel.tripLogs;
-  const o={place,province,country,visited,startDate,endDate,desc};
+  const o={place,subdistrict,district,province,country,visited,startDate,endDate,desc};
   if(id){ const it=list.find(function(x){return x.id===id;}); if(it) Object.assign(it,o); }
   else { o.id=uid(); list.push(o); }
   saveDB();
