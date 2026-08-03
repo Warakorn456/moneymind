@@ -227,7 +227,10 @@ _escHtml(s)              // escape HTML string (บรรทัด ~14142, ใ�
              3.RATE LIMIT LOGIN (_rlCheck/_rlFail, ล็อก 5 นาทีหลังพลาด 5 ครั้ง) · 4.FEEDBACK MODAL
 ~14358–14639 GMAIL BANK AUTO-IMPORT (client-side) — poll `DB.settings.gmailImportUrl`,
              modal ยืนยัน/แก้ก่อนบันทึก (openGmailInbox/_renderGmailModal/confirmGmailTx)
-~14639–14739 NAV SORTABLE (drag-and-drop sidebar reorder) — ท้ายสุดก่อนปิด </script>
+~14639–14739 NAV SORTABLE (drag-and-drop sidebar reorder)
+             — เลขบรรทัดด้านบน (จนถึงจุดนี้) ค้างมาตั้งแต่ก่อน auto-commit สะสมหลายพันบรรทัด ใช้ grep "══════" เช็คตำแหน่งจริงเสมอ
+             ท้ายไฟล์ปัจจุบัน (หลัง NAV SORTABLE) มีเพิ่ม: NATIVE APP BRIDGE, PUSH NOTIFICATIONS, OFFLINE DETECTION,
+             แล้วจบด้วย TRAVEL JOURNAL (บันทึกทริป — เพิ่ม 2026-08-03) ก่อนปิด </script>
 ```
 
 ## ฟีเจอร์ทั้งหมด
