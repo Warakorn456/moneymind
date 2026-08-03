@@ -17202,7 +17202,10 @@ function openTripLogModal(id,prefillName){
   let prefill=null;
   if(!it&&prefillName){
     const p=(DB.travel.places||[]).find(function(x){return x.name.toLowerCase()===prefillName.toLowerCase();});
-    if(p) prefill={place:p.name,province:'',country:_simplePinCountry(p),visited:!!p.visited,startDate:'',endDate:'',desc:''};
+    if(p){
+      const admin=_parseAdminFromLabel(p.label);
+      prefill={place:p.name,subdistrict:admin.subdistrict,district:admin.district,province:admin.province,country:admin.country||_simplePinCountry(p),visited:!!p.visited,startDate:'',endDate:'',desc:''};
+    }
   }
   const data=it||prefill;
   closeTripLogModal();
@@ -17213,7 +17216,17 @@ function openTripLogModal(id,prefillName){
   ov.innerHTML='<div class="modal" style="max-width:460px">'
     +'<div class="modal-title"><i class="fas fa-book" style="color:#8b5cf6"></i> '+(it?tr('travel_journal_edit_title'):tr('travel_journal_add_title'))+'</div>'
     +'<input type="hidden" id="_tl-id" value="'+(it?_escAttr(it.id):'')+'">'
-    +'<div class="fgroup"><label class="flabel">'+tr('travel_journal_field_place')+'</label><input id="_tl-place" class="finput" placeholder="'+tr('travel_journal_field_place_ph')+'" value="'+(data?_escAttr(data.place||''):'')+'"></div>'
+    +'<div class="fgroup"><label class="flabel">'+tr('travel_journal_field_place')+'</label>'
+      +'<div style="display:flex;gap:8px">'
+        +'<input id="_tl-place" class="finput" style="flex:1" placeholder="'+tr('travel_journal_field_place_ph')+'" value="'+(data?_escAttr(data.place||''):'')+'">'
+        +'<button type="button" class="btn btn-ghost" onclick="tripLogSearchPlace()" style="padding:0 14px;flex-shrink:0" title="'+tr('travel_journal_search_btn')+'"><i class="fas fa-location-crosshairs"></i></button>'
+      +'</div>'
+      +'<div id="_tl-search-status" style="font-size:11px;margin-top:5px;min-height:14px"></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+      +'<div class="fgroup"><label class="flabel">'+tr('travel_journal_field_subdistrict')+'</label><input id="_tl-subdistrict" class="finput" value="'+(data?_escAttr(data.subdistrict||''):'')+'"></div>'
+      +'<div class="fgroup"><label class="flabel">'+tr('travel_journal_field_district')+'</label><input id="_tl-district" class="finput" value="'+(data?_escAttr(data.district||''):'')+'"></div>'
+    +'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
       +'<div class="fgroup"><label class="flabel">'+tr('travel_journal_field_province')+'</label><input id="_tl-province" class="finput" value="'+(data?_escAttr(data.province||''):'')+'"></div>'
       +'<div class="fgroup"><label class="flabel">'+tr('travel_journal_field_country')+'</label><input id="_tl-country" class="finput" value="'+(data?_escAttr(data.country||''):'')+'"></div>'
