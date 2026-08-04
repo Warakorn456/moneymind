@@ -17005,12 +17005,14 @@ function _onFavStockCategoryChange(){
 
 function saveFavStock(){
   const symbolEl=document.getElementById('_fs-symbol');
-  const symbol=(symbolEl&&symbolEl.value||'').trim().toUpperCase();
+  let symbol=(symbolEl&&symbolEl.value||'').trim().toUpperCase();
   if(!symbol){ toast(tr('favstock_need_symbol'),'error'); return; }
   const id=document.getElementById('_fs-id').value;
   const note=(document.getElementById('_fs-note').value||'').trim();
   const rating=parseInt(document.getElementById('_fs-rating').value,10)||0;
   const category=document.getElementById('_fs-category').value||'';
+  // safety net เผื่อ onchange ของ category ไม่ทัน trigger (เช่น category ถูกเลือกมาก่อนแล้วพิมพ์ symbol ทีหลัง)
+  if(category==='thai' && !symbol.endsWith('.BK')) symbol+='.BK';
   const list=_getFavStocks();
   if(id){
     const it=list.find(function(f){return f.id===id;});
