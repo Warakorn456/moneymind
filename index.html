@@ -16991,6 +16991,18 @@ function _setFavStockRating(n){
   });
 }
 
+// เลือกหมวด "หุ้นไทย" แล้วเติม .BK ต่อท้าย symbol ให้อัตโนมัติถ้ายังไม่มี — กันปัญหา ticker ไม่มี
+// suffix ไปตรงกับหุ้นตลาดอื่นโดยบังเอิญ (เช่น KTB เฉยๆ = Kontoor Brands สหรัฐฯ ไม่ใช่กรุงไทย)
+function _onFavStockCategoryChange(){
+  const catEl=document.getElementById('_fs-category');
+  const symEl=document.getElementById('_fs-symbol');
+  if(!catEl||!symEl||symEl.disabled) return;
+  if(catEl.value==='thai'){
+    const v=symEl.value.trim().toUpperCase();
+    if(v && !v.endsWith('.BK')) symEl.value=v+'.BK';
+  }
+}
+
 function saveFavStock(){
   const symbolEl=document.getElementById('_fs-symbol');
   const symbol=(symbolEl&&symbolEl.value||'').trim().toUpperCase();
