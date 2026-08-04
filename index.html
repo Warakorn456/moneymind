@@ -17130,18 +17130,61 @@ function closeFavStockDetailModal(){
   const ov=document.getElementById('_favStockDetailModal'); if(ov) ov.remove();
 }
 
+function _toggleFsdSummary(){
+  const s=document.getElementById('_fsd-summary-short'), f=document.getElementById('_fsd-summary-full');
+  if(!s||!f) return;
+  const showingFull=f.style.display!=='none';
+  s.style.display=showingFull?'':'none';
+  f.style.display=showingFull?'none':'';
+}
+
+// ส่วนโปรไฟล์บริษัท/กองทุน (sector/industry/พนักงาน/ประเทศ + คำอธิบายธุรกิจเต็มจาก yfinance .info)
+// ใช้ได้ทั้งหุ้นที่มีงบการเงินและกองทุน/ETF ที่ไม่มี (เดิม businessSummary สั้นๆ แบบ static เท่านั้น)
+function _favStockDetailProfileHtml(data){
+  const chips=[];
+  if(data.sector) chips.push(tr('favstock_detail_sector')+': '+_escHtml(data.sector));
+  if(data.industry) chips.push(tr('favstock_detail_industry')+': '+_escHtml(data.industry));
+  if(data.employees) chips.push(tr('favstock_detail_employees')+': '+Number(data.employees).toLocaleString('en-US'));
+  if(data.country) chips.push(tr('favstock_detail_country')+': '+_escHtml(data.country));
+  let html='';
+  if(chips.length){
+    html+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">'
+      +chips.map(function(c){ return '<span style="font-size:11px;padding:3px 9px;border-radius:20px;background:var(--surface2);color:var(--muted)">'+c+'</span>'; }).join('')
+    +'</div>';
+  }
+  if(data.businessSummary){
+    const full=_escHtml(data.businessSummary);
+    const isLong=data.businessSummary.length>220;
+    const short=_escHtml(data.businessSummary.slice(0,220))+(isLong?'…':'');
+    html+='<div style="font-size:12px;line-height:1.6;color:var(--text);margin-bottom:4px">'
+      +'<span id="_fsd-summary-short">'+short+(isLong?' <a href="javascript:void(0)" onclick="_toggleFsdSummary()" style="color:var(--primary-l)">'+tr('favstock_detail_read_more')+'</a>':'')+'</span>'
+      +'<span id="_fsd-summary-full" style="display:none">'+full+' <a href="javascript:void(0)" onclick="_toggleFsdSummary()" style="color:var(--primary-l)">'+tr('favstock_detail_read_less')+'</a></span>'
+    +'</div>'
+    +'<div style="font-size:10.5px;color:var(--muted);margin-bottom:16px">'+tr('favstock_detail_summary_note')+'</div>';
+  }
+  return html;
+}
+
 async function _loadFavStockDetailCharts(symbol){
   const data=await _fetchStockFinancials(symbol);
   const body=document.getElementById('_fsd-body');
   if(!body||!document.getElementById('_favStockDetailModal')) return; // ปิด modal ไปแล้วก่อน fetch เสร็จ
-  if(!data||!data.available||!data.annual||!data.annual.length){
+  if(!data){
     body.innerHTML='<div style="text-align:center;padding:30px 0;color:var(--muted)">'+tr('favstock_detail_empty')+'</div>';
+    return;
+  }
+  const profileHtml=_favStockDetailProfileHtml(data);
+  if(!data.available||!data.annual||!data.annual.length){
+    // ไม่มีงบการเงิน (กองทุน/ETF/ticker ไม่รองรับ) — ยังโชว์โปรไฟล์บริษัทได้ถ้ามี
+    body.innerHTML=profileHtml
+      +'<div style="text-align:center;padding:16px 0;color:var(--muted);border-top:1px solid var(--border);margin-top:'+(profileHtml?'6px':'0')+'">'+tr('favstock_detail_empty')+'</div>';
     return;
   }
   const years=data.annual.slice().reverse(); // API คืนใหม่→เก่า, กลับให้กราฟอ่านซ้าย(เก่า)→ขวา(ใหม่)
   const labels=years.map(function(y){return y.year;});
   const cur=data.currency||'USD';
-  body.innerHTML='<div style="font-size:12.5px;font-weight:700;margin-bottom:6px">'+tr('favstock_detail_income_title')+' <span style="font-weight:400;color:var(--muted)">('+_escHtml(cur)+')</span></div>'
+  body.innerHTML=profileHtml
+    +'<div style="font-size:12.5px;font-weight:700;margin-bottom:6px">'+tr('favstock_detail_income_title')+' <span style="font-weight:400;color:var(--muted)">('+_escHtml(cur)+')</span></div>'
     +'<div style="position:relative;height:200px;margin-bottom:22px"><canvas id="_fsd-chart-income"></canvas></div>'
     +'<div style="font-size:12.5px;font-weight:700;margin-bottom:6px">'+tr('favstock_detail_cashflow_title')+' <span style="font-weight:400;color:var(--muted)">('+_escHtml(cur)+')</span></div>'
     +'<div style="position:relative;height:200px;margin-bottom:10px"><canvas id="_fsd-chart-cashflow"></canvas></div>'
