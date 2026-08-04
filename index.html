@@ -16972,7 +16972,7 @@ function _favStocksHtml(){
     : '<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px 0">'+tr('favstock_empty')+'</div>';
   return '<div class="card" style="padding:16px;margin-bottom:18px">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px">'
-      +'<div style="font-size:14px;font-weight:700"><i class="fas fa-star" style="color:#fbbf24"></i> '+tr('favstock_title')+'</div>'
+      +'<div style="font-size:14px;font-weight:700"><i class="fas fa-star" style="color:#fbbf24"></i> '+tr('favstock_title')+' <span style="font-weight:400;color:var(--muted);font-size:12.5px">('+list.length+')</span></div>'
       +'<button class="btn btn-primary" style="padding:7px 14px;font-size:12px" onclick="openFavStockModal()"><i class="fas fa-plus"></i> '+tr('favstock_add')+'</button>'
     +'</div>'
     +body
