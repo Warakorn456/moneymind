@@ -14088,6 +14088,9 @@ async function _hasActiveSubscription(){
 // ⚠️ ตอนนี้เป็น test-mode key — รอ Omise KYC ผ่านแล้วต้องสลับเป็น live key (pkey_live_...)
 const OMISE_PUBLIC_KEY='pkey_test_687yjtg5eyyn7qpswzz';
 const CHECKOUT_URL='https://34-134-61-137.sslip.io/v1/checkout';
+// ราคาหุ้นผ่าน VM ของเราเอง (yfinance ฝั่งเซิร์ฟเวอร์) แทนพึ่ง free CORS proxy บุคคลที่สามอย่างเดียว
+// ฟรี ไม่มีค่าใช้จ่ายเพิ่ม (VM รันอยู่แล้ว) — ต้อง login (Firebase session) แต่ไม่ต้องมี subscription
+const QUOTE_PROXY_URL='https://34-134-61-137.sslip.io/v1/quote';
 if(typeof Omise!=='undefined') Omise.setPublicKey(OMISE_PUBLIC_KEY);
 
 async function _getSubscriptionInfo(){
