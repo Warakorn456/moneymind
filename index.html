@@ -16951,6 +16951,25 @@ function _favStocksHtml(){
 const _favStockPriceCache={}; // {symbol:{price,ts}}
 const FAVSTOCK_PRICE_TTL_MS=90*1000;
 
+// ขอราคาหลายหุ้นทีเดียวผ่าน VM ของเราเอง (/v1/quote, yfinance ฝั่งเซิร์ฟเวอร์) — ทางหลัก ไม่พึ่ง CORS proxy ฟรีเลย
+// ต้อง login (Firebase session) แต่ไม่ต้องมี subscription; ล้มเหลว/ไม่ได้ login → คืน {} เฉยๆ ให้ตกไปใช้ fallback เดิม
+async function _fetchQuotesBatch(symbols){
+  if(!_auth||!_auth.currentUser||!symbols||!symbols.length) return {};
+  try{
+    const idToken=await _auth.currentUser.getIdToken();
+    const r=await fetch(QUOTE_PROXY_URL,{method:'POST',headers:{'Authorization':'Bearer '+idToken,'Content-Type':'application/json'},body:JSON.stringify({symbols})});
+    if(!r.ok) return {};
+    const j=await r.json();
+    return j.quotes||{};
+  }catch(e){ return {}; }
+}
+// แปลง quote ที่ได้จาก /v1/quote (ราคาดิบ+สกุลเงิน) เป็นบาท — ใช้ getFxRate() เดิมแบบเดียวกับ getPriceFor()
+async function _quoteToThb(q){
+  if(!q||!q.price) return null;
+  if((q.currency||'USD').toUpperCase()==='USD') return q.price*(await getFxRate());
+  return q.price;
+}
+
 function _renderFavStockPrice(id,price){
   const el=document.getElementById('_fs-price-'+id);
   if(el) el.textContent=fmt(price);
@@ -16964,6 +16983,11 @@ async function _retryFavStockPrice(id,symbol){
   const el=document.getElementById('_fs-price-'+id);
   if(el) el.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
   try{
+    const quotes=await _fetchQuotesBatch([symbol]);
+    const thb=await _quoteToThb(quotes[symbol]);
+    if(thb){ _favStockPriceCache[symbol]={price:thb,ts:Date.now()}; _renderFavStockPrice(id,thb); return; }
+  }catch(e){}
+  try{
     const price=await getPriceFor(symbol,'หุ้น');
     _favStockPriceCache[symbol]={price,ts:Date.now()};
     _renderFavStockPrice(id,price);
@@ -16971,7 +16995,21 @@ async function _retryFavStockPrice(id,symbol){
 }
 
 async function _loadFavStockPrices(){
-  const list=_getFavStocks();
+  const list=_getFavStocks().filter(function(f){ return document.getElementById('_fs-price-'+f.id); });
+  if(!list.length) return;
+
+  // ทางหลัก: ขอราคาที่ยังไม่ cache ทั้งหมดทีเดียวผ่าน VM ของเราเอง (เร็ว+ไม่ต้องพึ่ง CORS proxy ฟรี)
+  const uncached=list.filter(function(f){ const c=_favStockPriceCache[f.symbol]; return !(c&&(Date.now()-c.ts)<FAVSTOCK_PRICE_TTL_MS); });
+  if(uncached.length){
+    const symbols=[...new Set(uncached.map(function(f){return f.symbol;}))];
+    const quotes=await _fetchQuotesBatch(symbols);
+    for(const sym of symbols){
+      const thb=await _quoteToThb(quotes[sym]);
+      if(thb) _favStockPriceCache[sym]={price:thb,ts:Date.now()};
+    }
+  }
+
+  // ทางสำรอง: ตัวที่ proxy ของเราหาไม่เจอ/ยังไม่ login ค่อยไล่ทีละตัวผ่าน CORS proxy เดิม (มี stagger+cache อยู่แล้ว)
   for(let i=0;i<list.length;i++){
     const f=list[i];
     if(!document.getElementById('_fs-price-'+f.id)) continue; // เปลี่ยนหน้าไปแล้วก่อนถึงคิวนี้
