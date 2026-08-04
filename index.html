@@ -14109,6 +14109,8 @@ const CHECKOUT_URL='https://34-134-61-137.sslip.io/v1/checkout';
 // ราคาหุ้นผ่าน VM ของเราเอง (yfinance ฝั่งเซิร์ฟเวอร์) แทนพึ่ง free CORS proxy บุคคลที่สามอย่างเดียว
 // ฟรี ไม่มีค่าใช้จ่ายเพิ่ม (VM รันอยู่แล้ว) — ต้อง login (Firebase session) แต่ไม่ต้องมี subscription
 const QUOTE_PROXY_URL='https://34-134-61-137.sslip.io/v1/quote';
+// งบการเงินย้อนหลัง (กำไรขาดทุน+กระแสเงินสด) สำหรับปุ่ม "ดูข้อมูลเชิงลึก" ในหุ้นที่ชื่นชอบ — VM เดียวกัน
+const FINANCIALS_PROXY_URL='https://34-134-61-137.sslip.io/v1/financials';
 if(typeof Omise!=='undefined') Omise.setPublicKey(OMISE_PUBLIC_KEY);
 
 async function _getSubscriptionInfo(){
