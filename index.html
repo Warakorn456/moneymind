@@ -16859,6 +16859,20 @@ function markTripLogVisited(id){
 //  รายการหุ้นที่อยากติดตาม ไม่ต้องถือจริง — คนละก้อนกับ DB.investments (ถือจริง) และ DB.wishlist เดิม (legacy ไม่เกี่ยวข้อง)
 //  บอท Telegram (stock_news_watch.py) อ่าน DB.favStocks จาก Firestore ไปวิเคราะห์ข่าว + เฝ้าระวังต่อ
 // ══════════════════════════════════════════
+// ชื่อเต็มบริษัท — lookup แบบ static (ไม่พึ่ง API เพิ่ม เร็ว+ฟรี 100%) ครอบคลุมหุ้นยอดนิยม/ที่บอทติดตามอยู่แล้ว
+// สัญลักษณ์ที่ไม่อยู่ในนี้จะแสดงแค่ symbol เฉยๆ ไม่เดาชื่อ กันชื่อผิด
+const STOCK_COMPANY_NAMES={
+  AAPL:'Apple Inc.',MSFT:'Microsoft Corporation',NVDA:'NVIDIA Corporation',GOOGL:'Alphabet Inc. (Class A)',GOOG:'Alphabet Inc. (Class C)',
+  AMZN:'Amazon.com, Inc.',META:'Meta Platforms, Inc.',TSLA:'Tesla, Inc.',TSM:'Taiwan Semiconductor Manufacturing Company',ASML:'ASML Holding N.V.',
+  AMD:'Advanced Micro Devices, Inc.',AVGO:'Broadcom Inc.',INTC:'Intel Corporation',ARM:'Arm Holdings plc',LLY:'Eli Lilly and Company',
+  CRWD:'CrowdStrike Holdings, Inc.',PLTR:'Palantir Technologies Inc.',MU:'Micron Technology, Inc.',SNDK:'Sandisk Corporation',
+  IBM:'International Business Machines Corporation',ORCL:'Oracle Corporation',CRWV:'CoreWeave, Inc.',SOFI:'SoFi Technologies, Inc.',
+  PL:'Planet Labs PBC',ALAB:'Astera Labs, Inc.',STX:'Seagate Technology Holdings plc',NBIS:'Nebius Group N.V.',LUNR:'Intuitive Machines, Inc.',
+  VSAT:'Viasat, Inc.',SATS:'EchoStar Corporation',BE:'Bloom Energy Corporation',CEG:'Constellation Energy Corporation',GLW:'Corning Incorporated',
+  AAOI:'Applied Optoelectronics, Inc.',AXTI:'AXT, Inc.',RKLB:'Rocket Lab USA, Inc.',IONQ:'IonQ, Inc.',OKLO:'Oklo Inc.',RGTI:'Rigetti Computing, Inc.',
+  EOSE:'Eos Energy Enterprises, Inc.',ASTS:'AST SpaceMobile, Inc.',IREN:'IREN Limited',ONDS:'Ondas Holdings Inc.',
+  QQQ:'Invesco QQQ Trust',SPY:'SPDR S&P 500 ETF Trust',
+};
 function _getFavStocks(){ if(!Array.isArray(DB.favStocks)) DB.favStocks=[]; return DB.favStocks; }
 
 function openFavStockModal(id){
