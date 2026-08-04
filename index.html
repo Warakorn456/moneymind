@@ -16943,18 +16943,43 @@ function _favStocksHtml(){
   +'</div>';
 }
 
+// cache ราคาไว้สั้นๆ (กัน re-fetch รัวๆ ทุกครั้งที่ renderInv ทำงาน — tab switch/auto-refresh ทุก 2 นาที/หลังบันทึก)
+// + หน่วงเวลาระหว่างหุ้นแต่ละตัว กัน free CORS proxy (allorigins/corsproxy.io/codetabs) โดน rate-limit ตอนมีหุ้นเยอะ
+const _favStockPriceCache={}; // {symbol:{price,ts}}
+const FAVSTOCK_PRICE_TTL_MS=90*1000;
+
+function _renderFavStockPrice(id,price){
+  const el=document.getElementById('_fs-price-'+id);
+  if(el) el.textContent=fmt(price);
+}
+function _renderFavStockPriceFailed(id,symbol){
+  const el=document.getElementById('_fs-price-'+id);
+  if(el) el.innerHTML='<span style="color:var(--red);font-size:11px;cursor:pointer" title="'+tr('favstock_click_retry')+'" onclick="_retryFavStockPrice(\''+id+'\',\''+_escAttr(symbol)+'\')">'+tr('favstock_price_failed')+' <i class="fas fa-rotate-right"></i></span>';
+}
+
+async function _retryFavStockPrice(id,symbol){
+  const el=document.getElementById('_fs-price-'+id);
+  if(el) el.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
+  try{
+    const price=await getPriceFor(symbol,'หุ้น');
+    _favStockPriceCache[symbol]={price,ts:Date.now()};
+    _renderFavStockPrice(id,price);
+  }catch(e){ _renderFavStockPriceFailed(id,symbol); }
+}
+
 async function _loadFavStockPrices(){
   const list=_getFavStocks();
-  for(const f of list){
+  for(let i=0;i<list.length;i++){
+    const f=list[i];
     if(!document.getElementById('_fs-price-'+f.id)) continue; // เปลี่ยนหน้าไปแล้วก่อนถึงคิวนี้
+    const cached=_favStockPriceCache[f.symbol];
+    if(cached&&(Date.now()-cached.ts)<FAVSTOCK_PRICE_TTL_MS){ _renderFavStockPrice(f.id,cached.price); continue; }
+    if(i>0) await new Promise(function(r){ setTimeout(r,400); });
     try{
       const price=await getPriceFor(f.symbol,'หุ้น');
-      const el=document.getElementById('_fs-price-'+f.id);
-      if(el) el.textContent=fmt(price);
-    }catch(e){
-      const el=document.getElementById('_fs-price-'+f.id);
-      if(el) el.innerHTML='<span style="color:var(--red);font-size:11px">'+tr('favstock_price_failed')+'</span>';
-    }
+      _favStockPriceCache[f.symbol]={price,ts:Date.now()};
+      _renderFavStockPrice(f.id,price);
+    }catch(e){ _renderFavStockPriceFailed(f.id,f.symbol); }
   }
 }
 
