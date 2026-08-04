@@ -558,6 +558,7 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 | `stock_macro_calendar.py` | `stock_macro_calendar.py` | deploy ได้ตามปกติ — Fed/CPI/NFP 14 วัน, cron จันทร์ 08:00 |
 | `stock_earnings.py` | `stock_earnings.py` | deploy ได้ตามปกติ — Earnings + Post-Earnings summary, cron 2 รอบ/วัน |
 | `stock_watchlist_score.py` | `stock_watchlist_score.py` | deploy ได้ตามปกติ — Gemini score รายสัปดาห์, cron จันทร์ 09:00 |
+| `stock_news_watch.py` | `stock_news_watch.py` | ✅ deploy จริงแล้ว 2026-08-04 — ข่าวหุ้น "หุ้นที่ชื่นชอบ" (`DB.favStocks`) + เฝ้าระวัง, cron `15 2 * * 1-5` (09:15 Bangkok จ.–ศ.), log `stock_news_watch.log` (อยู่ใน `cron_health.py` REGISTRY แล้ว, threshold 26h) |
 | `investment_research.py` | `investment_research.py` | deploy ได้ตามปกติ — วิเคราะห์หุ้นรายอาทิตย์ → Drive + Telegram |
 | `smart_advisor.py` | `smart_advisor.py` | ✅ deploy 2026-06-18 — spending pace advisor; cron `0 13 * * *` (20:00 Bangkok); เงียบถ้าปกติ |
 
