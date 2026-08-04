@@ -6163,21 +6163,28 @@ function switchInvTab(tab){
   _invTab=tab;
   const tabPort=document.getElementById('inv-tab-port');
   const tabDca=document.getElementById('inv-tab-dca');
+  const tabFav=document.getElementById('inv-tab-fav');
   const btnPort=document.getElementById('inv-btn-port');
   const btnAdd=document.getElementById('inv-btn-add');
+  const btnRebal=document.getElementById('inv-btn-rebal');
   if(tabPort) tabPort.classList.toggle('active',tab==='portfolio');
   if(tabDca) tabDca.classList.toggle('active',tab==='dca');
+  if(tabFav) tabFav.classList.toggle('active',tab==='favstocks');
   if(btnPort) btnPort.style.display=tab==='portfolio'?'':'none';
+  if(btnRebal) btnRebal.style.display=tab==='favstocks'?'none':'';
   if(btnAdd){
-    if(tab==='dca'){ btnAdd.textContent=''; btnAdd.innerHTML='<i class="fas fa-plus"></i> '+tr('dca_add_plan'); btnAdd.onclick=()=>openDcaPlanModal(); }
-    else { btnAdd.innerHTML='<i class="fas fa-plus"></i> '+tr('inv_add'); btnAdd.onclick=()=>openInvModal(); }
+    if(tab==='favstocks'){ btnAdd.style.display='none'; }
+    else if(tab==='dca'){ btnAdd.style.display=''; btnAdd.innerHTML='<i class="fas fa-plus"></i> '+tr('dca_add_plan'); btnAdd.onclick=()=>openDcaPlanModal(); }
+    else { btnAdd.style.display=''; btnAdd.innerHTML='<i class="fas fa-plus"></i> '+tr('inv_add'); btnAdd.onclick=()=>openInvModal(); }
   }
+  if(tab==='favstocks'){ const panel=document.getElementById('rebal-panel'); if(panel) panel.style.display='none'; }
   renderInv();
 }
 
 function renderInv(){
   const el=document.getElementById('inv-content');
   if(!el) return;
+  if(_invTab==='favstocks'){ renderFavStocksView(); return; }
   if(_invTab==='dca'){ renderDcaView(); return; }
   const allInv=DB.investments||[];
   const ports=getPortfolios();
