@@ -17075,14 +17075,16 @@ function _favStockCard(f){
 function _favStocksHtml(){
   const list=_getFavStocks().slice().sort(function(a,b){ return (b.rating||0)-(a.rating||0) || (a.symbol||'').localeCompare(b.symbol||''); });
   const filtered=list.filter(function(f){ return !f.category || _favStockCatFilter.has(f.category); });
-  const filterRow='<div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">'
+  const filterRow='<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">'
     +Object.keys(FAVSTOCK_CATS).map(function(c){
       const info=FAVSTOCK_CATS[c];
       const checked=_favStockCatFilter.has(c);
-      return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px">'
-        +'<input type="checkbox" '+(checked?'checked':'')+' onchange="_toggleFavStockCatFilter(\''+c+'\',this.checked)" style="accent-color:'+info.color+';width:15px;height:15px;cursor:pointer">'
-        +'<span style="color:'+info.color+';font-weight:600">'+tr(info.key)+'</span>'
-      +'</label>';
+      const activeStyle=checked
+        ? 'background:linear-gradient(145deg,'+info.color+'33,'+info.color+'12);border-color:'+info.color+'70;color:'+info.color+';box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 4px 14px -6px '+info.color+'80'
+        : '';
+      return '<button type="button" class="favcat-pill'+(checked?' active':'')+'" style="'+activeStyle+'" onclick="_toggleFavStockCatFilter(\''+c+'\')">'
+        +'<i class="fas '+(checked?'fa-circle-check':'fa-circle')+'"></i> '+tr(info.key)
+      +'</button>';
     }).join('')
   +'</div>';
   const body=!list.length
