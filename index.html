@@ -16897,11 +16897,15 @@ function openFavStockModal(id){
   ov.className='overlay show';
   ov.onclick=function(e){ if(e.target===ov) closeFavStockModal(); };
   const rating=it?(it.rating||0):0;
+  const category=it?(it.category||''):'';
   const stars=[1,2,3,4,5].map(function(n){ return '<i class="fas fa-star" data-star="'+n+'" onclick="_setFavStockRating('+n+')" style="cursor:pointer;color:var(--muted)"></i>'; }).join('');
+  const catOptions='<option value=""'+(category===''?' selected':'')+'>'+tr('favstock_cat_none')+'</option>'
+    +Object.keys(FAVSTOCK_CATS).map(function(c){ return '<option value="'+c+'"'+(category===c?' selected':'')+'>'+tr(FAVSTOCK_CATS[c].key)+'</option>'; }).join('');
   ov.innerHTML='<div class="modal" style="max-width:380px">'
     +'<div class="modal-title"><i class="fas fa-star" style="color:#fbbf24"></i> '+(it?tr('favstock_edit_title'):tr('favstock_add_title'))+'</div>'
     +'<input type="hidden" id="_fs-id" value="'+(it?_escAttr(it.id):'')+'">'
     +'<div class="fgroup"><label class="flabel">'+tr('favstock_field_symbol')+'</label><input id="_fs-symbol" class="finput" placeholder="'+tr('favstock_field_symbol_ph')+'" style="text-transform:uppercase" value="'+(it?_escAttr(it.symbol):'')+'"'+(it?' disabled':'')+'></div>'
+    +'<div class="fgroup"><label class="flabel">'+tr('favstock_field_category')+'</label><select id="_fs-category" class="fselect">'+catOptions+'</select></div>'
     +'<div class="fgroup"><label class="flabel">'+tr('favstock_field_note')+'</label><input id="_fs-note" class="finput" placeholder="'+tr('favstock_field_note_ph')+'" value="'+(it?_escAttr(it.note||''):'')+'"></div>'
     +'<div class="fgroup"><label class="flabel">'+tr('favstock_field_rating')+'</label>'
       +'<div id="_fs-rating-picker" style="display:flex;gap:8px;font-size:24px">'+stars+'</div>'
