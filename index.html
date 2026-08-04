@@ -17152,15 +17152,18 @@ function _favStockDetailProfileHtml(data){
       +chips.map(function(c){ return '<span style="font-size:11px;padding:3px 9px;border-radius:20px;background:var(--surface2);color:var(--muted)">'+c+'</span>'; }).join('')
     +'</div>';
   }
-  if(data.businessSummary){
-    const full=_escHtml(data.businessSummary);
-    const isLong=data.businessSummary.length>220;
-    const short=_escHtml(data.businessSummary.slice(0,220))+(isLong?'…':'');
+  // ใช้คำแปลไทย (แปลผ่าน Google Translate ฝั่งเซิร์ฟเวอร์) ถ้า UI เป็นไทยและแปลสำเร็จ — ไม่งั้น fallback ไปต้นฉบับอังกฤษ
+  const useTh=currentLang==='th'&&data.businessSummaryTh;
+  const summaryText=useTh?data.businessSummaryTh:data.businessSummary;
+  if(summaryText){
+    const full=_escHtml(summaryText);
+    const isLong=summaryText.length>220;
+    const short=_escHtml(summaryText.slice(0,220))+(isLong?'…':'');
     html+='<div style="font-size:12px;line-height:1.6;color:var(--text);margin-bottom:4px">'
       +'<span id="_fsd-summary-short">'+short+(isLong?' <a href="javascript:void(0)" onclick="_toggleFsdSummary()" style="color:var(--primary-l)">'+tr('favstock_detail_read_more')+'</a>':'')+'</span>'
       +'<span id="_fsd-summary-full" style="display:none">'+full+' <a href="javascript:void(0)" onclick="_toggleFsdSummary()" style="color:var(--primary-l)">'+tr('favstock_detail_read_less')+'</a></span>'
     +'</div>'
-    +'<div style="font-size:10.5px;color:var(--muted);margin-bottom:16px">'+tr('favstock_detail_summary_note')+'</div>';
+    +'<div style="font-size:10.5px;color:var(--muted);margin-bottom:16px">'+tr(useTh?'favstock_detail_summary_note_translated':'favstock_detail_summary_note')+'</div>';
   }
   return html;
 }
