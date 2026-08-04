@@ -1610,8 +1610,9 @@
         <div style="display:flex;gap:3px;background:var(--surface2);padding:3px;border-radius:9px">
           <button id="inv-tab-port" class="ftab active" onclick="switchInvTab('portfolio')"><i class="fas fa-chart-pie"></i> <span data-i18n="inv_tab_port">พอร์ต</span></button>
           <button id="inv-tab-dca" class="ftab" onclick="switchInvTab('dca')"><i class="fas fa-arrows-rotate"></i> DCA</button>
+          <button id="inv-tab-fav" class="ftab" onclick="switchInvTab('favstocks')"><i class="fas fa-star"></i> <span data-i18n="favstock_title">หุ้นที่ชื่นชอบ</span></button>
         </div>
-        <button class="btn btn-ghost" onclick="toggleRebalPanel(this)"><i class="fas fa-balance-scale"></i> Rebalancing</button>
+        <button class="btn btn-ghost" id="inv-btn-rebal" onclick="toggleRebalPanel(this)"><i class="fas fa-balance-scale"></i> Rebalancing</button>
         <button class="btn btn-ghost" id="inv-btn-port" onclick="openPortModal()"><i class="fas fa-layer-group"></i> <span data-i18n="inv_manage_port">จัดการพอร์ต</span></button>
         <button class="btn btn-primary" id="inv-btn-add" onclick="openInvModal()"><i class="fas fa-plus"></i> <span data-i18n="inv_add">เพิ่มการลงทุน</span></button>
       </div>
