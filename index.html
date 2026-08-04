@@ -17108,6 +17108,24 @@ async function _quoteToThb(q){
   return q.price;
 }
 
+// งบการเงินย้อนหลัง (กำไรขาดทุน+กระแสเงินสด) ต่อหุ้น — cache นานกว่าราคาหุ้นมาก (งบเปลี่ยนแค่รายไตรมาส)
+// ดึงทีละตัวตอนกดดูรายละเอียดเท่านั้น ไม่ prefetch ทั้งลิสต์ (กันดึงข้อมูลหนักเกินจำเป็น)
+const _favStockFinancialsCache={}; // {symbol:{data,ts}}
+const FINANCIALS_CACHE_TTL_MS=12*3600*1000;
+async function _fetchStockFinancials(symbol){
+  const cached=_favStockFinancialsCache[symbol];
+  if(cached&&(Date.now()-cached.ts)<FINANCIALS_CACHE_TTL_MS) return cached.data;
+  if(!_auth||!_auth.currentUser) return null;
+  try{
+    const idToken=await _auth.currentUser.getIdToken();
+    const r=await fetch(FINANCIALS_PROXY_URL,{method:'POST',headers:{'Authorization':'Bearer '+idToken,'Content-Type':'application/json'},body:JSON.stringify({symbol})});
+    if(!r.ok) return null;
+    const data=await r.json();
+    _favStockFinancialsCache[symbol]={data,ts:Date.now()};
+    return data;
+  }catch(e){ return null; }
+}
+
 function _renderFavStockPrice(id,price){
   const el=document.getElementById('_fs-price-'+id);
   if(el) el.textContent=fmt(price);
