@@ -7322,9 +7322,19 @@ async function refreshAllInvPrices(){
   _invRefreshing=true;
   setInvLiveLabel('⟳ กำลังอัปเดตราคา...',true);
   let ok=0, fail=0;
+
+  // ทางหลัก: ขอราคาหุ้น (ไม่ใช่คริปโต) เป็น batch เดียวผ่าน VM ของเราเอง ก่อน — เร็วกว่า+ไม่พึ่ง CORS proxy ฟรี
+  // (คริปโตยังใช้ CoinGecko ผ่าน getPriceFor เดิม — คนละ endpoint ไม่เกี่ยวกับปัญหา CORS proxy ของหุ้น)
+  const stockSymbols=[...new Set(DB.investments.filter(function(inv){return inv.type!=='คริปโต';}).map(function(inv){return inv.name.toUpperCase();}))];
+  const invQuotes=stockSymbols.length?await _fetchQuotesBatch(stockSymbols):{};
+
   for(const inv of [...DB.investments]){
     try{
-      const price=await getPriceFor(inv.name,inv.type);
+      let price;
+      const q=inv.type!=='คริปโต'?invQuotes[inv.name.toUpperCase()]:null;
+      const thb=q?await _quoteToThb(q):null;
+      if(thb) price=thb;
+      else price=await getPriceFor(inv.name,inv.type); // fallback: คริปโต หรือ proxy ของเราหาสัญลักษณ์นี้ไม่เจอ
       const idx=DB.investments.findIndex(x=>x.id===inv.id);
       if(idx>=0){
         const qty=inv.qty||1;
