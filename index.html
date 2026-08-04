@@ -17085,6 +17085,97 @@ function renderFavStocksView(){
   _loadFavStockPrices();
 }
 
+// ── ดูข้อมูลเชิงลึกหุ้น: งบการเงินย้อนหลัง (กำไรขาดทุน + กระแสเงินสด แบบกราฟ) ──
+// ตั้งชื่อแยกจาก openFavStockModal (อันนั้นคือ modal เพิ่ม/แก้ไขหุ้น คนละหน้าที่กัน)
+let _fsdIncomeChart=null, _fsdCashflowChart=null;
+
+function _fmtFinNum(v){
+  if(v==null||v!==v) return '';
+  const sign=v<0?'-':''; const abs=Math.abs(v);
+  if(abs>=1e12) return sign+(abs/1e12).toFixed(2)+'T';
+  if(abs>=1e9) return sign+(abs/1e9).toFixed(1)+'B';
+  if(abs>=1e6) return sign+(abs/1e6).toFixed(0)+'M';
+  if(abs>=1e3) return sign+(abs/1e3).toFixed(0)+'K';
+  return sign+abs.toFixed(0);
+}
+
+function openFavStockDetailModal(id){
+  const it=_getFavStocks().find(function(f){return f.id===id;});
+  if(!it) return;
+  closeFavStockDetailModal();
+  const sym=(it.symbol||'').toUpperCase();
+  const companyName=STOCK_COMPANY_NAMES[sym]||'';
+  const companyDesc=STOCK_COMPANY_DESC[sym]||'';
+  const cat=it.category&&FAVSTOCK_CATS[it.category];
+  const catBadge=cat?' <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:'+cat.color+'22;color:'+cat.color+'">'+tr(cat.key)+'</span>':'';
+  const ov=document.createElement('div');
+  ov.id='_favStockDetailModal';
+  ov.className='overlay show';
+  ov.onclick=function(e){ if(e.target===ov) closeFavStockDetailModal(); };
+  ov.innerHTML='<div class="modal" style="max-width:640px;width:95%">'
+    +'<div class="modal-title"><i class="fas fa-chart-column" style="color:#fbbf24"></i> '+_escHtml(sym)+(companyName?' <span style="font-weight:400;color:var(--muted);font-size:13px">('+_escHtml(companyName)+')</span>':'')+catBadge+'</div>'
+    +(companyDesc?'<div style="font-size:12.5px;color:var(--muted);margin:-6px 0 14px">'+_escHtml(companyDesc)+'</div>':'')
+    +'<div id="_fsd-body">'
+      +'<div style="text-align:center;padding:30px 0;color:var(--muted)"><i class="fas fa-spinner fa-spin"></i> '+tr('favstock_detail_loading')+'</div>'
+    +'</div>'
+    +'<div class="modal-foot"><button class="btn btn-ghost" onclick="closeFavStockDetailModal()">'+tr('close')+'</button></div>'
+  +'</div>';
+  document.body.appendChild(ov);
+  _loadFavStockDetailCharts(sym);
+}
+
+function closeFavStockDetailModal(){
+  if(_fsdIncomeChart){ _fsdIncomeChart.destroy(); _fsdIncomeChart=null; }
+  if(_fsdCashflowChart){ _fsdCashflowChart.destroy(); _fsdCashflowChart=null; }
+  const ov=document.getElementById('_favStockDetailModal'); if(ov) ov.remove();
+}
+
+async function _loadFavStockDetailCharts(symbol){
+  const data=await _fetchStockFinancials(symbol);
+  const body=document.getElementById('_fsd-body');
+  if(!body||!document.getElementById('_favStockDetailModal')) return; // ปิด modal ไปแล้วก่อน fetch เสร็จ
+  if(!data||!data.available||!data.annual||!data.annual.length){
+    body.innerHTML='<div style="text-align:center;padding:30px 0;color:var(--muted)">'+tr('favstock_detail_empty')+'</div>';
+    return;
+  }
+  const years=data.annual.slice().reverse(); // API คืนใหม่→เก่า, กลับให้กราฟอ่านซ้าย(เก่า)→ขวา(ใหม่)
+  const labels=years.map(function(y){return y.year;});
+  const cur=data.currency||'USD';
+  body.innerHTML='<div style="font-size:12.5px;font-weight:700;margin-bottom:6px">'+tr('favstock_detail_income_title')+' <span style="font-weight:400;color:var(--muted)">('+_escHtml(cur)+')</span></div>'
+    +'<div style="position:relative;height:200px;margin-bottom:22px"><canvas id="_fsd-chart-income"></canvas></div>'
+    +'<div style="font-size:12.5px;font-weight:700;margin-bottom:6px">'+tr('favstock_detail_cashflow_title')+' <span style="font-weight:400;color:var(--muted)">('+_escHtml(cur)+')</span></div>'
+    +'<div style="position:relative;height:200px;margin-bottom:10px"><canvas id="_fsd-chart-cashflow"></canvas></div>'
+    +'<div style="font-size:11px;color:var(--muted)">'+tr('favstock_detail_disclaimer')+'</div>';
+
+  if(_fsdIncomeChart){ _fsdIncomeChart.destroy(); _fsdIncomeChart=null; }
+  if(_fsdCashflowChart){ _fsdCashflowChart.destroy(); _fsdCashflowChart=null; }
+  const chartOpts=function(){
+    return {responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:_chartTickColor()}},
+        tooltip:{callbacks:{label:function(c){ return c.dataset.label+': '+_fmtFinNum(c.parsed.y); }}}},
+      scales:{y:{ticks:{color:_chartTickColor(),callback:function(v){ return _fmtFinNum(v); }},grid:{color:_chartGridColor(.08)}},
+        x:{ticks:{color:_chartTickColor()},grid:{display:false}}}};
+  };
+  const cvInc=document.getElementById('_fsd-chart-income');
+  if(cvInc&&window.Chart){
+    _fsdIncomeChart=new Chart(cvInc,{type:'bar',
+      data:{labels,datasets:[
+        {label:tr('favstock_detail_revenue'),data:years.map(function(y){return y.revenue;}),backgroundColor:'#3b82f6',borderRadius:4},
+        {label:tr('favstock_detail_net_income'),data:years.map(function(y){return y.netIncome;}),backgroundColor:'#10b981',borderRadius:4}
+      ]},
+      options:chartOpts()});
+  }
+  const cvCf=document.getElementById('_fsd-chart-cashflow');
+  if(cvCf&&window.Chart){
+    _fsdCashflowChart=new Chart(cvCf,{type:'bar',
+      data:{labels,datasets:[
+        {label:tr('favstock_detail_operating_cf'),data:years.map(function(y){return y.operatingCF;}),backgroundColor:'#8b5cf6',borderRadius:4},
+        {label:tr('favstock_detail_free_cf'),data:years.map(function(y){return y.freeCF;}),backgroundColor:'#f59e0b',borderRadius:4}
+      ]},
+      options:chartOpts()});
+  }
+}
+
 // cache ราคาไว้สั้นๆ (กัน re-fetch รัวๆ ทุกครั้งที่ renderInv ทำงาน — tab switch/auto-refresh ทุก 2 นาที/หลังบันทึก)
 // + หน่วงเวลาระหว่างหุ้นแต่ละตัว กัน free CORS proxy (allorigins/corsproxy.io/codetabs) โดน rate-limit ตอนมีหุ้นเยอะ
 const _favStockPriceCache={}; // {symbol:{price,ts}}
