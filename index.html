@@ -16950,8 +16950,8 @@ const FAVSTOCK_CATS={
 };
 // ติ๊กเลือกหมวดที่จะโชว์ในลิสต์ — เก็บใน session เฉยๆ ไม่บันทึกลง DB (reset ทุกครั้งที่โหลดหน้าใหม่)
 let _favStockCatFilter=new Set(Object.keys(FAVSTOCK_CATS));
-function _toggleFavStockCatFilter(cat,checked){
-  if(checked) _favStockCatFilter.add(cat); else _favStockCatFilter.delete(cat);
+function _toggleFavStockCatFilter(cat){
+  if(_favStockCatFilter.has(cat)) _favStockCatFilter.delete(cat); else _favStockCatFilter.add(cat);
   renderFavStocksView();
 }
 
