@@ -16873,6 +16873,20 @@ const STOCK_COMPANY_NAMES={
   EOSE:'Eos Energy Enterprises, Inc.',ASTS:'AST SpaceMobile, Inc.',IREN:'IREN Limited',ONDS:'Ondas Holdings Inc.',
   QQQ:'Invesco QQQ Trust',SPY:'SPDR S&P 500 ETF Trust',
 };
+// หมวดหมู่หุ้นที่ชื่นชอบ — ให้ user แยกดูเป็นกลุ่มได้ (หุ้นเมกา/จีน/ไทย/กองทุนรวม)
+const FAVSTOCK_CATS={
+  mega:{key:'favstock_cat_mega',color:'#3b82f6'},
+  china:{key:'favstock_cat_china',color:'#ef4444'},
+  thai:{key:'favstock_cat_thai',color:'#8b5cf6'},
+  fund:{key:'favstock_cat_fund',color:'#10b981'},
+};
+// ติ๊กเลือกหมวดที่จะโชว์ในลิสต์ — เก็บใน session เฉยๆ ไม่บันทึกลง DB (reset ทุกครั้งที่โหลดหน้าใหม่)
+let _favStockCatFilter=new Set(Object.keys(FAVSTOCK_CATS));
+function _toggleFavStockCatFilter(cat,checked){
+  if(checked) _favStockCatFilter.add(cat); else _favStockCatFilter.delete(cat);
+  renderFavStocksView();
+}
+
 function _getFavStocks(){ if(!Array.isArray(DB.favStocks)) DB.favStocks=[]; return DB.favStocks; }
 
 function openFavStockModal(id){
