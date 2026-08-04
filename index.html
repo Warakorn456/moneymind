@@ -3075,7 +3075,6 @@ function _enterAppReal(){
   if(typeof applyLang==='function') applyLang();
   setTimeout(()=>{ if(typeof applyRecurringTx==='function') applyRecurringTx(); },1500);
   setTimeout(()=>{ if(typeof checkNotifications==='function') checkNotifications(); },2000);
-  setTimeout(()=>{ if(_auth&&_auth.currentUser&&typeof loadMyHouseholds==='function') loadMyHouseholds().then(list=>{ if(list.length===1) selectHousehold(list[0].id); }); },1200);
   setTimeout(()=>{ if(typeof maybeAutoSnapshot==='function') maybeAutoSnapshot(); },1500);
   // แสดง Admin nav + AI Usage nav เฉพาะ owner
   const _isOwnerNav=(_ENC&&currentUser===_ENC.user);
