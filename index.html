@@ -16972,9 +16972,11 @@ function _favStockStars(rating){
 function _favStockCard(f){
   const priceId='_fs-price-'+f.id;
   const companyName=STOCK_COMPANY_NAMES[(f.symbol||'').toUpperCase()];
+  const cat=f.category&&FAVSTOCK_CATS[f.category];
+  const catBadge=cat?' <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:'+cat.color+'22;color:'+cat.color+'">'+tr(cat.key)+'</span>':'';
   return '<div class="card" style="padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">'
     +'<div style="flex:1;min-width:0">'
-      +'<div style="font-weight:700;font-size:14px">'+_escHtml(f.symbol)+(companyName?' <span style="font-weight:400;color:var(--muted);font-size:11.5px">('+_escHtml(companyName)+')</span>':'')+'</div>'
+      +'<div style="font-weight:700;font-size:14px">'+_escHtml(f.symbol)+(companyName?' <span style="font-weight:400;color:var(--muted);font-size:11.5px">('+_escHtml(companyName)+')</span>':'')+catBadge+'</div>'
       +_favStockStars(f.rating)
       +(f.note?'<div style="font-size:11.5px;color:var(--muted);margin-top:4px">'+_escHtml(f.note)+'</div>':'')
     +'</div>'
