@@ -16833,6 +16833,110 @@ function markTripLogVisited(id){
   };
 })();
 
+// ══════════════════════════════════════════
+//  FAVORITE STOCKS — หุ้นที่ชื่นชอบ (ต่อท้ายหน้าพอร์ตลงทุน)
+//  รายการหุ้นที่อยากติดตาม ไม่ต้องถือจริง — คนละก้อนกับ DB.investments (ถือจริง) และ DB.wishlist เดิม (legacy ไม่เกี่ยวข้อง)
+//  บอท Telegram (stock_news_watch.py) อ่าน DB.favStocks จาก Firestore ไปวิเคราะห์ข่าว + เฝ้าระวังต่อ
+// ══════════════════════════════════════════
+function _getFavStocks(){ if(!Array.isArray(DB.favStocks)) DB.favStocks=[]; return DB.favStocks; }
+
+function openFavStockModal(){
+  closeFavStockModal();
+  const ov=document.createElement('div');
+  ov.id='_favStockModal';
+  ov.className='overlay show';
+  ov.onclick=function(e){ if(e.target===ov) closeFavStockModal(); };
+  ov.innerHTML='<div class="modal" style="max-width:380px">'
+    +'<div class="modal-title"><i class="fas fa-star" style="color:#fbbf24"></i> '+tr('favstock_add_title')+'</div>'
+    +'<div class="fgroup"><label class="flabel">'+tr('favstock_field_symbol')+'</label><input id="_fs-symbol" class="finput" placeholder="'+tr('favstock_field_symbol_ph')+'" style="text-transform:uppercase"></div>'
+    +'<div class="fgroup"><label class="flabel">'+tr('favstock_field_note')+'</label><input id="_fs-note" class="finput" placeholder="'+tr('favstock_field_note_ph')+'"></div>'
+    +'<div class="modal-foot">'
+      +'<button class="btn btn-ghost" onclick="closeFavStockModal()">'+tr('cancel')+'</button>'
+      +'<button class="btn btn-primary" onclick="saveFavStock()"><i class="fas fa-save"></i> '+tr('save')+'</button>'
+    +'</div>'
+  +'</div>';
+  document.body.appendChild(ov);
+  const f=document.getElementById('_fs-symbol'); if(f) f.focus();
+}
+function closeFavStockModal(){
+  const ov=document.getElementById('_favStockModal'); if(ov) ov.remove();
+}
+
+function saveFavStock(){
+  const symbolEl=document.getElementById('_fs-symbol');
+  const symbol=(symbolEl&&symbolEl.value||'').trim().toUpperCase();
+  if(!symbol){ toast(tr('favstock_need_symbol'),'error'); return; }
+  const note=(document.getElementById('_fs-note').value||'').trim();
+  const list=_getFavStocks();
+  const existing=list.find(function(f){return f.symbol===symbol;});
+  if(existing){ existing.note=note; }
+  else { list.push({id:uid(),symbol,note,addedAt:new Date().toISOString()}); }
+  saveDB();
+  closeFavStockModal();
+  if(curPage==='investments') renderInv();
+  toast(tr('favstock_saved'),'success');
+}
+
+function removeFavStock(id){
+  if(!confirm(tr('favstock_confirm_delete'))) return;
+  DB.favStocks=_getFavStocks().filter(function(f){return f.id!==id;});
+  saveDB();
+  if(curPage==='investments') renderInv();
+  toast(tr('favstock_deleted'),'success');
+}
+
+function _favStockCard(f){
+  const priceId='_fs-price-'+f.id;
+  return '<div class="card" style="padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">'
+    +'<div style="flex:1;min-width:0">'
+      +'<div style="font-weight:700;font-size:14px">'+_escHtml(f.symbol)+'</div>'
+      +(f.note?'<div style="font-size:11.5px;color:var(--muted);margin-top:2px">'+_escHtml(f.note)+'</div>':'')
+    +'</div>'
+    +'<div id="'+priceId+'" style="font-size:13px;color:var(--muted);flex-shrink:0"><i class="fas fa-spinner fa-spin"></i></div>'
+    +'<button class="icon-btn del" title="'+tr('delete')+'" onclick="removeFavStock(\''+f.id+'\')" style="flex-shrink:0"><i class="fas fa-trash"></i></button>'
+  +'</div>';
+}
+
+function _favStocksHtml(){
+  const list=_getFavStocks();
+  const body=list.length
+    ? list.map(_favStockCard).join('')
+    : '<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px 0">'+tr('favstock_empty')+'</div>';
+  return '<div class="card" style="padding:16px;margin-bottom:18px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px">'
+      +'<div style="font-size:14px;font-weight:700"><i class="fas fa-star" style="color:#fbbf24"></i> '+tr('favstock_title')+'</div>'
+      +'<button class="btn btn-primary" style="padding:7px 14px;font-size:12px" onclick="openFavStockModal()"><i class="fas fa-plus"></i> '+tr('favstock_add')+'</button>'
+    +'</div>'
+    +body
+  +'</div>';
+}
+
+async function _loadFavStockPrices(){
+  const list=_getFavStocks();
+  for(const f of list){
+    if(!document.getElementById('_fs-price-'+f.id)) continue; // เปลี่ยนหน้าไปแล้วก่อนถึงคิวนี้
+    try{
+      const price=await getPriceFor(f.symbol,'หุ้น');
+      const el=document.getElementById('_fs-price-'+f.id);
+      if(el) el.textContent=fmt(price);
+    }catch(e){
+      const el=document.getElementById('_fs-price-'+f.id);
+      if(el) el.innerHTML='<span style="color:var(--red);font-size:11px">'+tr('favstock_price_failed')+'</span>';
+    }
+  }
+}
+
+(function(){
+  const _origRenderInv=renderInv;
+  renderInv=function(){
+    _origRenderInv();
+    const el=document.getElementById('inv-content');
+    if(!el) return;
+    el.insertAdjacentHTML('afterbegin', _favStocksHtml());
+    _loadFavStockPrices();
+  };
+})();
+
 </script>
 
 <!-- Subscription Modal -->
