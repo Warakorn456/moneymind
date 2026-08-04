@@ -16965,7 +16965,7 @@ function openFavStockModal(id){
     +'<div class="modal-title"><i class="fas fa-star" style="color:#fbbf24"></i> '+(it?tr('favstock_edit_title'):tr('favstock_add_title'))+'</div>'
     +'<input type="hidden" id="_fs-id" value="'+(it?_escAttr(it.id):'')+'">'
     +'<div class="fgroup"><label class="flabel">'+tr('favstock_field_symbol')+'</label><input id="_fs-symbol" class="finput" placeholder="'+tr('favstock_field_symbol_ph')+'" style="text-transform:uppercase" value="'+(it?_escAttr(it.symbol):'')+'"'+(it?' disabled':'')+'></div>'
-    +'<div class="fgroup"><label class="flabel">'+tr('favstock_field_category')+'</label><select id="_fs-category" class="fselect">'+catOptions+'</select></div>'
+    +'<div class="fgroup"><label class="flabel">'+tr('favstock_field_category')+'</label><select id="_fs-category" class="fselect" onchange="_onFavStockCategoryChange()">'+catOptions+'</select></div>'
     +'<div class="fgroup"><label class="flabel">'+tr('favstock_field_note')+'</label><input id="_fs-note" class="finput" placeholder="'+tr('favstock_field_note_ph')+'" value="'+(it?_escAttr(it.note||''):'')+'"></div>'
     +'<div class="fgroup"><label class="flabel">'+tr('favstock_field_rating')+'</label>'
       +'<div id="_fs-rating-picker" style="display:flex;gap:8px;font-size:24px">'+stars+'</div>'
