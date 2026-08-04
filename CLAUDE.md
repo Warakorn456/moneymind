@@ -480,6 +480,7 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | **Stock Macro Calendar** (Fed/CPI/NFP events แจ้ง 14 วันล่วงหน้า) | จันทร์ 08:00 Bangkok | `stock_macro_calendar.py` → topic 📈 |
 | **Stock Earnings** (Earnings Calendar + Post-Earnings Gemini Summary) | 21:00 Bangkok (pre-open) + 04:30 Bangkok (post-close) จ.–ศ. | `stock_earnings.py` → topic 📈 |
 | **Stock Watchlist Score** (Gemini ให้คะแนนหุ้นในพอร์ตรายสัปดาห์) | จันทร์ 09:00 Bangkok | `stock_watchlist_score.py` → topic 📈 |
+| **Stock News Watch** (ข่าวหุ้น "หุ้นที่ชื่นชอบ" + ชี้ตัวที่ควรเฝ้าระวัง — เพิ่ม 2026-08-04) | 09:15 Bangkok จ.–ศ. | `stock_news_watch.py` → topic 📈; อ่าน `DB.favStocks` (fallback ไปหุ้นที่ถือจริงถ้าว่าง), ข่าวจาก `yf.Ticker(sym).news` (ฟรี), Gemini batch วิเคราะห์ครั้งเดียวจบ; ทดสอบรันจริงสำเร็จ 2026-08-04 (42 หุ้น, fallback เพราะ favStocks ยังว่าง) |
 | **Calendar Reminder** (แจ้ง Telegram ล่วงหน้า 60 นาที สำหรับ Google Calendar events) | ทุก 15 นาที | `calendar_reminder.py` → personal |
 | **Bank Statement Analysis** (Gemini วิเคราะห์ transaction data จาก Firestore ประจำเดือน) | วันที่ 1 ของเดือน 10:00 Bangkok | `bank_statement_analysis.py` → topic 💰 |
 | **Investment Research** (วิเคราะห์หุ้นในพอร์ตรายสัปดาห์ ส่ง Telegram + Drive) | อาทิตย์ 10:00 Bangkok | `investment_research.py` → topic 📈 + Drive |
