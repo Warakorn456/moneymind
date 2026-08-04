@@ -549,7 +549,7 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 | `calendar_reminder.py` | `calendar_reminder.py` | deploy ได้ตามปกติ |
 | `bank_statement_analysis.py` | `bank_statement_analysis.py` | deploy ได้ตามปกติ |
 | `stock_advanced_alerts.py` | `stock_advanced_alerts.py` | deploy ได้ตามปกติ — SL/TP + 52W High/Low + Volume Spike, cron ทุก 30 นาที US market |
-| `stock_support_resistance.py` | `stock_support_resistance.py` | ✅ deploy จริงแล้ว 2026-07-30 — เดิมเอกสารบอกว่า deploy แล้วแต่ไฟล์+cron ไม่เคยมีอยู่บน VM จริงมากว่าเดือน (เจอจาก system audit); ตอนนี้ scp ขึ้น VM + เพิ่ม crontab `30 2 * * 1-5` แล้ว, ทดสอบรันจริงสำเร็จ (ส่ง pivot points 43 หุ้น) ส่งไป personal chat (ไม่ใช่ topic 📈 — ตามแบบเดียวกับ `stock_advanced_alerts.py`) |
+| `stock_support_resistance.py` | `stock_support_resistance.py` | ❌ **ถอดออกจาก cron แล้ว 2026-08-04** (user ไม่ต้องการให้ส่งอีก) — เคย deploy จริง 2026-07-30 (ดู gotcha ด้านล่าง) แต่ตอนนี้ลบ crontab `30 2 * * 1-5` ออกจาก VM แล้ว ไฟล์ยังอยู่เผื่อเปิดใช้กลับในอนาคต |
 | `stock_macro_calendar.py` | `stock_macro_calendar.py` | deploy ได้ตามปกติ — Fed/CPI/NFP 14 วัน, cron จันทร์ 08:00 |
 | `stock_earnings.py` | `stock_earnings.py` | deploy ได้ตามปกติ — Earnings + Post-Earnings summary, cron 2 รอบ/วัน |
 | `stock_watchlist_score.py` | `stock_watchlist_score.py` | deploy ได้ตามปกติ — Gemini score รายสัปดาห์, cron จันทร์ 09:00 |
