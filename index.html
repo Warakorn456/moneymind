@@ -15843,8 +15843,17 @@ function _showWelcomeOnboard(){
     window.addEventListener('mouseup', onUp);
     window.addEventListener('touchend', onUp);
     window.addEventListener('resize', function(){
+      // เดิมเรียก snapToEdge() ตรงๆ — คำนวณแค่แกนเดียว (ตามขอบที่ใกล้สุด) แล้วปล่อยอีกแกนไว้เฉยๆ
+      // ถ้า viewport เปลี่ยนขนาดมาก (เช่น WebView resize ตอนโหลดครั้งแรก) ตำแหน่งเดิมอาจอยู่นอกจอไปแล้ว
+      // ทำให้คำนวณ "ขอบที่ใกล้สุด" ผิดพลาด ปุ่มเด้งไปมุมผิด (เจอจริง: เด้งไปทับมุมซ้ายบนแทนขวาล่าง)
+      // แก้: clamp ทั้ง 2 แกนให้อยู่ในจอเสมอ ไม่ต้อง snap ไปขอบใดขอบหนึ่ง
       var r=fab.getBoundingClientRect();
-      snapToEdge(r.left, r.top);
+      var W=window.innerWidth, H=window.innerHeight;
+      var fw=fab.offsetWidth||56, fh=fab.offsetHeight||56;
+      var nx=Math.max(MARGIN,Math.min(W-fw-MARGIN,r.left));
+      var ny=Math.max(MARGIN,Math.min(H-fh-MARGIN,r.top));
+      setPos(nx,ny,false);
+      savePos({x:nx,y:ny});
     });
   }
 
