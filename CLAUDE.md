@@ -285,6 +285,7 @@ _escHtml(s)              // escape HTML string (บรรทัด ~14142, ใ�
 | Dashboard | Drag-and-drop reorder sections (DB.settings.dashOrder) |
 | Transactions | Tags, Search, Export CSV, Quick Add, Undo, Category Budget |
 | Advanced | Cash Flow Forecast, Debt Payoff Planner, Investment Rebalancing |
+| Investments · Favorite Stocks (เพิ่ม 2026-08-04) | **"หุ้นที่ชื่นชอบ"** — section บนสุดของหน้าพอร์ตลงทุน (monkey-patch บน `renderInv`, insert แบบ `afterbegin` เข้า `#inv-content` — pattern เดียวกับ Travel Journal) รายการหุ้นที่อยากติดตาม **ไม่ต้องถือจริง** เก็บที่ `DB.favStocks=[{id,symbol,note,addedAt}]` (คนละก้อนกับ `DB.investments`/`DB.wishlist` เดิม); ปุ่ม "+ เพิ่มหุ้น" เปิด modal dynamic-inject (`openFavStockModal`/`saveFavStock`/`removeFavStock`) ราคาปัจจุบันดึงผ่าน `getPriceFor(symbol,'หุ้น')` เดิม (index.html ~6419, Yahoo Finance) แบบ async ทีละใบไม่บล็อก render (`_loadFavStockPrices`) — **บอท `stock_news_watch.py` อ่านรายการนี้จาก Firestore ไปวิเคราะห์ข่าว** (ดูตาราง cron ด้านล่าง) |
 | System | PIN Lock, Dark/Light mode, Multi-currency, Bank Transfer, NW Milestones |
 | System | Sidebar nav reorder (DB.settings.navOrder) |
 
