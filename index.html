@@ -16938,14 +16938,15 @@ function saveFavStock(){
   const id=document.getElementById('_fs-id').value;
   const note=(document.getElementById('_fs-note').value||'').trim();
   const rating=parseInt(document.getElementById('_fs-rating').value,10)||0;
+  const category=document.getElementById('_fs-category').value||'';
   const list=_getFavStocks();
   if(id){
     const it=list.find(function(f){return f.id===id;});
-    if(it){ it.note=note; it.rating=rating; }
+    if(it){ it.note=note; it.rating=rating; it.category=category; }
   } else {
     const existing=list.find(function(f){return f.symbol===symbol;});
-    if(existing){ existing.note=note; existing.rating=rating; }
-    else { list.push({id:uid(),symbol,note,rating,addedAt:new Date().toISOString()}); }
+    if(existing){ existing.note=note; existing.rating=rating; existing.category=category; }
+    else { list.push({id:uid(),symbol,note,rating,category,addedAt:new Date().toISOString()}); }
   }
   saveDB();
   closeFavStockModal();
