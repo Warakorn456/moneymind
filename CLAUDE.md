@@ -472,7 +472,7 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | **Duplicate Check** (txn ซ้ำจาก 4 pipelines) | อาทิตย์ 09:00 | `dup_cleanup.py` → topic 💰 (report-only ไม่ลบ) |
 | แจ้งเตือนงบประมาณเกิน 80% | ทุก 12 ชั่วโมง | n8n budget-alert-01 → personal + email |
 | **Stock Advanced Alerts** (SL/TP + 52-Week High/Low + Volume Spike) | ทุก 30 นาที จ.–ศ. US market | `stock_advanced_alerts.py` → topic 📈 |
-| **Stock Support & Resistance** (Classic Pivot Points สำหรับพอร์ต) | 09:30 Bangkok จ.–ศ. | `stock_support_resistance.py` → topic 📈 |
+| ~~Stock Support & Resistance~~ (Classic Pivot Points) | ❌ **ถอดออก 2026-08-04** — user แจ้งไม่ต้องการให้ส่งแล้ว ลบ crontab บน VM + ลบ entry ออกจาก `cron_health.py` REGISTRY แล้ว (ไฟล์ `stock_support_resistance.py` ยังอยู่บน VM/local เผื่อเปิดใช้กลับ แต่ไม่มี cron เรียกแล้ว) |
 | **Stock Macro Calendar** (Fed/CPI/NFP events แจ้ง 14 วันล่วงหน้า) | จันทร์ 08:00 Bangkok | `stock_macro_calendar.py` → topic 📈 |
 | **Stock Earnings** (Earnings Calendar + Post-Earnings Gemini Summary) | 21:00 Bangkok (pre-open) + 04:30 Bangkok (post-close) จ.–ศ. | `stock_earnings.py` → topic 📈 |
 | **Stock Watchlist Score** (Gemini ให้คะแนนหุ้นในพอร์ตรายสัปดาห์) | จันทร์ 09:00 Bangkok | `stock_watchlist_score.py` → topic 📈 |
