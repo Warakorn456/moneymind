@@ -17049,17 +17049,6 @@ async function _loadFavStockPrices(){
   }
 }
 
-(function(){
-  const _origRenderInv=renderInv;
-  renderInv=function(){
-    _origRenderInv();
-    const el=document.getElementById('inv-content');
-    if(!el) return;
-    el.insertAdjacentHTML('afterbegin', _favStocksHtml());
-    _loadFavStockPrices();
-  };
-})();
-
 </script>
 
 <!-- Subscription Modal -->
