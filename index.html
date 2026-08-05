@@ -1431,8 +1431,11 @@
     <!-- ── Financial Health Score ── -->
     <div id="dash-health-section" style="margin-bottom:18px"></div>
 
+    <!-- dash-nw-history-section: เดิม display:none ค้างจากตอนถอด section ออกไปพร้อมของอื่น (บรรทัดล่าง)
+         แก้ 2026-08-05 — ฟังก์ชัน renderNWHistory() ยังทำงาน/มีข้อมูลจริงอยู่ตลอด แค่ไม่เคยแสดงผลเลยสักครั้ง
+         (ตรงกับที่ user ขอฟีเจอร์ "ดูกราฟความมั่งคั่งย้อนหลัง" — ของจริงมีอยู่แล้วแค่ถูกซ่อนไว้) -->
+    <div id="dash-nw-history-section" style="margin-bottom:18px"></div>
     <!-- sections ที่ถอดออก — เหลือ div ว่างกัน JS error -->
-    <div id="dash-nw-history-section" style="display:none"></div>
     <div id="dash-insights-section" style="margin-bottom:18px"></div>
     <div id="dash-catbud-section" style="display:none"></div>
     <div id="dash-rvv-section" style="display:none"></div>
