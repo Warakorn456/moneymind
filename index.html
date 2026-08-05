@@ -3296,12 +3296,20 @@ async function tryLogin(){
       const data=JSON.parse(new TextDecoder().decode(plain));
       currentUser=_ENC.user;
       // owner ก็ต้องมี Firebase Auth session + ผูก uid เพื่อผ่าน locked rules (userdata/warakorn ไม่ public แล้ว)
-      await ensureAuthForUser(_ENC.user, '', pass);
+      const _authCred=await ensureAuthForUser(_ENC.user, '', pass);
       DB={...DB,...data};
       if(localStorage.getItem(userDataKey(currentUser))) loadDB();
       else saveLocalOnly();
       const _synced=await fsLoad();
       enterApp();
+      // 🐛 เจอ 2026-08-05: ก่อนหน้านี้ผลลัพธ์ ensureAuthForUser() ไม่เคยถูกเช็คเลย — ถ้าเชื่อมต่อ Cloud
+      // ไม่ได้ (เช่น เครื่องใหม่ที่ไม่เคยมี Firebase session ค้างอยู่ + สาเหตุใดก็ตามที่ sign-in ไม่ผ่าน)
+      // แอปจะเงียบๆ โชว์ข้อมูลสำรองที่ฝังไว้ตอนสร้างระบบ (เก่ามาก อาจเป็นเดือน/ปีก่อน) ให้ดูเหมือนใช้
+      // งานได้ปกติ โดยไม่มีการเตือนใดๆ นอกจากตัวหนังสือเล็กๆ "ซิงค์ไม่ได้" ที่สังเกตยาก — user เจอปัญหา
+      // นี้จริงบนไอโฟน คิดว่าเป็นข้อมูลบัญชีคนอื่น ทั้งที่จริงเป็นข้อมูลเก่าของตัวเอง เพิ่ม toast เตือนชัดเจน
+      if(!_authCred){
+        toast('⚠️ เชื่อมต่อ Cloud ไม่ได้ในอุปกรณ์นี้ — ข้อมูลที่เห็นอาจเป็นข้อมูลสำรองเก่า ไม่ใช่ล่าสุด กรุณาตรวจสอบอินเทอร์เน็ตแล้วออกจากระบบ-ล็อกอินใหม่','error',10000);
+      }
       if(!_synced) fsSave();
       fsListen();
     }catch{
