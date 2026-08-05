@@ -10437,29 +10437,42 @@ function snapshotNetWorth(){
   DB.nwHistory[ym]=Math.round(banks+port-debts);
 }
 
+// ช่วงเวลาที่แสดงในกราฟ — เก็บแค่ session (ไม่ persist ลง DB) เหมือน _favStockCatFilter
+let _nwHistoryRange='all';
+function setNwHistoryRange(r){ _nwHistoryRange=r; renderNWHistory(); }
+
 function renderNWHistory(){
   const el=document.getElementById('dash-nw-history-section'); if(!el) return;
   if(!DB.nwHistory||Object.keys(DB.nwHistory).length<2){ if(_chNwHistory){ _chNwHistory.destroy(); _chNwHistory=null; } el.innerHTML=''; return; }
-  const sorted=Object.entries(DB.nwHistory).sort(([a],[b])=>a.localeCompare(b)).slice(-12);
+  const allSorted=Object.entries(DB.nwHistory).sort(([a],[b])=>a.localeCompare(b));
+  // 'all' = ย้อนหลังจนถึงปัจจุบันทั้งหมด (ไม่ตัดที่ 12 เดือนเหมือนเดิม) — ตามที่ user ขอ
+  const sorted=_nwHistoryRange==='6m'?allSorted.slice(-6):_nwHistoryRange==='1y'?allSorted.slice(-12):allSorted;
   const labels=sorted.map(([k])=>{ const [y,m]=k.split('-'); const mn=monthShortArr(); return mn[parseInt(m)-1]+'\''+String(parseInt(y)-2500+43).slice(-2); });
   const vals=sorted.map(([,v])=>v);
   const first=vals[0], last=vals[vals.length-1];
   const diff=last-first, diffPct=first!==0?((diff/Math.abs(first))*100).toFixed(1):0;
+  const ranges=[['6m','nw_history_6m'],['1y','nw_history_1y'],['all','nw_history_all']];
+  const rangeToggle=ranges.map(function(r){
+    const active=_nwHistoryRange===r[0];
+    const activeStyle=active?'background:linear-gradient(145deg,#06b6d633,#06b6d612);border-color:#06b6d670;color:#06b6d6;box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 4px 14px -6px #06b6d680':'';
+    return '<button type="button" class="favcat-pill'+(active?' active':'')+'" style="padding:4px 11px;font-size:11px;'+activeStyle+'" onclick="setNwHistoryRange(\''+r[0]+'\')">'+tr(r[1])+'</button>';
+  }).join('');
   el.innerHTML=`
     <div class="nw-history-card">
-      <div class="sec-hd" style="margin-bottom:14px">
+      <div class="sec-hd" style="margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <div style="display:flex;align-items:center;gap:8px">
           <div style="width:30px;height:30px;border-radius:8px;background:rgba(6,182,212,.1);display:flex;align-items:center;justify-content:center"><i class="fas fa-chart-area" style="color:var(--cyan);font-size:12px"></i></div>
-          <div class="sec-title">Net Worth ตามเวลา</div>
+          <div class="sec-title">${tr('nw_history_title')}</div>
         </div>
         <div style="font-size:13px;color:${diff>=0?'var(--green)':'var(--red)'};font-weight:700">${diff>=0?'↑':'↓'}${fmt(Math.abs(diff))} (${diffPct}%)</div>
       </div>
-      <div style="height:120px"><canvas id="ch-nw-history"></canvas></div>
+      <div style="display:flex;gap:6px;margin-bottom:10px">${rangeToggle}</div>
+      <div style="height:150px"><canvas id="ch-nw-history"></canvas></div>
     </div>`;
   requestAnimationFrame(()=>{
     const ctx=document.getElementById('ch-nw-history')?.getContext('2d'); if(!ctx) return;
     if(_chNwHistory){ _chNwHistory.destroy(); _chNwHistory=null; }
-    _chNwHistory=new Chart(ctx,{type:'line',data:{labels,datasets:[{data:vals,borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.1)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#06b6d4',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:_chartTickColor(),font:{size:10}},grid:{display:false}},y:{ticks:{color:_chartTickColor(),font:{size:10},callback:v=>v>=1000000?'฿'+(v/1000000).toFixed(1)+'M':v>=1000?'฿'+(v/1000).toFixed(0)+'K':'฿'+v},grid:{color:_chartGridColor(.04)}}}}});
+    _chNwHistory=new Chart(ctx,{type:'line',data:{labels,datasets:[{data:vals,borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.1)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#06b6d4',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:_chartTickColor(),font:{size:10},maxTicksLimit:12},grid:{display:false}},y:{ticks:{color:_chartTickColor(),font:{size:10},callback:v=>v>=1000000?'฿'+(v/1000000).toFixed(1)+'M':v>=1000?'฿'+(v/1000).toFixed(0)+'K':'฿'+v},grid:{color:_chartGridColor(.04)}}}}});
   });
 }
 
