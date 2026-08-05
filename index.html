@@ -5268,6 +5268,20 @@ function saveTx(){
   if(bankId) _adjustBankBalance(bankId, type, amt);
   if(savingDestBankId) _adjustBankBalance(savingDestBankId, 'income', amt);
   saveDB(); closeM('m-tx'); renderPage(curPage);
+  _maybeAskReview();
+}
+
+// ขอรีวิวจาก App Store ครั้งเดียวต่อผู้ใช้ หลังบันทึกรายการจริงถึง 5 ครั้ง (สัญญาณว่าใช้งานจริงจัง ไม่ใช่แค่ลองเปิดดู)
+// iOS (SKStoreReviewController) เองมี rate-limit อยู่แล้ว (สูงสุด 3 ครั้ง/ปี) — ธงนี้กันแค่ไม่ให้ยิง postMessage ซ้ำทุกครั้งที่บันทึกรายการ
+function _maybeAskReview(){
+  try{
+    if(!_isNativeApp() || !window._isIOSApp) return;
+    if(DB.settings._reviewAsked) return;
+    if((DB.transactions||[]).length<5) return;
+    DB.settings._reviewAsked=true;
+    saveDB();
+    setTimeout(function(){ window.ReactNativeWebView.postMessage(JSON.stringify({action:'requestReview'})); },800);
+  }catch(e){}
 }
 
 function delTx(id){
