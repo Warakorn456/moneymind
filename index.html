@@ -10431,13 +10431,14 @@ function renderHealthScore(){
 // ══════════════════════════════════════════
 //  NEW FEATURE C — NET WORTH HISTORY
 // ══════════════════════════════════════════
+// เดิมคำนวณเองแยกจาก calcNetWorth() ด้วยสูตรคนละแบบ (banks+port-debts เดิม ไม่รวม extraAssets
+// จากหน้างบดุล) ทำให้กราฟ Net Worth ตามเวลา โชว์ตัวเลข "น้อยกว่า" ความเป็นจริงเงียบๆ (เจอ 2026-08-05
+// ส่วนต่างเท่ากับ extraAssets ที่หายไปพอดี) — แก้ให้เรียก calcNetWorth() ตัวเดียวกับที่การ์ด Net
+// Worth บน Dashboard ใช้ ให้ตัวเลข "ตอนนี้" กับ "ย้อนหลัง" มาจากสูตรเดียวกันเสมอ ไม่มีทางเพี้ยนอีก
 function snapshotNetWorth(){
   const ym=`${selYear}-${String(selMonth+1).padStart(2,'0')}`;
   if(!DB.nwHistory) DB.nwHistory={};
-  const banks=getBanks().reduce((s,b)=>b.type!=='บัตรเครดิต'?s+b.balance:s,0);
-  const port=DB.investments.reduce((s,i)=>s+i.value,0);
-  const debts=(DB.debts||[]).reduce((s,d)=>s+(d.remaining||d.total||0),0);
-  DB.nwHistory[ym]=Math.round(banks+port-debts);
+  DB.nwHistory[ym]=Math.round(calcNetWorth().netWorth);
 }
 
 // ช่วงเวลาที่แสดงในกราฟ — เก็บแค่ session (ไม่ persist ลง DB) เหมือน _favStockCatFilter
