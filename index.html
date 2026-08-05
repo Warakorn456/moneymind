@@ -2814,6 +2814,10 @@ function setSyncStatus(s){
   lb.textContent=label; lb.style.color=color;
 }
 
+// เดิม 8000ms — เจอจริง 2026-08-05 ว่า fsSave() ขึ้น error "หมดเวลา" ทั้งที่ document ไปเซฟสำเร็จ
+// บน Firestore จริงๆ (ยืนยันด้วยการอ่าน document กลับมาเทียบ) แค่ client แข่งกับ timeout ไม่ทัน —
+// เป็น false alarm ทำให้ user เห็น toast/ไอคอน "ซิงค์ไม่ได้" บ่อยเกินจำเป็นทั้งที่ข้อมูลไม่ได้หาย
+// เพิ่มเป็น 20000ms ให้ผ่อนคลายมากขึ้น (ไม่ block UI อยู่แล้วเพราะ async เบื้องหลัง)
 const _fsTimeout=ms=>new Promise((_,r)=>setTimeout(()=>r(new Error('หมดเวลา — ตรวจสอบว่าสร้าง Firestore Database แล้วหรือยัง')),ms));
 
 let _sizeWarnedThisSession=false;
