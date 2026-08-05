@@ -10450,7 +10450,8 @@ function renderNWHistory(){
   const allSorted=Object.entries(DB.nwHistory).sort(([a],[b])=>a.localeCompare(b));
   // 'all' = ย้อนหลังจนถึงปัจจุบันทั้งหมด (ไม่ตัดที่ 12 เดือนเหมือนเดิม) — ตามที่ user ขอ
   const sorted=_nwHistoryRange==='6m'?allSorted.slice(-6):_nwHistoryRange==='1y'?allSorted.slice(-12):allSorted;
-  const labels=sorted.map(([k])=>{ const [y,m]=k.split('-'); const mn=monthShortArr(); return mn[parseInt(m)-1]+'\''+String(parseInt(y)-2500+43).slice(-2); });
+  // เดิมคำนวณปี พ.ศ. ผิด (String(y-2500+43) ได้ค่าติดลบ เช่น '31 แทนที่จะเป็น '69) — แก้ให้ใช้ beYear() เดิมที่ถูกต้อง+รองรับ EN ด้วย
+  const labels=sorted.map(([k])=>{ const [y,m]=k.split('-'); const mn=monthShortArr(); return mn[parseInt(m)-1]+'\''+String(beYear(parseInt(y))).slice(-2); });
   const vals=sorted.map(([,v])=>v);
   const first=vals[0], last=vals[vals.length-1];
   const diff=last-first, diffPct=first!==0?((diff/Math.abs(first))*100).toFixed(1):0;
