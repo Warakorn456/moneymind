@@ -530,6 +530,23 @@
       .stats-grid{grid-template-columns:1fr}
       .budget-nums{grid-template-columns:1fr}
     }
+    /* Performance: ลด backdrop-filter บนมือถือ — ทั้งไฟล์มี blur() 32 จุดจาก Liquid Glass redesign
+       (การ์ด, topbar, sidebar ฯลฯ) แต่ละจุดต้อง recomposite ทุกเฟรมตอนเลื่อนหน้าจอ ซึ่ง WebView บน
+       มือถือ (ทั้งแอป Android/iOS ที่ห่อเว็บนี้ตรงๆ และเบราว์เซอร์มือถือทั่วไป) มี GPU budget น้อยกว่า
+       เดสก์ท็อปมาก ยิ่งมีการ์ดเบลอซ้อนกันหลายใบพร้อมกัน (เช่นหน้า Dashboard) ยิ่งฝืด/กระตุกตอนเลื่อน —
+       เจอจาก user รายงาน "เลื่อนขึ้น-ลงไม่ลื่น ฝืดๆ" บนแอปมือถือ 2026-08-05. ลด blur radius ลงมาก
+       (18-28px → 6px) แทนตัดออกทั้งหมด ยังพอเห็นเป็นกระจกฝ้าอยู่บ้างแต่เบากว่าเดิมมาก — ใช้
+       !important เพราะต้อง override selector ผสม dark/light mode หลายชุดพร้อมกันโดยไม่ต้อง
+       เขียนซ้ำทุก selector */
+    @media(max-width:700px){
+      .topbar,body:not(.light-mode) .topbar,body.light-mode .topbar,
+      .sidebar,body:not(.light-mode) .sidebar,body.light-mode .sidebar,
+      .card,.stat-card,.chart-card,.set-card,.tax-card,.modal,.scard,.dcard,.toast,.bs-card,
+      .prof-header,.prof-section,.tax-result-panel,.sub-card,.sr-card,.gmail-modal,.comparison-card,
+      .insights-card,.health-card,.forecast-card,.nw-history-card,.login-box{
+        backdrop-filter:blur(6px)!important;-webkit-backdrop-filter:blur(6px)!important;
+      }
+    }
     .hamburger{display:none;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:4px}
     @media(max-width:700px){.hamburger{display:flex}}
     .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
