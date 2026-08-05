@@ -280,7 +280,7 @@ _escHtml(s)              // escape HTML string (บรรทัด ~14142, ใ�
 | System | **Feedback Modal** — ฟอร์มส่งความคิดเห็น/รายงานปัญหาในแอป (mini-feature "4." ท้ายไฟล์) |
 | System | **Chat FAB Drag** — ปุ่มลอย (FAB) เปิดแชท Maya ลากได้ทั้งจอ, snap ไปขอบที่ใกล้ที่สุดอัตโนมัติ, จำตำแหน่งไว้ `localStorage` (`mm_fab_pos`) |
 | Transactions | **Gmail Bank Auto-Import (client-side)** — poll URL จาก `DB.settings.gmailImportUrl` (n8n เขียนลง Google Sheet "PendingTx") ทุก 1 นาที (`_gmailPoll`/`_gmailStartPoll`), badge แจ้งจำนวนรายการค้าง (`_gmailUpdateBadge`); คลิกเปิด modal (`openGmailInbox`/`_renderGmailModal`) แก้ไข/ยืนยันทีละรายการ (`confirmGmailTx`) หรือยืนยันทั้งหมด (`confirmAllGmailTx`) ก่อนบันทึกเข้า `DB.transactions` จริง — คนละส่วนกับ GCP script `gmail_bank_alert.py` (ฝั่งนั้นดัก Gmail แล้วเขียน Sheet, ฝั่งนี้ดึง Sheet มาให้ผู้ใช้ยืนยันในเว็บ) |
-| Dashboard | Health Score, NW History, Monthly Comparison, Spending Heatmap, YTD Summary |
+| Dashboard | Health Score, NW History (ปุ่มเลือกช่วง 6M/1Y/ทั้งหมด — เพิ่ง unhide จาก `display:none` ที่ซ่อนถาวรมานาน + แก้ label ปี พ.ศ. ผิด 2026-08-05 ดู Gotchas), Monthly Comparison, Spending Heatmap, YTD Summary |
 | Dashboard | RVV (Fixed vs Variable), 50/30/20, Emergency Fund, Pay Yourself First |
 | Dashboard | Drag-and-drop reorder sections (DB.settings.dashOrder) |
 | Transactions | Tags, Search, Export CSV, Quick Add, Undo, Category Budget |
