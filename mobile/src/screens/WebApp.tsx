@@ -6,6 +6,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as Print from 'expo-print';
 import * as Notifications from 'expo-notifications';
+import * as StoreReview from 'expo-store-review';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import {
@@ -402,7 +403,7 @@ export default function WebApp() {
     }
   }, [injectPushToken, injectPushError]);
 
-  // รับ message จาก WebView (action: 'googleSignIn' | 'appleSignIn' | 'exitApp' | 'saveFile' | 'printHtml' | 'requestPushToken')
+  // รับ message จาก WebView (action: 'googleSignIn' | 'appleSignIn' | 'exitApp' | 'saveFile' | 'printHtml' | 'requestPushToken' | 'requestReview')
   const handleMessage = useCallback((event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
@@ -418,6 +419,10 @@ export default function WebApp() {
         printHtml(data.html);
       } else if (data.action === 'requestPushToken') {
         registerForPushNotifications();
+      } else if (data.action === 'requestReview') {
+        // SKStoreReviewController — iOS เองเป็นคนตัดสินใจว่าจะโชว์ prompt จริงไหม (จำกัดจำนวนครั้ง/ปีต่อผู้ใช้)
+        // เว็บแค่ "ขอ" ตอนจังหวะดี ไม่มีวัน throw/error กลับไปให้เว็บรู้ว่าโชว์จริงหรือเปล่า
+        StoreReview.isAvailableAsync().then((ok) => { if (ok) StoreReview.requestReview(); });
       } else if (data.action === 'appReady') {
         appReadyRef.current = true;
         clearWatchdog();
