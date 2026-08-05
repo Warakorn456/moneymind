@@ -3299,7 +3299,12 @@ async function tryLogin(){
       const _authCred=await ensureAuthForUser(_ENC.user, '', pass);
       DB={...DB,...data};
       if(localStorage.getItem(userDataKey(currentUser))) loadDB();
-      else saveLocalOnly();
+      // เดิม else saveLocalOnly() เสมอ — ถ้า auth ล้มเหลว (เครื่องนี้ต่อ cloud ไม่ได้) จะ "ฝัง" ข้อมูล
+      // สำรองเก่าลง local storage ถาวร แม้ออกจากระบบแล้วล็อกอินใหม่ก็ยังโหลดของเก่าเดิมซ้ำอยู่ดี (เพราะ
+      // ตอนนี้ localStorage มีข้อมูลแล้ว → เข้าเงื่อนไข loadDB() ด้านบนแทน ไม่มีทางได้ของจริงอีกเลยจนกว่า
+      // จะล้างแอป/ล้าง storage ด้วยมือ) — แก้ให้ persist local เฉพาะตอน auth สำเร็จจริง (มั่นใจว่าจะซิงค์
+      // ข้อมูลจริงตามมาได้) ถ้า auth ล้มเหลวให้ข้อมูลสำรองอยู่แค่ใน memory ของ session นี้เท่านั้น
+      else if(_authCred) saveLocalOnly();
       const _synced=await fsLoad();
       enterApp();
       // 🐛 เจอ 2026-08-05: ก่อนหน้านี้ผลลัพธ์ ensureAuthForUser() ไม่เคยถูกเช็คเลย — ถ้าเชื่อมต่อ Cloud
