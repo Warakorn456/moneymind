@@ -2961,6 +2961,7 @@ async function fsLoad(){
         // cloud ใหม่กว่าหรือเท่ากัน → ใช้ cloud (merge union-by-id กัน tx ใหม่ที่ยังไม่ sync หาย)
         DB=_mergeDbSnapshot(DB,remote);
         saveLocalOnly();
+        _lastSyncedIds=_snapshotSyncedIds(DB); // baseline สำหรับ _mergeForSave() ครั้งถัดไป (แยก "ของใหม่" กับ "ลบไปแล้ว")
       } else {
         // local ใหม่กว่า (เช่น ปิด tab ก่อน Firestore write เสร็จ) → push local ขึ้น cloud
         setTimeout(()=>fsSave(),2000);
