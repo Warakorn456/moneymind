@@ -7452,12 +7452,11 @@ function toast(msg,type='info',duration=3000){
 }
 
 // ══════════════════════════════════════════
-//  INVESTMENT AUTO-REFRESH
+//  INVESTMENT PRICE REFRESH (manual — ปิด auto-refresh แล้ว 2026-08-07)
+//  เดิมดึงราคาอัตโนมัติทุก 2 นาทีตลอดเวลาที่อยู่หน้านี้ — พอร์ตที่มีกองทุนรวมไทยบางกอง
+//  (Yahoo Finance ไม่มีข้อมูล NAV กองทุนไทยเลยโครงสร้าง) จะดึงพลาดซ้ำไม่มีวันจบทุก 2 นาที
+//  เปลืองโดยไม่จำเป็น — user ขอให้ปิด auto แล้วใช้ปุ่มกดดึงเองแทน (ดึงทุกตัวพร้อมกันในคลิกเดียว)
 // ══════════════════════════════════════════
-let _invRefreshTimer=null;
-let _invCountdownTimer=null;
-const INV_INTERVAL=120; // วินาที (อัปเดตทุก 2 นาที)
-let _invNextAt=0;
 let _invRefreshing=false;
 
 async function refreshAllInvPrices(){
@@ -7490,8 +7489,7 @@ async function refreshAllInvPrices(){
   saveDB();
   if(curPage==='investments') renderInv();
   const now=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-  setInvLiveLabel(`Live · อัปเดตล่าสุด ${now}${fail?' (ล้มเหลว '+fail+')':''}`,false);
-  _invNextAt=Date.now()+INV_INTERVAL*1000;
+  setInvLiveLabel(`อัปเดตล่าสุด ${now}${fail?' (ล้มเหลว '+fail+')':''}`,false);
   _invRefreshing=false;
 }
 
@@ -7502,24 +7500,13 @@ function setInvLiveLabel(text,loading){
   if(lbl) lbl.textContent=text;
 }
 
+// เดิมชื่อ startInvAutoRefresh/stopInvAutoRefresh (ตั้ง/เคลียร์ setInterval ดึงราคาทุก 2 นาที) —
+// คงชื่อฟังก์ชันเดิมไว้ (เรียกจากหลายจุดตอน nav เข้า/ออกหน้า investments) แต่เปลี่ยนพฤติกรรมเป็น
+// no-op แทนการตั้ง timer จริง กันต้องแก้ทุก call site — การดึงราคาตอนนี้ต้องกดปุ่ม "ดึงราคา" เองเท่านั้น
 function startInvAutoRefresh(){
-  stopInvAutoRefresh();
-  refreshAllInvPrices(); // โหลดทันที
-  _invNextAt=Date.now()+INV_INTERVAL*1000;
-  _invRefreshTimer=setInterval(()=>refreshAllInvPrices(),INV_INTERVAL*1000);
-  _invCountdownTimer=setInterval(()=>{
-    const el=document.getElementById('inv-countdown');
-    if(!el) return;
-    const sec=Math.max(0,Math.round((_invNextAt-Date.now())/1000));
-    const m=Math.floor(sec/60), s=sec%60;
-    el.textContent=_invRefreshing?'':` · ครั้งหน้าใน ${m}:${s.toString().padStart(2,'0')}`;
-  },1000);
+  setInvLiveLabel(tr('inv_live_loading'),false);
 }
-
-function stopInvAutoRefresh(){
-  if(_invRefreshTimer){clearInterval(_invRefreshTimer);_invRefreshTimer=null;}
-  if(_invCountdownTimer){clearInterval(_invCountdownTimer);_invCountdownTimer=null;}
-}
+function stopInvAutoRefresh(){}
 
 // ══════════════════════════════════════════
 //  TAX
