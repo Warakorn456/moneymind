@@ -2861,14 +2861,15 @@ async function fsSave(){
     // 🐛 2026-08-07: เดิม .set() ตรงๆ เขียนทับ field db ทั้งก้อนด้วยข้อมูลใน session นี้เสมอ ไม่มี
     // merge ตอนเขียนเลย (มีแค่ตอนอ่าน/ฟังใน fsLoad/fsListen ซึ่งเป็น race condition ไม่ใช่การรับประกัน)
     // — session เก่าที่ค้างอยู่เคยเขียนทับข้อมูลที่ bot เพิ่งบันทึกไปหายทั้งหมดมาแล้วจริง แก้เป็น
-    // runTransaction: อ่านค่าล่าสุด ณ ตอน commit เสมอ + merge union-by-id ก่อนเขียน กันชนกันแบบรับประกันได้จริง
+    // runTransaction: อ่านค่าล่าสุด ณ ตอน commit เสมอ + merge ก่อนเขียน กันชนกันแบบรับประกันได้จริง
+    // ใช้ _mergeForSave() (ไม่ใช่ _mergeDbSnapshot() ตัวเดิม) เพราะต้องเคารพการลบที่ local เพิ่งทำด้วย —
+    // เจอบั๊กจริงระหว่างทดสอบ: ถ้าใช้ union เดิมตรงๆ การลบรายการผ่านหน้าเว็บจะไม่มีผลจริง (remote ที่ยังไม่รู้
+    // เรื่องการลบจะถูก union กลับเข้ามาใหม่ทุกครั้งที่เซฟ)
     await Promise.race([
       _fs.runTransaction(async (t)=>{
         const doc=await t.get(docRef);
         const remoteDb=(doc.exists&&doc.data()&&doc.data().db)?JSON.parse(doc.data().db):{};
-        // remoteDb เป็นฐาน, DB (ที่กำลังจะเซฟรอบนี้) ชนะถ้า id ชนกัน (active edit อยู่) —
-        // ส่วนรายการใหม่จาก remote ที่ local ยังไม่รู้จัก (เช่น bot เพิ่งเพิ่ม) union เข้ามาด้วยเสมอ
-        merged=_mergeDbSnapshot(remoteDb,DB);
+        merged=_mergeForSave(remoteDb,DB);
         merged._savedAt=Date.now();
         const dbJson=JSON.stringify(merged);
         _checkDbSizeWarn(dbJson);
@@ -2876,7 +2877,7 @@ async function fsSave(){
       }),
       _fsTimeout(20000)
     ]);
-    if(merged){ DB=merged; saveLocalOnly(); } // sync merge result กลับเข้า local ด้วย กัน session นี้ไม่รู้เรื่องรายการที่เพิ่ง merge เข้ามา
+    if(merged){ DB=merged; saveLocalOnly(); _lastSyncedIds=_snapshotSyncedIds(merged); } // sync กลับเข้า local + อัปเดต baseline ของ id ที่ sync แล้ว
     setSyncStatus('ok');
   }catch(e){
     console.error('[Firebase] save:',e.message);
