@@ -231,7 +231,8 @@ _escHtml(s)              // escape HTML string (บรรทัด ~14142, ใ�
 ~14639–14739 NAV SORTABLE (drag-and-drop sidebar reorder)
              — เลขบรรทัดด้านบน (จนถึงจุดนี้) ค้างมาตั้งแต่ก่อน auto-commit สะสมหลายพันบรรทัด ใช้ grep "══════" เช็คตำแหน่งจริงเสมอ
              ท้ายไฟล์ปัจจุบัน (หลัง NAV SORTABLE) มีเพิ่ม: NATIVE APP BRIDGE, PUSH NOTIFICATIONS, OFFLINE DETECTION,
-             แล้วจบด้วย TRAVEL JOURNAL (บันทึกทริป — เพิ่ม 2026-08-03) ก่อนปิด </script>
+             TRAVEL JOURNAL (บันทึกทริป — เพิ่ม 2026-08-03), FAVORITE STOCKS (หุ้นที่ชื่นชอบ),
+             แล้วจบด้วย DAILY LOG STREAK (เพิ่ม 2026-08-07 — ดูตาราง Dashboard ด้านบน) ก่อนปิด </script>
 ```
 
 ## ฟีเจอร์ทั้งหมด
