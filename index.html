@@ -15827,14 +15827,19 @@ function _renderWealthRank(){
 
 // ── Welcome Onboarding Modal (แสดงครั้งเดียวหลัง register) ─────────────
 function _showWelcomeOnboard(){
+  // 🐛 2026-08-07: วิเคราะห์ churn จริงจาก Admin Dashboard พบว่า user ใหม่ส่วนใหญ่ (4/6 บัญชีจริง
+  // ที่ตรวจ) ไม่เคยบันทึกรายการแรกเลยแม้จะเปิดแอปกลับมาหลายวัน — จุดที่ไม่จบคือ step "บันทึกรายการแรก"
+  // เดิมแค่ nav() ไปหน้า transactions ยังต้องกด "+เพิ่มรายการ" อีกทีถึงจะเห็นฟอร์ม (3 คลิกกว่าจะถึงฟอร์มจริง)
+  // เปลี่ยนเป็นเปิดฟอร์ม openTxModal() ตรงๆ จากตรงนี้เลย (modal อยู่ใน DOM ทุกหน้าอยู่แล้ว) ลดเหลือ 1 คลิก
   var steps=[
-    {icon:'fa-plus-circle',color:'#10b981',title:'บันทึกรายการแรก',desc:'เพิ่มรายรับหรือรายจ่ายแรกของคุณ',page:'transactions'},
+    {icon:'fa-plus-circle',color:'#10b981',title:'บันทึกรายการแรก',desc:'เพิ่มรายรับหรือรายจ่ายแรกของคุณ',page:'transactions',action:"document.getElementById('_onboard-ov').remove();openTxModal({type:'expense'})"},
     {icon:'fa-university',color:'#3b82f6',title:'เพิ่มธนาคาร/กระเป๋าเงิน',desc:'ตั้งบัญชีธนาคารเพื่อติดตามยอดเงิน',page:'banks'},
     {icon:'fa-piggy-bank',color:'#f59e0b',title:'ตั้งเป้าหมายออมเงิน',desc:'สร้างเป้าหมายเพื่อเริ่มออมได้ทันที',page:'savings'},
     {icon:'fa-robot',color:'#a78bfa',title:'ลอง AI มายา',desc:'ถามมายาเรื่องการเงินได้เลย (กดปุ่มวงกลมมุมขวา)',page:''},
   ];
   var stepsHtml=steps.map(function(s,i){
-    return '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);cursor:'+(s.page?'pointer':'default')+'" '+(s.page?'onclick="document.getElementById(\'_onboard-ov\').remove();nav(\''+s.page+'\')"':'')+' >'
+    var clickBody=s.action||(s.page?"document.getElementById('_onboard-ov').remove();nav('"+s.page+"')":'');
+    return '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);cursor:'+(clickBody?'pointer':'default')+'" '+(clickBody?'onclick="'+clickBody+'"':'')+' >'
       +'<div style="width:36px;height:36px;border-radius:10px;background:'+s.color+'18;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
         +'<i class="fas '+s.icon+'" style="color:'+s.color+';font-size:15px"></i>'
       +'</div>'
