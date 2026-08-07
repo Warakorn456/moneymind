@@ -2856,15 +2856,27 @@ async function fsSave(){
   if(!currentUser||!_fs){ setSyncStatus('error'); return; }
   try{
     setSyncStatus('syncing');
-    const dbJson=JSON.stringify(DB);
-    _checkDbSizeWarn(dbJson);
+    const docRef=_fs.collection('userdata').doc(currentUser);
+    let merged=null;
+    // 🐛 2026-08-07: เดิม .set() ตรงๆ เขียนทับ field db ทั้งก้อนด้วยข้อมูลใน session นี้เสมอ ไม่มี
+    // merge ตอนเขียนเลย (มีแค่ตอนอ่าน/ฟังใน fsLoad/fsListen ซึ่งเป็น race condition ไม่ใช่การรับประกัน)
+    // — session เก่าที่ค้างอยู่เคยเขียนทับข้อมูลที่ bot เพิ่งบันทึกไปหายทั้งหมดมาแล้วจริง แก้เป็น
+    // runTransaction: อ่านค่าล่าสุด ณ ตอน commit เสมอ + merge union-by-id ก่อนเขียน กันชนกันแบบรับประกันได้จริง
     await Promise.race([
-      _fs.collection('userdata').doc(currentUser).set({
-        db:dbJson,
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      },{merge:true}),
+      _fs.runTransaction(async (t)=>{
+        const doc=await t.get(docRef);
+        const remoteDb=(doc.exists&&doc.data()&&doc.data().db)?JSON.parse(doc.data().db):{};
+        // remoteDb เป็นฐาน, DB (ที่กำลังจะเซฟรอบนี้) ชนะถ้า id ชนกัน (active edit อยู่) —
+        // ส่วนรายการใหม่จาก remote ที่ local ยังไม่รู้จัก (เช่น bot เพิ่งเพิ่ม) union เข้ามาด้วยเสมอ
+        merged=_mergeDbSnapshot(remoteDb,DB);
+        merged._savedAt=Date.now();
+        const dbJson=JSON.stringify(merged);
+        _checkDbSizeWarn(dbJson);
+        t.set(docRef,{db:dbJson,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      }),
       _fsTimeout(20000)
     ]);
+    if(merged){ DB=merged; saveLocalOnly(); } // sync merge result กลับเข้า local ด้วย กัน session นี้ไม่รู้เรื่องรายการที่เพิ่ง merge เข้ามา
     setSyncStatus('ok');
   }catch(e){
     console.error('[Firebase] save:',e.message);
