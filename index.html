@@ -16262,6 +16262,27 @@ function _rlReset(){ try{ localStorage.removeItem(_RL_KEY); }catch(e){} }
 })();
 
 // ══════════════════════════════════════════
+//  3.5 SHARE APP (ปุ่ม "แชร์แอปให้เพื่อน" — sidebar footer)
+// ══════════════════════════════════════════
+window.shareApp=async function(){
+  const shareData={
+    title:'MoneyMind — '+tr('app_subtitle_short'),
+    text:tr('share_app_message'),
+    url:'https://app.moneymindth.com/landing.html'
+  };
+  if(navigator.share){
+    try{ await navigator.share(shareData); return; }
+    catch(e){ if(e.name==='AbortError') return; } // user ปิด share sheet เอง ไม่ใช่ error ต้อง fallback
+  }
+  try{
+    await navigator.clipboard.writeText(shareData.url);
+    toast(tr('share_link_copied'),'success');
+  }catch(e){
+    toast(shareData.url,'info');
+  }
+};
+
+// ══════════════════════════════════════════
 //  4. FEEDBACK MODAL
 // ══════════════════════════════════════════
 (function(){
