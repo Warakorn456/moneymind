@@ -17453,16 +17453,21 @@ function _daysBetween(a,b){
   return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000);
 }
 
-function _backfillStreak(s,today){
+function _backfillStreak(s){
   // คำนวณ baseline ย้อนหลังจากประวัติ transaction จริง กันไม่ให้ user เก่าที่บันทึกทุกวันอยู่แล้ว
   // เห็น streak เริ่มที่ 0 ทันทีที่เปิดฟีเจอร์นี้ (ไม่นับ grace ตอน backfill เพื่อความง่าย — แค่ประมาณ baseline)
+  // 🐛 2026-08-07 เจอตอนทดสอบจริง: เดิม anchor ที่ "วันนี้" ตรงๆ — ถ้าวันนี้ยังไม่บันทึกอะไรเลย backfill
+  // จะไม่ทำงาน (ไม่มี dates[i]===today ให้เริ่มนับ) ทำให้ user ที่มี streak ต่อเนื่องจากเมื่อวานเห็น "0"
+  // ทั้งที่ streak ยังไม่ขาดจริง — แก้เป็น anchor ที่วันที่ล่าสุดที่มี transaction จริง (ไม่ว่าจะเป็นวันนี้/เมื่อวาน)
   var dates=Array.from(new Set(DB.transactions.map(function(t){return t.date;}))).filter(function(d){return /^\d{4}-\d{2}-\d{2}$/.test(d||'');}).sort();
-  var streak=0, cursor=today;
+  if(!dates.length) return;
+  var anchor=dates[dates.length-1];
+  var streak=0, cursor=anchor;
   for(var i=dates.length-1;i>=0;i--){
     if(dates[i]===cursor){ streak++; var prev=new Date(cursor+'T00:00:00'); prev.setDate(prev.getDate()-1); cursor=prev.toISOString().slice(0,10); }
     else if(dates[i]<cursor) break;
   }
-  s.current=streak; s.longest=Math.max(s.longest,streak);
+  s.current=streak; s.longest=Math.max(s.longest,streak); s.lastLogDate=anchor;
 }
 
 function _canUseGrace(s,today){
