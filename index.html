@@ -1635,8 +1635,8 @@
       <div>
         <div class="sec-title" data-i18n="investments">พอร์ตลงทุน</div>
         <div id="inv-live-bar" style="display:flex;align-items:center;gap:8px;margin-top:5px;font-size:12px;color:var(--muted)">
-          <span id="inv-live-dot" style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:livePulse 2s infinite"></span>
-          <span id="inv-live-label" data-i18n="inv_live_loading">Live — กำลังโหลด...</span>
+          <span id="inv-live-dot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block"></span>
+          <span id="inv-live-label" data-i18n="inv_live_loading">ยังไม่ได้อัปเดตราคา — กดปุ่มเพื่อดึงราคาล่าสุด</span>
           <span id="inv-countdown" style="color:var(--muted)"></span>
         </div>
       </div>
@@ -1646,6 +1646,7 @@
           <button id="inv-tab-dca" class="ftab" onclick="switchInvTab('dca')"><i class="fas fa-arrows-rotate"></i> DCA</button>
           <button id="inv-tab-fav" class="ftab" onclick="switchInvTab('favstocks')"><i class="fas fa-star"></i> <span data-i18n="favstock_title">หุ้นที่ชื่นชอบ</span></button>
         </div>
+        <button class="btn btn-ghost" id="inv-btn-refresh" onclick="refreshAllInvPrices()"><i class="fas fa-rotate"></i> <span data-i18n="inv_refresh_prices">ดึงราคา</span></button>
         <button class="btn btn-ghost" id="inv-btn-rebal" onclick="toggleRebalPanel(this)"><i class="fas fa-balance-scale"></i> Rebalancing</button>
         <button class="btn btn-ghost" id="inv-btn-port" onclick="openPortModal()"><i class="fas fa-layer-group"></i> <span data-i18n="inv_manage_port">จัดการพอร์ต</span></button>
         <button class="btn btn-primary" id="inv-btn-add" onclick="openInvModal()"><i class="fas fa-plus"></i> <span data-i18n="inv_add">เพิ่มการลงทุน</span></button>
