@@ -12674,6 +12674,7 @@ function _renderAdminUsageSection(summary){
 async function renderAdmin(){
   const el=document.getElementById('admin-content');
   if(!el) return;
+  window._adminShowTest=false; // reset ทุกครั้งที่ render ใหม่ ให้ตรงกับ checkbox ที่วาดใหม่ (unchecked เสมอ)
   // เฉพาะ owner เท่านั้น
   if(!_ENC||currentUser!==_ENC.user){
     el.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)"><i class="fas fa-lock" style="font-size:48px;margin-bottom:16px;display:block"></i>'+tr('admin_no_access')+'</div>';
