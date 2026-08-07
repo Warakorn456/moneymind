@@ -3002,6 +3002,7 @@ function fsListen(){
       // remote ใหม่กว่า → อุปกรณ์อื่น sync มา (merge union-by-id กัน tx ใหม่ที่ยังไม่ sync หาย)
       DB=_mergeDbSnapshot(DB,remote);
       saveLocalOnly();
+      _lastSyncedIds=_snapshotSyncedIds(DB); // baseline สำหรับ _mergeForSave() ครั้งถัดไป
       setSyncStatus('ok');
       // ถ้ามี input focused หรือ modal เปิดอยู่ → defer re-render
       const modalOpen=document.querySelector('.overlay.show,.plan-modal-bg.active,.modal-bg.active');
