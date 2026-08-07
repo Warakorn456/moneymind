@@ -12572,7 +12572,7 @@ function filterAdminTable(q){
 }
 function _adminToggleTestRows(show){
   window._adminShowTest=!!show;
-  const searchEl=document.querySelector('#admin-user-tbody')?.closest('div[style*="overflow"]')?.parentElement?.querySelector('input[type="text"]');
+  const searchEl=document.querySelector('input[oninput^="filterAdminTable"]');
   filterAdminTable(searchEl?searchEl.value:'');
 }
 function _adminUsageSortLabel(key){
