@@ -12563,9 +12563,17 @@ function exportAdminCsv(){
 }
 function filterAdminTable(q){
   q=(q||'').toLowerCase().trim();
+  const showTest=!!window._adminShowTest;
   document.querySelectorAll('#admin-user-tbody tr[data-u]').forEach(tr=>{
-    tr.style.display=(!q||tr.getAttribute('data-u').includes(q))?'':'none';
+    const matchQ=!q||tr.getAttribute('data-u').includes(q);
+    const matchTest=showTest||tr.getAttribute('data-test')!=='1';
+    tr.style.display=(matchQ&&matchTest)?'':'none';
   });
+}
+function _adminToggleTestRows(show){
+  window._adminShowTest=!!show;
+  const searchEl=document.querySelector('#admin-user-tbody')?.closest('div[style*="overflow"]')?.parentElement?.querySelector('input[type="text"]');
+  filterAdminTable(searchEl?searchEl.value:'');
 }
 function _adminUsageSortLabel(key){
   const s=window._adminUsageSort||{key:'nw',dir:'desc'};
