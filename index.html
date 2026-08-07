@@ -12693,7 +12693,23 @@ async function renderAdmin(){
     });
     // เรียงจากใหม่ → เก่า
     members.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-    window._adminMembers=members;
+    // 🐛 2026-08-07: ตรวจ churn/stickiness จริงแล้วพบว่า 14/21 บัญชีเป็นบัญชีทดสอบ/เดโม่ที่สร้างไว้
+    // ระหว่างพัฒนา (test1-5, testuser, demo ฯลฯ) ปนอยู่กับ user จริง ทำให้สถิติเพี้ยนหนัก — ตรวจ userdata
+    // จริงยืนยันแล้วว่า best_05/warakorn_k มีข้อมูล 0 รายการเหมือนบัญชีทดสอบอื่นๆ (ต่างจาก yok07 ที่ไม่มีรูปแบบ
+    // ชื่อคล้าย test เลยแต่มี 31 transaction จริง — ไม่ใช่บัญชีทดสอบ ไม่กรองออก) ใช้ pattern ชื่อ/อีเมลเป็นหลัก
+    // ไม่ใช้ "ไม่มี transaction" เป็นเกณฑ์กรอง เพราะ user ใหม่จริงที่ยังไม่ activate ก็มี 0 tx เหมือนกัน
+    // (อยากเห็นคนกลุ่มนี้ในสถิติต่อ ไม่อยากให้หายไปเงียบๆ)
+    const _isTestAccount=m=>{
+      const u=(m.username||'').toLowerCase(), e=(m.email||'').toLowerCase();
+      if(_ENC&&u===_ENC.user.toLowerCase()) return true; // owner
+      if(/test|demo/.test(u)||/test|demo/.test(e)) return true; // test1-5, testuser, testerios, traveltestuser, demo, demo_6815
+      if(/warakorn/.test(u)) return true; // warakorn_k — บัญชี Google สำรองของ owner
+      if(u==='best_05') return true; // ตรวจ userdata แล้ว 0 รายการ + อีเมลโยงกับ owner — เข้าข่ายบัญชีทดสอบ
+      return false;
+    };
+    members.forEach(m=>{ m.isTest=_isTestAccount(m); });
+    const realMembers=members.filter(m=>!m.isTest);
+    window._adminMembers=members; // เก็บ list เต็มไว้ให้ตาราง/ค้นหา/export CSV เห็นครบทุกบัญชี
 
     // ── Part C: usage รวมจากฝั่งเซิร์ฟเวอร์ (admin/summary เขียนโดย admin_stats.py ผ่าน SA) ──
     let summary=null;
