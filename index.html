@@ -17510,12 +17510,24 @@ function _updateStreak(){
   saveDB();
 }
 
+function _streakDisplayCurrent(s,today){
+  // ค่าที่โชว์บนการ์ด — ไม่แก้ DB.settings.streak ตรงนี้ (แค่คำนวณเพื่อแสดงผล)
+  // ถ้ายังไม่บันทึกวันนี้แต่ gap ยังไม่เกิน grace ที่ให้ได้ (≤2 วัน) ให้โชว์ค่าเดิมไปก่อน (streak ยังไม่ขาดจริง)
+  // ถ้า gap เกินไปแล้ว (ขาดเกิน grace) ให้โชว์ 0 กันตัวเลขค้างหลอกว่ายังไม่ขาดทั้งที่ขาดไปแล้วจริงๆ
+  if(!s.lastLogDate) return 0;
+  if(s.lastLogDate===today) return s.current;
+  var gap=_daysBetween(s.lastLogDate,today);
+  if(gap<=2) return s.current;
+  return 0;
+}
+
 function _renderStreakCard(){
   var wrap=document.getElementById('dash-streak-card');
   if(!wrap) return;
   var s=(DB.settings&&DB.settings.streak)||{current:0,longest:0};
   var today=new Date().toISOString().slice(0,10);
   var doneToday=_hasTxOnDate(today);
+  var displayCurrent=_streakDisplayCurrent(s,today);
   var dots='';
   for(var i=6;i>=0;i--){
     var d=new Date(); d.setDate(d.getDate()-i);
