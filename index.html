@@ -12868,7 +12868,10 @@ async function renderAdmin(){
           <span style="font-size:15px;font-weight:800">${tr('admin_total_users')}</span>
           <span style="font-size:11px;color:var(--muted);margin-left:7px">${total} accounts</span>
         </div>
-        <input type="text" oninput="filterAdminTable(this.value)" placeholder="🔍 ${tr('admin_search')}..." class="finput" style="width:180px;font-size:12px;padding:5px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          ${testCount?`<label style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none"><input type="checkbox" onchange="_adminToggleTestRows(this.checked)" style="cursor:pointer;accent-color:#a78bfa"> ${tr('admin_show_test_accounts')} (${testCount})</label>`:''}
+          <input type="text" oninput="filterAdminTable(this.value)" placeholder="🔍 ${tr('admin_search')}..." class="finput" style="width:180px;font-size:12px;padding:5px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)">
+        </div>
       </div>
       <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
         <table style="width:100%;border-collapse:collapse">
