@@ -12729,16 +12729,18 @@ async function renderAdmin(){
     const todayStart=new Date(); todayStart.setHours(0,0,0,0);
     const d7=now-7*dayMs, d30=now-30*dayMs;
 
-    const total=members.length;
-    const online=members.filter(m=>m.lastSeen&&(now-m.lastSeen.getTime())<onlineMs).length;
-    const dau=members.filter(m=>m.lastSeen&&m.lastSeen.getTime()>=todayStart.getTime()).length;
-    const wau=members.filter(m=>m.lastSeen&&m.lastSeen.getTime()>=d7).length;
-    const mau=members.filter(m=>m.lastSeen&&m.lastSeen.getTime()>=d30).length;
-    const newToday=members.filter(m=>m.createdAt&&m.createdAt>=todayStart).length;
-    const new7=members.filter(m=>m.createdAt&&m.createdAt.getTime()>=d7).length;
-    const churn=members.filter(m=>m.lastSeen&&m.lastSeen.getTime()<d30).length;
-    const never=members.filter(m=>!m.lastSeen).length;
-    const withEmail=members.filter(m=>m.email&&!/@moneymind\.local$/i.test(m.email)).length;
+    // สถิติทั้งหมดคำนวณจาก realMembers (กรองบัญชีทดสอบ/เดโม่ออกแล้ว) ให้ DAU/MAU/churn/stickiness สะท้อน user จริง
+    const total=realMembers.length;
+    const testCount=members.length-realMembers.length;
+    const online=realMembers.filter(m=>m.lastSeen&&(now-m.lastSeen.getTime())<onlineMs).length;
+    const dau=realMembers.filter(m=>m.lastSeen&&m.lastSeen.getTime()>=todayStart.getTime()).length;
+    const wau=realMembers.filter(m=>m.lastSeen&&m.lastSeen.getTime()>=d7).length;
+    const mau=realMembers.filter(m=>m.lastSeen&&m.lastSeen.getTime()>=d30).length;
+    const newToday=realMembers.filter(m=>m.createdAt&&m.createdAt>=todayStart).length;
+    const new7=realMembers.filter(m=>m.createdAt&&m.createdAt.getTime()>=d7).length;
+    const churn=realMembers.filter(m=>m.lastSeen&&m.lastSeen.getTime()<d30).length;
+    const never=realMembers.filter(m=>!m.lastSeen).length;
+    const withEmail=realMembers.filter(m=>m.email&&!/@moneymind\.local$/i.test(m.email)).length;
     const stickiness=mau?Math.round(dau/mau*100):0;
 
     const fmtAgo=d=>{ if(!d) return '<span style="color:#475569">'+tr('admin_never')+'</span>'; const s=Math.floor((now-d.getTime())/1000); if(s<60) return '<span style="color:#10b981">'+tr('admin_just_now')+'</span>'; if(s<3600) return `<span style="color:#10b981">${Math.floor(s/60)} ${tr('admin_min_ago')}</span>`; if(s<86400) return `${Math.floor(s/3600)} ${tr('admin_hr_ago')}`; return `${Math.floor(s/86400)} ${tr('admin_day_ago')}`; };
