@@ -3000,6 +3000,12 @@ function saveUsers(u){ localStorage.setItem(USERS_KEY,JSON.stringify(u)); }
 // ทำให้ทุก login มี request.auth เพื่อให้ผ่าน Firestore security rules
 // และผูก members/<username>.uid = auth.uid (claim) ให้ rule ตรวจสิทธิ์ได้
 // รองรับ legacy users ที่ไม่มี email จริง ผ่าน synthetic email (<username>@moneymind.local)
+// 🐛 2026-08-07: ทุก error จาก signInWithEmailAndPassword/createUserWithEmailAndPassword ถูกกลืนหายไปเงียบๆ
+// (catch ว่างเปล่า) — ตอน sign-in ล้มเหลวจริงบนอุปกรณ์ user (เจอซ้ำแม้ลบแอปติดตั้งใหม่จาก App Store)
+// ไม่มีทางรู้ error code จริงเลย (auth/network-request-failed? auth/too-many-requests? ฯลฯ) เพราะ
+// _sendReport() เองก็ต้อง authed() ถึงจะเขียน Firestore ได้ — chicken-and-egg ตอน auth พังพอดี รายงานไม่ได้
+// เก็บ error ล่าสุดไว้ตัวแปรนี้ให้ toast โชว์ตรงๆ แทน (ผู้ใช้แคปหน้าจอส่งมาได้ทันที ไม่ต้องพึ่ง log ฝั่งเซิร์ฟเวอร์)
+let _lastEnsureAuthError=null;
 async function ensureAuthForUser(username, email, pass){
   if(!_auth || !_fs) return null;
   // ดู uid/email เดิมใน members ก่อนเสมอ เพื่อเทียบกับ session ที่ค้างอยู่ในเบราว์เซอร์
