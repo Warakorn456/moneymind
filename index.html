@@ -477,6 +477,12 @@
       .budget-nums{grid-template-columns:repeat(3,1fr);gap:6px}
       .bnum-v{font-size:14px!important}
       .bnum-l{font-size:10px}
+
+      /* 🐛 2026-08-07: admin dashboard "growth chart + platform" grid ใช้ inline style
+         grid-template-columns:1fr 260px (JS-generated, ไม่มี class) — inline style ชนะ media query
+         ปกติเสมอ ต้อง !important ทับ ไม่งั้นคอลัมน์ 260px บังคับความกว้างรวมเกิน viewport มือถือ
+         ทำให้หน้าจอ "หลุดขอบ" (เจอจริงจาก user บนไอโฟน) */
+      .admin-growth-grid{grid-template-columns:1fr!important}
       .budget-card{padding:14px 12px;margin-bottom:14px}
       .budget-title{font-size:11px}
 
