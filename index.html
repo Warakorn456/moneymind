@@ -17430,6 +17430,138 @@ async function _loadFavStockPrices(){
   }
 }
 
+// ══════════════════════════════════════════
+//  DAILY LOG STREAK — นับวันติดต่อกันที่บันทึกอย่างน้อย 1 รายการ
+//  (เพิ่ม 2026-08-07 — gamification เดิม (rank/level) ผูกกับ net worth ล้วน
+//  ขยับช้าเป็นเดือน/ปี ไม่มีกลไกให้รางวัลพฤติกรรมสม่ำเสมอรายวันเลย ทั้งที่ความแม่นยำของ
+//  budget/forecast/health score ทุกตัวขึ้นกับว่าบันทึกครบทุกวันหรือไม่)
+// ══════════════════════════════════════════
+const STREAK_MILESTONES=[7,30,100,365];
+
+function _hasTxOnDate(dateStr){ return DB.transactions.some(function(t){ return t.date===dateStr; }); }
+
+function _isoWeekKey(dateStr){
+  var d=new Date(dateStr+'T00:00:00');
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate()+3-((d.getDay()+6)%7)); // ขยับไปวันพฤหัสของสัปดาห์เดียวกัน (ISO week rule)
+  var week1=new Date(d.getFullYear(),0,4);
+  var weekNo=1+Math.round(((d-week1)/86400000-3+((week1.getDay()+6)%7))/7);
+  return d.getFullYear()+'-W'+weekNo;
+}
+
+function _daysBetween(a,b){
+  return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000);
+}
+
+function _backfillStreak(s,today){
+  // คำนวณ baseline ย้อนหลังจากประวัติ transaction จริง กันไม่ให้ user เก่าที่บันทึกทุกวันอยู่แล้ว
+  // เห็น streak เริ่มที่ 0 ทันทีที่เปิดฟีเจอร์นี้ (ไม่นับ grace ตอน backfill เพื่อความง่าย — แค่ประมาณ baseline)
+  var dates=Array.from(new Set(DB.transactions.map(function(t){return t.date;}))).filter(function(d){return /^\d{4}-\d{2}-\d{2}$/.test(d||'');}).sort();
+  var streak=0, cursor=today;
+  for(var i=dates.length-1;i>=0;i--){
+    if(dates[i]===cursor){ streak++; var prev=new Date(cursor+'T00:00:00'); prev.setDate(prev.getDate()-1); cursor=prev.toISOString().slice(0,10); }
+    else if(dates[i]<cursor) break;
+  }
+  s.current=streak; s.longest=Math.max(s.longest,streak);
+}
+
+function _canUseGrace(s,today){
+  var wk=_isoWeekKey(today);
+  return s.graceWeek!==wk;
+}
+
+function _checkStreakMilestone(s){
+  if(!s.milestonesShown) s.milestonesShown=[];
+  STREAK_MILESTONES.forEach(function(m){
+    if(s.current===m && s.milestonesShown.indexOf(m)===-1){
+      s.milestonesShown.push(m);
+      toast('🎉 '+tr('streak_milestone').replace('{n}',m),'success');
+    }
+  });
+}
+
+function _updateStreak(){
+  if(!DB.settings) DB.settings={};
+  if(!DB.settings.streak) DB.settings.streak={current:0,longest:0,lastLogDate:'',graceWeek:'',milestonesShown:[]};
+  var s=DB.settings.streak;
+  var today=new Date().toISOString().slice(0,10);
+  if(s.lastLogDate===today) return;
+  if(!_hasTxOnDate(today)) return; // ยังไม่บันทึกวันนี้ — ยังไม่ตัดสินสถานะ
+
+  if(!s.lastLogDate){
+    _backfillStreak(s,today);
+  }else{
+    var gap=_daysBetween(s.lastLogDate,today);
+    if(gap===1) s.current++;
+    else if(gap===2 && _canUseGrace(s,today)){ s.current++; s.graceWeek=_isoWeekKey(today); }
+    else if(gap>1) s.current=1;
+  }
+  s.longest=Math.max(s.longest,s.current);
+  s.lastLogDate=today;
+  _checkStreakMilestone(s);
+  saveDB();
+}
+
+function _renderStreakCard(){
+  var wrap=document.getElementById('dash-streak-card');
+  if(!wrap) return;
+  var s=(DB.settings&&DB.settings.streak)||{current:0,longest:0};
+  var today=new Date().toISOString().slice(0,10);
+  var doneToday=_hasTxOnDate(today);
+  var dots='';
+  for(var i=6;i>=0;i--){
+    var d=new Date(); d.setDate(d.getDate()-i);
+    var dStr=d.toISOString().slice(0,10);
+    var hit=_hasTxOnDate(dStr);
+    var isToday=i===0;
+    var bg=hit?'var(--green)':'var(--border)';
+    dots+='<div style="width:10px;height:10px;border-radius:50%;background:'+bg+';'+(isToday?'box-shadow:0 0 0 2px var(--primary)':'')+'"></div>';
+  }
+  wrap.innerHTML=
+    '<div style="display:flex;align-items:center;gap:14px">'+
+      '<div style="font-size:34px;line-height:1">🔥</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">'+_escHtml(tr('streak_title'))+'</div>'+
+        '<div style="font-size:26px;font-weight:800">'+s.current+' <span style="font-size:13px;font-weight:600;color:var(--muted)">'+_escHtml(tr('streak_days_suffix'))+'</span></div>'+
+        '<div style="font-size:12px;color:var(--muted)">'+_escHtml(tr('streak_best_label'))+': '+s.longest+'</div>'+
+      '</div>'+
+    '</div>'+
+    '<div style="display:flex;gap:6px;margin-top:12px">'+dots+'</div>'+
+    '<div style="margin-top:10px;font-size:12px;font-weight:600;color:'+(doneToday?'var(--green)':'var(--amber)')+'">'+
+      (doneToday?'✅ '+_escHtml(tr('streak_done_today')):'⏳ '+_escHtml(tr('streak_pending_today')))+
+    '</div>';
+}
+
+(function(){
+  var _streakOrig=renderDash;
+  renderDash=function(){
+    _streakOrig.apply(this,arguments);
+    var wrap=document.getElementById('dash-streak-card');
+    if(!wrap){
+      wrap=document.createElement('div');
+      wrap.id='dash-streak-card';
+      wrap.className='card';
+      wrap.style.cssText='margin-bottom:20px;overflow:hidden;min-width:0;box-sizing:border-box;';
+      var sortable=document.getElementById('dash-sortable');
+      if(sortable) sortable.appendChild(wrap);
+    }
+    _updateStreak();
+    _renderStreakCard();
+  };
+  // init ทันที เพราะ renderDash() ต้นทางวิ่งก่อน script block นี้แล้ว
+  var w=document.getElementById('dash-streak-card');
+  if(!w){
+    w=document.createElement('div');
+    w.id='dash-streak-card';
+    w.className='card';
+    w.style.cssText='margin-bottom:20px;overflow:hidden;min-width:0;box-sizing:border-box;';
+    var s=document.getElementById('dash-sortable');
+    if(s) s.appendChild(w);
+  }
+  _updateStreak();
+  _renderStreakCard();
+})();
+
 </script>
 
 <!-- Subscription Modal -->
