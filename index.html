@@ -6300,11 +6300,13 @@ function switchInvTab(tab){
   const btnPort=document.getElementById('inv-btn-port');
   const btnAdd=document.getElementById('inv-btn-add');
   const btnRebal=document.getElementById('inv-btn-rebal');
+  const btnRefresh=document.getElementById('inv-btn-refresh');
   if(tabPort) tabPort.classList.toggle('active',tab==='portfolio');
   if(tabDca) tabDca.classList.toggle('active',tab==='dca');
   if(tabFav) tabFav.classList.toggle('active',tab==='favstocks');
   if(btnPort) btnPort.style.display=tab==='portfolio'?'':'none';
   if(btnRebal) btnRebal.style.display=tab==='favstocks'?'none':'';
+  if(btnRefresh) btnRefresh.style.display=tab==='favstocks'?'none':'';
   if(btnAdd){
     if(tab==='favstocks'){ btnAdd.style.display='none'; }
     else if(tab==='dca'){ btnAdd.style.display=''; btnAdd.innerHTML='<i class="fas fa-plus"></i> '+tr('dca_add_plan'); btnAdd.onclick=()=>openDcaPlanModal(); }
