@@ -422,9 +422,10 @@ Static file — ไม่ต้อง build:
 
 เคยมีฟีเจอร์เขียนสคริปต์โปรโมทรายวัน (คลิปสั้น + Veo prompt ส่งเข้า Telegram) เริ่มทำ 2026-07-06 — ไม่ต้องการฟีเจอร์นี้แล้ว ลบทั้งหมด:
 - `D:\MoneyMind_Marketing\` (โฟลเดอร์ทั้งหมด รวม scripts/videos ตัวอย่างที่เคยสร้าง) — ลบแล้ว
-- `C:\Users\warakorn\Documents\marketing_daily_script.py` (ไม่เคย deploy ขึ้น VM/cron จริง) — ลบแล้ว
+- `C:\Users\warakorn\Documents\marketing_daily_script.py` — ลบแล้ว (source บนโน้ตบุ๊ก)
 - n8n workflow `mm-marketing-script-01` "MoneyMind Marketing - Daily Script Writer" (เคย active=1 ในเครื่อง — ตัวที่ "ใช้จริง" ตัวเดียวในฟีเจอร์นี้) — ลบออกจาก `~/.n8n/database.sqlite` แล้ว (พร้อม execution history/stats/shared_workflow ที่เกี่ยวข้อง); สำรอง DB ไว้ที่ `database.sqlite.bak-20260730-191733` ก่อนลบ
 - Telegram Group topic "🎬 วิดีโอโปรโมท" (thread_id=1143) ยังอยู่ในกลุ่ม MoneyMind Hub — ไม่มีอะไรส่งเข้ามาอีกแล้ว ลบ/เก็บ topic เองได้ผ่านแอป Telegram ถ้าต้องการ
+- **🐛 เอกสารเดิมผิด — สคริปต์นี้เคย deploy ขึ้น VM จริง (เจอ+แก้ 2026-08-07)** — ตอนตรวจสุขภาพระบบหลังบ้านทั่วไป เจอว่า `~/moneymind/marketing_daily_script.py` (สร้างไฟล์ไว้ 6 ก.ค.) ยังอยู่บน VM จริง พร้อม crontab entry `30 0 * * *` ที่ยังรันอยู่ทุกวัน — crash ทุกครั้งด้วย `HTTPError 400` (ส่ง Telegram ไป topic 1143 ที่อาจถูกลบไปแล้ว) เงียบๆ ไม่มีใครสังเกตเพราะ `marketing_script.log` ไม่ได้อยู่ใน `cron_health.py` REGISTRY (ตัด REGISTRY entry ไปแล้วตอนลบฟีเจอร์ 30 ก.ค. แต่**ลืมลบตัว crontab entry จริงบน VM**) — สรุปคือขั้นตอนลบฟีเจอร์เดิมทำไม่ครบ 100% ตามที่บันทึกไว้. **แก้แล้ว:** ลบ crontab entry + ไฟล์ `marketing_daily_script.py` + `marketing_script.log` ออกจาก VM ยืนยันแล้วว่าไม่มี entry เหลือทั้งใน crontab และ `cron_health.py` REGISTRY. **บทเรียน:** เวลาลบฟีเจอร์ที่มี cron บน VM ต้องเช็ค `crontab -l` ตรงๆ ด้วยเสมอ ไม่ใช่แค่ลบไฟล์ script/แก้ REGISTRY — ทั้งสามจุด (ไฟล์, crontab entry, REGISTRY) ต้องลบพร้อมกันครบ ไม่งั้นจะเหลือ orphan ที่รันพังทุกวันแบบไม่มีใครเห็น
 
 ---
 
