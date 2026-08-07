@@ -12769,7 +12769,7 @@ async function renderAdmin(){
 
     // growth (สมัครรายวัน → สะสม)
     const growth={};
-    members.forEach(m=>{ if(m.createdAt){ const k=m.createdAt.toISOString().slice(0,10); growth[k]=(growth[k]||0)+1; }});
+    realMembers.forEach(m=>{ if(m.createdAt){ const k=m.createdAt.toISOString().slice(0,10); growth[k]=(growth[k]||0)+1; }});
     const gkeys=Object.keys(growth).sort();
     let cum=0; const gcum=gkeys.map(k=>{cum+=growth[k]; return cum;});
 
