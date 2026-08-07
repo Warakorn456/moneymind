@@ -17491,16 +17491,19 @@ function _updateStreak(){
   var s=DB.settings.streak;
   var today=new Date().toISOString().slice(0,10);
   if(s.lastLogDate===today) return;
-  if(!_hasTxOnDate(today)) return; // ยังไม่บันทึกวันนี้ — ยังไม่ตัดสินสถานะ
 
   if(!s.lastLogDate){
-    _backfillStreak(s,today);
-  }else{
-    var gap=_daysBetween(s.lastLogDate,today);
-    if(gap===1) s.current++;
-    else if(gap===2 && _canUseGrace(s,today)){ s.current++; s.graceWeek=_isoWeekKey(today); }
-    else if(gap>1) s.current=1;
+    // ครั้งแรกสุด — backfill จากประวัติจริงเสมอ (ไม่รอวันนี้บันทึกก่อน กันเห็น "0" ทั้งที่ streak ยังไม่ขาด)
+    _backfillStreak(s);
+    if(s.lastLogDate===today){ s.longest=Math.max(s.longest,s.current); _checkStreakMilestone(s); saveDB(); }
+    return;
   }
+  if(!_hasTxOnDate(today)) return; // ยังไม่บันทึกวันนี้ — ยังไม่ตัดสิน (การ์ดจะโชว์ค่าเดิม + สถานะ "รอบันทึก" แทน)
+
+  var gap=_daysBetween(s.lastLogDate,today);
+  if(gap===1) s.current++;
+  else if(gap===2 && _canUseGrace(s,today)){ s.current++; s.graceWeek=_isoWeekKey(today); }
+  else if(gap>1) s.current=1;
   s.longest=Math.max(s.longest,s.current);
   s.lastLogDate=today;
   _checkStreakMilestone(s);
