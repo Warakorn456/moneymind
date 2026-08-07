@@ -2907,6 +2907,42 @@ function _mergeDbSnapshot(local,remote){
   return merged;
 }
 
+// 🐛 2026-08-07: เจอระหว่างทดสอบ fsSave() แบบ transaction (ดูด้านล่าง) — _mergeDbSnapshot() ข้างบน
+// เป็น pure union-by-id เสมอ ไม่มีทาง "ลบ" ได้เลย ถ้าใช้ union นี้ตอน "เขียน" ด้วย การลบรายการ
+// ผ่านหน้าเว็บจะไม่มีผลจริง เพราะ remote (ที่ยังไม่รู้เรื่องการลบ) จะถูก union กลับเข้ามาใหม่ทุกครั้ง —
+// ต้องแยก id ที่ "เคยรู้จักมาก่อนแต่ตอนนี้หายไปจาก local" (ลบตั้งใจ ห้าม revive) ออกจาก
+// "ไม่เคยรู้จักมาก่อนเลย" (ของใหม่จากอีกฝั่งจริงๆ เก็บไว้) — ต้องมี baseline ของ id ที่เคย sync แล้ว
+let _lastSyncedIds={};
+function _snapshotSyncedIds(dbObj){
+  const out={};
+  _MERGE_ARRAY_FIELDS.forEach(function(field){
+    const arr=Array.isArray(dbObj[field])?dbObj[field]:[];
+    out[field]=new Set(arr.filter(function(i){return i&&i.id!=null;}).map(function(i){return i.id;}));
+  });
+  return out;
+}
+// merge สำหรับ "เขียน" โดยเฉพาะ (ต่างจาก _mergeDbSnapshot ที่ใช้ตอน "อ่าน/ฟัง") — เคารพการลบที่ local
+// เพิ่งทำ: เอา remote-only item เข้ามาเฉพาะตัวที่ไม่เคยอยู่ใน _lastSyncedIds เท่านั้น (ของใหม่จริง)
+function _mergeForSave(remote,local){
+  const merged={...remote,...local};
+  _MERGE_ARRAY_FIELDS.forEach(function(field){
+    const localArr=Array.isArray(local[field])?local[field]:[];
+    const remoteArr=Array.isArray(remote[field])?remote[field]:[];
+    const localIds=new Set(localArr.filter(function(i){return i&&i.id!=null;}).map(function(i){return i.id;}));
+    const knownIds=_lastSyncedIds[field]||new Set();
+    const byId=new Map();
+    localArr.forEach(function(item){ if(item&&item.id!=null) byId.set(item.id,item); });
+    remoteArr.forEach(function(item){
+      if(!item||item.id==null) return;
+      if(localIds.has(item.id)) return; // local มีอยู่แล้ว (อาจแก้ไข) — local ชนะ อยู่ใน map แล้ว
+      if(knownIds.has(item.id)) return; // เคยรู้จัก id นี้มาก่อน แต่ตอนนี้ local ไม่มี = ถูกลบตั้งใจ ห้าม revive
+      byId.set(item.id,item); // ไม่เคยรู้จักมาก่อนเลย = ของใหม่จากอีกฝั่งจริงๆ เก็บไว้
+    });
+    merged[field]=Array.from(byId.values());
+  });
+  return merged;
+}
+
 async function fsLoad(){
   if(!currentUser||!_fs){ setSyncStatus('error'); return false; }
   try{
