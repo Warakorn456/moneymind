@@ -488,7 +488,7 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | ~~**RSS News Digest**~~ (MarketWatch/Yahoo/CNBC → Gemini → หุ้นในพอร์ต) | ~~08:30 จ.–ศ.~~ | ~~`rss_news.py`~~ ❌ ลบออก 2026-06-18 (ลด Gemini token) |
 | **Firestore → Google Sheets** (Transactions/Monthly/NW/Portfolio) | 23:00 ทุกวัน | `firestore_to_sheets.py` → Sheets (Looker Studio) |
 | **NotebookLM Export** (Q&A snapshot: NW, รายเดือน, หมวด, ออม, หนี้, พอร์ต, **ประกัน/ภาษี-ลดหย่อน/subscriptions**) | ทุกวันจันทร์ 00:00 (รายสัปดาห์) | `notebooklm_export.py` → Drive `moneymind_qa_snapshot.md` + แจ้ง Telegram (อ่าน Firestore ผ่าน SA) |
-| **Firestore Backup → Drive** (JSON snapshot, เก็บ 90 วัน) | 01:00 ทุกวัน | `firestore_backup.py` → Drive `Backups/` (แจ้ง TG จันทร์) |
+| **Firestore Backup → Drive** (JSON snapshot, เก็บ 90 วัน) | 01:00 ทุกวัน | `firestore_backup.py` → Drive `Backups/` (แจ้ง TG จันทร์) — **ทดสอบกู้คืนจริงแล้ว 2026-08-07** (ดู `firestore_restore.py` ด้านล่าง) ยืนยันว่า pipeline backup→restore ใช้งานได้จริง ไม่ใช่แค่มีไฟล์อยู่เฉยๆ |
 | **Admin Stats** (สรุป usage หลังบ้านต่อผู้ใช้ทุกคน) | 09:00 ทุกวัน (`0 2 * * *`) | `admin_stats.py` → Firestore `admin/summary` (อ่าน userdata ทุกคนผ่าน SA) |
 | **Proactive AI Insights** (anomaly detection) | เสาร์ 10:00 | `proactive_insights.py` → topic 💰 |
 | **Smart Advisor** (spending pace ทุก category → เตือนเฉพาะเมื่อ projected เกิน avg 30%) | 20:00 ทุกวัน | `smart_advisor.py` → personal + topic 💰 (เงียบถ้าปกติ) |
