@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /landing.html
+Allow: /privacy.html
+Allow: /terms.html
+Allow: /support.html
+Disallow: /
+
+Sitemap: https://app.moneymindth.com/sitemap.xml
