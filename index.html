@@ -12749,9 +12749,9 @@ async function renderAdmin(){
     const platformLabel=p=>({'web':'Web','android':'Android','ios':'iOS'}[p]||p||'-');
 
     // stats platform
-    const webCount=members.filter(m=>m.platform==='web').length;
-    const androidCount=members.filter(m=>m.platform==='android').length;
-    const iosCount=members.filter(m=>m.platform==='ios').length;
+    const webCount=realMembers.filter(m=>m.platform==='web').length;
+    const androidCount=realMembers.filter(m=>m.platform==='android').length;
+    const iosCount=realMembers.filter(m=>m.platform==='ios').length;
     const platMax=Math.max(webCount,androidCount,iosCount,1);
     const platRow=(label,icon,n,color)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
       <div style="width:30px;height:30px;border-radius:8px;background:${color}18;border:1px solid ${color}30;display:flex;align-items:center;justify-content:center;flex-shrink:0">
