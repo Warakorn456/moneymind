@@ -2918,7 +2918,11 @@ async function fsLoad(){
   }catch(e){
     console.error('[Firebase] load error:',e);
     setSyncStatus('error');
-    toast(tr('cloud_load_failed')+': '+e.message,'error');
+    // 🐛 2026-08-07: "Missing or insufficient permissions" อย่างเดียวบอกไม่ได้ว่า sign-in สำเร็จหรือไม่
+    // (permission-denied เกิดได้ทั้งตอนไม่มี session เลย และตอนมี session แต่ uid ไม่ตรงกับ members/{u}.uid
+    // ที่ผูกไว้ — สองเคสนี้ต้องแก้คนละทาง) แนบ uid ปัจจุบัน (ถ้ามี) ต่อท้าย error ให้เทียบกับ Firestore ได้ตรงๆ
+    const _uidTxt=(_auth&&_auth.currentUser)?` [uid: ${_auth.currentUser.uid}]`:' [uid: ไม่มี session]';
+    toast(tr('cloud_load_failed')+': '+e.message+_uidTxt,'error',12000);
     return false;
   }
 }
