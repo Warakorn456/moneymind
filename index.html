@@ -6306,7 +6306,12 @@ function switchInvTab(tab){
   if(tabFav) tabFav.classList.toggle('active',tab==='favstocks');
   if(btnPort) btnPort.style.display=tab==='portfolio'?'':'none';
   if(btnRebal) btnRebal.style.display=tab==='favstocks'?'none':'';
-  if(btnRefresh) btnRefresh.style.display=tab==='favstocks'?'none':'';
+  // ปุ่ม "ดึงราคา" โชว์ทุกแท็บ (portfolio/dca/favstocks ต่างก็มีราคาที่ต้องอัปเดต) แค่สลับ handler
+  // ให้เรียกฟังก์ชันที่ถูกต้องของแท็บนั้นๆ — เดิมซ่อนไว้ตอน favstocks ทำให้ user งงว่า "ไม่มีปุ่มเลย"
+  if(btnRefresh){
+    btnRefresh.style.display='';
+    btnRefresh.onclick=tab==='favstocks'?()=>_loadFavStockPrices():()=>refreshAllInvPrices();
+  }
   if(btnAdd){
     if(tab==='favstocks'){ btnAdd.style.display='none'; }
     else if(tab==='dca'){ btnAdd.style.display=''; btnAdd.innerHTML='<i class="fas fa-plus"></i> '+tr('dca_add_plan'); btnAdd.onclick=()=>openDcaPlanModal(); }
