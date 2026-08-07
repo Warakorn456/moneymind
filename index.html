@@ -12791,7 +12791,7 @@ async function renderAdmin(){
         ?`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.35);border-radius:20px;padding:2px 8px;font-size:10px;color:#10b981;font-weight:600">${platformIcon(curPlat)} ${platformLabel(curPlat)}</span>`
         :`<span style="display:inline-flex;align-items:center;gap:4px;color:#475569;font-size:11px">${platformIcon(m.platform)} ${platformLabel(m.platform)}</span>`;
       return `
-      <tr data-u="${(m.username+' '+(m.email||'')).toLowerCase()}" style="border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.025)'" onmouseout="this.style.background=''">
+      <tr data-u="${(m.username+' '+(m.email||'')).toLowerCase()}" data-test="${m.isTest?'1':'0'}" style="border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s${m.isTest?';display:none':''}" onmouseover="this.style.background='rgba(255,255,255,.025)'" onmouseout="this.style.background=''">
         <td style="padding:10px 14px">
           <div style="display:flex;align-items:center;gap:9px">
             <div style="width:30px;height:30px;border-radius:9px;background:${ac}20;border:1px solid ${ac}35;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:${ac};flex-shrink:0;position:relative">
@@ -12799,7 +12799,7 @@ async function renderAdmin(){
               ${isOnline?`<span style="position:absolute;bottom:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#10b981;border:1.5px solid var(--surface);box-shadow:0 0 5px #10b981"></span>`:''}
             </div>
             <div>
-              <div style="font-size:12px;font-weight:700;white-space:nowrap">${m.username}${m.isOwner?' <span style="font-size:9px;background:rgba(245,158,11,.2);color:#f59e0b;padding:1px 5px;border-radius:6px">owner</span>':''}</div>
+              <div style="font-size:12px;font-weight:700;white-space:nowrap">${m.username}${m.isOwner?' <span style="font-size:9px;background:rgba(245,158,11,.2);color:#f59e0b;padding:1px 5px;border-radius:6px">owner</span>':''}${m.isTest?' <span style="font-size:9px;background:rgba(148,163,184,.18);color:#94a3b8;padding:1px 5px;border-radius:6px">'+tr('admin_test_account')+'</span>':''}</div>
             </div>
           </div>
         </td>
