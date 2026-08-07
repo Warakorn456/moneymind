@@ -3032,14 +3032,16 @@ async function ensureAuthForUser(username, email, pass){
   // ต้องลอง sign-in บัญชีเดิมได้แม้ uid ผูกแล้ว ไม่งั้นเครื่องใหม่สร้าง Firebase session ไม่ได้ → sync 403)
   else candidates.push(username+'@moneymind.local');
   let cred=null;
+  _lastEnsureAuthError=null;
   for(const em of candidates){
     try{ cred=await _auth.signInWithEmailAndPassword(em,pass); break; }
     catch(e){
+      _lastEnsureAuthError=(e&&e.code)?`${e.code}: ${e.message||''}`:String(e);
       // สร้างบัญชีใหม่ได้เฉพาะตอนที่ยังไม่เคยผูก uid (unclaimed) เท่านั้น — ถ้าผูกแล้วแต่ sign-in ไม่ผ่าน
       // ห้ามสร้างทับ เพราะจะกลายเป็นบัญชี Firebase คนละใบแยกจากของเดิม (uid ไม่ตรง member เดิมอยู่ดี)
       if(!existingUid && ['auth/user-not-found','auth/invalid-credential','auth/invalid-login-credentials'].includes(e.code)){
-        try{ cred=await _auth.createUserWithEmailAndPassword(em,pass); break; }
-        catch(e2){ /* email-already-in-use ด้วยรหัสอื่น → ลอง candidate ถัดไป */ }
+        try{ cred=await _auth.createUserWithEmailAndPassword(em,pass); _lastEnsureAuthError=null; break; }
+        catch(e2){ _lastEnsureAuthError=(e2&&e2.code)?`${e2.code}: ${e2.message||''}`:String(e2); /* email-already-in-use ด้วยรหัสอื่น → ลอง candidate ถัดไป */ }
       }
     }
   }
