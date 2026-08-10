@@ -163,11 +163,24 @@
   .logo-text{ font-size:1.2rem; font-weight:800; letter-spacing:-.02em; }
 
   /* theme toggle — only shown when JS can actually drive it */
-  .theme-toggle{ display:none; width:40px; height:40px; align-items:center; justify-content:center;
+  .theme-toggle{ display:none; position:relative; width:40px; height:40px;
     background:var(--card2); border:1px solid var(--border); border-radius:11px; color:var(--text);
     font-size:.95rem; cursor:pointer; transition:border-color .2s, transform .18s; }
   html.has-js .theme-toggle{ display:inline-flex; }
   .theme-toggle:hover{ border-color:rgba(167,139,250,.45); transform:translateY(-1px); }
+  /* both icons always in the DOM, stacked — lets them cross-fade/rotate instead of
+     being replaced outright (a DOM swap can't transition) */
+  .theme-toggle .icon-sun, .theme-toggle .icon-moon{ position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    transition:opacity .5s ease, transform .5s ease; }
+  .theme-toggle .icon-sun{ opacity:1; transform:rotate(0) scale(1); }
+  .theme-toggle .icon-moon{ opacity:0; transform:rotate(-90deg) scale(.5); }
+  :root[data-theme="light"] .theme-toggle .icon-sun{ opacity:0; transform:rotate(90deg) scale(.5); }
+  :root[data-theme="light"] .theme-toggle .icon-moon{ opacity:1; transform:rotate(0) scale(1); }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]) .theme-toggle .icon-sun{ opacity:0; transform:rotate(90deg) scale(.5); }
+    :root:not([data-theme="dark"]) .theme-toggle .icon-moon{ opacity:1; transform:rotate(0) scale(1); }
+  }
 
   /* hero */
   .hero{ padding:64px 0 56px; }
@@ -447,6 +460,12 @@
     .web-badge .wb-lg{ font-size:1rem; }
   }
 
+  /* theme-toggle page crossfade (View Transitions API) — browser default is a snappy
+     ~250ms fade, which reads as "switches too fast"; slow it down and give it easing */
+  ::view-transition-old(root), ::view-transition-new(root){
+    animation-duration:.6s; animation-timing-function:ease-in-out;
+  }
+
   /* respect users who ask for less motion — kills marquee, reveals, float and scan loops */
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{
@@ -458,6 +477,7 @@
     .marquee-track{ animation:none; width:100%; flex-wrap:wrap; justify-content:center; }
     .marquee-set{ flex-wrap:wrap; justify-content:center; padding-right:0; }
     .marquee-set[aria-hidden="true"]{ display:none; }
+    ::view-transition-old(root), ::view-transition-new(root){ animation:none!important; }
   }
 </style>
 </head>
@@ -470,7 +490,8 @@
       <span class="logo-text">MoneyMind</span>
     </a>
     <button type="button" id="theme-toggle" class="theme-toggle" aria-label="สลับโหมดสีสว่าง/มืด">
-      <i class="fas fa-sun" aria-hidden="true"></i>
+      <i class="fas fa-sun icon-sun" aria-hidden="true"></i>
+      <i class="fas fa-moon icon-moon" aria-hidden="true"></i>
     </button>
   </nav>
 
@@ -854,24 +875,38 @@
     var btn = document.getElementById('theme-toggle');
     if (!btn) return;
     var mqLight = window.matchMedia('(prefers-color-scheme: light)');
+    var mqReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     function effective() {
       return document.documentElement.getAttribute('data-theme')
           || (mqLight.matches ? 'light' : 'dark');
     }
     function paint() {
+      // icon itself transitions via CSS off the data-theme attribute (icon-sun/icon-moon
+      // opacity+rotate) — this only has to keep the a11y label in sync
       var isLight = effective() === 'light';
-      btn.innerHTML = '<i class="fas fa-' + (isLight ? 'moon' : 'sun') + '" aria-hidden="true"></i>';
       var label = isLight ? 'สลับเป็นโหมดมืด' : 'สลับเป็นโหมดสว่าง';
       btn.setAttribute('aria-label', label);
       btn.title = label;
     }
-
-    btn.addEventListener('click', function () {
-      var next = effective() === 'light' ? 'dark' : 'light';
+    function applyTheme(next) {
       document.documentElement.setAttribute('data-theme', next);
       try { localStorage.setItem('mm_landing_theme', next); } catch (e) {}
       paint();
+    }
+
+    btn.addEventListener('click', function () {
+      var next = effective() === 'light' ? 'dark' : 'light';
+      // ไล่สีทั้งหน้าแบบนุ่มนวลด้วย View Transitions API — เบราว์เซอร์ที่ไม่รองรับ
+      // (หรือผู้ใช้ที่ตั้งค่าลดการเคลื่อนไหว) จะสลับทันทีเหมือนเดิม ไม่มีอะไรพัง
+      if (document.startViewTransition && !mqReduced.matches) {
+        var t = document.startViewTransition(function () { applyTheme(next); });
+        // ready ปฏิเสธได้ในบางสถานการณ์ (เช่น แท็บไม่ได้โฟกัสอยู่ตอนกด) — theme สลับไปแล้วเสมอ
+        // เพราะ applyTheme รันใน callback ไม่ขึ้นกับ ready แค่กัน unhandled rejection ไม่ให้ขึ้น console เฉยๆ
+        t.ready.catch(function () {});
+      } else {
+        applyTheme(next);
+      }
     });
     // ยังไม่เคยเลือกเอง → ตามระบบ ถ้าผู้ใช้สลับธีมเครื่องระหว่างเปิดหน้าอยู่
     if (mqLight.addEventListener) mqLight.addEventListener('change', paint);
