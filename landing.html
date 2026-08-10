@@ -294,6 +294,9 @@
     font-size:1.05rem; margin-bottom:14px; }
   .fcard .title{ font-size:.98rem; font-weight:700; margin-bottom:6px; }
   .fcard .desc{ font-size:.85rem; color:var(--muted); line-height:1.65; }
+  .fcard .link{ display:inline-block; font-size:.8rem; font-weight:600; color:var(--primary-l);
+    text-decoration:none; margin-top:10px; }
+  .fcard .link:hover{ text-decoration:underline; }
 
   /* product preview showcase */
   .preview-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
@@ -384,6 +387,9 @@
 
   .review-invite{ text-align:center; max-width:560px; margin:0 auto; }
   .review-invite p{ color:var(--muted); font-size:.92rem; margin-bottom:20px; }
+  .dev-note{ font-size:.8rem; color:var(--muted); margin-top:28px; opacity:.85; }
+  .dev-note a{ color:var(--primary-l); text-decoration:none; font-weight:600; }
+  .dev-note a:hover{ text-decoration:underline; }
   .review-btns{ display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
   .review-btn{ display:inline-flex; align-items:center; gap:8px; font-size:.85rem; font-weight:600;
     text-decoration:none; color:var(--text); background:var(--surface2); border:1px solid var(--border);
@@ -683,6 +689,39 @@
     <p class="rank-caption reveal">มีทั้งหมด 8 ระดับ ตั้งแต่ Iron ถึง Legend — ยิ่งใช้ยิ่งเห็นอันดับตัวเองชัดขึ้น ไม่ใช่แค่ตัวเลขในบัญชี</p>
   </section>
 
+  <section class="section" id="security">
+    <div class="section-head reveal">
+      <h2>ความปลอดภัยของข้อมูล</h2>
+      <p>ทุกข้อด้านล่างมีรายละเอียดเต็มอยู่ในนโยบายจริง กดเข้าไปอ่านได้เลย ไม่ใช่แค่คำโฆษณา</p>
+    </div>
+    <div class="grid reveal-stagger">
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(124,58,237,.14);color:#a78bfa"><i class="fas fa-lock"></i></div>
+        <div class="title">รหัสผ่านเข้ารหัสแบบย้อนกลับไม่ได้</div>
+        <div class="desc">รหัสผ่านถูก hash ด้วย PBKDF2 ก่อนจัดเก็บเสมอ — แม้แต่ทีมงานก็ไม่เห็นรหัสผ่านจริงของคุณ</div>
+        <a class="link" href="privacy.html#security">ดูรายละเอียด →</a>
+      </div>
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(239,68,68,.14);color:#f87171"><i class="fas fa-ban"></i></div>
+        <div class="title">ไม่ขาย ไม่แบ่งปันข้อมูลคุณ</div>
+        <div class="desc">ไม่ขาย ไม่เช่า และไม่แบ่งปันข้อมูลส่วนตัวของคุณแก่บุคคลที่สามเพื่อวัตถุประสงค์ทางการตลาดโดยเด็ดขาด</div>
+        <a class="link" href="privacy.html#how-we-use-data">ดูรายละเอียด →</a>
+      </div>
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(16,185,129,.14);color:#34d399"><i class="fas fa-file-export"></i></div>
+        <div class="title">ข้อมูลของคุณเป็นของคุณเสมอ</div>
+        <div class="desc">ส่งออกหรือลบข้อมูลการเงินทั้งหมดได้ทุกเมื่อผ่านหน้าตั้งค่าในแอป ไม่ต้องขอใคร</div>
+        <a class="link" href="terms.html#data-ownership">ดูรายละเอียด →</a>
+      </div>
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(245,158,11,.14);color:#fbbf24"><i class="fas fa-robot"></i></div>
+        <div class="title">ฟีเจอร์ AI ต้องขอความยินยอมก่อนเสมอ</div>
+        <div class="desc">แอปจะขอความยินยอมก่อนใช้งานฟีเจอร์ AI ครั้งแรกเสมอ เลือกไม่ใช้ได้และแอปยังทำงานปกติทุกฟีเจอร์อื่น</div>
+        <a class="link" href="privacy.html#ai-consent">ดูรายละเอียด →</a>
+      </div>
+    </div>
+  </section>
+
   <section class="section" id="reviews">
     <div class="section-head reveal">
       <h2>เสียงจากผู้ใช้</h2>
@@ -720,6 +759,8 @@
           <i class="fab fa-google-play"></i> เขียนรีวิวบน Play Store
         </a>
       </div>
+      <p class="dev-note">พัฒนาและดูแลโดยนักพัฒนาอิสระคนเดียว ไม่ใช่บริษัทใหญ่ —
+        มีคำถามหรือข้อเสนอแนะ ทักมาได้โดยตรงที่ <a href="mailto:warakornbest6@gmail.com">warakornbest6@gmail.com</a></p>
     </div>
   </section>
 
@@ -801,6 +842,7 @@
       <a href="privacy.html">ความเป็นส่วนตัว</a>
       <a href="terms.html">ข้อตกลงการใช้งาน</a>
       <a href="support.html">ช่วยเหลือ</a>
+      <a href="mailto:warakornbest6@gmail.com">warakornbest6@gmail.com</a>
     </div>
   </footer>
 </div>
