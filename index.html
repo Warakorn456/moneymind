@@ -10214,7 +10214,9 @@ function toggleTheme(){
   if(!document.startViewTransition||reduceMotion||_themeTransitionActive){ apply(); return; }
   _themeTransitionActive=true;
   const trans=document.startViewTransition(apply);
-  trans.finished.finally(()=>{ _themeTransitionActive=false; }).catch(()=>{});
+  trans.ready.catch(()=>{});
+  trans.updateCallbackDone.catch(()=>{});
+  trans.finished.then(()=>{ _themeTransitionActive=false; }, ()=>{ _themeTransitionActive=false; });
 }
 
 function applyTheme(){
