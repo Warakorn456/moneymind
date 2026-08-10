@@ -17788,7 +17788,7 @@ function _renderStreakCard(){
       if(_raf) return;
       _raf=requestAnimationFrame(()=>{
         _raf=null;
-        const head=document.querySelector('.mascot-head');
+        const head=document.querySelector('.mascot-shell');
         if(!head) return;
         const r=head.getBoundingClientRect();
         const dx=Math.max(-1,Math.min(1,(e.clientX-(r.left+r.width/2))/120));
