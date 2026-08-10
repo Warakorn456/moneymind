@@ -2,6 +2,7 @@
 *.png
 !chars.png
 !mobile/**/*.png
+!assets/**/*.png
 
 # Playwright MCP artifacts
 .playwright-mcp/
