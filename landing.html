@@ -130,6 +130,16 @@
   a{color:inherit}
   .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
 
+  /* per-section glow — the ambient body::before backdrop is position:fixed (same everywhere
+     while scrolling), so several sections in a row otherwise sit on an identical background.
+     These scroll normally with content and give each section a distinct, subtle "moment"
+     instead of the whole page reading as one flat surface. */
+  #preview, #rank{ position:relative; }
+  #preview::before, #rank::before{ content:''; position:absolute; top:-30px; left:50%;
+    transform:translateX(-50%); width:min(700px,90%); height:280px; z-index:-1; pointer-events:none; }
+  #preview::before{ background:radial-gradient(ellipse at center, var(--glowb), transparent 72%); }
+  #rank::before{ background:radial-gradient(ellipse at center, var(--glowd), transparent 72%); }
+
   /* scroll reveal — hidden state applies only when JS is running (html.js),
      so no-JS visitors and crawlers always see full content */
   .reveal{ transition:opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1); }
@@ -281,13 +291,15 @@
   .marquee-set{ display:flex; align-items:center; gap:14px; padding-right:14px; flex-shrink:0; }
   .bank-pill{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap;
     font-size:.88rem; font-weight:700; color:var(--text);
-    background:var(--card2);
-    border:1px solid var(--border); border-radius:100px; padding:9px 20px; }
+    background:var(--surface2);
+    border:1px solid rgba(167,139,250,.18); border-radius:100px; padding:9px 20px;
+    box-shadow:0 4px 14px rgba(0,0,0,.18); }
   .bank-pill i{ color:var(--primary-l); font-size:.8rem; }
   .feature-pill{ display:inline-flex; align-items:center; white-space:nowrap;
     font-size:.85rem; font-weight:600; color:var(--text);
-    background:var(--card2);
-    border:1px solid var(--border); border-radius:100px; padding:9px 20px; }
+    background:var(--surface2);
+    border:1px solid rgba(167,139,250,.18); border-radius:100px; padding:9px 20px;
+    box-shadow:0 4px 14px rgba(0,0,0,.18); }
   @keyframes mmmarquee{ from{ transform:translateX(0) } to{ transform:translateX(-50%) } }
   /* opposite direction so two marquees on one page read as distinct, not a glitch */
   .marquee-track-rev{ animation-name:mmmarquee-rev; }
@@ -389,21 +401,42 @@
     .rank-card{ width:calc(50% - 6px); max-width:150px; }
   }
 
+  /* faq — native <details>/<summary>, works with zero JS */
+  .faq-list{ max-width:680px; margin:0 auto; display:flex; flex-direction:column; gap:12px; }
+  .faq-item{ background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:4px 20px; transition:border-color .18s; }
+  .faq-item:hover{ border-color:rgba(167,139,250,.3); }
+  .faq-item summary{ list-style:none; cursor:pointer; padding:16px 28px 16px 0; position:relative;
+    font-size:.95rem; font-weight:700; }
+  .faq-item summary::-webkit-details-marker{ display:none; }
+  .faq-item summary::after{ content:'\f078'; font-family:'Font Awesome 6 Free'; font-weight:900;
+    position:absolute; right:0; top:50%; transform:translateY(-50%); font-size:.75rem;
+    color:var(--primary-l); transition:transform .3s cubic-bezier(.16,1,.3,1); }
+  .faq-item[open] summary::after{ transform:translateY(-50%) rotate(180deg); }
+  .faq-a{ font-size:.87rem; color:var(--muted); line-height:1.75; padding-bottom:18px; }
+  .faq-a a{ color:var(--primary-l); }
+
   /* reviews */
+  .reviews-inner{ display:flex; flex-direction:column; align-items:center; gap:32px; }
   .rating-card{ display:flex; flex-direction:column; align-items:center; text-align:center;
-    background:var(--card);
-    border:1px solid var(--border); border-radius:18px; padding:28px 22px; max-width:420px; margin:0 auto 20px; }
+    background:var(--card); flex-shrink:0;
+    border:1px solid var(--border); border-radius:18px; padding:28px 22px; width:100%; max-width:300px; }
   .rating-stars{ color:var(--amber); font-size:1.1rem; letter-spacing:.15em; margin-bottom:8px; }
   .rating-score{ font-size:2rem; font-weight:800; letter-spacing:-.02em; line-height:1.2; }
   .rating-source{ font-size:.86rem; color:var(--muted); margin-top:2px; }
   .rating-note{ font-size:.78rem; color:var(--muted); opacity:.8; margin-top:10px; }
 
-  .review-invite{ text-align:center; max-width:560px; margin:0 auto; }
+  .review-invite{ text-align:center; max-width:420px; }
   .review-invite p{ color:var(--muted); font-size:.92rem; margin-bottom:20px; }
-  .dev-note{ font-size:.8rem; color:var(--muted); margin-top:28px; opacity:.85; }
+  .dev-note{ font-size:.8rem; color:var(--muted); margin-top:22px; opacity:.85; }
   .dev-note a{ color:var(--primary-l); text-decoration:none; font-weight:600; }
   .dev-note a:hover{ text-decoration:underline; }
   .review-btns{ display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
+  @media (min-width:760px){
+    .reviews-inner{ flex-direction:row; justify-content:center; gap:48px; }
+    .review-invite{ text-align:left; }
+    .review-invite .review-btns{ justify-content:flex-start; }
+  }
   .review-btn{ display:inline-flex; align-items:center; gap:8px; font-size:.85rem; font-weight:600;
     text-decoration:none; color:var(--text); background:var(--surface2); border:1px solid var(--border);
     border-radius:100px; padding:11px 22px; transition:border-color .2s,transform .18s; }
@@ -762,45 +795,76 @@
     </div>
   </section>
 
+  <section class="section" id="faq">
+    <div class="section-head reveal">
+      <h2>คำถามที่พบบ่อย</h2>
+      <p>คำตอบตรงๆ ไม่มีตัวเล็ก — รายละเอียดเต็มอยู่ในนโยบายจริงเสมอ</p>
+    </div>
+    <div class="faq-list reveal-stagger">
+      <details class="faq-item reveal">
+        <summary>แอปนี้ฟรีจริงไหม มีดักจ่ายทีหลังไหม</summary>
+        <div class="faq-a">ใช้งานฟรี 100% ไม่มีค่าใช้จ่ายแอบแฝง ทุกฟีเจอร์หลัก (บันทึกรายรับ-รายจ่าย สแกนใบเสร็จ คำนวณภาษี ติดตามพอร์ต) ใช้ได้เต็มรูปแบบโดยไม่ต้องจ่ายเงิน</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>ข้อมูลการเงินของฉันปลอดภัยแค่ไหน</summary>
+        <div class="faq-a">รหัสผ่านเข้ารหัสแบบย้อนกลับไม่ได้ ข้อมูลไม่ถูกขายหรือแบ่งปันให้ใคร และคุณเข้าถึงได้คนเดียว — ดูรายละเอียดทั้งหมดได้ที่หัวข้อ <a href="#security">ความปลอดภัยของข้อมูล</a> ด้านบน</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>เลิกใช้แล้วเอาข้อมูลออกได้ไหม</summary>
+        <div class="faq-a">ได้ทุกเมื่อ ข้อมูลการเงินที่คุณป้อนเป็นของคุณเสมอ ส่งออกหรือลบทั้งหมดได้จากหน้าตั้งค่าในแอป ไม่ต้องขอใคร — รายละเอียดที่ <a href="terms.html#data-ownership">ข้อตกลงการใช้งาน</a></div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>ใครเป็นคนดูแลแอปนี้</summary>
+        <div class="faq-a">พัฒนาและดูแลโดยนักพัฒนาอิสระคนเดียว ไม่ใช่บริษัทใหญ่ มีคำถามหรือข้อเสนอแนะทักได้โดยตรงที่ <a href="mailto:warakornbest6@gmail.com">warakornbest6@gmail.com</a></div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>แอปนี้เป็นที่ปรึกษาการเงินหรือเปล่า</summary>
+        <div class="faq-a">ไม่ใช่ครับ MoneyMind ไม่ใช่ที่ปรึกษาทางการเงิน การลงทุน ภาษี หรือกฎหมาย ตัวเลขและคำแนะนำในแอป (รวมถึงจาก AI) เป็นการประมาณการเพื่อวางแผนส่วนตัวเท่านั้น ก่อนตัดสินใจทางการเงินจริงควรตรวจสอบกับผู้เชี่ยวชาญที่มีใบอนุญาตเสมอ</div>
+      </details>
+    </div>
+  </section>
+
   <section class="section" id="reviews">
     <div class="section-head reveal">
       <h2>เสียงจากผู้ใช้</h2>
       <p>แอปเพิ่งเปิดตัว — เราขอโชว์ตามจริง ไม่แต่งรีวิวเอง</p>
     </div>
 
-    <div class="rating-card reveal">
-      <div class="rating-stars">★★★★★</div>
-      <div class="rating-score">5.0</div>
-      <div class="rating-source">คะแนนบน App Store</div>
-      <div class="rating-note">จากผู้ให้คะแนน 1 คน — แอปเพิ่งเปิดตัว ยังมีรีวิวน้อยมาก</div>
-    </div>
-
-    <!-- ══════════════════════════════════════════════════════════════════════
-         พอมีรีวิวจริงจากผู้ใช้แล้ว ให้ลบคอมเมนต์ก้อนนี้ออก แล้ววาง .review-grid
-         ด้านล่างนี้เข้าไปแทน (CSS พร้อมใช้งานแล้ว ไม่ต้องแก้อะไรเพิ่ม)
-         ⚠️ ใส่เฉพาะรีวิวที่มีคนพูดจริงเท่านั้น ห้ามแต่งขึ้นเอง
-
-    <div class="review-grid reveal-stagger">
-      <div class="review-card reveal">
-        <div class="stars">★★★★★</div>
-        <div class="quote">(ข้อความรีวิวจริงจากผู้ใช้)</div>
-        <div class="who">— ชื่อผู้ใช้จริง · App Store</div>
+    <div class="reviews-inner">
+      <div class="rating-card reveal">
+        <div class="rating-stars">★★★★★</div>
+        <div class="rating-score">5.0</div>
+        <div class="rating-source">คะแนนบน App Store</div>
+        <div class="rating-note">จากผู้ให้คะแนน 1 คน — แอปเพิ่งเปิดตัว ยังมีรีวิวน้อยมาก</div>
       </div>
-    </div>
-         ══════════════════════════════════════════════════════════════════════ -->
 
-    <div class="review-invite reveal">
-      <p>ถ้าคุณใช้ MoneyMind อยู่ ความเห็นของคุณช่วยเราได้มากจริงๆ<br>รีวิวของคุณอาจเป็นอันแรกที่คนอื่นได้อ่าน</p>
-      <div class="review-btns">
-        <a class="review-btn" href="https://apps.apple.com/th/app/id6788824042?action=write-review">
-          <i class="fab fa-apple"></i> เขียนรีวิวบน App Store
-        </a>
-        <a class="review-btn" href="https://play.google.com/store/apps/details?id=app.moneymind.th">
-          <i class="fab fa-google-play"></i> เขียนรีวิวบน Play Store
-        </a>
+      <!-- ══════════════════════════════════════════════════════════════════════
+           พอมีรีวิวจริงจากผู้ใช้แล้ว ให้ลบคอมเมนต์ก้อนนี้ออก แล้ววาง .review-grid
+           ด้านล่างนี้เข้าไปแทน (CSS พร้อมใช้งานแล้ว ไม่ต้องแก้อะไรเพิ่ม)
+           ⚠️ ใส่เฉพาะรีวิวที่มีคนพูดจริงเท่านั้น ห้ามแต่งขึ้นเอง
+
+      <div class="review-grid reveal-stagger">
+        <div class="review-card reveal">
+          <div class="stars">★★★★★</div>
+          <div class="quote">(ข้อความรีวิวจริงจากผู้ใช้)</div>
+          <div class="who">— ชื่อผู้ใช้จริง · App Store</div>
+        </div>
       </div>
-      <p class="dev-note">พัฒนาและดูแลโดยนักพัฒนาอิสระคนเดียว ไม่ใช่บริษัทใหญ่ —
-        มีคำถามหรือข้อเสนอแนะ ทักมาได้โดยตรงที่ <a href="mailto:warakornbest6@gmail.com">warakornbest6@gmail.com</a></p>
+           ══════════════════════════════════════════════════════════════════════ -->
+
+      <div class="review-invite reveal">
+        <p>ถ้าคุณใช้ MoneyMind อยู่ ความเห็นของคุณช่วยเราได้มากจริงๆ รีวิวของคุณอาจเป็นอันแรกที่คนอื่นได้อ่าน</p>
+        <div class="review-btns">
+          <a class="review-btn" href="https://apps.apple.com/th/app/id6788824042?action=write-review">
+            <i class="fab fa-apple"></i> เขียนรีวิวบน App Store
+          </a>
+          <a class="review-btn" href="https://play.google.com/store/apps/details?id=app.moneymind.th">
+            <i class="fab fa-google-play"></i> เขียนรีวิวบน Play Store
+          </a>
+        </div>
+        <p class="dev-note">พัฒนาและดูแลโดยนักพัฒนาอิสระคนเดียว ไม่ใช่บริษัทใหญ่ —
+          มีคำถามหรือข้อเสนอแนะ ทักมาได้โดยตรงที่ <a href="mailto:warakornbest6@gmail.com">warakornbest6@gmail.com</a></p>
+      </div>
     </div>
   </section>
 
