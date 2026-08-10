@@ -17,6 +17,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "app.moneymind.th",
       "buildNumber": "11",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "MoneyMind ใช้กล้องเพื่อถ่ายรูปโปรไฟล์ และสแกนใบเสร็จ/สลิป/เอกสารภาษีด้วย AI",
