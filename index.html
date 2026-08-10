@@ -3719,7 +3719,6 @@ function _showGoogleWebViewMsg(errEl,allBtns){
 }
 
 async function tryGoogleLogin(){
-  if(window._isAndroidApp && window.AndroidBridge){ window.AndroidBridge.startGoogleSignIn(); return; }
   const errEl=_activeLoginErr();
   const allBtns=[...document.querySelectorAll('.google-btn,.apple-btn')];
   allBtns.forEach(b=>{ b.disabled=true; b.style.opacity='.5'; });
