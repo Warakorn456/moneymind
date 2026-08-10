@@ -44,11 +44,15 @@ const APP_VERSION = Constants.expoConfig?.version ?? '0.0.0';
 // webClientId = Web client ID (Firebase Auth → Google → Web SDK configuration)
 // → idToken ที่ได้จะมี audience ตรงกับที่ Firebase.signInWithCredential ต้องการ
 // (Android OAuth client + SHA-1 ต้องมีใน GCP ด้วยเพื่อให้ SDK verify แอปได้)
+// iosClientId = iOS OAuth client จาก Firebase iOS app (registered 2026-08-10, GoogleService-Info.plist)
+// จำเป็นสำหรับ iOS โดยเฉพาะ — ไม่มีค่านี้ Google Sign-In จะเปิดไม่ได้บน iOS เลย (ไม่เคยตั้งมาก่อน)
 // ─────────────────────────────────────────────────────────────────────────
 const GOOGLE_WEB_CLIENT_ID = '668138190451-6nufstl3plvt62lf64ianq8ffa3qb1kh.apps.googleusercontent.com';
+const GOOGLE_IOS_CLIENT_ID = '668138190451-j0uc44mu6jhke92tl2njsdgbcb0erqo6.apps.googleusercontent.com';
 
 GoogleSignin.configure({
   webClientId: GOOGLE_WEB_CLIENT_ID,
+  iosClientId: GOOGLE_IOS_CLIENT_ID,
   offlineAccess: false,
 });
 
