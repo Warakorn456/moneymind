@@ -10191,19 +10191,30 @@ function renderSpendingInsights(){
 //  FEATURE 7 — DARK/LIGHT MODE TOGGLE
 // ══════════════════════════════════════════
 function toggleTheme(){
-  const isLight=document.body.classList.toggle('light-mode');
-  DB.settings.theme=isLight?'light':'dark';
-  saveDB();
-  const icon=document.getElementById('theme-icon');
-  if(icon) icon.className=isLight?'fas fa-moon':'fas fa-sun';
+  const apply=()=>{
+    const isLight=document.body.classList.toggle('light-mode');
+    DB.settings.theme=isLight?'light':'dark';
+    saveDB();
+  };
+  const btn=document.getElementById('theme-btn');
+  const reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!document.startViewTransition||!btn||reduceMotion){ apply(); return; }
+  const r=btn.getBoundingClientRect();
+  const x=r.left+r.width/2, y=r.top+r.height/2;
+  const endRadius=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));
+  const trans=document.startViewTransition(apply);
+  trans.ready.then(()=>{
+    document.documentElement.animate(
+      {clipPath:[`circle(0px at ${x}px ${y}px)`,`circle(${endRadius}px at ${x}px ${y}px)`]},
+      {duration:550,easing:'ease-in-out',pseudoElement:'::view-transition-new(root)'}
+    );
+  });
 }
 
 function applyTheme(){
   const theme=DB.settings.theme||'dark';
   const isLight=theme==='light';
   document.body.classList.toggle('light-mode',isLight);
-  const icon=document.getElementById('theme-icon');
-  if(icon) icon.className=isLight?'fas fa-moon':'fas fa-sun';
 }
 
 // Chart.js สร้าง canvas ใหม่ทุกครั้งที่ re-render หน้า — เรียกฟังก์ชันนี้ตอนสร้าง chart
