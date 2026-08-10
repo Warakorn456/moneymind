@@ -1326,7 +1326,10 @@
       <!-- Language toggle -->
       <button class="theme-btn" id="lang-btn" onclick="toggleLang()" title="Switch Language / สลับภาษา" style="font-size:12px;font-weight:700">EN</button>
       <!-- Theme toggle -->
-      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="สลับ Dark/Light Mode"><i class="fas fa-sun" id="theme-icon"></i></button>
+      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="สลับ Dark/Light Mode">
+        <i class="fas fa-sun theme-icon-sun"></i>
+        <i class="fas fa-moon theme-icon-moon"></i>
+      </button>
       <!-- Gmail Bank Import -->
       <div style="position:relative">
         <button id="gmail-import-btn" onclick="openGmailInbox()" title="นำเข้าจากอีเมลธนาคาร" style="display:none;position:relative;background:none;border:1px solid var(--border);border-radius:10px;width:36px;height:36px;cursor:pointer;color:var(--text);font-size:14px;align-items:center;justify-content:center;transition:all .2s">
