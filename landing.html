@@ -460,6 +460,40 @@
     .web-badge .wb-lg{ font-size:1rem; }
   }
 
+  /* "ดูรายละเอียด" popup — shows the real clause fetched from privacy.html/terms.html
+     instead of navigating away. visibility (not display:none) is used deliberately so
+     the transition plays on the way OUT as well as in. */
+  body.modal-open{ overflow:hidden; }
+  .detail-modal{ position:fixed; inset:0; z-index:80; display:flex; align-items:center;
+    justify-content:center; padding:20px; visibility:hidden; }
+  .detail-modal.open{ visibility:visible; }
+  .detail-modal-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.55);
+    opacity:0; transition:opacity .35s ease; }
+  .detail-modal.open .detail-modal-backdrop{ opacity:1; }
+  .detail-modal-panel{ position:relative; width:100%; max-width:560px; max-height:82vh;
+    overflow-y:auto; background:var(--surface); border:1px solid var(--border); border-radius:18px;
+    padding:32px 28px 28px; box-shadow:0 30px 70px -20px rgba(0,0,0,.5);
+    opacity:0; transform:translateY(14px) scale(.97);
+    transition:opacity .4s cubic-bezier(.16,1,.3,1), transform .4s cubic-bezier(.16,1,.3,1); }
+  .detail-modal.open .detail-modal-panel{ opacity:1; transform:none; }
+  .detail-modal-close{ position:absolute; top:16px; right:16px; width:34px; height:34px;
+    display:flex; align-items:center; justify-content:center; background:var(--card2);
+    border:1px solid var(--border); border-radius:10px; color:var(--text); cursor:pointer;
+    transition:border-color .2s; }
+  .detail-modal-close:hover{ border-color:rgba(167,139,250,.45); }
+  .detail-modal-panel h3{ font-size:1.15rem; font-weight:800; margin:0 32px 16px 0; letter-spacing:-.01em; }
+  .detail-modal-body{ font-size:.9rem; line-height:1.8; color:var(--text); }
+  .detail-modal-body p, .detail-modal-body ul{ margin-bottom:12px; }
+  .detail-modal-body ul{ padding-left:20px; }
+  .detail-modal-body strong{ color:var(--primary-l); }
+  .detail-modal-body a{ color:var(--primary-l); }
+  .detail-modal-spinner{ display:flex; align-items:center; gap:10px; color:var(--muted); font-size:.85rem; padding:8px 0; }
+  .detail-modal-spinner i{ animation:mmspin 1s linear infinite; }
+  @keyframes mmspin{ to{ transform:rotate(360deg); } }
+  .detail-modal-full{ display:inline-block; margin-top:18px; font-size:.82rem; font-weight:600;
+    color:var(--primary-l); text-decoration:none; }
+  .detail-modal-full:hover{ text-decoration:underline; }
+
   /* theme-toggle page crossfade (View Transitions API) — browser default is a snappy
      ~250ms fade, which reads as "switches too fast"; slow it down and give it easing */
   ::view-transition-old(root), ::view-transition-new(root){
@@ -868,6 +902,19 @@
   </footer>
 </div>
 
+<!-- ป๊อบอัพ "ดูรายละเอียด" — โครงเดียวใช้ซ้ำได้กับทั้ง 4 การ์ดในหัวข้อความปลอดภัย
+     เนื้อหาจริงถูกดึงมาจาก privacy.html/terms.html สดๆ ตอนกด ไม่ได้ก็อปมาแปะไว้ตรงนี้
+     กันข้อความเพี้ยนจากของจริงถ้านโยบายมีการแก้ไขในอนาคต -->
+<div class="detail-modal" id="detail-modal" aria-hidden="true">
+  <div class="detail-modal-backdrop" data-close></div>
+  <div class="detail-modal-panel" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
+    <button type="button" class="detail-modal-close" data-close aria-label="ปิด"><i class="fas fa-xmark"></i></button>
+    <h3 id="detail-modal-title"></h3>
+    <div class="detail-modal-body"></div>
+    <a class="detail-modal-full" href="#">เปิดอ่านฉบับเต็ม →</a>
+  </div>
+</div>
+
 <script>
   // ปุ่มสลับโหมดสว่าง/มืด — ถ้ายังไม่เคยกด จะตามค่าของระบบไปเรื่อยๆ
   // พอกดครั้งแรกถึงจะจำค่าที่เลือกไว้ใน localStorage
@@ -934,6 +981,111 @@
     }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
 
     for (var j = 0; j < els.length; j++) io.observe(els[j]);
+  })();
+</script>
+
+<script>
+  // ป๊อบอัพ "ดูรายละเอียด" — href ของลิงก์ยังชี้ไปหน้าเต็มตามปกติเสมอ (คลิกกลาง/เปิดแท็บใหม่/
+  // ปิด JS ยังทำงานถูก) ตัวนี้แค่ดัก click ธรรมดาแล้วโชว์เนื้อหาจริงในป๊อบอัพแทนการเปลี่ยนหน้า
+  (function () {
+    var modal = document.getElementById('detail-modal');
+    if (!modal) return;
+    var panel = modal.querySelector('.detail-modal-panel');
+    var titleEl = document.getElementById('detail-modal-title');
+    var bodyEl = modal.querySelector('.detail-modal-body');
+    var fullLinkEl = modal.querySelector('.detail-modal-full');
+    var lastFocused = null;
+    var pageCache = {};
+
+    function showLoading() {
+      bodyEl.innerHTML = '<div class="detail-modal-spinner"><i class="fas fa-circle-notch"></i> กำลังโหลด...</div>';
+    }
+    function showError(fullUrl) {
+      bodyEl.innerHTML = '<p>ขอโทษครับ โหลดเนื้อหาไม่สำเร็จ ลองเปิดฉบับเต็มแทนได้เลย</p>';
+    }
+
+    // ตัด "1. "/"2.1 " ที่ขึ้นต้นหัวข้อออก — เลขนี้มีความหมายแค่ตอนอยู่ในเอกสารเต็มเรียงตามลำดับ
+    function stripNumbering(text) {
+      return text.replace(/^\s*\d+(\.\d+)?\.?\s*/, '');
+    }
+
+    function extractClause(doc, id) {
+      var heading = doc.getElementById(id);
+      if (!heading) return null;
+      var frag = document.createDocumentFragment();
+      var node = heading.nextElementSibling;
+      while (node && node.tagName !== 'H2') {
+        frag.appendChild(node.cloneNode(true));
+        node = node.nextElementSibling;
+      }
+      return { title: stripNumbering(heading.textContent), frag: frag };
+    }
+
+    function openModal(url) {
+      var parts = url.split('#');
+      var path = parts[0];
+      var id = parts[1];
+
+      lastFocused = document.activeElement;
+      fullLinkEl.setAttribute('href', url);
+      titleEl.textContent = '';
+      showLoading();
+
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('modal-open');
+      modal.querySelector('.detail-modal-close').focus();
+
+      var ready = pageCache[path]
+        ? Promise.resolve(pageCache[path])
+        : fetch(path).then(function (res) {
+            if (!res.ok) throw new Error('fetch failed');
+            return res.text();
+          }).then(function (html) {
+            pageCache[path] = html;
+            return html;
+          });
+
+      ready.then(function (html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var clause = extractClause(doc, id);
+        if (!clause) { showError(url); return; }
+        titleEl.textContent = clause.title;
+        bodyEl.innerHTML = '';
+        bodyEl.appendChild(clause.frag);
+      }).catch(function () {
+        showError(url);
+      });
+    }
+
+    function closeModal() {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('modal-open');
+      if (lastFocused && lastFocused.focus) lastFocused.focus();
+    }
+
+    document.addEventListener('click', function (e) {
+      var trigger = e.target.closest('#security .link');
+      if (trigger) {
+        e.preventDefault();
+        openModal(trigger.getAttribute('href'));
+        return;
+      }
+      if (e.target.closest('[data-close]')) closeModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (!modal.classList.contains('open')) return;
+      if (e.key === 'Escape') { closeModal(); return; }
+      // focus trap แบบง่าย — วนอยู่แค่ 2 จุดที่กดได้ในป๊อบอัพ (ปุ่มปิด กับลิงก์อ่านฉบับเต็ม)
+      if (e.key === 'Tab') {
+        var focusables = panel.querySelectorAll('button, a[href]');
+        var first = focusables[0], last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
   })();
 </script>
 
