@@ -262,7 +262,10 @@ export default function WebApp() {
       let msg = 'error';
       if (isErrorWithCode(err)) {
         if (err.code === statusCodes.SIGN_IN_CANCELLED) { injectError('cancel'); return; }
-        if (err.code === statusCodes.IN_PROGRESS) return;
+        // เดิมทำแค่ return เฉยๆ ไม่เรียก injectError() เลย — ฝั่งเว็บ (tryGoogleLogin) disable ปุ่ม
+        // + รอ callback จาก native ตลอดไปไม่มี timeout ทำให้ปุ่มค้างถาวรถ้าเจอ error code นี้
+        // (เช่น user แตะปุ่มซ้ำเร็วๆ ระหว่าง sign-in flow เดิมยังไม่จบ) — ต้อง inject เสมอ
+        if (err.code === statusCodes.IN_PROGRESS) { injectError('กำลังลงชื่อเข้าใช้อยู่ ลองใหม่อีกครั้ง'); return; }
         if (err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) msg = 'Google Play Services ไม่พร้อมใช้งาน';
         else msg = String(err.code);
       } else {
