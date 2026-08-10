@@ -271,7 +271,14 @@
     background:var(--card2);
     border:1px solid var(--border); border-radius:100px; padding:9px 20px; }
   .bank-pill i{ color:var(--primary-l); font-size:.8rem; }
+  .feature-pill{ display:inline-flex; align-items:center; white-space:nowrap;
+    font-size:.85rem; font-weight:600; color:var(--text);
+    background:var(--card2);
+    border:1px solid var(--border); border-radius:100px; padding:9px 20px; }
   @keyframes mmmarquee{ from{ transform:translateX(0) } to{ transform:translateX(-50%) } }
+  /* opposite direction so two marquees on one page read as distinct, not a glitch */
+  .marquee-track-rev{ animation-name:mmmarquee-rev; }
+  @keyframes mmmarquee-rev{ from{ transform:translateX(-50%) } to{ transform:translateX(0) } }
 
   /* features */
   .section{ padding:64px 0; }
@@ -527,24 +534,28 @@
   </section>
 
   <div class="marquee-band">
-    <div class="marquee-label">รองรับอีเมลแจ้งเตือนจากธนาคาร</div>
+    <div class="marquee-label">ทำไมต้อง MoneyMind</div>
     <div class="marquee">
-      <div class="marquee-track">
+      <div class="marquee-track marquee-track-rev">
         <div class="marquee-set">
-          <span class="bank-pill"><i class="fas fa-building-columns"></i> KBank</span>
-          <span class="bank-pill"><i class="fas fa-building-columns"></i> SCB</span>
-          <span class="bank-pill"><i class="fas fa-building-columns"></i> กรุงไทย</span>
-          <span class="bank-pill"><i class="fas fa-building-columns"></i> TTB</span>
-          <span class="bank-pill"><i class="fas fa-building-columns"></i> กรุงศรี</span>
-          <span class="bank-pill"><i class="fas fa-building-columns"></i> เกียรตินาคิน</span>
+          <span class="feature-pill">📸 ถ่ายรูปใบเสร็จ ระบบจัดหมวดให้อัตโนมัติ</span>
+          <span class="feature-pill">🤖 ถามมายาได้ทุกเรื่องเงิน ตอบเป็นภาษาคน</span>
+          <span class="feature-pill">🧮 คำนวณภาษีตามฐานอัตราก้าวหน้าจริงของไทย</span>
+          <span class="feature-pill">📬 เชื่อมอีเมลธนาคาร ดึงรายการให้อัตโนมัติ</span>
+          <span class="feature-pill">📈 ติดตามพอร์ตหุ้น กองทุน คริปโตแบบเรียลไทม์</span>
+          <span class="feature-pill">🏆 ระบบจัดอันดับความมั่งคั่ง 8 ระดับ</span>
+          <span class="feature-pill">☁️ ซิงค์ข้อมูลข้ามอุปกรณ์อัตโนมัติ</span>
+          <span class="feature-pill">🇹🇭 ออกแบบมาสำหรับคนไทยโดยเฉพาะ</span>
         </div>
         <div class="marquee-set" aria-hidden="true">
-          <span class="bank-pill"><i class="fas fa-building-columns"></i> KBank</span>
-          <span class="bank-pill"><i class="fas fa-building-columns"></i> SCB</span>
-          <span class="bank-pill"><i class="fas fa-building-columns"></i> กรุงไทย</span>
-          <span class="bank-pill"><i class="fas fa-building-columns"></i> TTB</span>
-          <span class="bank-pill"><i class="fas fa-building-columns"></i> กรุงศรี</span>
-          <span class="bank-pill"><i class="fas fa-building-columns"></i> เกียรตินาคิน</span>
+          <span class="feature-pill">📸 ถ่ายรูปใบเสร็จ ระบบจัดหมวดให้อัตโนมัติ</span>
+          <span class="feature-pill">🤖 ถามมายาได้ทุกเรื่องเงิน ตอบเป็นภาษาคน</span>
+          <span class="feature-pill">🧮 คำนวณภาษีตามฐานอัตราก้าวหน้าจริงของไทย</span>
+          <span class="feature-pill">📬 เชื่อมอีเมลธนาคาร ดึงรายการให้อัตโนมัติ</span>
+          <span class="feature-pill">📈 ติดตามพอร์ตหุ้น กองทุน คริปโตแบบเรียลไทม์</span>
+          <span class="feature-pill">🏆 ระบบจัดอันดับความมั่งคั่ง 8 ระดับ</span>
+          <span class="feature-pill">☁️ ซิงค์ข้อมูลข้ามอุปกรณ์อัตโนมัติ</span>
+          <span class="feature-pill">🇹🇭 ออกแบบมาสำหรับคนไทยโดยเฉพาะ</span>
         </div>
       </div>
     </div>
@@ -758,6 +769,30 @@
       </div>
     </div>
   </section>
+
+  <div class="marquee-band">
+    <div class="marquee-label">รองรับอีเมลแจ้งเตือนจากธนาคาร</div>
+    <div class="marquee">
+      <div class="marquee-track">
+        <div class="marquee-set">
+          <span class="bank-pill"><i class="fas fa-building-columns"></i> KBank</span>
+          <span class="bank-pill"><i class="fas fa-building-columns"></i> SCB</span>
+          <span class="bank-pill"><i class="fas fa-building-columns"></i> กรุงไทย</span>
+          <span class="bank-pill"><i class="fas fa-building-columns"></i> TTB</span>
+          <span class="bank-pill"><i class="fas fa-building-columns"></i> กรุงศรี</span>
+          <span class="bank-pill"><i class="fas fa-building-columns"></i> เกียรตินาคิน</span>
+        </div>
+        <div class="marquee-set" aria-hidden="true">
+          <span class="bank-pill"><i class="fas fa-building-columns"></i> KBank</span>
+          <span class="bank-pill"><i class="fas fa-building-columns"></i> SCB</span>
+          <span class="bank-pill"><i class="fas fa-building-columns"></i> กรุงไทย</span>
+          <span class="bank-pill"><i class="fas fa-building-columns"></i> TTB</span>
+          <span class="bank-pill"><i class="fas fa-building-columns"></i> กรุงศรี</span>
+          <span class="bank-pill"><i class="fas fa-building-columns"></i> เกียรตินาคิน</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <footer>
     <div class="foot-brand"><i class="fas fa-copyright"></i> 2569 MoneyMind — การเงินส่วนบุคคล</div>
