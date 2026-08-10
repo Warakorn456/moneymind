@@ -17,6 +17,43 @@
     .login-btn:hover{opacity:.88}.login-btn:disabled{opacity:.5}
     .login-err{font-size:13px;color:#ef4444;margin-top:10px;min-height:18px}
     .login-icon{font-size:48px;margin-bottom:20px}
+    /* ══ Login mascot — หุ่นยนต์น้อยเฝ้าประตู login (เพิ่ม 2026-08-10) ══ */
+    .login-mascot{display:flex;flex-direction:column;align-items:center;margin-bottom:14px;user-select:none}
+    .mascot-bubble{background:#fff;color:#23252d;font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:14px;
+      margin-bottom:8px;max-width:220px;text-align:center;position:relative;box-shadow:0 6px 18px rgba(0,0,0,.25);
+      opacity:0;transform:translateY(4px) scale(.9);transition:opacity .25s,transform .25s}
+    .mascot-bubble.show{opacity:1;transform:translateY(0) scale(1)}
+    .mascot-bubble::after{content:'';position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);
+      border:6px solid transparent;border-top-color:#fff}
+    .mascot-antenna{height:14px;display:flex;justify-content:center}
+    .mascot-antenna span{width:6px;height:6px;border-radius:50%;background:#fbbf24;box-shadow:0 0 8px rgba(251,191,36,.8);
+      display:block;animation:mascotBob 2.4s ease-in-out infinite}
+    .mascot-antenna span::before{content:'';position:absolute;width:2px;height:10px;background:rgba(255,255,255,.25);margin-top:6px}
+    .mascot-head{width:78px;height:70px;border-radius:26px;
+      background:linear-gradient(155deg,#a78bfa,#7c3aed 60%,#6d28d9);
+      box-shadow:0 10px 26px -8px rgba(124,58,237,.6),inset 0 1px 0 rgba(255,255,255,.35),inset 0 -2px 6px rgba(0,0,0,.18);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+      position:relative;transition:transform .3s cubic-bezier(.34,1.4,.64,1)}
+    .mascot-eyes{display:flex;gap:14px}
+    .mascot-eye{width:16px;height:16px;border-radius:50%;background:#fffdf8;display:flex;align-items:center;justify-content:center;
+      transition:transform .18s ease}
+    .mascot-pupil{width:7px;height:7px;border-radius:50%;background:#23252d;transition:transform .12s linear}
+    .mascot-mouth{width:16px;height:7px;border-radius:0 0 10px 10px;background:rgba(35,37,45,.65);transition:all .25s}
+    /* mood: กำลังพิมพ์รหัสผ่าน — หลับตา */
+    .login-mascot.mood-watching .mascot-eye{transform:scaleY(.12)}
+    .login-mascot.mood-watching .mascot-mouth{width:10px;border-radius:10px}
+    /* mood: error — ขมวดคิ้ว/สั่น */
+    .login-mascot.mood-error .mascot-head{animation:mascotShake .5s ease}
+    .login-mascot.mood-error .mascot-eye{transform:scaleY(.55)}
+    .login-mascot.mood-error .mascot-mouth{background:rgba(239,68,68,.75);border-radius:10px 10px 0 0}
+    /* mood: success — เด้งฉลอง */
+    .login-mascot.mood-success .mascot-head{animation:mascotPop .6s cubic-bezier(.34,1.4,.64,1)}
+    @keyframes mascotBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+    @keyframes mascotShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+    @keyframes mascotPop{0%{transform:scale(1) rotate(0)}40%{transform:scale(1.15) rotate(-6deg)}70%{transform:scale(1.05) rotate(4deg)}100%{transform:scale(1) rotate(0)}}
+    @media(prefers-reduced-motion:reduce){
+      .mascot-antenna span,.login-mascot.mood-error .mascot-head,.login-mascot.mood-success .mascot-head{animation:none}
+    }
     .login-toggle{font-size:13px;color:#64748b;margin-top:16px;cursor:pointer}
     .login-toggle span{color:#a78bfa;font-weight:600;cursor:pointer}
     .login-toggle span:hover{text-decoration:underline}
