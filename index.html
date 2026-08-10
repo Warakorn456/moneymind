@@ -3727,7 +3727,16 @@ async function tryGoogleLogin(){
   if((window._isAndroidApp||window._isIOSApp) && window.ReactNativeWebView){
     if(errEl) errEl.textContent='กำลังเปิด Google Sign-In...';
     window.ReactNativeWebView.postMessage(JSON.stringify({action:'googleSignIn'}));
-    // allBtns จะถูก re-enable โดย handleNativeGoogleAuth / handleNativeGoogleError
+    // allBtns จะถูก re-enable โดย handleNativeGoogleAuth / handleNativeGoogleError (inject จาก native)
+    // safety net: ถ้า native ไม่เรียก callback กลับมาเลยไม่ว่าเหตุผลอะไร (บั๊กที่เจอมาก่อน, crash,
+    // WebView ref หลุด ฯลฯ) เช็คว่าปุ่มยังค้าง disabled อยู่ไหมหลัง 25 วิ ถ้าใช่ → re-enable เอง
+    // กันปุ่มค้างถาวรแบบที่เคยเกิด (2026-08-03) ไม่ต้องรู้สาเหตุที่แท้จริงล่วงหน้าก็กู้คืนได้
+    setTimeout(()=>{
+      if(allBtns.some(b=>b.disabled)){
+        allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
+        if(errEl && errEl.textContent==='กำลังเปิด Google Sign-In...') errEl.textContent='หมดเวลาเชื่อมต่อ ลองใหม่อีกครั้ง';
+      }
+    },25000);
     return;
   }
   // In-app browser (ที่ไม่ใช่ native app) — บล็อก
