@@ -96,14 +96,10 @@
   .hero-visual{ animation:mmrise 1s cubic-bezier(.16,1,.3,1) .3s backwards; }
 
   /* nav */
-  nav{ display:flex; align-items:center; justify-content:space-between; padding:20px 0; }
-  .logo{ display:flex; align-items:center; gap:10px; text-decoration:none; }
-  .logo-mark{ width:38px; height:38px; border-radius:11px; background:linear-gradient(135deg,#6366f1,#8b5cf6);
-    display:flex; align-items:center; justify-content:center; font-size:1.15rem; flex-shrink:0; }
+  nav{ display:flex; align-items:center; padding:20px 0; }
+  .logo{ display:flex; align-items:center; gap:11px; text-decoration:none; }
+  .logo-mark{ width:40px; height:40px; border-radius:11px; display:block; flex-shrink:0; }
   .logo-text{ font-size:1.2rem; font-weight:800; letter-spacing:-.02em; }
-  .nav-cta{ font-size:.85rem; font-weight:600; color:var(--primary-l); text-decoration:none;
-    padding:8px 16px; border:1px solid rgba(167,139,250,.35); border-radius:100px; transition:background .2s; }
-  .nav-cta:hover{ background:rgba(167,139,250,.12); }
 
   /* hero */
   .hero{ padding:64px 0 56px; }
@@ -269,15 +265,22 @@
   }
 
   /* wealth rank showcase */
-  .rank-row{ display:flex; align-items:center; justify-content:center; gap:16px; flex-wrap:wrap; }
-  .rank-row img{ width:130px; height:auto; border-radius:14px; border:1px solid var(--border);
-    background:rgba(255,255,255,.02); transition:transform .18s; }
-  .rank-row img:hover{ transform:translateY(-4px); }
-  .rank-arrow{ color:rgba(255,255,255,.15); font-size:1rem; }
-  .rank-caption{ text-align:center; color:var(--muted); font-size:.88rem; margin-top:26px; }
+  /* rank tiers — tier text is real HTML (the artwork is illustration only),
+     so it stays sharp at any size instead of being baked into a scaled-down image */
+  .rank-row{ display:flex; align-items:flex-start; justify-content:center; gap:16px; flex-wrap:wrap; }
+  .rank-card{ width:150px; text-align:center; }
+  .rank-art{ border-radius:14px; overflow:hidden; border:1px solid var(--border);
+    background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+    margin-bottom:12px; transition:transform .18s, border-color .18s; }
+  .rank-card:hover .rank-art{ transform:translateY(-4px); border-color:rgba(167,139,250,.4); }
+  .rank-art img{ width:100%; height:auto; display:block; }
+  .rank-name{ font-size:1.02rem; font-weight:800; letter-spacing:-.01em; line-height:1.3; }
+  .rank-th{ font-size:.82rem; color:var(--muted); line-height:1.4; }
+  .rank-range{ font-size:.85rem; font-weight:700; margin-top:5px; }
+  .rank-caption{ text-align:center; color:var(--muted); font-size:.88rem; margin-top:28px; }
   @media (max-width:640px){
-    .rank-row img{ width:108px; }
-    .rank-arrow{ display:none; }
+    .rank-row{ gap:12px; }
+    .rank-card{ width:calc(50% - 6px); max-width:150px; }
   }
 
   /* reviews */
@@ -367,10 +370,9 @@
 <div class="wrap">
   <nav>
     <a href="landing.html" class="logo">
-      <div class="logo-mark">💰</div>
+      <img class="logo-mark" src="assets/logo.png" alt="โลโก้ MoneyMind" width="40" height="40">
       <span class="logo-text">MoneyMind</span>
     </a>
-    <a class="nav-cta" href="https://app.moneymindth.com/">เข้าเว็บแอปฟรี</a>
   </nav>
 
   <section class="hero">
@@ -556,15 +558,32 @@
       <p>ระบบจัดอันดับความมั่งคั่งแบบ percentile เทียบกับคนไทยจริง — ฟีเจอร์ที่แอปการเงินทั่วไปไม่มี</p>
     </div>
     <div class="rank-row reveal">
-      <img src="assets/rank/bronze.png" alt="ระดับ Bronze" loading="lazy" width="130" height="347">
-      <i class="fas fa-arrow-right rank-arrow"></i>
-      <img src="assets/rank/gold.png" alt="ระดับ Gold" loading="lazy" width="130" height="347">
-      <i class="fas fa-arrow-right rank-arrow"></i>
-      <img src="assets/rank/diamond.png" alt="ระดับ Diamond" loading="lazy" width="130" height="347">
-      <i class="fas fa-arrow-right rank-arrow"></i>
-      <img src="assets/rank/legend.png" alt="ระดับ Legend" loading="lazy" width="130" height="347">
+      <div class="rank-card">
+        <div class="rank-art"><img src="assets/rank/bronze.png" alt="ตัวละครระดับ Bronze" loading="lazy" width="288" height="450"></div>
+        <div class="rank-name" style="color:#cd7f32">Bronze</div>
+        <div class="rank-th">บรอนซ์</div>
+        <div class="rank-range">฿0 – ฿50K</div>
+      </div>
+      <div class="rank-card">
+        <div class="rank-art"><img src="assets/rank/gold.png" alt="ตัวละครระดับ Gold" loading="lazy" width="288" height="450"></div>
+        <div class="rank-name" style="color:#f59e0b">Gold</div>
+        <div class="rank-th">โกลด์</div>
+        <div class="rank-range">฿200K – ฿600K</div>
+      </div>
+      <div class="rank-card">
+        <div class="rank-art"><img src="assets/rank/diamond.png" alt="ตัวละครระดับ Diamond" loading="lazy" width="288" height="450"></div>
+        <div class="rank-name" style="color:#06b6d4">Diamond</div>
+        <div class="rank-th">ไดมอนด์</div>
+        <div class="rank-range">฿10M – ฿50M</div>
+      </div>
+      <div class="rank-card">
+        <div class="rank-art"><img src="assets/rank/legend.png" alt="ตัวละครระดับ Legend" loading="lazy" width="288" height="450"></div>
+        <div class="rank-name" style="color:#ec4899">Legend</div>
+        <div class="rank-th">เลเจนด์</div>
+        <div class="rank-range">฿50M ขึ้นไป</div>
+      </div>
     </div>
-    <p class="rank-caption reveal">ยิ่งใช้ยิ่งเห็นอันดับตัวเองชัดขึ้น — ไม่ใช่แค่ตัวเลขในบัญชี</p>
+    <p class="rank-caption reveal">มีทั้งหมด 8 ระดับ ตั้งแต่ Iron ถึง Legend — ยิ่งใช้ยิ่งเห็นอันดับตัวเองชัดขึ้น ไม่ใช่แค่ตัวเลขในบัญชี</p>
   </section>
 
   <section class="section" id="reviews">
