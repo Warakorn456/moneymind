@@ -3809,6 +3809,13 @@ async function tryAppleLogin(){
   if(window._isIOSApp && window.ReactNativeWebView){
     if(errEl) errEl.textContent='กำลังเปิด Sign in with Apple...';
     window.ReactNativeWebView.postMessage(JSON.stringify({action:'appleSignIn'}));
+    // safety net เดียวกับ tryGoogleLogin() — กันปุ่มค้างถาวรถ้า native ไม่เรียก callback กลับมาเลย
+    setTimeout(()=>{
+      if(allBtns.some(b=>b.disabled)){
+        allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
+        if(errEl && errEl.textContent==='กำลังเปิด Sign in with Apple...') errEl.textContent='หมดเวลาเชื่อมต่อ ลองใหม่อีกครั้ง';
+      }
+    },25000);
     return;
   }
   if(!_auth||!_fs){
