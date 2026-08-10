@@ -685,8 +685,8 @@
     body.light-mode .theme-icon-sun{opacity:0;transform:translate(-50%,-50%) rotate(90deg) scale(.4)}
     body.light-mode .theme-icon-moon{opacity:1;transform:translate(-50%,-50%) rotate(0) scale(1)}
     @media(prefers-reduced-motion:reduce){.theme-icon-sun,.theme-icon-moon{transition:none}}
-    /* ─ View Transition — วงกลมขยายจากปุ่มธีมตอนสลับ dark/light (ควบคุม clip-path เองผ่าน JS ใน toggleTheme() ปิด default cross-fade ของ browser) ─ */
-    ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+    /* ─ View Transition — ไล่สีพร้อมกันทั้งจอตอนสลับ dark/light (cross-fade ทั้งพื้นหลังพร้อมกัน ไม่ใช่ไล่จากจุดเดียว) — คุมแค่ความเร็ว ปล่อยให้ browser cross-fade เองตาม default animation */
+    ::view-transition-old(root),::view-transition-new(root){animation-duration:.5s;animation-timing-function:ease-in-out;mix-blend-mode:normal}
     ::view-transition-new(root){z-index:2}
     ::view-transition-old(root){z-index:1}
 
