@@ -3939,9 +3939,20 @@ async function _handleLineCallback(){
   if(!code||!state) return;
   const savedState=sessionStorage.getItem('_lineOAuthState');
   sessionStorage.removeItem('_lineOAuthState');
-  if(!savedState||state!==savedState) return; // ไม่ตรง/ไม่มี pending state → ไม่ใช่ callback ของเรา เงียบๆ
   // ล้าง code/state ออกจาก URL ทันที กัน authorization code ค้างอยู่ใน browser history/URL bar
+  // (ทำก่อนเช็ค state match เสมอ — ไม่ว่าจะ error หรือสำเร็จ กัน user กด refresh แล้วโดนใช้ code ซ้ำ)
   history.replaceState(null,'',window.location.pathname);
+  if(!savedState||state!==savedState){
+    // 🐛 เจอ 2026-08-11: เดิม return เงียบๆ ตรงนี้ (ตั้งใจกันเคส "มี code/state ค้างจาก URL เก่า
+    // ไม่ใช่ callback จริง") แต่ดันกลืน error จริงไปด้วย (sessionStorage หายเพราะ redirect ไปคนละแท็บ/
+    // ปิดแท็บเดิมแล้วเปิดใหม่ ฯลฯ) — user เห็นแค่ "login ไม่ได้" ไม่มี error ให้ debug เลย เปลี่ยนเป็น
+    // แสดง error ชัดเจนแทนเสมอที่มี code+state จริงมาแต่ match ไม่ได้ (ไม่ใช่ isolated no-op อีกต่อไป)
+    const errEl2=_activeLoginErr();
+    const msg2='เข้าสู่ระบบด้วย LINE ไม่สำเร็จ: เซสชันหมดอายุหรือเปิดคนละแท็บ กรุณาลองใหม่อีกครั้ง';
+    if(errEl2) errEl2.textContent=msg2; else toast(msg2,'error');
+    console.error('[line login] state mismatch — savedState:',savedState,'received state:',state);
+    return;
+  }
   const mode=savedState.split(':')[0];
   const errEl=_activeLoginErr();
   const redirectUri=window.location.origin+'/';
