@@ -3612,7 +3612,7 @@ function _activeLoginErr(){
 async function _rejectOAuthCollision(memberData, errEl){
   try{ await _auth.signOut(); }catch(e){}
   const p=(memberData&&memberData.provider)||'';
-  const how = p==='google' ? 'ปุ่ม Google' : p==='apple' ? 'ปุ่ม Apple' : 'Username / Password';
+  const how = p==='google' ? 'ปุ่ม Google' : p==='apple' ? 'ปุ่ม Apple' : p==='line' ? 'ปุ่ม LINE' : 'Username / Password';
   const el=errEl||(typeof _activeLoginErr==='function'?_activeLoginErr():null);
   if(el) el.innerHTML='<div style="background:#1e1a2e;border:1px solid #ef444455;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.7">'
     +'⚠️ <b>อีเมลนี้ลงทะเบียนไว้แล้ว</b><br>กรุณาเข้าสู่ระบบด้วย <b>'+how+'</b> ที่ใช้ครั้งแรก</div>';
