@@ -16428,6 +16428,67 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
 })();
 
 // ══════════════════════════════════════════
+//  2.5 LINE CONNECT BANNER — DASHBOARD (เพิ่ม 2026-08-11)
+// ══════════════════════════════════════════
+// ปุ่ม "เชื่อมต่อ LINE" มีอยู่แล้วในหน้า Profile (ใต้ "ความปลอดภัยบัญชี") แต่ user จริงไม่มีใครเจอ
+// เลย (ตรวจ Firestore มีแค่บัญชีทดสอบ 1 คนที่เชื่อมต่อ) เพราะฝังลึกเกินไป — เพิ่มการ์ดเตือนบน
+// Dashboard (หน้าที่ user เห็นบ่อยสุด) แบบ dismiss ได้ ไม่รบกวนซ้ำถ้ากดปิดไปแล้ว
+(function(){
+  const _origRD2=typeof renderDash==='function'?renderDash:null;
+  if(!_origRD2) return;
+  let _lineBannerStatus=null; // null=ยังไม่รู้(กำลัง fetch), true=เชื่อมต่อแล้ว, false=ยังไม่เชื่อมต่อ
+  // cache ไว้กัน query Firestore ซ้ำทุกครั้งที่ renderDash() รัน (หน้านี้ re-render บ่อยมาก)
+
+  function _dismissKey(){ return 'mm_line_banner_dismissed_'+(currentUser||''); }
+  function _isDismissed(){ try{ return localStorage.getItem(_dismissKey())==='1'; }catch(e){ return false; } }
+  window.dismissLineBanner=function(){
+    try{ localStorage.setItem(_dismissKey(),'1'); }catch(e){}
+    const el=document.getElementById('_lineBanner');
+    if(el) el.remove();
+  };
+  // เรียกจาก _handleLineCallback() (mode='link') ทันทีหลังเชื่อมต่อสำเร็จ กันการ์ดค้างโชว์
+  window._setLineBannerConnected=function(){ _lineBannerStatus=true; _renderLineBanner(); };
+
+  function _renderLineBanner(){
+    const existing=document.getElementById('_lineBanner');
+    if(existing) existing.remove();
+    if(_lineBannerStatus!==false) return; // ยังไม่รู้สถานะ หรือเชื่อมต่อแล้ว → ไม่โชว์
+    if(_isDismissed()) return;
+    const cont=document.getElementById('page-dashboard');
+    if(!cont) return;
+    const banner=document.createElement('div');
+    banner.id='_lineBanner';
+    banner.style.cssText='margin-bottom:20px;position:relative;background:linear-gradient(135deg,rgba(6,199,85,.15),rgba(6,199,85,.06));border:1px solid rgba(6,199,85,.35);border-radius:16px;padding:18px 44px 18px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap';
+    banner.innerHTML=`
+      <div style="font-size:28px;flex-shrink:0">🔔</div>
+      <div style="flex:1;min-width:180px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:2px" data-i18n="dash_line_banner_title">เชื่อมต่อ LINE รับแจ้งเตือนการเงิน</div>
+        <div style="font-size:12px;color:var(--muted)" data-i18n="dash_line_banner_desc">สรุปรายวัน/สัปดาห์ เตือนงบเกิน เตือนบิลใกล้ครบกำหนด ส่งตรงถึงแชท LINE</div>
+      </div>
+      <button class="btn" onclick="lineConnectAccount()" style="background:#06C755;flex-shrink:0;white-space:nowrap" data-i18n="dash_line_banner_btn">เชื่อมต่อเลย</button>
+      <button onclick="dismissLineBanner()" aria-label="close" style="position:absolute;top:8px;right:10px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:4px">×</button>`;
+    if(typeof applyLang==='function') applyLang(banner);
+    const emptyGuide=document.getElementById('_emptyGuide');
+    if(emptyGuide) cont.insertBefore(banner, emptyGuide.nextSibling);
+    else cont.insertBefore(banner, cont.firstChild);
+  }
+
+  renderDash=function(){
+    _origRD2();
+    if(!currentUser||!_fs) return;
+    if(_isDismissed()) return;
+    if(_lineBannerStatus===null){
+      _fs.collection('members').doc(currentUser).get().then(function(doc){
+        _lineBannerStatus=!!(doc.exists&&doc.data().lineUserId);
+        _renderLineBanner();
+      }).catch(function(){ /* อ่านไม่ได้ — เงียบๆ ไม่โชว์การ์ด ไม่ใช่ error ที่ user ต้องเห็น */ });
+      return;
+    }
+    _renderLineBanner();
+  };
+})();
+
+// ══════════════════════════════════════════
 //  3. RATE LIMIT LOGIN (5 ครั้ง → ล็อก 5 นาที)
 // ══════════════════════════════════════════
 const _RL_KEY='mm_login_fail';
