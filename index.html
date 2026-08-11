@@ -16467,10 +16467,12 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
       </div>
       <button class="btn" onclick="lineConnectAccount()" style="background:#06C755;flex-shrink:0;white-space:nowrap" data-i18n="dash_line_banner_btn">เชื่อมต่อเลย</button>
       <button onclick="dismissLineBanner()" aria-label="close" style="position:absolute;top:8px;right:10px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:4px">×</button>`;
-    if(typeof applyLang==='function') applyLang(banner);
     const emptyGuide=document.getElementById('_emptyGuide');
     if(emptyGuide) cont.insertBefore(banner, emptyGuide.nextSibling);
     else cont.insertBefore(banner, cont.firstChild);
+    // applyLang() ไม่รับ container arg (query document.querySelectorAll เองเสมอ) — ต้องเรียก
+    // "หลัง" insert เข้า DOM แล้วเท่านั้น ไม่งั้นหา [data-i18n] ในตัวที่ยังลอยอยู่ไม่เจอ
+    if(typeof applyLang==='function') applyLang();
   }
 
   renderDash=function(){
