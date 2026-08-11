@@ -1,39 +1,40 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MoneyMind — แอปจัดการเงินส่วนตัว บันทึกรายรับรายจ่าย คำนวณภาษี ฟรี</title>
-<meta name="description" content="MoneyMind แอปจัดการเงินส่วนตัวสำหรับคนไทย บันทึกรายรับ-รายจ่ายด้วยการสแกนใบเสร็จด้วย AI คำนวณภาษีเงินได้เต็มรูปแบบ นำเข้ารายการจากอีเมลธนาคารอัตโนมัติ ติดตามพอร์ตลงทุนและวางแผนเกษียณ ใช้งานฟรี ดาวน์โหลดได้ทั้ง iOS และ Android">
-<meta name="keywords" content="แอปจัดการเงิน, บันทึกรายรับรายจ่าย, คำนวณภาษี, แอปการเงินส่วนบุคคล, ประหยัดเงิน, วางแผนการเงิน, สแกนใบเสร็จ, ภาษีเงินได้บุคคลธรรมดา">
+<title>MoneyMind — Personal Finance App for Thailand | Free Expense Tracker & Tax Calculator</title>
+<meta name="description" content="MoneyMind is a personal finance app built for people living in Thailand. Track income and expenses with AI receipt scanning, calculate your Thai income tax in full, automatically import transactions from bank emails, track your investment portfolio, and plan for retirement. Free to use — available on iOS and Android.">
+<meta name="keywords" content="finance app Thailand, expense tracker, income tax calculator Thailand, personal finance app, budgeting app, AI receipt scanner, Thai tax filing">
 <meta name="robots" content="index, follow">
-<link rel="canonical" href="https://app.moneymindth.com/landing.html">
+<link rel="canonical" href="https://app.moneymindth.com/landing-en.html">
 <link rel="icon" href="mobile/assets/favicon.png" type="image/png">
 <link rel="alternate" hreflang="th" href="https://app.moneymindth.com/landing.html">
 <link rel="alternate" hreflang="en" href="https://app.moneymindth.com/landing-en.html">
 <link rel="alternate" hreflang="x-default" href="https://app.moneymindth.com/landing.html">
 
 <meta property="og:type" content="website">
-<meta property="og:locale" content="th_TH">
-<meta property="og:url" content="https://app.moneymindth.com/landing.html">
-<meta property="og:title" content="MoneyMind — แอปจัดการเงินส่วนตัวที่เข้าใจคนไทย">
-<meta property="og:description" content="บันทึกรายรับ-รายจ่ายด้วย AI สแกนใบเสร็จ คำนวณภาษีเต็มรูปแบบ นำเข้ารายการจากอีเมลธนาคารอัตโนมัติ — ใช้งานฟรี ดาวน์โหลดได้ทั้ง iOS และ Android">
-<meta property="og:image" content="https://app.moneymindth.com/assets/og-image.png">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://app.moneymindth.com/landing-en.html">
+<meta property="og:title" content="MoneyMind — The Personal Finance App Built for Thailand">
+<meta property="og:description" content="AI receipt scanning, full Thai tax calculation, automatic bank-email import — free. Available on iOS and Android.">
+<meta property="og:image" content="https://app.moneymindth.com/assets/og-image-en.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="MoneyMind — แอปจัดการเงินส่วนตัวที่เข้าใจคนไทย">
-<meta name="twitter:description" content="บันทึกรายรับ-รายจ่ายด้วย AI สแกนใบเสร็จ คำนวณภาษีเต็มรูปแบบ นำเข้ารายการจากอีเมลธนาคารอัตโนมัติ — ใช้งานฟรี">
-<meta name="twitter:image" content="https://app.moneymindth.com/assets/og-image.png">
+<meta name="twitter:title" content="MoneyMind — The Personal Finance App Built for Thailand">
+<meta name="twitter:description" content="AI receipt scanning, full Thai tax calculation, automatic bank-email import — free.">
+<meta name="twitter:image" content="https://app.moneymindth.com/assets/og-image-en.png">
 
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-<!-- ต้องรันก่อน render:
-     1) ใส่ธีมที่ผู้ใช้เคยเลือกไว้ ก่อนวาดหน้าจอ ไม่งั้นจะเห็นสีเก่าแวบนึงก่อนเปลี่ยน
-        ถ้ายังไม่เคยเลือก ปล่อยว่างไว้ CSS จะไปตามค่าของระบบ (prefers-color-scheme)
-     2) คลาส .js ใส่เฉพาะตอนที่รองรับ IntersectionObserver
-        → ถ้าไม่รองรับ/ปิด JS ทุกอย่างแสดงตามปกติ ไม่มีอะไรถูกซ่อนค้าง -->
+<!-- Must run before render:
+     1) apply any previously-chosen theme before paint, otherwise you'd see the old colors
+        flash before it switches. If never chosen, leave unset — CSS follows the system
+        (prefers-color-scheme).
+     2) the .js class is only added when IntersectionObserver is supported
+        → if unsupported/JS disabled, everything just shows normally, nothing stays hidden -->
 <script>
   (function () {
     var d = document.documentElement;
@@ -53,8 +54,8 @@
   "name": "MoneyMind",
   "operatingSystem": "iOS, Android",
   "applicationCategory": "FinanceApplication",
-  "description": "แอปจัดการเงินส่วนตัวสำหรับคนไทย บันทึกรายรับ-รายจ่ายด้วย AI สแกนใบเสร็จ คำนวณภาษีเงินได้เต็มรูปแบบ นำเข้ารายการจากอีเมลธนาคารอัตโนมัติ ติดตามพอร์ตลงทุนและวางแผนเกษียณ",
-  "inLanguage": "th",
+  "description": "A personal finance app built for people living in Thailand. Track income and expenses with AI receipt scanning, calculate Thai income tax in full, automatically import transactions from bank emails, track investment portfolios, and plan for retirement.",
+  "inLanguage": "en",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "THB" },
   "url": "https://app.moneymindth.com/"
 }
@@ -67,33 +68,33 @@
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "แอปนี้ฟรีจริงไหม มีดักจ่ายทีหลังไหม",
-      "acceptedAnswer": { "@type": "Answer", "text": "ตอนนี้ใช้งานฟรีทุกฟีเจอร์หลัก (บันทึกรายรับ-รายจ่าย สแกนใบเสร็จ คำนวณภาษี ติดตามพอร์ต) ไม่ต้องผูกบัตรหรือจ่ายเงินก่อนเริ่มใช้งาน" }
+      "name": "Is this app really free? Will I get charged later?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Right now, all core features are free (logging income/expenses, receipt scanning, tax calculation, portfolio tracking) — no card or payment required to get started." }
     },
     {
       "@type": "Question",
-      "name": "ข้อมูลการเงินของฉันปลอดภัยแค่ไหน",
-      "acceptedAnswer": { "@type": "Answer", "text": "รหัสผ่านเข้ารหัสแบบย้อนกลับไม่ได้ ข้อมูลไม่ถูกขายหรือแบ่งปันให้ใคร และคุณเข้าถึงได้คนเดียว" }
+      "name": "How safe is my financial data?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Passwords are irreversibly hashed, your data is never sold or shared, and only you can access it." }
     },
     {
       "@type": "Question",
-      "name": "แอปนี้เชื่อมต่อบัญชีธนาคารของฉันโดยตรงไหม",
-      "acceptedAnswer": { "@type": "Answer", "text": "ไม่เชื่อมต่อและไม่ขอรหัสผ่านธนาคารของคุณเด็ดขาด ระบบนำเข้ารายการทำได้จากอีเมลแจ้งเตือนธุรกรรมที่ธนาคารส่งให้คุณเองเท่านั้น (ไม่ใช่การเชื่อมต่อบัญชีแบบ Open Banking) หรือคุณจะบันทึกรายการด้วยตัวเองก็ได้เช่นกัน" }
+      "name": "Does this app connect directly to my bank account?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No — and we never ask for your banking password. The app only imports transactions from the bank transaction alert emails your bank sends you (this is not an Open Banking connection). You can also just log transactions yourself." }
     },
     {
       "@type": "Question",
-      "name": "เลิกใช้แล้วเอาข้อมูลออกได้ไหม",
-      "acceptedAnswer": { "@type": "Answer", "text": "ได้ทุกเมื่อ ข้อมูลการเงินที่คุณป้อนเป็นของคุณเสมอ ส่งออกหรือลบทั้งหมดได้จากหน้าตั้งค่าในแอป ไม่ต้องขอใคร" }
+      "name": "Can I delete my data if I stop using the app?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Anytime. The financial data you enter is always yours — export or delete all of it from the in-app settings page, no need to ask anyone." }
     },
     {
       "@type": "Question",
-      "name": "มีปัญหาหรือข้อเสนอแนะ ติดต่อได้ทางไหน",
-      "acceptedAnswer": { "@type": "Answer", "text": "ส่งอีเมลมาได้โดยตรงที่ warakornbest6@gmail.com เราตอบทุกข้อความและนำไปใช้พัฒนาแอปอย่างต่อเนื่อง" }
+      "name": "I have an issue or a suggestion — how do I reach you?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Email us directly at warakornbest6@gmail.com — we read and respond to every message, and use it to keep improving the app." }
     },
     {
       "@type": "Question",
-      "name": "แอปนี้เป็นที่ปรึกษาการเงินหรือเปล่า",
-      "acceptedAnswer": { "@type": "Answer", "text": "ไม่ใช่ครับ MoneyMind ไม่ใช่ที่ปรึกษาทางการเงิน การลงทุน ภาษี หรือกฎหมาย ตัวเลขและคำแนะนำในแอป (รวมถึงจาก AI) เป็นการประมาณการเพื่อวางแผนส่วนตัวเท่านั้น ก่อนตัดสินใจทางการเงินจริงควรตรวจสอบกับผู้เชี่ยวชาญที่มีใบอนุญาตเสมอ" }
+      "name": "Is this app a financial advisor?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. MoneyMind is not a financial, investment, tax, or legal advisor. The numbers and suggestions in the app (including from the AI) are estimates for personal planning purposes only. Always check with a licensed professional before making real financial decisions." }
     }
   ]
 }
@@ -356,7 +357,7 @@
     .hero-visual{ flex:0 0 320px; max-width:320px; margin:0; }
   }
 
-  /* marquee — decorative running band of supported banks */
+  /* marquee — decorative running band of feature highlights */
   .marquee-band{ padding:22px 0 10px; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
     background:var(--band); }
   .marquee-label{ text-align:center; font-size:.76rem; font-weight:600; color:var(--muted);
@@ -548,9 +549,9 @@
 
   /* steps */
   .steps{ position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
-  /* เส้นต้องจบตรงกึ่งกลางวงกลมพอดี — วงกลมชิดขอบซ้ายของแต่ละคอลัมน์ (ไม่ได้อยู่กึ่งกลาง)
-     สูตรเดิม 100%/6 คำนวณเหมือนไม่มี gap เลย เส้นเลยไม่ตรงกับวงกลมจริง โดยเฉพาะเส้นที่ 2-3
-     ที่นี่คิดจาก: วงกลมกว้าง 40px (ครึ่งหนึ่ง=20px) + gap 24px คูณจำนวนช่องจริงๆ */
+  /* the connector line has to land exactly on the badge centers — badges sit flush against
+     each column's left edge (not centered), so left:20px flat + right accounting for the
+     24px column gap keeps it aligned across all three badges */
   .steps::before{ content:''; position:absolute; top:20px; left:20px; right:calc(100%/3 - 36px); height:2px;
     background:linear-gradient(90deg,var(--line),transparent); z-index:0; }
   .step{ position:relative; z-index:1; }
@@ -590,7 +591,7 @@
     .web-badge .wb-lg{ font-size:1rem; }
   }
 
-  /* "ดูรายละเอียด" popup — shows the real clause fetched from privacy.html/terms.html
+  /* "See details" popup — shows the real clause fetched from privacy.html/terms.html
      instead of navigating away. visibility (not display:none) is used deliberately so
      the transition plays on the way OUT as well as in. */
   body.modal-open{ overflow:hidden; }
@@ -649,33 +650,33 @@
 
 <div class="wrap">
   <nav>
-    <a href="landing.html" class="logo">
-      <img class="logo-mark" src="assets/logo.png" alt="โลโก้ MoneyMind" width="40" height="40">
+    <a href="landing-en.html" class="logo">
+      <img class="logo-mark" src="assets/logo.png" alt="MoneyMind logo" width="40" height="40">
       <span class="logo-text">MoneyMind</span>
     </a>
     <div class="nav-links">
-      <a href="#features">ฟีเจอร์</a>
-      <a href="#security">ความปลอดภัย</a>
-      <a href="#faq">คำถามที่พบบ่อย</a>
+      <a href="#features">Features</a>
+      <a href="#security">Security</a>
+      <a href="#faq">FAQ</a>
     </div>
     <div class="nav-right">
-      <a href="landing-en.html" class="lang-switch">EN</a>
-      <a href="https://app.moneymindth.com/" class="nav-cta">ใช้งานเลย</a>
-      <button type="button" id="theme-toggle" class="theme-toggle" aria-label="สลับโหมดสีสว่าง/มืด">
+      <a href="landing.html" class="lang-switch">TH</a>
+      <a href="https://app.moneymindth.com/" class="nav-cta">Get Started</a>
+      <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Toggle light/dark mode">
         <i class="fas fa-sun icon-sun" aria-hidden="true"></i>
         <i class="fas fa-moon icon-moon" aria-hidden="true"></i>
       </button>
       <details class="mobile-nav">
-        <summary class="mobile-nav-btn" aria-label="เมนู">
+        <summary class="mobile-nav-btn" aria-label="Menu">
           <i class="fas fa-bars" aria-hidden="true"></i>
           <i class="fas fa-xmark" aria-hidden="true"></i>
         </summary>
         <div class="mobile-nav-menu">
-          <a href="#features">ฟีเจอร์</a>
-          <a href="#security">ความปลอดภัย</a>
-          <a href="#faq">คำถามที่พบบ่อย</a>
+          <a href="#features">Features</a>
+          <a href="#security">Security</a>
+          <a href="#faq">FAQ</a>
           <div class="mobile-nav-divider"></div>
-          <a href="landing-en.html">English</a>
+          <a href="landing.html">ไทย (Thai)</a>
         </div>
       </details>
     </div>
@@ -684,13 +685,13 @@
   <section class="hero">
     <div class="hero-inner">
       <div class="hero-text">
-        <h1>แอป<em>จัดการเงิน</em>ที่เข้าใจคนไทยจริงๆ</h1>
-        <p class="sub">บันทึกรายรับ-รายจ่ายด้วยการสแกนใบเสร็จด้วย AI คำนวณภาษีเงินได้เต็มรูปแบบ และนำเข้ารายการจากอีเมลธนาคารอัตโนมัติ — ทำเรื่องเงินที่ยุ่งยากให้ง่ายในแอปเดียว</p>
+        <h1>The <em>money app</em> built for life in Thailand</h1>
+        <p class="sub">Track income and expenses with AI receipt scanning, calculate your income tax in full, and automatically import transactions from bank emails — everything money-related, simplified in one app.</p>
 
         <div class="trust-row">
-          <span><i class="fas fa-shield-halved"></i> เข้ารหัสข้อมูลตามมาตรฐาน PDPA</span>
-          <span><i class="fas fa-cloud"></i> ซิงค์ข้อมูลข้ามอุปกรณ์อัตโนมัติ</span>
-          <span><i class="fas fa-language"></i> รองรับภาษาไทยและอังกฤษ</span>
+          <span><i class="fas fa-shield-halved"></i> PDPA-compliant data protection</span>
+          <span><i class="fas fa-cloud"></i> Automatic cross-device sync</span>
+          <span><i class="fas fa-language"></i> Available in Thai and English</span>
         </div>
       </div>
 
@@ -700,12 +701,12 @@
           <div class="phone-screen">
             <div class="mock-topbar">
               <span class="mock-avatar"></span>
-              <span class="mock-greeting">สวัสดีค่ะ 👋</span>
+              <span class="mock-greeting">Hi there 👋</span>
             </div>
             <div class="mock-nw-card">
-              <div class="mock-nw-label">Net Worth ทั้งหมด</div>
+              <div class="mock-nw-label">Total Net Worth</div>
               <div class="mock-nw-value">฿847,392</div>
-              <div class="mock-nw-badge">+12.4% เดือนนี้</div>
+              <div class="mock-nw-badge">+12.4% this month</div>
               <div class="mock-bars">
                 <span style="height:35%"></span>
                 <span style="height:55%"></span>
@@ -717,40 +718,40 @@
               </div>
             </div>
             <div class="mock-chips">
-              <div class="mock-chip"><i class="fas fa-utensils"></i> อาหาร <b>฿3,200</b></div>
-              <div class="mock-chip"><i class="fas fa-car"></i> เดินทาง <b>฿1,150</b></div>
+              <div class="mock-chip"><i class="fas fa-utensils"></i> Food <b>฿3,200</b></div>
+              <div class="mock-chip"><i class="fas fa-car"></i> Transport <b>฿1,150</b></div>
             </div>
           </div>
         </div>
-        <div class="float-badge float-badge-1"><i class="fas fa-receipt"></i> บันทึกอัตโนมัติ</div>
-        <div class="float-badge float-badge-2"><i class="fas fa-robot"></i> ถามมายาได้เลย</div>
+        <div class="float-badge float-badge-1"><i class="fas fa-receipt"></i> Auto-logged</div>
+        <div class="float-badge float-badge-2"><i class="fas fa-robot"></i> Ask Maya anything</div>
       </div>
     </div>
   </section>
 
   <div class="marquee-band">
-    <div class="marquee-label">ทำไมต้อง MoneyMind</div>
+    <div class="marquee-label">Why MoneyMind</div>
     <div class="marquee">
       <div class="marquee-track marquee-track-rev">
         <div class="marquee-set">
-          <span class="feature-pill">📸 ถ่ายรูปใบเสร็จ ระบบจัดหมวดให้อัตโนมัติ</span>
-          <span class="feature-pill">🤖 ถามมายาได้ทุกเรื่องเงิน ตอบเป็นภาษาคน</span>
-          <span class="feature-pill">🧮 คำนวณภาษีตามฐานอัตราก้าวหน้าจริงของไทย</span>
-          <span class="feature-pill">📬 เชื่อมอีเมลธนาคาร ดึงรายการให้อัตโนมัติ</span>
-          <span class="feature-pill">📈 ติดตามพอร์ตหุ้น กองทุน คริปโตแบบเรียลไทม์</span>
-          <span class="feature-pill">🏆 ระบบจัดอันดับความมั่งคั่ง 8 ระดับ</span>
-          <span class="feature-pill">☁️ ซิงค์ข้อมูลข้ามอุปกรณ์อัตโนมัติ</span>
-          <span class="feature-pill">🇹🇭 ออกแบบมาสำหรับคนไทยโดยเฉพาะ</span>
+          <span class="feature-pill">📸 Snap a receipt — auto-categorized instantly</span>
+          <span class="feature-pill">🤖 Ask Maya anything about money, in plain language</span>
+          <span class="feature-pill">🧮 Real Thai progressive tax brackets, calculated for you</span>
+          <span class="feature-pill">📬 Connect your bank email — transactions imported automatically</span>
+          <span class="feature-pill">📈 Track stocks, funds, and crypto in real time</span>
+          <span class="feature-pill">🏆 8-tier wealth ranking system</span>
+          <span class="feature-pill">☁️ Automatic sync across all your devices</span>
+          <span class="feature-pill">🇹🇭 Built specifically for Thailand</span>
         </div>
         <div class="marquee-set" aria-hidden="true">
-          <span class="feature-pill">📸 ถ่ายรูปใบเสร็จ ระบบจัดหมวดให้อัตโนมัติ</span>
-          <span class="feature-pill">🤖 ถามมายาได้ทุกเรื่องเงิน ตอบเป็นภาษาคน</span>
-          <span class="feature-pill">🧮 คำนวณภาษีตามฐานอัตราก้าวหน้าจริงของไทย</span>
-          <span class="feature-pill">📬 เชื่อมอีเมลธนาคาร ดึงรายการให้อัตโนมัติ</span>
-          <span class="feature-pill">📈 ติดตามพอร์ตหุ้น กองทุน คริปโตแบบเรียลไทม์</span>
-          <span class="feature-pill">🏆 ระบบจัดอันดับความมั่งคั่ง 8 ระดับ</span>
-          <span class="feature-pill">☁️ ซิงค์ข้อมูลข้ามอุปกรณ์อัตโนมัติ</span>
-          <span class="feature-pill">🇹🇭 ออกแบบมาสำหรับคนไทยโดยเฉพาะ</span>
+          <span class="feature-pill">📸 Snap a receipt — auto-categorized instantly</span>
+          <span class="feature-pill">🤖 Ask Maya anything about money, in plain language</span>
+          <span class="feature-pill">🧮 Real Thai progressive tax brackets, calculated for you</span>
+          <span class="feature-pill">📬 Connect your bank email — transactions imported automatically</span>
+          <span class="feature-pill">📈 Track stocks, funds, and crypto in real time</span>
+          <span class="feature-pill">🏆 8-tier wealth ranking system</span>
+          <span class="feature-pill">☁️ Automatic sync across all your devices</span>
+          <span class="feature-pill">🇹🇭 Built specifically for Thailand</span>
         </div>
       </div>
     </div>
@@ -758,19 +759,19 @@
 
   <section class="section" id="preview">
     <div class="section-head reveal">
-      <h2>ดูตัวอย่างการใช้งานจริง</h2>
-      <p>ภาพจำลองหน้าจอ — ดูว่าใช้งานจริงเป็นยังไงก่อนตัดสินใจโหลด</p>
+      <h2>See it in action</h2>
+      <p>Real screen mockups — see how it actually works before you decide to download</p>
     </div>
     <div class="preview-grid reveal-stagger">
       <div class="preview-card reveal">
-        <div class="preview-label"><i class="fas fa-robot"></i> ผู้ช่วย AI "มายา"</div>
+        <div class="preview-label"><i class="fas fa-robot"></i> AI Assistant "Maya"</div>
         <div class="chat-mock">
-          <div class="chat-bubble user">เดือนนี้ใช้เงินไปเท่าไหร่แล้ว</div>
-          <div class="chat-bubble ai">เดือนนี้ใช้ไปแล้ว <b>฿18,420</b> ส่วนใหญ่หมวดอาหารกับเดินทางค่ะ 🍜</div>
+          <div class="chat-bubble user">How much have I spent this month?</div>
+          <div class="chat-bubble ai">You've spent <b>฿18,420</b> so far this month, mostly on food and transport 🍜</div>
         </div>
       </div>
       <div class="preview-card reveal">
-        <div class="preview-label"><i class="fas fa-camera"></i> สแกนใบเสร็จด้วย AI</div>
+        <div class="preview-label"><i class="fas fa-camera"></i> AI Receipt Scanning</div>
         <div class="scan-mock">
           <div class="scan-receipt">
             <i class="fas fa-receipt"></i>
@@ -778,18 +779,18 @@
           </div>
           <i class="fas fa-arrow-right scan-arrow"></i>
           <div class="scan-result">
-            <div class="scan-result-top"><span>ร้านกาแฟบ้านใกล้</span><b>฿120</b></div>
-            <span class="scan-tag"><i class="fas fa-mug-hot"></i> อาหาร</span>
+            <div class="scan-result-top"><span>Neighborhood coffee shop</span><b>฿120</b></div>
+            <span class="scan-tag"><i class="fas fa-mug-hot"></i> Food</span>
           </div>
         </div>
       </div>
       <div class="preview-card reveal">
-        <div class="preview-label"><i class="fas fa-file-invoice-dollar"></i> คำนวณภาษีเงินได้</div>
+        <div class="preview-label"><i class="fas fa-file-invoice-dollar"></i> Income Tax Calculator</div>
         <div class="tax-mock">
-          <div class="tax-save-label">ประหยัดภาษีได้เพิ่ม</div>
-          <div class="tax-save-value">฿14,200<span>/ปี</span></div>
+          <div class="tax-save-label">Extra tax savings available</div>
+          <div class="tax-save-value">฿14,200<span>/year</span></div>
           <div class="tax-bar"><div class="tax-bar-fill" style="width:64%"></div></div>
-          <div class="tax-hint"><i class="fas fa-lightbulb"></i> แนะนำซื้อ RMF เพิ่มอีก ฿32,000</div>
+          <div class="tax-hint"><i class="fas fa-lightbulb"></i> Consider buying ฿32,000 more in RMF</div>
         </div>
       </div>
     </div>
@@ -797,300 +798,303 @@
 
   <section class="section" id="features">
     <div class="section-head reveal">
-      <h2>ฟีเจอร์ที่แอปจัดการเงินทั่วไปไม่มี</h2>
-      <p>ออกแบบมาสำหรับบริบทการเงินแบบไทยโดยเฉพาะ ไม่ใช่แอปแปลจากต่างประเทศ</p>
+      <h2>Features other finance apps don't have</h2>
+      <p>Built specifically for how money works in Thailand — not a foreign app in translation</p>
     </div>
     <div class="grid reveal-stagger">
       <div class="fcard reveal">
         <div class="ico" style="background:rgba(124,58,237,.14);color:#a78bfa"><i class="fas fa-camera"></i></div>
-        <div class="title">สแกนใบเสร็จด้วย AI</div>
-        <div class="desc">ถ่ายรูปใบเสร็จหรือสลิปโอนเงิน ระบบอ่านยอดและจัดหมวดหมู่ให้อัตโนมัติ ไม่ต้องพิมพ์เอง</div>
+        <div class="title">AI Receipt Scanning</div>
+        <div class="desc">Photograph a receipt or transfer slip — the app reads the amount and categorizes it automatically. No manual typing.</div>
       </div>
       <div class="fcard reveal">
         <div class="ico" style="background:rgba(6,182,212,.14);color:#22d3ee"><i class="fas fa-file-invoice-dollar"></i></div>
-        <div class="title">คำนวณภาษีเงินได้เต็มรูปแบบ</div>
-        <div class="desc">คำนวณภาษีตามฐานอัตราก้าวหน้าจริงของไทย พร้อมแนะนำลำดับซื้อกองทุนลดหย่อนให้คุ้มที่สุด</div>
+        <div class="title">Full Thai Income Tax Calculator</div>
+        <div class="desc">Calculated using Thailand's real progressive tax brackets, with a recommended order for tax-deductible fund purchases to maximize your savings.</div>
       </div>
       <div class="fcard reveal">
         <div class="ico" style="background:rgba(16,185,129,.14);color:#34d399"><i class="fas fa-envelope-open-text"></i></div>
-        <div class="title">นำเข้ารายการจากอีเมลธนาคาร</div>
-        <div class="desc">เชื่อมอีเมล ระบบดักจับแจ้งเตือนธุรกรรมจากธนาคารแล้วเสนอบันทึกให้ทันที ลดงานพิมพ์ซ้ำ</div>
+        <div class="title">Bank Email Import</div>
+        <div class="desc">Connect your email and the app catches bank transaction alerts, then offers to log them instantly — no more re-typing.</div>
       </div>
       <div class="fcard reveal">
         <div class="ico" style="background:rgba(245,158,11,.14);color:#fbbf24"><i class="fas fa-robot"></i></div>
-        <div class="title">ผู้ช่วย AI "มายา"</div>
-        <div class="desc">ถามคำถามเกี่ยวกับเงินของตัวเองเป็นภาษาพูด สั่งบันทึกรายการหรือตั้งเป้าหมายผ่านแชทได้เลย</div>
+        <div class="title">AI Assistant "Maya"</div>
+        <div class="desc">Ask questions about your own finances in plain language. Log transactions or set goals right from the chat.</div>
       </div>
       <div class="fcard reveal">
         <div class="ico" style="background:rgba(236,72,153,.14);color:#f472b6"><i class="fas fa-chart-line"></i></div>
-        <div class="title">ติดตามพอร์ตลงทุน</div>
-        <div class="desc">ดูมูลค่าพอร์ตหุ้น กองทุน และคริปโตแบบเรียลไทม์ พร้อมเปรียบเทียบกับดัชนีตลาด</div>
+        <div class="title">Investment Portfolio Tracking</div>
+        <div class="desc">See your stocks, funds, and crypto in real time, benchmarked against market indices.</div>
       </div>
       <div class="fcard reveal">
         <div class="ico" style="background:rgba(129,140,248,.14);color:#818cf8"><i class="fas fa-umbrella-beach"></i></div>
-        <div class="title">วางแผนเกษียณ</div>
-        <div class="desc">คำนวณเงินที่ต้องมีตอนเกษียณจากรายจ่าย เงินเฟ้อ และผลตอบแทนที่คาดหวัง เห็นภาพชัดตั้งแต่วันนี้</div>
+        <div class="title">Retirement Planning</div>
+        <div class="desc">Calculate how much you'll need at retirement based on expenses, inflation, and expected returns — see the full picture starting today.</div>
       </div>
       <div class="fcard reveal">
         <div class="ico" style="background:rgba(52,211,153,.14);color:#34d399"><i class="fas fa-piggy-bank"></i></div>
-        <div class="title">เป้าหมายออมเงิน + Subscriptions</div>
-        <div class="desc">ตั้งเป้าออมแยกตามเป้าหมาย พร้อมติดตามค่าบริการรายเดือนไม่ให้ลืมจ่ายหรือลืมยกเลิก</div>
+        <div class="title">Savings Goals + Subscriptions</div>
+        <div class="desc">Set separate savings goals and track recurring subscriptions so you never forget to pay — or forget to cancel.</div>
       </div>
       <div class="fcard reveal">
         <div class="ico" style="background:rgba(6,182,212,.14);color:#22d3ee"><i class="fas fa-cloud-arrow-up"></i></div>
-        <div class="title">ซิงค์ข้ามอุปกรณ์</div>
-        <div class="desc">เริ่มบันทึกบนมือถือ เปิดดูต่อบนคอมได้ทันที ข้อมูลอัปเดตอัตโนมัติผ่านคลาวด์</div>
+        <div class="title">Cross-Device Sync</div>
+        <div class="desc">Start logging on your phone, pick up right where you left off on your computer — everything updates automatically via the cloud.</div>
       </div>
     </div>
   </section>
 
   <section class="section" id="rank">
     <div class="section-head">
-      <h2>สนุกกับการออมเงิน ไม่ใช่แค่บันทึกตัวเลข</h2>
-      <p>ระบบจัดอันดับความมั่งคั่งแบบ percentile เทียบกับคนไทยจริง — ฟีเจอร์ที่แอปการเงินทั่วไปไม่มี</p>
+      <h2>Saving money, made fun — not just numbers in a ledger</h2>
+      <p>A percentile-based wealth ranking system compared against real people in Thailand — a feature other finance apps don't have</p>
     </div>
     <div class="rank-row reveal">
       <div class="rank-card">
-        <div class="rank-art"><img src="assets/rank/bronze.png" alt="ตัวละครระดับ Bronze" loading="lazy" width="288" height="450"></div>
+        <div class="rank-art"><img src="assets/rank/bronze.png" alt="Bronze tier character" loading="lazy" width="288" height="450"></div>
         <div class="rank-name bronze">Bronze</div>
-        <div class="rank-th">บรอนซ์</div>
+        <div class="rank-th">Starting out</div>
         <div class="rank-range">฿0 – ฿50K</div>
       </div>
       <div class="rank-card">
-        <div class="rank-art"><img src="assets/rank/gold.png" alt="ตัวละครระดับ Gold" loading="lazy" width="288" height="450"></div>
+        <div class="rank-art"><img src="assets/rank/gold.png" alt="Gold tier character" loading="lazy" width="288" height="450"></div>
         <div class="rank-name gold">Gold</div>
-        <div class="rank-th">โกลด์</div>
+        <div class="rank-th">Building wealth</div>
         <div class="rank-range">฿200K – ฿600K</div>
       </div>
       <div class="rank-card">
-        <div class="rank-art"><img src="assets/rank/diamond.png" alt="ตัวละครระดับ Diamond" loading="lazy" width="288" height="450"></div>
+        <div class="rank-art"><img src="assets/rank/diamond.png" alt="Diamond tier character" loading="lazy" width="288" height="450"></div>
         <div class="rank-name diamond">Diamond</div>
-        <div class="rank-th">ไดมอนด์</div>
+        <div class="rank-th">High net worth</div>
         <div class="rank-range">฿10M – ฿50M</div>
       </div>
       <div class="rank-card">
-        <div class="rank-art"><img src="assets/rank/legend.png" alt="ตัวละครระดับ Legend" loading="lazy" width="288" height="450"></div>
+        <div class="rank-art"><img src="assets/rank/legend.png" alt="Legend tier character" loading="lazy" width="288" height="450"></div>
         <div class="rank-name legend">Legend</div>
-        <div class="rank-th">เลเจนด์</div>
-        <div class="rank-range">฿50M ขึ้นไป</div>
+        <div class="rank-th">Elite</div>
+        <div class="rank-range">฿50M and up</div>
       </div>
     </div>
-    <p class="rank-caption reveal">มีทั้งหมด 8 ระดับ ตั้งแต่ Iron ถึง Legend — ยิ่งใช้ยิ่งเห็นอันดับตัวเองชัดขึ้น ไม่ใช่แค่ตัวเลขในบัญชี</p>
+    <p class="rank-caption reveal">8 tiers in total, from Iron to Legend — the more you use it, the clearer your own progress becomes, not just a number in an account.</p>
   </section>
 
   <section class="section" id="security">
     <div class="section-head reveal">
-      <h2>ความปลอดภัยของข้อมูล</h2>
-      <p>ทุกข้อด้านล่างมีรายละเอียดเต็มอยู่ในนโยบายจริง กดเข้าไปอ่านได้เลย ไม่ใช่แค่คำโฆษณา</p>
+      <h2>Data Security</h2>
+      <p>Every claim below has full detail in our real policy — click through and read it yourself, not just marketing copy</p>
     </div>
     <div class="grid reveal-stagger">
       <div class="fcard reveal">
         <div class="ico" style="background:rgba(124,58,237,.14);color:#a78bfa"><i class="fas fa-lock"></i></div>
-        <div class="title">รหัสผ่านเข้ารหัสแบบย้อนกลับไม่ได้</div>
-        <div class="desc">รหัสผ่านถูก hash ด้วย PBKDF2 ก่อนจัดเก็บเสมอ — แม้แต่ทีมงานก็ไม่เห็นรหัสผ่านจริงของคุณ</div>
-        <a class="link" href="privacy.html#security">ดูรายละเอียด →</a>
+        <div class="title">Passwords Are Irreversibly Hashed</div>
+        <div class="desc">Passwords are hashed with PBKDF2 before storage, always — even we can't see your real password.</div>
+        <a class="link" href="privacy.html#security">See details →</a>
       </div>
       <div class="fcard reveal">
         <div class="ico" style="background:rgba(239,68,68,.14);color:#f87171"><i class="fas fa-ban"></i></div>
-        <div class="title">ไม่ขาย ไม่แบ่งปันข้อมูลคุณ</div>
-        <div class="desc">ไม่ขาย ไม่เช่า และไม่แบ่งปันข้อมูลส่วนตัวของคุณแก่บุคคลที่สามเพื่อวัตถุประสงค์ทางการตลาดโดยเด็ดขาด</div>
-        <a class="link" href="privacy.html#how-we-use-data">ดูรายละเอียด →</a>
+        <div class="title">We Never Sell or Share Your Data</div>
+        <div class="desc">We never sell, rent, or share your personal data with third parties for marketing purposes, period.</div>
+        <a class="link" href="privacy.html#how-we-use-data">See details →</a>
       </div>
       <div class="fcard reveal">
         <div class="ico" style="background:rgba(16,185,129,.14);color:#34d399"><i class="fas fa-file-export"></i></div>
-        <div class="title">ข้อมูลของคุณเป็นของคุณเสมอ</div>
-        <div class="desc">ส่งออกหรือลบข้อมูลการเงินทั้งหมดได้ทุกเมื่อผ่านหน้าตั้งค่าในแอป ไม่ต้องขอใคร</div>
-        <a class="link" href="terms.html#data-ownership">ดูรายละเอียด →</a>
+        <div class="title">Your Data Is Always Yours</div>
+        <div class="desc">Export or delete all your financial data anytime from the app's settings page — no need to ask anyone.</div>
+        <a class="link" href="terms.html#data-ownership">See details →</a>
       </div>
       <div class="fcard reveal">
         <div class="ico" style="background:rgba(245,158,11,.14);color:#fbbf24"><i class="fas fa-robot"></i></div>
-        <div class="title">ฟีเจอร์ AI ต้องขอความยินยอมก่อนเสมอ</div>
-        <div class="desc">แอปจะขอความยินยอมก่อนใช้งานฟีเจอร์ AI ครั้งแรกเสมอ เลือกไม่ใช้ได้และแอปยังทำงานปกติทุกฟีเจอร์อื่น</div>
-        <a class="link" href="privacy.html#ai-consent">ดูรายละเอียด →</a>
+        <div class="title">AI Features Always Ask Consent First</div>
+        <div class="desc">The app always asks for your consent before your first use of any AI feature. Opt out anytime and every other feature still works normally.</div>
+        <a class="link" href="privacy.html#ai-consent">See details →</a>
       </div>
     </div>
-    <p class="infra-note reveal">ระบบทำงานบน Google Cloud และ Firebase — โครงสร้างพื้นฐานเดียวกับที่บริษัทเทคโนโลยีทั่วโลกใช้งานจริง</p>
+    <p class="infra-note reveal">Runs on Google Cloud and Firebase — the same infrastructure real technology companies use worldwide.</p>
     <div class="security-details reveal">
-      <div><i class="fas fa-lock"></i> เชื่อมต่อด้วย HTTPS/TLS เข้ารหัสข้อมูลระหว่างส่งทุกครั้ง ไม่มีการส่งข้อมูลแบบไม่เข้ารหัส</div>
-      <div><i class="fas fa-key"></i> Firebase Security Rules จำกัดสิทธิ์เข้าถึงข้อมูลบนคลาวด์ให้เฉพาะเจ้าของบัญชีที่ล็อกอินแล้วเท่านั้น</div>
-      <div><i class="fas fa-user-shield"></i> ขอความยินยอมตามกฎหมาย PDPA ก่อนเก็บข้อมูลทุกครั้งที่ใช้งานครั้งแรก</div>
+      <div><i class="fas fa-lock"></i> Every connection is encrypted with HTTPS/TLS — data is never sent unencrypted.</div>
+      <div><i class="fas fa-key"></i> Firebase Security Rules restrict cloud data access to the logged-in account owner only.</div>
+      <div><i class="fas fa-user-shield"></i> Consent is requested under Thailand's PDPA law before any data is collected, on first use.</div>
     </div>
   </section>
 
   <section class="section" id="pricing">
     <div class="section-head reveal">
-      <h2>ราคา</h2>
-      <p>ฟีเจอร์หลักทั้งหมดใช้งานได้ฟรีตอนนี้ ไม่ต้องผูกบัตรเพื่อเริ่มต้น</p>
+      <h2>Pricing</h2>
+      <p>All core features are free to use right now — no card required to get started</p>
     </div>
     <div class="price-card reveal">
-      <div class="price-tag">ฟรีเต็มรูปแบบตอนนี้</div>
+      <div class="price-tag">Free, in full, right now</div>
       <ul class="price-list">
-        <li><i class="fas fa-check"></i> สแกนใบเสร็จด้วย AI</li>
-        <li><i class="fas fa-check"></i> คำนวณภาษีเงินได้เต็มรูปแบบ</li>
-        <li><i class="fas fa-check"></i> นำเข้ารายการจากอีเมลธนาคารอัตโนมัติ</li>
-        <li><i class="fas fa-check"></i> ติดตามพอร์ตลงทุนแบบเรียลไทม์</li>
-        <li><i class="fas fa-check"></i> ผู้ช่วย AI "มายา"</li>
-        <li><i class="fas fa-check"></i> ซิงค์ข้อมูลข้ามอุปกรณ์อัตโนมัติ</li>
+        <li><i class="fas fa-check"></i> AI Receipt Scanning</li>
+        <li><i class="fas fa-check"></i> Full Income Tax Calculator</li>
+        <li><i class="fas fa-check"></i> Automatic Bank Email Import</li>
+        <li><i class="fas fa-check"></i> Real-Time Portfolio Tracking</li>
+        <li><i class="fas fa-check"></i> AI Assistant "Maya"</li>
+        <li><i class="fas fa-check"></i> Automatic Cross-Device Sync</li>
       </ul>
-      <p class="price-note">ไม่มีค่าใช้จ่ายแอบแฝง ไม่ต้องผูกบัตร ไม่ต้องใส่ข้อมูลการชำระเงินเพื่อเริ่มใช้งาน</p>
+      <p class="price-note">No hidden charges. No card required. No payment info needed to get started.</p>
     </div>
   </section>
 
   <section class="section" id="faq">
     <div class="section-head reveal">
-      <h2>คำถามที่พบบ่อย</h2>
-      <p>คำตอบตรงๆ ไม่มีตัวเล็ก — รายละเอียดเต็มอยู่ในนโยบายจริงเสมอ</p>
+      <h2>Frequently Asked Questions</h2>
+      <p>Straight answers, no fine print — full detail always lives in our real policies</p>
     </div>
     <div class="faq-list reveal-stagger">
       <details class="faq-item reveal">
-        <summary>แอปนี้ฟรีจริงไหม มีดักจ่ายทีหลังไหม</summary>
-        <div class="faq-a">ตอนนี้ใช้งานฟรีทุกฟีเจอร์หลัก (บันทึกรายรับ-รายจ่าย สแกนใบเสร็จ คำนวณภาษี ติดตามพอร์ต) ไม่ต้องผูกบัตรหรือจ่ายเงินก่อนเริ่มใช้งาน</div>
+        <summary>Is this app really free? Will I get charged later?</summary>
+        <div class="faq-a">Right now, all core features are free (logging income/expenses, receipt scanning, tax calculation, portfolio tracking) — no card or payment required to get started.</div>
       </details>
       <details class="faq-item reveal">
-        <summary>ข้อมูลการเงินของฉันปลอดภัยแค่ไหน</summary>
-        <div class="faq-a">รหัสผ่านเข้ารหัสแบบย้อนกลับไม่ได้ ข้อมูลไม่ถูกขายหรือแบ่งปันให้ใคร และคุณเข้าถึงได้คนเดียว — ดูรายละเอียดทั้งหมดได้ที่หัวข้อ <a href="#security">ความปลอดภัยของข้อมูล</a> ด้านบน</div>
+        <summary>How safe is my financial data?</summary>
+        <div class="faq-a">Passwords are irreversibly hashed, your data is never sold or shared, and only you can access it — see the full detail in the <a href="#security">Data Security</a> section above.</div>
       </details>
       <details class="faq-item reveal">
-        <summary>แอปนี้เชื่อมต่อบัญชีธนาคารของฉันโดยตรงไหม</summary>
-        <div class="faq-a">ไม่เชื่อมต่อและไม่ขอรหัสผ่านธนาคารของคุณเด็ดขาด ระบบนำเข้ารายการทำได้จากอีเมลแจ้งเตือนธุรกรรมที่ธนาคารส่งให้คุณเองเท่านั้น (ไม่ใช่การเชื่อมต่อบัญชีแบบ Open Banking) หรือคุณจะบันทึกรายการด้วยตัวเองก็ได้เช่นกัน</div>
+        <summary>Does this app connect directly to my bank account?</summary>
+        <div class="faq-a">No — and we never ask for your banking password. The app only imports transactions from the bank transaction alert emails your bank sends you (this is not an Open Banking connection). You can also just log transactions yourself.</div>
       </details>
       <details class="faq-item reveal">
-        <summary>เลิกใช้แล้วเอาข้อมูลออกได้ไหม</summary>
-        <div class="faq-a">ได้ทุกเมื่อ ข้อมูลการเงินที่คุณป้อนเป็นของคุณเสมอ ส่งออกหรือลบทั้งหมดได้จากหน้าตั้งค่าในแอป ไม่ต้องขอใคร — รายละเอียดที่ <a href="terms.html#data-ownership">ข้อตกลงการใช้งาน</a></div>
+        <summary>Can I delete my data if I stop using the app?</summary>
+        <div class="faq-a">Anytime. The financial data you enter is always yours — export or delete all of it from the in-app settings page, no need to ask anyone — see <a href="terms.html#data-ownership">Terms of Service</a>.</div>
       </details>
       <details class="faq-item reveal">
-        <summary>มีปัญหาหรือข้อเสนอแนะ ติดต่อได้ทางไหน</summary>
-        <div class="faq-a">ส่งอีเมลมาได้โดยตรงที่ <a href="mailto:warakornbest6@gmail.com">warakornbest6@gmail.com</a> เราตอบทุกข้อความและนำไปใช้พัฒนาแอปอย่างต่อเนื่อง</div>
+        <summary>I have an issue or a suggestion — how do I reach you?</summary>
+        <div class="faq-a">Email us directly at <a href="mailto:warakornbest6@gmail.com">warakornbest6@gmail.com</a> — we read and respond to every message, and use it to keep improving the app.</div>
       </details>
       <details class="faq-item reveal">
-        <summary>แอปนี้เป็นที่ปรึกษาการเงินหรือเปล่า</summary>
-        <div class="faq-a">ไม่ใช่ครับ MoneyMind ไม่ใช่ที่ปรึกษาทางการเงิน การลงทุน ภาษี หรือกฎหมาย ตัวเลขและคำแนะนำในแอป (รวมถึงจาก AI) เป็นการประมาณการเพื่อวางแผนส่วนตัวเท่านั้น ก่อนตัดสินใจทางการเงินจริงควรตรวจสอบกับผู้เชี่ยวชาญที่มีใบอนุญาตเสมอ</div>
+        <summary>Is this app a financial advisor?</summary>
+        <div class="faq-a">No. MoneyMind is not a financial, investment, tax, or legal advisor. The numbers and suggestions in the app (including from the AI) are estimates for personal planning purposes only. Always check with a licensed professional before making real financial decisions.</div>
       </details>
     </div>
   </section>
 
   <section class="section" id="reviews">
     <div class="section-head reveal">
-      <h2>เสียงจากผู้ใช้</h2>
+      <h2>What users are saying</h2>
     </div>
 
     <div class="reviews-inner">
       <div class="rating-card reveal">
         <div class="rating-stars">★★★★★</div>
         <div class="rating-score">5.0</div>
-        <div class="rating-source">คะแนนบน App Store</div>
-        <div class="rating-note">จากผู้ให้คะแนนจริงบน App Store</div>
+        <div class="rating-source">App Store rating</div>
+        <div class="rating-note">From a real App Store review</div>
       </div>
 
       <!-- ══════════════════════════════════════════════════════════════════════
-           พอมีรีวิวจริงจากผู้ใช้แล้ว ให้ลบคอมเมนต์ก้อนนี้ออก แล้ววาง .review-grid
-           ด้านล่างนี้เข้าไปแทน (CSS พร้อมใช้งานแล้ว ไม่ต้องแก้อะไรเพิ่ม)
-           ⚠️ ใส่เฉพาะรีวิวที่มีคนพูดจริงเท่านั้น ห้ามแต่งขึ้นเอง
+           Once there are real reviews from users, remove this comment block and
+           put the .review-grid below in its place (CSS is ready, nothing else
+           needs to change)
+           ⚠️ Only include reviews someone actually wrote — never fabricate them
 
       <div class="review-grid reveal-stagger">
         <div class="review-card reveal">
           <div class="stars">★★★★★</div>
-          <div class="quote">(ข้อความรีวิวจริงจากผู้ใช้)</div>
-          <div class="who">— ชื่อผู้ใช้จริง · App Store</div>
+          <div class="quote">(real quote from a real user)</div>
+          <div class="who">— real username · App Store</div>
         </div>
       </div>
            ══════════════════════════════════════════════════════════════════════ -->
 
       <div class="review-invite reveal">
-        <p>ถ้าคุณใช้ MoneyMind อยู่ ความเห็นของคุณช่วยเราได้มากจริงๆ รีวิวของคุณอาจเป็นอันแรกที่คนอื่นได้อ่าน</p>
+        <p>If you're using MoneyMind, your feedback genuinely helps — your review could be the very first one someone else reads.</p>
         <div class="review-btns">
           <a class="review-btn" href="https://apps.apple.com/th/app/id6788824042?action=write-review">
-            <i class="fab fa-apple"></i> เขียนรีวิวบน App Store
+            <i class="fab fa-apple"></i> Write a review on the App Store
           </a>
           <a class="review-btn" href="https://play.google.com/store/apps/details?id=app.moneymind.th">
-            <i class="fab fa-google-play"></i> เขียนรีวิวบน Play Store
+            <i class="fab fa-google-play"></i> Write a review on the Play Store
           </a>
         </div>
-        <p class="dev-note">มีคำถามหรือข้อเสนอแนะ ติดต่อได้โดยตรงที่ <a href="mailto:warakornbest6@gmail.com">warakornbest6@gmail.com</a> — เราตอบกลับทุกข้อความ</p>
+        <p class="dev-note">Questions or feedback? Reach out directly at <a href="mailto:warakornbest6@gmail.com">warakornbest6@gmail.com</a> — we respond to every message.</p>
       </div>
     </div>
   </section>
 
   <section class="section" id="how">
     <div class="section-head reveal">
-      <h2>เริ่มใช้งานได้ใน 3 ขั้นตอน</h2>
+      <h2>Get started in 3 steps</h2>
     </div>
     <div class="steps reveal-stagger">
       <div class="step reveal">
         <div class="step-badge">1</div>
-        <div class="title">สมัครใช้งานฟรี</div>
-        <div class="desc">ดาวน์โหลดแอปหรือเข้าใช้งานผ่านเว็บ สมัครด้วยอีเมลหรือ Google ใช้เวลาไม่ถึงนาที</div>
+        <div class="title">Sign up for free</div>
+        <div class="desc">Download the app or use it on the web. Sign up with email or Google — takes less than a minute.</div>
       </div>
       <div class="step reveal">
         <div class="step-badge">2</div>
-        <div class="title">บันทึกรายการแรก</div>
-        <div class="desc">สแกนใบเสร็จ พิมพ์เอง หรือเชื่อมอีเมลธนาคารให้ระบบดึงรายการให้อัตโนมัติ</div>
+        <div class="title">Log your first transaction</div>
+        <div class="desc">Scan a receipt, type it in yourself, or connect your bank email and let the app import transactions automatically.</div>
       </div>
       <div class="step reveal">
         <div class="step-badge">3</div>
-        <div class="title">เห็นภาพรวมการเงินทันที</div>
-        <div class="desc">แดชบอร์ดสรุปรายรับ-รายจ่าย เป้าหมายออม และความมั่งคั่งโดยรวมอัปเดตให้เองทุกครั้ง</div>
+        <div class="title">See your full financial picture instantly</div>
+        <div class="desc">A dashboard summarizing income, expenses, savings goals, and overall net worth — updated automatically every time.</div>
       </div>
     </div>
   </section>
 
   <section class="section">
     <div class="cta-block reveal">
-      <h2>พร้อมเริ่มจัดการเงินอย่างเป็นระบบหรือยัง?</h2>
-      <p>ใช้งานได้ฟรี ไม่มีค่าใช้จ่ายแอบแฝง</p>
+      <h2>Ready to get your finances organized?</h2>
+      <p>Free to use, no hidden costs</p>
       <div class="store-row" style="margin-bottom:0">
-        <a class="store-cell ios" href="https://apps.apple.com/th/app/id6788824042" aria-label="ดาวน์โหลดบน App Store">
-          <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/th-th?size=250x83" alt="ดาวน์โหลดบน App Store">
+        <a class="store-cell ios" href="https://apps.apple.com/th/app/id6788824042" aria-label="Download on the App Store">
+          <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on the App Store">
         </a>
-        <a class="store-cell android" href="https://play.google.com/store/apps/details?id=app.moneymind.th" aria-label="ดาวน์โหลดบน Google Play">
-          <img src="https://play.google.com/intl/en_us/badges/static/images/badges/th_badge_web_generic.png" alt="ดาวน์โหลดบน Google Play">
+        <a class="store-cell android" href="https://play.google.com/store/apps/details?id=app.moneymind.th" aria-label="Get it on Google Play">
+          <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play">
         </a>
-        <a class="store-cell web" href="https://app.moneymindth.com/" aria-label="ใช้งานบนเว็บเบราว์เซอร์">
+        <a class="store-cell web" href="https://app.moneymindth.com/" aria-label="Use it in your web browser">
           <span class="web-badge">
             <i class="fas fa-globe"></i>
             <span class="wb-txt">
-              <span class="wb-sm">ใช้งานได้ที่</span>
-              <span class="wb-lg">เว็บเบราว์เซอร์</span>
+              <span class="wb-sm">Available on</span>
+              <span class="wb-lg">Web Browser</span>
             </span>
           </span>
         </a>
       </div>
       <div class="trust-row cta-trust-row">
-        <span><i class="fas fa-shield-halved"></i> เข้ารหัสข้อมูลตามมาตรฐาน PDPA</span>
-        <span><i class="fas fa-cloud"></i> ซิงค์ข้อมูลข้ามอุปกรณ์อัตโนมัติ</span>
-        <span><i class="fas fa-language"></i> รองรับภาษาไทยและอังกฤษ</span>
+        <span><i class="fas fa-shield-halved"></i> PDPA-compliant data protection</span>
+        <span><i class="fas fa-cloud"></i> Automatic cross-device sync</span>
+        <span><i class="fas fa-language"></i> Available in Thai and English</span>
       </div>
     </div>
   </section>
 
   <footer>
-    <div class="foot-brand"><i class="fas fa-copyright"></i> 2569 MoneyMind — การเงินส่วนบุคคล</div>
+    <div class="foot-brand"><i class="fas fa-copyright"></i> 2026 MoneyMind — Personal Finance</div>
     <div class="foot-links">
-      <a href="https://app.moneymindth.com/">เว็บแอป</a>
-      <a href="privacy.html">ความเป็นส่วนตัว</a>
-      <a href="terms.html">ข้อตกลงการใช้งาน</a>
-      <a href="support.html">ช่วยเหลือ</a>
+      <a href="https://app.moneymindth.com/">Web App</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="support.html">Support</a>
       <a href="mailto:warakornbest6@gmail.com">warakornbest6@gmail.com</a>
     </div>
   </footer>
 </div>
 
-<!-- ป๊อบอัพ "ดูรายละเอียด" — โครงเดียวใช้ซ้ำได้กับทั้ง 4 การ์ดในหัวข้อความปลอดภัย
-     เนื้อหาจริงถูกดึงมาจาก privacy.html/terms.html สดๆ ตอนกด ไม่ได้ก็อปมาแปะไว้ตรงนี้
-     กันข้อความเพี้ยนจากของจริงถ้านโยบายมีการแก้ไขในอนาคต -->
+<!-- "See details" popup — one shared structure reused by all 4 cards in the Security section.
+     The real content is fetched live from privacy.html/terms.html when clicked, not copy-pasted
+     here, so it can't drift out of sync if the policy changes in the future. Note: those policy
+     pages exist in Thai only for now, so this modal will show Thai text even on this English
+     page — an accepted limitation until the policies themselves get an English translation. -->
 <div class="detail-modal" id="detail-modal" aria-hidden="true">
   <div class="detail-modal-backdrop" data-close></div>
   <div class="detail-modal-panel" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
-    <button type="button" class="detail-modal-close" data-close aria-label="ปิด"><i class="fas fa-xmark"></i></button>
+    <button type="button" class="detail-modal-close" data-close aria-label="Close"><i class="fas fa-xmark"></i></button>
     <h3 id="detail-modal-title"></h3>
     <div class="detail-modal-body"></div>
-    <a class="detail-modal-full" href="#">เปิดอ่านฉบับเต็ม →</a>
+    <a class="detail-modal-full" href="#">Read the full document →</a>
   </div>
 </div>
 
 <script>
-  // ปุ่มสลับโหมดสว่าง/มืด — ถ้ายังไม่เคยกด จะตามค่าของระบบไปเรื่อยๆ
-  // พอกดครั้งแรกถึงจะจำค่าที่เลือกไว้ใน localStorage
+  // Theme toggle button — until clicked once it just follows the system setting;
+  // the first click is what starts remembering the choice in localStorage.
   (function () {
     var btn = document.getElementById('theme-toggle');
     if (!btn) return;
@@ -1102,10 +1106,10 @@
           || (mqLight.matches ? 'light' : 'dark');
     }
     function paint() {
-      // icon itself transitions via CSS off the data-theme attribute (icon-sun/icon-moon
+      // the icon itself transitions via CSS off the data-theme attribute (icon-sun/icon-moon
       // opacity+rotate) — this only has to keep the a11y label in sync
       var isLight = effective() === 'light';
-      var label = isLight ? 'สลับเป็นโหมดมืด' : 'สลับเป็นโหมดสว่าง';
+      var label = isLight ? 'Switch to dark mode' : 'Switch to light mode';
       btn.setAttribute('aria-label', label);
       btn.title = label;
     }
@@ -1117,29 +1121,30 @@
 
     btn.addEventListener('click', function () {
       var next = effective() === 'light' ? 'dark' : 'light';
-      // ไล่สีทั้งหน้าแบบนุ่มนวลด้วย View Transitions API — เบราว์เซอร์ที่ไม่รองรับ
-      // (หรือผู้ใช้ที่ตั้งค่าลดการเคลื่อนไหว) จะสลับทันทีเหมือนเดิม ไม่มีอะไรพัง
+      // smooth whole-page crossfade via the View Transitions API — browsers that don't
+      // support it (or users who asked for reduced motion) just switch instantly, nothing breaks
       if (document.startViewTransition && !mqReduced.matches) {
         var t = document.startViewTransition(function () { applyTheme(next); });
-        // ready ปฏิเสธได้ในบางสถานการณ์ (เช่น แท็บไม่ได้โฟกัสอยู่ตอนกด) — theme สลับไปแล้วเสมอ
-        // เพราะ applyTheme รันใน callback ไม่ขึ้นกับ ready แค่กัน unhandled rejection ไม่ให้ขึ้น console เฉยๆ
+        // .ready can reject in some situations (e.g. the tab isn't focused when clicked) —
+        // the theme always switches regardless since applyTheme runs in the callback, not
+        // gated on .ready; this just silences the resulting unhandled-rejection console noise
         t.ready.catch(function () {});
       } else {
         applyTheme(next);
       }
     });
-    // ยังไม่เคยเลือกเอง → ตามระบบ ถ้าผู้ใช้สลับธีมเครื่องระหว่างเปิดหน้าอยู่
+    // haven't chosen manually yet → keep following the system if it changes while the tab is open
     if (mqLight.addEventListener) mqLight.addEventListener('change', paint);
     paint();
   })();
 
-  // เผยเนื้อหาทีละส่วนตอนเลื่อนถึง — ใช้ IntersectionObserver (ทำงานนอก main thread)
-  // แสดงครั้งเดียวแล้วเลิกเฝ้า ไม่ซ่อนกลับตอนเลื่อนขึ้น
+  // Reveal sections as you scroll to them — uses IntersectionObserver (runs off the main
+  // thread), shows once then stops watching, never hides again on scroll-up.
   (function () {
     var els = document.querySelectorAll('.reveal');
     if (!els.length) return;
 
-    // ผู้ใช้ที่ขอลดการเคลื่อนไหว → แสดงทุกอย่างทันที ไม่ต้องเฝ้าเลย
+    // users who asked for reduced motion → show everything immediately, no observing needed
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       for (var i = 0; i < els.length; i++) els[i].classList.add('in');
       return;
@@ -1158,8 +1163,9 @@
 </script>
 
 <script>
-  // ป๊อบอัพ "ดูรายละเอียด" — href ของลิงก์ยังชี้ไปหน้าเต็มตามปกติเสมอ (คลิกกลาง/เปิดแท็บใหม่/
-  // ปิด JS ยังทำงานถูก) ตัวนี้แค่ดัก click ธรรมดาแล้วโชว์เนื้อหาจริงในป๊อบอัพแทนการเปลี่ยนหน้า
+  // "See details" popup — the link's href still points at the real full page as normal
+  // (middle-click/open-in-new-tab/JS-disabled all still work correctly). This just
+  // intercepts a plain click and shows the real content in a popup instead of navigating.
   (function () {
     var modal = document.getElementById('detail-modal');
     if (!modal) return;
@@ -1171,13 +1177,14 @@
     var pageCache = {};
 
     function showLoading() {
-      bodyEl.innerHTML = '<div class="detail-modal-spinner"><i class="fas fa-circle-notch"></i> กำลังโหลด...</div>';
+      bodyEl.innerHTML = '<div class="detail-modal-spinner"><i class="fas fa-circle-notch"></i> Loading...</div>';
     }
     function showError(fullUrl) {
-      bodyEl.innerHTML = '<p>ขอโทษครับ โหลดเนื้อหาไม่สำเร็จ ลองเปิดฉบับเต็มแทนได้เลย</p>';
+      bodyEl.innerHTML = '<p>Sorry, the content couldn\'t load. Try opening the full document instead.</p>';
     }
 
-    // ตัด "1. "/"2.1 " ที่ขึ้นต้นหัวข้อออก — เลขนี้มีความหมายแค่ตอนอยู่ในเอกสารเต็มเรียงตามลำดับ
+    // strip a leading "1. "/"2.1 " off the heading — that numbering only makes sense
+    // in the context of the full ordered document
     function stripNumbering(text) {
       return text.replace(/^\s*\d+(\.\d+)?\.?\s*/, '');
     }
@@ -1251,7 +1258,7 @@
     document.addEventListener('keydown', function (e) {
       if (!modal.classList.contains('open')) return;
       if (e.key === 'Escape') { closeModal(); return; }
-      // focus trap แบบง่าย — วนอยู่แค่ 2 จุดที่กดได้ในป๊อบอัพ (ปุ่มปิด กับลิงก์อ่านฉบับเต็ม)
+      // simple focus trap — only 2 focusable things in the popup (close button, full-doc link)
       if (e.key === 'Tab') {
         var focusables = panel.querySelectorAll('button, a[href]');
         var first = focusables[0], last = focusables[focusables.length - 1];

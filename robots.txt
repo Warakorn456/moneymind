@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /landing.html
+Allow: /landing-en.html
 Allow: /privacy.html
 Allow: /terms.html
 Allow: /support.html
