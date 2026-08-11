@@ -24,6 +24,10 @@
       "ios": {
         "appleId": "Warakorn_D@iCloud.com",
         "ascAppId": "6788824042"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./play-publisher-key.json",
+        "track": "alpha"
       }
     }
   }
