@@ -111,10 +111,11 @@ const INJECT = `(function(){
   window.handleNativeAppleAuth = function(idToken, rawNonce) {
     try {
       function doSignIn() {
-        if (!window._auth || !window.firebase) { setTimeout(doSignIn, 300); return; }
+        // ดู comment เดียวกันใน handleNativeGoogleAuth ด้านบน — _auth เป็น let-declared ไม่ผูก window
+        if (typeof _auth === 'undefined' || !_auth || !window.firebase) { setTimeout(doSignIn, 300); return; }
         var provider = new firebase.auth.OAuthProvider('apple.com');
         var credential = provider.credential({ idToken: idToken, rawNonce: rawNonce });
-        window._auth.signInWithCredential(credential)
+        _auth.signInWithCredential(credential)
           .then(function(result) {
             if (window._handleOAuthResult) window._handleOAuthResult(result, 'apple');
           })
