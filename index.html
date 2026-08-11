@@ -7380,12 +7380,15 @@ async function renderAiQuotaBox(){
     const r=await fetch(QUOTA_STATUS_URL+'?username='+encodeURIComponent(currentUser),{headers:{'Authorization':'Bearer '+idToken}});
     if(!r.ok){ box.style.display='none'; return; }
     const q=await r.json();
+    // รวมโควตาของทุกฟีเจอร์ AI ที่ผ่าน proxy นี้ (สแกนใบเสร็จ/สลิป/ทวิ50/statement/แชท) ไว้เป็นตัวนับเดียวกันอยู่แล้วฝั่ง
+    // ai_proxy.py (aiUsage/freeUsage ต่อ user คนเดียว) — ที่นี่แค่แปลงเป็น % แทนการโชว์จำนวนครั้งดิบ
     const tierLabel=q.tier==='subscription'?tr('quota_tier_sub'):tr('quota_tier_free');
-    const mPct=Math.min(100,q.monthly.limit?q.monthly.used/q.monthly.limit*100:0);
+    const dPct=Math.round(Math.min(100,q.daily.limit?q.daily.used/q.daily.limit*100:0));
+    const mPct=Math.round(Math.min(100,q.monthly.limit?q.monthly.used/q.monthly.limit*100:0));
     box.innerHTML=`<div style="font-size:13px;color:var(--muted);margin-bottom:6px">${tierLabel}</div>
-      <div style="font-size:13px;margin-bottom:4px">${tr('quota_monthly_label')}: ${q.monthly.used}/${q.monthly.limit}</div>
-      <div class="pbar"><div class="pfill" style="width:${mPct}%"></div></div>
-      <div style="font-size:12px;color:var(--muted);margin-top:6px">${tr('quota_daily_label')}: ${q.daily.used}/${q.daily.limit}</div>`;
+      <div style="font-size:13px;margin-bottom:4px">${tr('quota_daily_label')}: <b>${dPct}%</b></div>
+      <div class="pbar"><div class="pfill" style="width:${dPct}%"></div></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">${tr('quota_monthly_label')}: ${mPct}%</div>`;
     box.style.display='block';
   }catch(e){ box.style.display='none'; }
 }
