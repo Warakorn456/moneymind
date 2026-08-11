@@ -167,10 +167,21 @@
   .hero-visual{ animation:mmrise 1s cubic-bezier(.16,1,.3,1) .3s backwards; }
 
   /* nav */
-  nav{ display:flex; align-items:center; justify-content:space-between; padding:20px 0; }
-  .logo{ display:flex; align-items:center; gap:11px; text-decoration:none; }
+  nav{ display:flex; align-items:center; justify-content:space-between; padding:20px 0; gap:20px; }
+  .logo{ display:flex; align-items:center; gap:11px; text-decoration:none; flex-shrink:0; }
   .logo-mark{ width:40px; height:40px; border-radius:11px; display:block; flex-shrink:0; }
   .logo-text{ font-size:1.2rem; font-weight:800; letter-spacing:-.02em; }
+  .nav-links{ display:flex; align-items:center; gap:28px; margin:0 auto; }
+  .nav-links a{ color:var(--muted); text-decoration:none; font-size:.9rem; font-weight:600;
+    transition:color .18s; white-space:nowrap; }
+  .nav-links a:hover{ color:var(--text); }
+  .nav-right{ display:flex; align-items:center; gap:12px; flex-shrink:0; }
+  .nav-cta{ display:inline-flex; align-items:center; height:38px; padding:0 18px;
+    background:linear-gradient(135deg,var(--grada),var(--gradb)); color:#fff; font-size:.86rem;
+    font-weight:700; text-decoration:none; border-radius:10px; white-space:nowrap;
+    transition:transform .18s, box-shadow .18s; }
+  .nav-cta:hover{ transform:translateY(-1px); box-shadow:0 6px 18px rgba(124,58,237,.35); }
+  @media (max-width:820px){ .nav-links{ display:none; } }
 
   /* theme toggle — only shown when JS can actually drive it */
   .theme-toggle{ display:none; position:relative; width:40px; height:40px;
@@ -322,6 +333,18 @@
   .fcard .link{ display:inline-block; font-size:.8rem; font-weight:600; color:var(--primary-l);
     text-decoration:none; margin-top:10px; }
   .fcard .link:hover{ text-decoration:underline; }
+  .infra-note{ text-align:center; font-size:.82rem; color:var(--muted); margin-top:26px; }
+
+  /* pricing */
+  .price-card{ max-width:460px; margin:0 auto; background:var(--card); border:1px solid var(--border);
+    border-radius:20px; padding:32px 30px; text-align:center; }
+  .price-tag{ display:inline-block; font-size:1.15rem; font-weight:800;
+    background:linear-gradient(135deg,var(--grada),var(--gradb)); -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:22px; }
+  .price-list{ list-style:none; text-align:left; display:flex; flex-direction:column; gap:12px; margin-bottom:22px; }
+  .price-list li{ font-size:.92rem; color:var(--text); display:flex; align-items:center; gap:10px; }
+  .price-list li i{ color:#34d399; font-size:.85rem; flex-shrink:0; }
+  .price-note{ font-size:.8rem; color:var(--muted); }
 
   /* product preview showcase */
   .preview-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
@@ -559,10 +582,18 @@
       <img class="logo-mark" src="assets/logo.png" alt="โลโก้ MoneyMind" width="40" height="40">
       <span class="logo-text">MoneyMind</span>
     </a>
-    <button type="button" id="theme-toggle" class="theme-toggle" aria-label="สลับโหมดสีสว่าง/มืด">
-      <i class="fas fa-sun icon-sun" aria-hidden="true"></i>
-      <i class="fas fa-moon icon-moon" aria-hidden="true"></i>
-    </button>
+    <div class="nav-links">
+      <a href="#features">ฟีเจอร์</a>
+      <a href="#security">ความปลอดภัย</a>
+      <a href="#faq">คำถามที่พบบ่อย</a>
+    </div>
+    <div class="nav-right">
+      <a href="https://app.moneymindth.com/" class="nav-cta">ใช้งานเลย</a>
+      <button type="button" id="theme-toggle" class="theme-toggle" aria-label="สลับโหมดสีสว่าง/มืด">
+        <i class="fas fa-sun icon-sun" aria-hidden="true"></i>
+        <i class="fas fa-moon icon-moon" aria-hidden="true"></i>
+      </button>
+    </div>
   </nav>
 
   <section class="hero">
@@ -793,6 +824,26 @@
         <a class="link" href="privacy.html#ai-consent">ดูรายละเอียด →</a>
       </div>
     </div>
+    <p class="infra-note reveal">ระบบทำงานบน Google Cloud และ Firebase — โครงสร้างพื้นฐานเดียวกับที่บริษัทเทคโนโลยีทั่วโลกใช้งานจริง</p>
+  </section>
+
+  <section class="section" id="pricing">
+    <div class="section-head reveal">
+      <h2>ราคา</h2>
+      <p>ไม่มีแพ็กเกจซ่อนอยู่ — ฟีเจอร์หลักทั้งหมดฟรีตั้งแต่วันแรก</p>
+    </div>
+    <div class="price-card reveal">
+      <div class="price-tag">ฟรี 100% ตลอดไป</div>
+      <ul class="price-list">
+        <li><i class="fas fa-check"></i> สแกนใบเสร็จด้วย AI</li>
+        <li><i class="fas fa-check"></i> คำนวณภาษีเงินได้เต็มรูปแบบ</li>
+        <li><i class="fas fa-check"></i> นำเข้ารายการจากอีเมลธนาคารอัตโนมัติ</li>
+        <li><i class="fas fa-check"></i> ติดตามพอร์ตลงทุนแบบเรียลไทม์</li>
+        <li><i class="fas fa-check"></i> ผู้ช่วย AI "มายา"</li>
+        <li><i class="fas fa-check"></i> ซิงค์ข้อมูลข้ามอุปกรณ์อัตโนมัติ</li>
+      </ul>
+      <p class="price-note">ไม่มีค่าใช้จ่ายแอบแฝง ไม่ต้องผูกบัตร ไม่ต้องใส่ข้อมูลการชำระเงินเพื่อเริ่มใช้งาน</p>
+    </div>
   </section>
 
   <section class="section" id="faq">
@@ -808,6 +859,10 @@
       <details class="faq-item reveal">
         <summary>ข้อมูลการเงินของฉันปลอดภัยแค่ไหน</summary>
         <div class="faq-a">รหัสผ่านเข้ารหัสแบบย้อนกลับไม่ได้ ข้อมูลไม่ถูกขายหรือแบ่งปันให้ใคร และคุณเข้าถึงได้คนเดียว — ดูรายละเอียดทั้งหมดได้ที่หัวข้อ <a href="#security">ความปลอดภัยของข้อมูล</a> ด้านบน</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>แอปนี้เชื่อมต่อบัญชีธนาคารของฉันโดยตรงไหม</summary>
+        <div class="faq-a">ไม่เชื่อมต่อและไม่ขอรหัสผ่านธนาคารของคุณเด็ดขาด ระบบนำเข้ารายการทำได้จากอีเมลแจ้งเตือนธุรกรรมที่ธนาคารส่งให้คุณเองเท่านั้น (ไม่ใช่การเชื่อมต่อบัญชีแบบ Open Banking) หรือคุณจะบันทึกรายการด้วยตัวเองก็ได้เช่นกัน</div>
       </details>
       <details class="faq-item reveal">
         <summary>เลิกใช้แล้วเอาข้อมูลออกได้ไหม</summary>
@@ -909,6 +964,11 @@
             </span>
           </span>
         </a>
+      </div>
+      <div class="trust-row cta-trust-row">
+        <span><i class="fas fa-shield-halved"></i> เข้ารหัสข้อมูลตามมาตรฐาน PDPA</span>
+        <span><i class="fas fa-cloud"></i> ซิงค์ข้อมูลข้ามอุปกรณ์อัตโนมัติ</span>
+        <span><i class="fas fa-language"></i> รองรับภาษาไทยและอังกฤษ</span>
       </div>
     </div>
   </section>
