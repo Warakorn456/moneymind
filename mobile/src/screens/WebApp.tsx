@@ -302,16 +302,14 @@ export default function WebApp() {
     }
   }, [injectAuth, injectError]);
 
-  // ส่งผล Apple Sign-In กลับเข้า WebView
+  // ส่งผล Apple Sign-In กลับเข้า WebView (retry-until-confirmed เหมือน Google — ดู injectReliable ด้านบน)
   const injectAppleAuth = useCallback((idToken: string, rawNonce: string) => {
-    const js = `(function(){ if(window.handleNativeAppleAuth) window.handleNativeAppleAuth(${JSON.stringify(idToken)},${JSON.stringify(rawNonce)}); })(); true;`;
-    webViewRef.current?.injectJavaScript(js);
-  }, []);
+    injectReliable(`apple-auth-${Date.now()}`, 'handleNativeAppleAuth', `${JSON.stringify(idToken)},${JSON.stringify(rawNonce)}`);
+  }, [injectReliable]);
 
   const injectAppleError = useCallback((msg: string) => {
-    const js = `(function(){ if(window.handleNativeAppleError) window.handleNativeAppleError(${JSON.stringify(msg)}); })(); true;`;
-    webViewRef.current?.injectJavaScript(js);
-  }, []);
+    injectReliable(`apple-error-${Date.now()}`, 'handleNativeAppleError', `${JSON.stringify(msg)}`);
+  }, [injectReliable]);
 
   // เริ่ม native Apple Sign-In (iOS เท่านั้น) — แทนที่ signInWithPopup() ฝั่งเว็บที่ใช้ไม่ได้ใน
   // WebView (Apple reject 2.1(a) 2026-07-19: "app only displayed a blank screen when we tapped
