@@ -454,6 +454,8 @@ export default function WebApp() {
       } else if (data.action === 'appReady') {
         appReadyRef.current = true;
         clearWatchdog();
+      } else if (data.action === 'nativeAuthDelivered') {
+        pendingDeliveries.current.delete(data.deliveryId);
       }
     } catch (_) {}
   }, [startGoogleSignIn, startAppleSignIn, saveFile, printHtml, registerForPushNotifications, clearWatchdog]);
