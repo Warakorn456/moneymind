@@ -211,8 +211,18 @@
   .hero-text > *:nth-child(6){ animation-delay:.55s }
   .hero-visual{ animation:mmrise 1s cubic-bezier(.16,1,.3,1) .3s backwards; }
 
-  /* nav */
-  nav{ display:flex; align-items:center; justify-content:space-between; padding:20px 0; gap:20px; }
+  /* nav — sticky so the CTA stays reachable from anywhere on the page.
+     nav lives inside .wrap (max-width 1080px), so its background is pushed out to
+     full-bleed with a 100vw pseudo-element; body already has overflow-x:hidden,
+     so 100vw can't introduce a horizontal scrollbar. */
+  nav{ position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between; padding:16px 0; gap:20px; }
+  nav::before{ content:''; position:absolute; inset:0; left:50%; transform:translateX(-50%);
+    width:100vw; z-index:-1; background:var(--bg); opacity:.82;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--border); }
+  /* anchor targets must clear the sticky nav, otherwise headings land underneath it */
+  section[id]{ scroll-margin-top:88px; }
   .logo{ display:flex; align-items:center; gap:11px; text-decoration:none; flex-shrink:0; }
   .logo-mark{ width:40px; height:40px; border-radius:11px; display:block; flex-shrink:0; }
   .logo-text{ font-size:1.2rem; font-weight:800; letter-spacing:-.02em; }
@@ -241,6 +251,10 @@
   .mobile-nav-menu{ position:absolute; top:calc(100% + 10px); right:0; min-width:210px;
     background:var(--card); border:1px solid var(--border); border-radius:14px; padding:10px;
     display:flex; flex-direction:column; gap:2px; box-shadow:0 12px 30px rgba(0,0,0,.35); z-index:20; }
+  /* display:flex above overrides the browser default that hides <details> content when
+     closed, which left the panel laid out (and sticking past the viewport edge) even while
+     invisible — it has to be hidden explicitly */
+  .mobile-nav:not([open]) .mobile-nav-menu{ display:none; }
   .mobile-nav-menu a{ color:var(--text); text-decoration:none; font-size:.92rem; font-weight:600;
     padding:10px 12px; border-radius:8px; transition:background .15s; }
   .mobile-nav-menu a:hover{ background:var(--surface2); }
@@ -249,6 +263,12 @@
     .nav-links{ display:none; }
     .lang-switch{ display:none; }
     .mobile-nav{ display:block; }
+  }
+  /* on small phones logo + CTA + theme toggle + hamburger together overflow the bar,
+     so the CTA drops out here — the hero's own download buttons sit right below it,
+     and the menu carries an app link too */
+  @media (max-width:560px){
+    .nav-cta{ display:none; }
   }
 
   /* theme toggle — only shown when JS can actually drive it */
@@ -272,14 +292,14 @@
   }
 
   /* hero */
-  .hero{ padding:64px 0 56px; }
+  .hero{ padding:80px 0 72px; }
   .hero-inner{ display:flex; flex-direction:column; align-items:center; gap:44px; text-align:center; }
   .hero-text{ min-width:0; }
-  h1{ font-size:clamp(30px,5.4vw,46px); font-weight:800; line-height:1.22; letter-spacing:-.02em;
-    text-wrap:balance; max-width:16ch; margin:0 auto 18px; }
+  h1{ font-size:clamp(34px,6.2vw,62px); font-weight:800; line-height:1.18; letter-spacing:-.025em;
+    text-wrap:balance; max-width:16ch; margin:0 auto 20px; }
   h1 em{ font-style:normal; background:linear-gradient(135deg,var(--grada),var(--gradb)); -webkit-background-clip:text;
     -webkit-text-fill-color:transparent; background-clip:text; }
-  .sub{ font-size:1.05rem; color:var(--muted); max-width:52ch; margin:0 auto 34px; text-wrap:balance; }
+  .sub{ font-size:1.12rem; color:var(--muted); max-width:52ch; margin:0 auto 34px; text-wrap:balance; }
 
   /* store row — iOS / Android / Web in equal-sized cells.
      Official badges keep their own artwork (brand rules), so heights are tuned
@@ -305,6 +325,9 @@
 
   .trust-row{ display:flex; align-items:center; justify-content:center; gap:26px; flex-wrap:wrap;
     margin-top:38px; font-size:.82rem; color:var(--muted); }
+  /* in the hero the trust chips sit right under the store badges, so they don't need
+     the full standalone gap the closing CTA uses */
+  .hero-text .trust-row{ margin-top:24px; }
   .trust-row span{ display:inline-flex; align-items:center; gap:7px; }
   .trust-row i{ color:var(--primary-l); }
 
@@ -385,9 +408,10 @@
   @keyframes mmmarquee-rev{ from{ transform:translateX(-50%) } to{ transform:translateX(0) } }
 
   /* features */
-  .section{ padding:64px 0; }
-  .section-head{ text-align:center; margin-bottom:40px; }
-  .section-head h2{ font-size:clamp(24px,3.4vw,32px); font-weight:800; letter-spacing:-.01em; margin-bottom:10px; }
+  .section{ padding:88px 0; }
+  .section-head{ text-align:center; margin-bottom:52px; }
+  .section-head h2{ font-size:clamp(26px,4vw,40px); font-weight:800; letter-spacing:-.02em;
+    line-height:1.25; margin-bottom:12px; }
   .section-head p{ color:var(--muted); font-size:.98rem; max-width:48ch; margin:0 auto; }
 
   .grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
@@ -460,7 +484,11 @@
   .tax-hint i{ color:var(--amber); }
 
   @media (max-width:820px){
-    .preview-grid{ grid-template-columns:1fr; }
+    /* minmax(0,1fr) rather than 1fr: a plain 1fr track refuses to shrink below the
+       card's min-content width, which pushed the grid past the viewport on ~320px screens */
+    .preview-grid{ grid-template-columns:minmax(0,1fr); }
+    .preview-card{ min-width:0; }
+    .preview-label{ overflow-wrap:anywhere; }
   }
 
   /* wealth rank showcase */
@@ -570,10 +598,26 @@
   .cta-block h2{ font-size:clamp(22px,3vw,28px); font-weight:800; margin-bottom:10px; }
   .cta-block p{ color:var(--muted); font-size:.95rem; margin-bottom:26px; }
 
+  /* guide strip — internal links to the article pages. Orphan pages don't rank,
+     so the guides need a real entry point from the landing page, not just the sitemap. */
+  .guide-strip{ padding:44px 0 8px; border-top:1px solid var(--border); }
+  .guide-strip-head{ text-align:center; margin-bottom:26px; }
+  .guide-strip-head h2{ font-size:1.25rem; font-weight:800; letter-spacing:-.01em; margin-bottom:7px; }
+  .guide-strip-head p{ color:var(--muted); font-size:.88rem; }
+  .guide-links{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .guide-links a{ display:flex; flex-direction:column; gap:6px; background:var(--card);
+    border:1px solid var(--border); border-radius:14px; padding:18px 20px; text-decoration:none;
+    transition:transform .18s, border-color .18s; }
+  .guide-links a:hover{ transform:translateY(-2px); border-color:rgba(167,139,250,.35); }
+  .guide-links .g-t{ font-size:.92rem; font-weight:700; line-height:1.5; }
+  .guide-links .g-t i{ color:var(--primary-l); margin-right:7px; }
+  .guide-links .g-d{ font-size:.81rem; color:var(--muted); line-height:1.6; }
+  @media (max-width:820px){ .guide-links{ grid-template-columns:1fr; } }
+
   footer{ margin-top:30px; padding:32px 0 48px; border-top:1px solid var(--border);
     display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; }
   .foot-brand{ display:flex; align-items:center; gap:9px; font-size:.85rem; color:var(--muted); }
-  .foot-links{ display:flex; gap:20px; font-size:.85rem; }
+  .foot-links{ display:flex; gap:20px; font-size:.85rem; flex-wrap:wrap; }
   .foot-links a{ color:var(--muted); text-decoration:none; }
   .foot-links a:hover{ color:var(--primary-l); }
 
@@ -676,6 +720,7 @@
           <a href="#security">Security</a>
           <a href="#faq">FAQ</a>
           <div class="mobile-nav-divider"></div>
+          <a href="https://app.moneymindth.com/">Open the web app</a>
           <a href="landing.html">ไทย (Thai)</a>
         </div>
       </details>
@@ -687,6 +732,24 @@
       <div class="hero-text">
         <h1>The <em>money app</em> built for life in Thailand</h1>
         <p class="sub">Track income and expenses with AI receipt scanning, calculate your income tax in full, and automatically import transactions from bank emails — everything money-related, simplified in one app.</p>
+
+        <div class="store-row">
+          <a class="store-cell ios" href="https://apps.apple.com/th/app/id6788824042" aria-label="Download on the App Store">
+            <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on the App Store">
+          </a>
+          <a class="store-cell android" href="https://play.google.com/store/apps/details?id=app.moneymind.th" aria-label="Get it on Google Play">
+            <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play">
+          </a>
+          <a class="store-cell web" href="https://app.moneymindth.com/" aria-label="Use it in your web browser">
+            <span class="web-badge">
+              <i class="fas fa-globe"></i>
+              <span class="wb-txt">
+                <span class="wb-sm">Available on</span>
+                <span class="wb-lg">Web Browser</span>
+              </span>
+            </span>
+          </a>
+        </div>
 
         <div class="trust-row">
           <span><i class="fas fa-shield-halved"></i> PDPA-compliant data protection</span>
@@ -1064,6 +1127,27 @@
       </div>
     </div>
   </section>
+
+  <div class="guide-strip">
+    <div class="guide-strip-head">
+      <h2>Finance guides</h2>
+      <p>Plain-language explainers on Thai tax and money management. Free to read, no sign-up — currently written in Thai.</p>
+    </div>
+    <div class="guide-links">
+      <a href="guides/thai-income-tax-calculation.html" hreflang="th">
+        <span class="g-t"><i class="fas fa-file-invoice-dollar"></i> How Thai income tax is actually calculated</span>
+        <span class="g-d">The progressive brackets step by step, with a worked example · in Thai</span>
+      </a>
+      <a href="guides/rmf-ssf-thaiesg-comparison.html" hreflang="th">
+        <span class="g-t"><i class="fas fa-chart-pie"></i> RMF vs Thai ESG vs SSF</span>
+        <span class="g-d">Deduction ceilings, holding periods, and which are still available · in Thai</span>
+      </a>
+      <a href="guides/expense-tracking-habit.html" hreflang="th">
+        <span class="g-t"><i class="fas fa-list-check"></i> Expense tracking that actually sticks</span>
+        <span class="g-d">Why most people quit within two weeks, and what to do differently · in Thai</span>
+      </a>
+    </div>
+  </div>
 
   <footer>
     <div class="foot-brand"><i class="fas fa-copyright"></i> 2026 MoneyMind — Personal Finance</div>
