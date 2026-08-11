@@ -35,11 +35,15 @@
        และซ่อนระบบซื้อ subscription (เลี่ยง 3.1.1 — ต้องผ่าน Apple IAP เท่านั้น)
        AI features บน iOS ใช้ Gemini API key ของ user เองแทน */
     html.ios-app .ios-hide{display:none !important}
+    /* ปุ่ม LINE Login ยังไม่รองรับในแอปมือถือ (รอ Phase 1.5 — WebView allowlist เปิด access.line.me
+       ให้โหลด inline ได้ก่อน) ซ่อนไว้ทั้ง iOS/Android จนกว่าจะพร้อม กันคนกดแล้วเจอ flow ที่พังครึ่งๆ กลางๆ */
+    html.ios-app .native-hide,html.android-app .native-hide{display:none !important}
   </style>
   <script>
-    // ตั้ง class ios-app ให้เร็วที่สุด (native inject window._isIOSApp ก่อน content load แล้ว)
-    // เพื่อซ่อน social login + subscription บน iOS โดยไม่ให้กระพริบโผล่ก่อน
+    // ตั้ง class ios-app/android-app ให้เร็วที่สุด (native inject window._isIOSApp/_isAndroidApp
+    // ก่อน content load แล้ว) เพื่อซ่อน social login + subscription บน iOS โดยไม่ให้กระพริบโผล่ก่อน
     try{ if(window._isIOSApp) document.documentElement.classList.add('ios-app'); }catch(e){}
+    try{ if(window._isAndroidApp) document.documentElement.classList.add('android-app'); }catch(e){}
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
