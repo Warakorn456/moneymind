@@ -233,16 +233,39 @@ export default function WebApp() {
     return false;
   }, []);
 
-  // ส่งผลกลับเข้า WebView
-  const injectAuth = useCallback((idToken: string | null, accessToken: string | null) => {
-    const js = `(function(){ if(window.handleNativeGoogleAuth) window.handleNativeGoogleAuth(${JSON.stringify(idToken)},${JSON.stringify(accessToken)}); })(); true;`;
-    webViewRef.current?.injectJavaScript(js);
+  // ส่งผลกลับเข้า WebView — retry จนกว่าจะยืนยันว่า deliver สำเร็จจริง (postMessage กลับมา)
+  // เจอบั๊กจริง 2026-08-11: Face ID/Apple sheet สำเร็จแล้ว แต่ webViewRef.current อาจยัง null
+  // ชั่วคราว หรือ window.handleNativeXxx ยังไม่ทัน define ตอนกลับมาจาก native modal — เดิมยิงครั้งเดียว
+  // ด้วย optional chaining (?.injectJavaScript) + injected code เช็ค if(window.fn) เงียบๆ ทั้งคู่
+  // ไม่มี error ให้เห็นเลยถ้าพลาด ทำให้ค้างถาวรจนกว่า timeout ฝั่งเว็บ (25 วิ) จะเตะ — retry ทุก 400ms
+  // สูงสุด 10 ครั้ง (4 วิ) จนกว่าจะได้ deliveryId ยืนยันกลับ กันเคสที่ยังไม่พร้อมตอนแรกไปพร้อมกัน
+  const pendingDeliveries = useRef<Set<string>>(new Set());
+
+  const injectReliable = useCallback((deliveryId: string, fnName: string, args: string) => {
+    pendingDeliveries.current.add(deliveryId);
+    const js = `(function(){
+      if(window.${fnName}){
+        window.${fnName}(${args});
+        window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify({action:'nativeAuthDelivered', deliveryId:${JSON.stringify(deliveryId)}}));
+      }
+    })(); true;`;
+    let attempts = 0;
+    const tryInject = () => {
+      if (!pendingDeliveries.current.has(deliveryId)) return;
+      attempts += 1;
+      webViewRef.current?.injectJavaScript(js);
+      if (attempts < 10) setTimeout(tryInject, 400);
+    };
+    tryInject();
   }, []);
 
+  const injectAuth = useCallback((idToken: string | null, accessToken: string | null) => {
+    injectReliable(`google-auth-${Date.now()}`, 'handleNativeGoogleAuth', `${JSON.stringify(idToken)},${JSON.stringify(accessToken)}`);
+  }, [injectReliable]);
+
   const injectError = useCallback((msg: string) => {
-    const js = `(function(){ if(window.handleNativeGoogleError) window.handleNativeGoogleError(${JSON.stringify(msg)}); })(); true;`;
-    webViewRef.current?.injectJavaScript(js);
-  }, []);
+    injectReliable(`google-error-${Date.now()}`, 'handleNativeGoogleError', `${JSON.stringify(msg)}`);
+  }, [injectReliable]);
 
   // เริ่ม native Google Sign-In
   const startGoogleSignIn = useCallback(async () => {
