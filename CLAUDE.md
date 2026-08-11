@@ -614,7 +614,11 @@ SOFI, PL, ALAB, STX, NBIS, LUNR, VSAT, SATS, ASML, BE, CEG, GLW, AAOI, FLY, QUCY
 | `report_relay.py` | `report_relay.py` | ✅ sync — ใหม่ 2026-07-02, cron `*/5 * * * *`; อ่าน Firestore `reports` collection ผ่าน SA → ส่ง Telegram → ลบ doc |
 | `notebooklm_export.py` | `notebooklm_export.py` | ✅ sync — ใหม่ 2026-06-15, cron `0 17 * * 0` (จันทร์) |
 | `sltp_alert.py` | `sltp_alert.py` | ✅ sync — ใหม่ 2026-06-01, cron ทุก 30 นาที US market |
-| `bill_reminder.py` | `bill_reminder.py` | ✅ sync — ใหม่ 2026-06-01, cron 09:00 ทุกวัน |
+| `bill_reminder.py` | `bill_reminder.py` | ✅ sync — ใหม่ 2026-06-01, cron 09:00 ทุกวัน; **ต่อยอด 2026-08-11 เพิ่ม LINE push branch** (`mm_line.py`) |
+| `mm_line.py` | `mm_line.py` | ✅ sync — ใหม่ 2026-08-11, helper module (`list_member_line_ids()`/`send_line_push()`) mirror ของ `mm_push.py` แต่เป็น LINE Messaging API แทน Expo push |
+| `line_daily_summary.py` | `line_daily_summary.py` | ✅ sync — ใหม่ 2026-08-11, cron `5 1 * * *` (08:05 Bangkok ทุกวัน) multi-user, เก็บ history ที่ `line_daily_summary_history.json` (per-username key, สำหรับสรุปรายสัปดาห์วันจันทร์) |
+| `line_budget_alert.py` | `line_budget_alert.py` | ✅ sync — ใหม่ 2026-08-11, cron `0 */12 * * *`, ย้าย logic จาก n8n `budget-alert-01` (เกณฑ์ ≥80%/หมวด) มา multi-user |
+| `line_monthly_report.py` | `line_monthly_report.py` | ✅ sync — ใหม่ 2026-08-11, cron `5 2 1 * *` (09:05 Bangkok วันที่ 1 ของเดือน) คู่ขนานกับ `monthly_report.py` เดิม (ไม่แตะของเดิม) เรียก Gemini แยกต่างหาก 1 ครั้ง/user/เดือน |
 | `earnings_calendar.py` | `earnings_calendar.py` | ✅ sync — cron `0 2 * * 1-5` (09:00 Bangkok จ.–ศ.) |
 | `sync_prices.py` | `sync_prices.py` | ✅ sync — ใหม่ 2026-06-01, cron `30 15 * * 1-5` (22:30 Bangkok) |
 | `tax_notebook.py` | `tax_notebook.py` | ✅ sync — ใหม่ 2026-06-01, cron `0 2 1 11 *` (1 พ.ย.) |
