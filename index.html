@@ -16454,7 +16454,7 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
     if(existing) existing.remove();
     if(_lineBannerStatus!==false) return; // ยังไม่รู้สถานะ หรือเชื่อมต่อแล้ว → ไม่โชว์
     if(_isDismissed()) return;
-    const cont=document.getElementById('page-dashboard');
+    const cont=document.getElementById('pg-dashboard');
     if(!cont) return;
     const banner=document.createElement('div');
     banner.id='_lineBanner';
