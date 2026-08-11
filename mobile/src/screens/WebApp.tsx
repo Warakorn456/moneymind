@@ -235,6 +235,13 @@ export default function WebApp() {
     const m = /^https?:\/\/([^/]+)/i.exec(url);
     const host = m ? m[1].toLowerCase() : null;
     if (host === WEB_HOST) return true;
+    // LINE Login (เพิ่ม 2026-08-11) — ต่างจาก Google ที่บล็อก OAuth ใน embedded WebView
+    // (disallowed_useragent policy, เป็นเหตุผลที่ Google/Apple ต้องใช้ native SDK bridge)
+    // LINE ไม่มีนโยบายแบบนี้ อนุญาตให้ access.line.me (และ subdomain อื่นๆ ของ line.me ที่
+    // อาจใช้ระหว่าง flow เช่น การยืนยัน 2FA) โหลด inline ในแอปได้เลย ไม่ต้องเด้งออก external
+    // browser เหมือนลิงก์ทั่วไป — ผู้ใช้ authorize เสร็จแล้ว LINE redirect กลับมาที่ WEB_HOST
+    // ตามปกติ (ตรงกับ allowlist เดิมด้านบนอยู่แล้ว ไม่ต้องแก้อะไรเพิ่ม)
+    if (host && (host === 'line.me' || host.endsWith('.line.me'))) return true;
     Linking.openURL(url).catch(() => {});
     return false;
   }, []);
