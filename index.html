@@ -3976,7 +3976,11 @@ async function _handleLineCallback(){
       const data=await resp.json();
       if(!resp.ok) throw new Error(data.error||'LINE link failed');
       toast('เชื่อมต่อ LINE สำเร็จ','success');
-      if(typeof renderSettings==='function') renderSettings();
+      // 🐛 เจอตอนเพิ่ม Dashboard banner (2026-08-11): เดิมเรียก renderSettings() ทั้งที่การ์ด
+      // "เชื่อมต่อ LINE" อยู่หน้า Profile ไม่ใช่ Settings — ไม่ error แต่ไม่ทำอะไรที่ตั้งใจเลย
+      // แก้เป็นเรียกฟังก์ชันที่ถูกต้องตรงๆ (เช็ค typeof เพราะฟังก์ชันนี้ก็เป็น optional เหมือนกัน)
+      if(typeof renderLineConnectSection==='function') renderLineConnectSection();
+      if(typeof window._setLineBannerConnected==='function') window._setLineBannerConnected();
     }
   }catch(e){
     console.error('[line login]',e);
