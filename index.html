@@ -3894,8 +3894,16 @@ async function tryAppleLogin(){
 const LINE_LOGIN_CHANNEL_ID='2011067483'; // ไม่ลับ ใช้ฝั่ง client ได้ (channel secret อยู่ ai_proxy.py เท่านั้น)
 const LINE_LOGIN_PROXY_URL='https://34-134-61-137.sslip.io/v1/line/login';
 
+// 🐛 เจอ 2026-08-11: randB64() ใช้ btoa() ธรรมดา (มี +,/,= ที่ไม่ url-safe) — ตัว state OAuth
+// ต้องเดินทางผ่าน redirect หลายชั้น (เราเข้ารหัส → LINE เก็บ/redirect กลับ → เราถอดรหัส) ถ้ามี
+// จุดไหนไม่ percent-encode/decode ให้ตรงกัน (เช่น LINE เก็บ/คืนค่าคนละวิธีกับที่เราคาดไว้) จะทำให้
+// state เพี้ยนแล้ว "เข้าสู่ระบบไม่ได้" แบบเงียบๆ (เจอจริงจาก user report) — เปลี่ยนเป็น base64url
+// (แทน +/- , /_ , ตัด = ทิ้ง) ตัดปัญหาการ encode/decode ไม่ตรงกันทั้งคลาสไปเลย เพราะไม่มีอักขระที่
+// ต้อง percent-encode ในนั้นอีกต่อไป
+function _randUrlSafe(n){ return randB64(n).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+
 function _lineAuthUrl(mode){
-  const state=mode+':'+randB64(12);
+  const state=mode+':'+_randUrlSafe(12);
   sessionStorage.setItem('_lineOAuthState',state);
   const redirectUri=window.location.origin+'/';
   const params=new URLSearchParams({
