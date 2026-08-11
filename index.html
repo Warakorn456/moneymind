@@ -3620,9 +3620,10 @@ async function _rejectOAuthCollision(memberData, errEl){
 }
 
 // helper: สร้าง/login ด้วย Firebase OAuth provider แล้ว sync ข้อมูล
-async function _handleOAuthResult(result, providerName){
+async function _handleOAuthResult(result, providerName, lineUserId){
   const fbUser=result.user;
   const email=fbUser.email||('no-email-'+fbUser.uid+'@'+providerName+'.local');
+  const extraFields=lineUserId?{lineUserId}:{};
   const snap=await _fs.collection('members').where('email','==',email).limit(1).get();
   if(!snap.empty){
     // มีบัญชีแล้ว — login
@@ -3631,7 +3632,7 @@ async function _handleOAuthResult(result, providerName){
     if((memberData.uid||'') && memberData.uid!==fbUser.uid){ await _rejectOAuthCollision(memberData); return; }
     currentUser=memberData.username;
     // uid เขียนทุกครั้ง (self-heal เคส unclaimed legacy) — ผ่าน rules เพราะ uid ตรง/ยังว่าง
-    try{ await _fs.collection('members').doc(currentUser).update({uid:fbUser.uid,lastSeen:firebase.firestore.FieldValue.serverTimestamp(),provider:providerName,platform:(window._isAndroidApp?'android':window._isIOSApp?'ios':'web')}); }catch(e){}
+    try{ await _fs.collection('members').doc(currentUser).update({uid:fbUser.uid,lastSeen:firebase.firestore.FieldValue.serverTimestamp(),provider:providerName,platform:(window._isAndroidApp?'android':window._isIOSApp?'ios':'web'),...extraFields}); }catch(e){}
     loadDB();
     const _synced=await fsLoad();
     enterApp();
@@ -3655,6 +3656,7 @@ async function _handleOAuthResult(result, providerName){
       platform:(window._isAndroidApp?'android':window._isIOSApp?'ios':'web'),
       createdAt:firebase.firestore.FieldValue.serverTimestamp(),
       lastSeen:firebase.firestore.FieldValue.serverTimestamp(),
+      ...extraFields,
     });
     const salt=randB64(16);
     const saltBytes=Uint8Array.from(atob(salt),c=>c.charCodeAt(0));
