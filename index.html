@@ -9310,6 +9310,15 @@ if(!currentUser){
     }
   });
 }
+// ตรวจ LINE Login callback เมื่อโหลดหน้า — ทำงานได้ทั้ง mode='login' (ยังไม่ login) และ
+// mode='link' (login อยู่แล้ว, กด "เชื่อมต่อ LINE" ใน Settings) จึงแยก timer จาก Google
+// ด้านบนที่ gate ด้วย !currentUser — ฟังก์ชันเองเป็น no-op เงียบๆ ถ้าไม่มี code/state ค้างอยู่
+var _lineCallbackTimer=setInterval(function(){
+  if(typeof firebase!=='undefined'&&firebase.auth){
+    clearInterval(_lineCallbackTimer);
+    try{ _handleLineCallback(); }catch(e){}
+  }
+},200);
 
 function buildFinanceContext(){
   const now=new Date();
