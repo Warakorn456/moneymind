@@ -528,7 +528,10 @@ Bot รันบน **GCP VM** (ไม่ใช่โน้ตบุค) — ป
 | ~~News Sentiment~~ | ~~09:10 จ.–ศ.~~ | ~~`news_sentiment.py`~~ ❌ ลบออก 2026-06-18 (ลด Gemini token) |
 | แจ้งเตือนหุ้นแกว่ง ≥10% | ทุก 30 นาที จ.–ศ. | `stock_alert.py` → topic 📈 |
 | **SL/TP Alert** (user-defined targets) | ทุก 30 นาที จ.–ศ. US market | `sltp_alert.py` → topic 📈 + personal |
-| **Bill Reminder** (subscriptions ครบใน 3 วัน) | 09:00 ทุกวัน | `bill_reminder.py` → topic 💰 |
+| **Bill Reminder** (subscriptions ครบใน 3 วัน) | 09:00 ทุกวัน | `bill_reminder.py` → topic 💰 + Expo push + **LINE push (เพิ่ม 2026-08-11, multi-user ผ่าน `mm_line.py`)** |
+| **LINE Daily Summary** (รายรับ-รายจ่ายวันนี้ + Net Worth, จันทร์เพิ่มสรุปรายสัปดาห์) — เพิ่ม 2026-08-11 | 08:05 ทุกวัน | `line_daily_summary.py` → LINE push ทุก user ที่เชื่อมต่อ (ไม่แตะ Telegram/topic ใดๆ) |
+| **LINE Budget Alert** (งบต่อหมวด ≥80%, ย้าย logic จาก n8n budget-alert-01) — เพิ่ม 2026-08-11 | ทุก 12 ชม. | `line_budget_alert.py` → LINE push ทุก user ที่เชื่อมต่อ |
+| **LINE Monthly Report** (สรุป+AI วิเคราะห์ประจำเดือน, คู่ขนานกับ `monthly_report.py` เดิม) — เพิ่ม 2026-08-11 | วันที่ 1 ของเดือน 09:05 | `line_monthly_report.py` → LINE push ทุก user ที่เชื่อมต่อ |
 | **Net Worth Weekly** | จันทร์ 09:00 | `networth_weekly.py` → topic 💰 |
 | **Stock Price Sync** | 22:30 จ.–ศ. (US market close) | `sync_prices.py` → topic 📈 + อัปเดต Firestore |
 | Weekly AI Coach | วันอาทิตย์ 09:00 | `weekly_ai_coach.py` → topic 💰 |
