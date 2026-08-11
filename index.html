@@ -1871,6 +1871,7 @@
         <div style="font-size:12px;color:var(--muted);margin-top:6px" data-i18n="set_get_key_hint">รับ Key ฟรีได้ที่ aistudio.google.com → Get API Key</div>
       </div>
       <div id="key-status"></div>
+      <div id="ai-quota-box" style="display:none;margin-top:10px"></div>
       <div class="fg" style="margin-top:14px">
         <label class="flabel">Gemini Model <span style="font-weight:400;color:var(--muted)" data-i18n="set_model_hint">(ปล่อยว่างให้ระบบเลือกอัตโนมัติ)</span></label>
         <div style="display:flex;gap:8px">
@@ -4089,6 +4090,8 @@ async function getModel(){
 // แยกจาก MAYA_PROXY_URL (OpenAI-compat, ใช้กับ mayaAgent tool-calling เท่านั้น) — endpoint คนละแบบ
 // ⚠️ IP เดียวกับ MAYA_PROXY_URL/CHECKOUT_URL — แก้พร้อมกันถ้า VM IP เปลี่ยน
 const GEMINI_PROXY_URL='https://34-134-61-137.sslip.io/v1/generate';
+// อ่านโควตาที่เหลือ (เดือน+วัน) โดยไม่เพิ่ม count — ใช้แสดงในหน้าตั้งค่า (ดู renderAiQuotaBox)
+const QUOTA_STATUS_URL='https://34-134-61-137.sslip.io/v1/quota-status';
 
 // เรียก Gemini ผ่าน ai_proxy.py แทน key ตรง (ใช้เมื่อไม่มี apiKey ส่วนตัวแต่มี subscription active หรือเข้าเงื่อนไข free tier)
 // ไม่มี retry/model-fallback loop เหมือน path ปกติ — ใช้ model เดียวคงที่ (เพียงพอสำหรับ path สำรอง)
@@ -4108,6 +4111,14 @@ async function _callGeminiProxy(contents, genConfig, modelPref, feature){
 
 // feature ที่เปิดให้ user ไม่มี apiKey/ไม่มี subscription ใช้ฟรีได้ (จำกัดโควตาฝั่ง ai_proxy.py, ดู freeUsage/{username})
 const FREE_TIER_FEATURES=new Set(['receipt','payslip','tawi50','statement']);
+
+// แปล error.code จาก ai_proxy.py (โควตาเดือน/วันหมด) เป็นข้อความที่ user เข้าใจ — ใช้ร่วมกันทุกจุดที่ยิงผ่าน callGemini()
+function _aiQuotaErrMsg(err){
+  if(err.code==='daily_quota_exceeded') return tr('ai_daily_limit_reached');
+  if(err.code==='monthly_quota_exceeded') return tr('sub_monthly_limit_reached');
+  if(err.code==='free_quota_exceeded') return tr('free_scan_limit_reached');
+  return err.message;
+}
 
 // wrapper — retry อัตโนมัติถ้า quota หมด
 // modelPref: optional string[] — ลอง model เหล่านี้ก่อน getModel() (ใช้สำหรับงานที่ต้องการโมเดลที่ไม่ใช่ thinking)
@@ -4348,7 +4359,7 @@ const I18N = {
     cancel:'ยกเลิก',clear_tag:'ล้างแท็ก',all_categories:'ทุกหมวด',
     scan_title:'สแกนเอกสารด้วย AI',scan_receipt_exp:'ใบเสร็จ / รายจ่าย',scan_slip_inc:'สลิปเงินเดือน / รายรับ',scan_drop_hint:'ลากรูปวางที่นี่ หรือคลิกเพื่อเลือกไฟล์',scan_formats:'รองรับ JPG, PNG, HEIC, WEBP',scan_reading:'AI กำลังอ่านใบเสร็จ...',scan_read_done:'AI อ่านข้อมูลแล้ว — ตรวจสอบก่อนบันทึก',scan_items_label:'รายการสินค้า/บริการ',scan_grand_total:'รวมทั้งสิ้น',scan_amount_baht:'จำนวนเงิน (บาท)',scan_gross_salary:'เงินเดือนรวม (บาท)',scan_before_deduct:'ก่อนหักภาษี/ประกัน',scan_total_deduct:'หักทั้งหมด (บาท)',scan_tax_social:'ภาษี + ประกันสังคม',scan_manual_entry:'กรอกเอง',
     scan_net_received:'รับสุทธิ (บาท)',scan_no_apikey:'ยังไม่มี API Key',scan_setup_here:'ตั้งค่าที่นี่',scan_or_manual:'หรือ กรอกข้อมูลเองได้เลย',scan_success:'AI อ่านเอกสารสำเร็จ!',scan_fail_prefix:'อ่านไม่สำเร็จ',scan_fail:'อ่านใบเสร็จไม่สำเร็จ',scan_item_name_ph:'ชื่อสินค้า/บริการ',scan_select_date:'กรุณาเลือกวันที่',scan_need_1_item:'กรุณาใส่จำนวนเงินอย่างน้อย 1 รายการ',scan_saved_n_items:'บันทึก {n} รายการจากใบเสร็จแล้ว',scan_need_amount:'กรุณาใส่จำนวนเงิน',scan_deduction_desc:'รายการหัก (ภาษี/ประกัน)',scan_saved_salary:'บันทึกสลิปเงินเดือนแล้ว',scan_saved_receipt:'บันทึกจากใบเสร็จแล้ว',
-    no_items_match_filter:'ไม่พบรายการตามตัวกรอง',need_apikey_first:'กรุณาใส่ Gemini API Key ในหน้าตั้งค่าก่อน',need_apikey_or_sub:'ต้องมี Gemini API Key หรือ Subscription เพื่อใช้ AI สแกน — ไปที่ตั้งค่า',free_scan_limit_reached:'ใช้สแกนฟรีครบโควตาเดือนนี้แล้ว — ใส่ Gemini API Key ของคุณเองในหน้าตั้งค่าเพื่อใช้ต่อ',stmt_pdf_needs_apikey:'ไฟล์ PDF รองรับเฉพาะผู้ที่มี API Key ส่วนตัวเท่านั้น (Subscription ยังไม่รองรับไฟล์ PDF) กรุณาแปลงเป็นรูปภาพหรือตั้งค่า API Key',
+    no_items_match_filter:'ไม่พบรายการตามตัวกรอง',need_apikey_first:'กรุณาใส่ Gemini API Key ในหน้าตั้งค่าก่อน',need_apikey_or_sub:'ต้องมี Gemini API Key หรือ Subscription เพื่อใช้ AI สแกน — ไปที่ตั้งค่า',free_scan_limit_reached:'ใช้สแกนฟรีครบโควตาเดือนนี้แล้ว — ใส่ Gemini API Key ของคุณเองในหน้าตั้งค่าเพื่อใช้ต่อ',ai_daily_limit_reached:'ใช้โควตา AI ครบสำหรับวันนี้แล้ว ลองใหม่พรุ่งนี้ หรือใส่ Gemini API Key ของคุณเองเพื่อใช้ต่อได้ทันที',sub_monthly_limit_reached:'ใช้โควตา AI Subscription ครบเดือนนี้แล้ว ลองใหม่เดือนหน้า หรือใส่ Gemini API Key ส่วนตัวเพื่อใช้ต่อได้ทันที',quota_tier_free:'สถานะ: ใช้ AI แบบฟรี (จำกัดโควตา)',quota_tier_sub:'สถานะ: AI Subscription',quota_monthly_label:'ใช้ไปเดือนนี้',quota_daily_label:'ใช้ไปวันนี้',stmt_pdf_needs_apikey:'ไฟล์ PDF รองรับเฉพาะผู้ที่มี API Key ส่วนตัวเท่านั้น (Subscription ยังไม่รองรับไฟล์ PDF) กรุณาแปลงเป็นรูปภาพหรือตั้งค่า API Key',
     stmt_title:'นำเข้า Bank Statement',stmt_upload:'อัปโหลด Bank Statement',stmt_upload_hint:'รองรับ PDF, JPG, PNG — ลากวางหรือคลิกเลือกไฟล์',stmt_reading:'AI กำลังอ่าน Statement...',stmt_reading_time:'อาจใช้เวลา 10–30 วินาที',stmt_total_items:'รายการทั้งหมด',stmt_total_income:'รายรับรวม',stmt_total_expense:'รายจ่ายรวม',stmt_select_all:'เลือกทั้งหมด',stmt_amount:'จำนวน',stmt_type:'ประเภท',stmt_reupload:'อัปโหลดใหม่',stmt_import_selected:'นำเข้ารายการที่เลือก',
     sav_page_title:'เป้าหมายการออม',sav_add_goal:'เพิ่มเป้าหมาย',sav_add_goal_title:'เพิ่มเป้าหมายออม',sav_goal_name:'ชื่อเป้าหมาย',sav_goal_name_ph:'เช่น ซื้อมือถือ, ท่องเที่ยวญี่ปุ่น',sav_target_amt:'เป้าหมาย (บาท)',sav_saved_amt:'ออมแล้ว (บาท)',sav_deadline:'กำหนดเสร็จ',sav_color:'สี',color_blue:'ฟ้า',color_green:'เขียว',color_purple:'ม่วง',color_pink:'ชมพู',color_gold:'ทอง',sav_link_portfolio:'ลิ้งกับพอร์ตลงทุน (ตัวเลขวิ่งมาอัตโนมัติ)',sav_no_link:'ไม่ลิ้ง',sav_empty_hint:'เริ่มตั้งเป้าหมายออมเงินกันเถอะ!',drag_to_reorder:'ลากเพื่อเรียงลำดับ',sav_deadline_until:'ถึง',sav_achieved_pct:'สำเร็จ',sav_remaining:'เหลือ',sav_goal_reached:'บรรลุเป้าหมายแล้ว!',sav_view_portfolio:'ดูพอร์ต',sav_edit_goal_title:'แก้ไขเป้าหมาย',sav_need_name:'กรุณาใส่ชื่อเป้าหมาย',sav_need_target:'กรุณาใส่จำนวนเป้าหมาย',edited:'แก้ไขแล้ว',sav_added:'เพิ่มเป้าหมายแล้ว',
     bank_add_account:'เพิ่มบัญชี',bank_add_card:'เพิ่มบัตรเครดิต',bank_transfer:'โอนเงิน',bank_no_accounts:'ยังไม่มีบัญชีธนาคาร',bank_add_hint:'กด "+ เพิ่มบัญชี" เพื่อเริ่มต้น',bank_total_all:'ยอดเงินรวมทุกบัญชี',bank_updated:'อัปเดต',bank_not_updated:'ยังไม่อัปเดต',bank_balance:'ยอดเงินคงเหลือ',bank_update_balance:'อัปเดตยอด',bank_total_owed:'ยอดค้างรวม',bank_outstanding:'ยอดค้างชำระ',bank_avail_limit:'วงเงินคงเหลือ',bank_used:'ใช้ไป',bank_limit:'วงเงิน',bank_billing_date:'ตัดรอบวันที่',bank_due_date:'ชำระภายในวันที่',update:'อัปเดต',bank_edit_card:'แก้ไขบัตรเครดิต',bank_edit_account:'แก้ไขบัญชีธนาคาร',
@@ -4454,7 +4465,7 @@ const I18N = {
     cancel:'Cancel',clear_tag:'Clear Tag',all_categories:'All Categories',
     scan_title:'Scan Document with AI',scan_receipt_exp:'Receipt / Expense',scan_slip_inc:'Salary Slip / Income',scan_drop_hint:'Drop an image here or click to select a file',scan_formats:'Supports JPG, PNG, HEIC, WEBP',scan_reading:'AI is reading the receipt...',scan_read_done:'AI has read the data — please review before saving',scan_items_label:'Items/Services',scan_grand_total:'Grand Total',scan_amount_baht:'Amount (THB)',scan_gross_salary:'Gross Salary (THB)',scan_before_deduct:'Before tax/insurance deduction',scan_total_deduct:'Total Deductions (THB)',scan_tax_social:'Tax + Social Security',scan_manual_entry:'Enter Manually',
     scan_net_received:'Net Received (THB)',scan_no_apikey:'No API Key yet',scan_setup_here:'Set up here',scan_or_manual:'or enter data manually',scan_success:'AI read the document successfully!',scan_fail_prefix:'Failed to read',scan_fail:'Failed to read receipt',scan_item_name_ph:'Item/Service name',scan_select_date:'Please select a date',scan_need_1_item:'Please enter at least 1 item amount',scan_saved_n_items:'Saved {n} items from receipt',scan_need_amount:'Please enter an amount',scan_deduction_desc:'Deduction (tax/insurance)',scan_saved_salary:'Salary slip saved',scan_saved_receipt:'Saved from receipt',
-    no_items_match_filter:'No items match the filter',need_apikey_first:'Please enter your Gemini API Key in Settings first',need_apikey_or_sub:'Gemini API Key or subscription required to use AI scanning — go to Settings',free_scan_limit_reached:'You\'ve used all your free scans for this month — add your own Gemini API Key in Settings to continue',stmt_pdf_needs_apikey:'PDF files require a personal API Key (subscription does not support PDF yet) — please convert to an image or set up an API Key',
+    no_items_match_filter:'No items match the filter',need_apikey_first:'Please enter your Gemini API Key in Settings first',need_apikey_or_sub:'Gemini API Key or subscription required to use AI scanning — go to Settings',free_scan_limit_reached:'You\'ve used all your free scans for this month — add your own Gemini API Key in Settings to continue',ai_daily_limit_reached:'You\'ve used today\'s AI quota — try again tomorrow, or add your own Gemini API Key to continue right away',sub_monthly_limit_reached:'You\'ve used this month\'s subscription AI quota — try again next month, or add your own Gemini API Key to continue right away',quota_tier_free:'Status: Free AI tier (limited quota)',quota_tier_sub:'Status: AI Subscription',quota_monthly_label:'Used this month',quota_daily_label:'Used today',stmt_pdf_needs_apikey:'PDF files require a personal API Key (subscription does not support PDF yet) — please convert to an image or set up an API Key',
     stmt_title:'Import Bank Statement',stmt_upload:'Upload Bank Statement',stmt_upload_hint:'Supports PDF, JPG, PNG — drag & drop or click to select',stmt_reading:'AI is reading the statement...',stmt_reading_time:'May take 10–30 seconds',stmt_total_items:'Total Items',stmt_total_income:'Total Income',stmt_total_expense:'Total Expense',stmt_select_all:'Select All',stmt_amount:'Amount',stmt_type:'Type',stmt_reupload:'Re-upload',stmt_import_selected:'Import Selected Items',
     sav_page_title:'Savings Goals',sav_add_goal:'Add Goal',sav_add_goal_title:'Add Savings Goal',sav_goal_name:'Goal Name',sav_goal_name_ph:'e.g. buy a phone, trip to Japan',sav_target_amt:'Target (THB)',sav_saved_amt:'Saved (THB)',sav_deadline:'Deadline',sav_color:'Color',color_blue:'Blue',color_green:'Green',color_purple:'Purple',color_pink:'Pink',color_gold:'Gold',sav_link_portfolio:'Link to Investment Portfolio (auto-updates the number)',sav_no_link:'No Link',sav_empty_hint:"Let's set a savings goal!",drag_to_reorder:'Drag to reorder',sav_deadline_until:'Until',sav_achieved_pct:'achieved',sav_remaining:'Remaining',sav_goal_reached:'Goal reached!',sav_view_portfolio:'View Portfolio',sav_edit_goal_title:'Edit Goal',sav_need_name:'Please enter a goal name',sav_need_target:'Please enter a target amount',edited:'Edited',sav_added:'Goal added',
     bank_add_account:'Add Account',bank_add_card:'Add Credit Card',bank_transfer:'Transfer',bank_no_accounts:'No bank accounts yet',bank_add_hint:'Click "+ Add Account" to get started',bank_total_all:'Total balance across accounts',bank_updated:'Updated',bank_not_updated:'Not updated yet',bank_balance:'Balance',bank_update_balance:'Update Balance',bank_total_owed:'Total owed',bank_outstanding:'Outstanding Balance',bank_avail_limit:'Available Limit',bank_used:'Used',bank_limit:'Limit',bank_billing_date:'Billing date',bank_due_date:'Due by',update:'Update',bank_edit_card:'Edit Credit Card',bank_edit_account:'Edit Bank Account',
@@ -5488,7 +5499,7 @@ async function aiReadReceipt(dataURL){
     toast(tr('scan_success'),'success');
   } catch(err){
     document.getElementById('ai-proc').style.display='none';
-    const msg=err.code==='free_quota_exceeded'?tr('free_scan_limit_reached'):err.message;
+    const msg=_aiQuotaErrMsg(err);
     showWarn('<i class="fas fa-exclamation-triangle"></i> '+tr('scan_fail_prefix')+': '+msg);
     document.getElementById('ai-manual-btn').style.display='inline-flex';
     toast(tr('scan_fail'),'error');
@@ -5802,7 +5813,7 @@ async function aiReadStatement(b64,mime){
     showStmtReview();
   }catch(err){
     document.getElementById('stmt-proc').style.display='none';
-    const msg=err.code==='free_quota_exceeded'?tr('free_scan_limit_reached'):err.message;
+    const msg=_aiQuotaErrMsg(err);
     const w=document.getElementById('stmt-warn');
     w.innerHTML=`<i class="fas fa-exclamation-triangle"></i> ${msg}`;
     w.style.display='block';
@@ -7357,6 +7368,28 @@ function renderDashBanks(){
 // ══════════════════════════════════════════
 //  SETTINGS
 // ══════════════════════════════════════════
+
+// แสดง "ใช้โควตา AI ไปแล้ว X/Y" ในหน้าตั้งค่า — เฉพาะ user ที่ไม่มี apiKey ส่วนตัว (คนมี key ใช้ตรง
+// ไม่ผ่าน proxy เลย ไม่มีโควตาให้แสดง) อ่านอย่างเดียวผ่าน /v1/quota-status ไม่เพิ่ม count ใดๆ
+async function renderAiQuotaBox(){
+  const box=document.getElementById('ai-quota-box');
+  if(!box) return;
+  if(DB.settings.apiKey || !_auth || !_auth.currentUser){ box.style.display='none'; return; }
+  try{
+    const idToken=await _auth.currentUser.getIdToken();
+    const r=await fetch(QUOTA_STATUS_URL+'?username='+encodeURIComponent(currentUser),{headers:{'Authorization':'Bearer '+idToken}});
+    if(!r.ok){ box.style.display='none'; return; }
+    const q=await r.json();
+    const tierLabel=q.tier==='subscription'?tr('quota_tier_sub'):tr('quota_tier_free');
+    const mPct=Math.min(100,q.monthly.limit?q.monthly.used/q.monthly.limit*100:0);
+    box.innerHTML=`<div style="font-size:13px;color:var(--muted);margin-bottom:6px">${tierLabel}</div>
+      <div style="font-size:13px;margin-bottom:4px">${tr('quota_monthly_label')}: ${q.monthly.used}/${q.monthly.limit}</div>
+      <div class="pbar"><div class="pfill" style="width:${mPct}%"></div></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">${tr('quota_daily_label')}: ${q.daily.used}/${q.daily.limit}</div>`;
+    box.style.display='block';
+  }catch(e){ box.style.display='none'; }
+}
+
 function renderSettings(){
   const k=DB.settings.apiKey;
   document.getElementById('api-key-in').value=k;
@@ -7372,6 +7405,7 @@ function renderSettings(){
   if(typeof renderSubscriptionBox==='function') renderSubscriptionBox();
   if(typeof renderTotpStatusBox==='function') renderTotpStatusBox();
   if(typeof renderSnapshotList==='function') renderSnapshotList();
+  if(typeof renderAiQuotaBox==='function') renderAiQuotaBox();
 }
 
 function renderTotpStatusBox(){
@@ -9029,7 +9063,7 @@ async function processPaySlip(file){
     );
   }catch(e){
     setZoneLoading('slip-zone',false);
-    const msg=e.code==='free_quota_exceeded'?tr('free_scan_limit_reached'):e.message;
+    const msg=_aiQuotaErrMsg(e);
     toast(tr('taxdoc_slip_failed')+': '+msg,'error');
   }
 }
@@ -9100,7 +9134,7 @@ async function processTawi50(file){
     );
   }catch(e){
     setZoneLoading('tawi-zone',false);
-    const msg=e.code==='free_quota_exceeded'?tr('free_scan_limit_reached'):e.message;
+    const msg=_aiQuotaErrMsg(e);
     toast(tr('taxdoc_tawi50_failed')+': '+msg,'error');
   }
 }
