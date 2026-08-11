@@ -70,12 +70,17 @@ const INJECT = `(function(){
   window.handleNativeGoogleAuth = function(idToken, accessToken) {
     try {
       function doSignIn() {
-        if (!window._auth || !window.firebase) { setTimeout(doSignIn, 300); return; }
+        // ⚠️ _auth ประกาศด้วย "let _auth=null" ที่ top-level ของ index.html script — ตัวแปร
+        // let/const แบบนี้ไม่ผูกเข้ากับ window object เอง (ต่างจาก var/function declaration)
+        // ใช้ window._auth เช็คแล้วเป็น undefined เสมอไม่ว่า login สำเร็จแค่ไหน ทำให้ loop นี้วนตลอดไป
+        // เงียบๆ ไม่มี error (เจอบั๊กเดียวกันมาแล้วที่ mayaAgent()/_subGetIdToken() ใน index.html
+        // แก้ไปแล้ว 2026-07-06 แต่ไม่เคยแก้ใน INJECT script นี้ — ต้องอ้างตัวแปรตรงๆ ไม่ใช่ window._auth)
+        if (typeof _auth === 'undefined' || !_auth || !window.firebase) { setTimeout(doSignIn, 300); return; }
         var credential = firebase.auth.GoogleAuthProvider.credential(
           idToken || null,
           accessToken || null
         );
-        window._auth.signInWithCredential(credential)
+        _auth.signInWithCredential(credential)
           .then(function(result) {
             if (window._handleOAuthResult) window._handleOAuthResult(result, 'google');
           })
