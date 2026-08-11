@@ -12651,6 +12651,58 @@ function renderChangePasswordSection(){
   el.innerHTML += '<div class="prof-section" style="margin-top:16px"><div class="set-title"><i class="fas fa-lock" style="color:#f59e0b;margin-right:8px"></i>ความปลอดภัยบัญชี</div>'+body+'</div>';
 }
 
+// ══════════════════════════════════════════
+//  LINE CONNECT — patch renderProfile ต่ออีกชั้น (เพิ่ม 2026-08-11)
+// ══════════════════════════════════════════
+// ปุ่ม "เชื่อมต่อ LINE" แยกจากปุ่ม login หน้าแรก — สำหรับ user ที่ login อยู่แล้ว (password/Google/Apple)
+// ให้ผูก lineUserId เข้าบัญชีปัจจุบันได้โดยไม่ต้องสร้างบัญชีใหม่ซ้อน (ดู tryLineLogin()/mode='link')
+const _origRenderProfileLine = renderProfile;
+renderProfile = function(){
+  _origRenderProfileLine();
+  renderLineConnectSection();
+};
+
+async function renderLineConnectSection(){
+  var el = document.getElementById('profile-content');
+  if(!el) return;
+  var boxId = 'line-connect-box';
+  el.innerHTML += '<div class="prof-section" style="margin-top:16px"><div class="set-title"><i class="fab fa-line" style="color:#06C755;margin-right:8px"></i>เชื่อมต่อ LINE</div><div id="'+boxId+'" style="font-size:13px;color:var(--muted)">กำลังโหลด...</div></div>';
+  if(!_fs||!currentUser) return;
+  try{
+    var doc = await _fs.collection('members').doc(currentUser).get();
+    var lineUserId = doc.exists ? doc.data().lineUserId : null;
+    var box = document.getElementById(boxId); // re-query กัน DOM เปลี่ยนไปแล้วระหว่างรอ await (nav ออกจากหน้าไปแล้ว)
+    if(!box) return;
+    if(lineUserId){
+      box.innerHTML = '<div style="display:flex;align-items:center;gap:10px;background:rgba(6,199,85,.1);border:1px solid rgba(6,199,85,.3);border-radius:10px;padding:12px 14px;flex-wrap:wrap">'
+        +'<i class="fas fa-check-circle" style="color:#06C755;font-size:18px"></i>'
+        +'<div style="flex:1;min-width:180px"><div style="font-weight:700;color:#06C755">เชื่อมต่อ LINE แล้ว</div>'
+        +'<div style="font-size:12px;color:var(--muted)">รับการแจ้งเตือนสถานะการเงินผ่าน LINE ได้</div></div>'
+        +'<button class="btn btn-ghost" style="padding:6px 12px;font-size:12px" onclick="lineDisconnectAccount()">ยกเลิกการเชื่อมต่อ</button>'
+        +'</div>';
+    } else {
+      box.innerHTML = '<div style="max-width:380px">'
+        +'<div style="margin-bottom:10px">เชื่อมต่อ LINE เพื่อรับการแจ้งเตือนสถานะการเงิน (สรุปรายวัน/สัปดาห์ เตือนงบเกิน เตือนบิลใกล้ครบกำหนด) ผ่านแชท LINE</div>'
+        +'<button class="line-btn native-hide" style="max-width:220px" onclick="lineConnectAccount()">'
+        +'<svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.48 2 2 5.69 2 10.25c0 4.09 3.54 7.51 8.33 8.16.32.07.77.21.88.49.1.25.06.65.03.9l-.14.87c-.04.25-.2 1 .87.55s5.78-3.4 7.88-5.83C21.34 13.5 22 11.97 22 10.25 22 5.69 17.52 2 12 2z"/></svg>'
+        +'เชื่อมต่อ LINE</button>'
+        +'<div class="native-hide" style="font-size:11px;color:var(--muted);margin-top:6px">ยังไม่รองรับในแอปมือถือ (เร็วๆ นี้) — ใช้เว็บที่ app.moneymindth.com แทนได้ตอนนี้</div>'
+        +'</div>';
+    }
+  }catch(e){
+    var box2 = document.getElementById(boxId);
+    if(box2) box2.textContent = 'โหลดสถานะไม่สำเร็จ';
+  }
+}
+
+function lineDisconnectAccount(){
+  if(!currentUser||!_fs) return;
+  if(!confirm('ยกเลิกการเชื่อมต่อ LINE? คุณจะไม่ได้รับการแจ้งเตือนผ่าน LINE อีก')) return;
+  _fs.collection('members').doc(currentUser).update({lineUserId:firebase.firestore.FieldValue.delete()})
+    .then(function(){ toast('ยกเลิกการเชื่อมต่อ LINE แล้ว','success'); renderLineConnectSection(); })
+    .catch(function(e){ toast('เกิดข้อผิดพลาด: '+e.message,'error'); });
+}
+
 function cpToggleVis(id, btn){
   var inp = document.getElementById(id); if(!inp) return;
   if(inp.type==='password'){ inp.type='text'; btn.innerHTML='<i class="fas fa-eye-slash"></i>'; }
