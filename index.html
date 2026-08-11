@@ -3876,6 +3876,102 @@ async function tryAppleLogin(){
   allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
 }
 
+// ══════════════════════════════════════════
+//  LINE LOGIN — เพิ่ม 2026-08-11
+// ══════════════════════════════════════════
+// LINE ไม่ใช่ Firebase Auth provider ในตัว (ต่างจาก Google/Apple) — ไม่มี signInWithPopup/Redirect
+// ให้ใช้ ต้อง redirect ผู้ใช้ไปหน้า authorize ของ LINE เอง แล้วให้ ai_proxy.py (backend) แลก
+// authorization code เป็น Firebase custom token ให้ (ดู CLAUDE.md/memory "LINE Login + Bot")
+// — LINE ไม่มีนโยบายบล็อก embedded WebView แบบ Google เลยไม่ต้องเช็ค _isInAppBrowser()/เปิด
+// Custom Tabs เหมือน Google — ใช้ full-page redirect ธรรมดาได้ทุกที่ (รวม WebView ในอนาคตหลัง
+// Phase 1.5 เปิด allowlist ให้ access.line.me โหลด inline ได้)
+//
+// 2 mode: 'login' (ปุ่มหน้า login, ยังไม่ login) กับ 'link' (ปุ่ม "เชื่อมต่อ LINE" ใน Settings,
+// login อยู่แล้ว ผูก lineUserId เข้าบัญชีปัจจุบันแทนสร้างบัญชีใหม่ซ้อน) — เก็บ mode ไว้ใน state
+// param ที่ส่งไป-กลับกับ LINE (sessionStorage เก็บคู่กันไว้เทียบกัน CSRF)
+const LINE_LOGIN_CHANNEL_ID='2011067483'; // ไม่ลับ ใช้ฝั่ง client ได้ (channel secret อยู่ ai_proxy.py เท่านั้น)
+const LINE_LOGIN_PROXY_URL='https://34-134-61-137.sslip.io/v1/line/login';
+
+function _lineAuthUrl(mode){
+  const state=mode+':'+randB64(12);
+  sessionStorage.setItem('_lineOAuthState',state);
+  const redirectUri=window.location.origin+'/';
+  const params=new URLSearchParams({
+    response_type:'code',
+    client_id:LINE_LOGIN_CHANNEL_ID,
+    redirect_uri:redirectUri,
+    state:state,
+    scope:'profile openid',
+    bot_prompt:'aggressive', // ชวนเพิ่มเพื่อนบอท OA ที่ลิงก์ไว้ระหว่าง login เลย (จำเป็นสำหรับแจ้งเตือนภายหลัง)
+  });
+  return 'https://access.line.me/oauth2/v2.1/authorize?'+params.toString();
+}
+
+async function tryLineLogin(){
+  const errEl=_activeLoginErr();
+  const allBtns=[...document.querySelectorAll('.google-btn,.apple-btn,.line-btn')];
+  allBtns.forEach(b=>{ b.disabled=true; b.style.opacity='.5'; });
+  if(errEl) errEl.textContent='';
+  // รอ Phase 1.5 (WebView allowlist) — ปุ่มถูกซ่อนด้วย CSS (.native-hide) อยู่แล้วในแอปมือถือ
+  // เช็คซ้ำที่นี่กันเผื่อ DOM ถูกกดผ่านทางอื่น
+  if(window._isAndroidApp||window._isIOSApp){
+    if(errEl) errEl.textContent='เข้าสู่ระบบด้วย LINE ยังไม่รองรับในแอปมือถือ (เร็วๆ นี้)';
+    allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
+    return;
+  }
+  window.location.href=_lineAuthUrl('login');
+}
+
+// เรียกจาก Settings — ผูก LINE เข้าบัญชีที่ login อยู่แล้ว (ไม่สร้างบัญชีใหม่)
+function lineConnectAccount(){
+  if(!currentUser||!_auth||!_auth.currentUser){ toast('กรุณาเข้าสู่ระบบก่อน','error'); return; }
+  window.location.href=_lineAuthUrl('link');
+}
+
+// เรียกตอนโหลดหน้าทุกครั้ง (ทั้ง login อยู่แล้ว/ยังไม่ login) — no-op เงียบๆ ถ้าไม่มี code/state
+// ค้างจาก LINE redirect กลับมา (คือ pattern ปกติของการโหลดหน้าเปล่าๆ ไม่ใช่ error)
+async function _handleLineCallback(){
+  const params=new URLSearchParams(window.location.search);
+  const code=params.get('code');
+  const state=params.get('state');
+  if(!code||!state) return;
+  const savedState=sessionStorage.getItem('_lineOAuthState');
+  sessionStorage.removeItem('_lineOAuthState');
+  if(!savedState||state!==savedState) return; // ไม่ตรง/ไม่มี pending state → ไม่ใช่ callback ของเรา เงียบๆ
+  // ล้าง code/state ออกจาก URL ทันที กัน authorization code ค้างอยู่ใน browser history/URL bar
+  history.replaceState(null,'',window.location.pathname);
+  const mode=savedState.split(':')[0];
+  const errEl=_activeLoginErr();
+  const redirectUri=window.location.origin+'/';
+  try{
+    if(mode==='login'){
+      if(errEl) errEl.textContent='กำลังเข้าสู่ระบบด้วย LINE...';
+      const resp=await fetch(LINE_LOGIN_PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({code,redirectUri,mode:'login'})});
+      const data=await resp.json();
+      if(!resp.ok) throw new Error(data.error||'LINE login failed');
+      const result=await _auth.signInWithCustomToken(data.customToken);
+      if(data.displayName){ try{ await result.user.updateProfile({displayName:data.displayName,photoURL:data.pictureUrl||null}); }catch(e){} }
+      await _handleOAuthResult(result,'line',data.lineUserId);
+    } else if(mode==='link'){
+      if(!currentUser||!_auth.currentUser){ toast('กรุณาเข้าสู่ระบบก่อน','error'); return; }
+      const idToken=await _auth.currentUser.getIdToken();
+      const resp=await fetch(LINE_LOGIN_PROXY_URL,{method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+idToken},
+        body:JSON.stringify({code,redirectUri,mode:'link',username:currentUser})});
+      const data=await resp.json();
+      if(!resp.ok) throw new Error(data.error||'LINE link failed');
+      toast('เชื่อมต่อ LINE สำเร็จ','success');
+      if(typeof renderSettings==='function') renderSettings();
+    }
+  }catch(e){
+    console.error('[line login]',e);
+    const msg='เข้าสู่ระบบด้วย LINE ไม่สำเร็จ: '+(e.message||e);
+    if(errEl) errEl.textContent=msg; else toast(msg,'error');
+    document.querySelectorAll('.google-btn,.apple-btn,.line-btn').forEach(b=>{ b.disabled=false; b.style.opacity=''; });
+  }
+}
+
 // ── Toggle login/register ──
 function switchToRegister(){
   document.getElementById('form-login').style.display='none';
