@@ -16394,9 +16394,9 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
     // ถ้า DB ว่างเปล่า แสดง welcome guide
     const hasData=(DB.transactions&&DB.transactions.length>0)||(DB.savings&&DB.savings.length>0)||(DB.debts&&DB.debts.length>0)||(DB.investments&&DB.investments.length>0);
     if(hasData) return;
-    const cont=document.getElementById('page-dashboard');
+    const cont=document.getElementById('pg-dashboard');
     if(!cont) return;
-    // ใส่ welcome card ด้านบนสุดของ page-dashboard
+    // ใส่ welcome card ด้านบนสุดของ pg-dashboard
     const guide=document.createElement('div');
     guide.id='_emptyGuide';
     guide.style.cssText='margin-bottom:20px';
