@@ -3895,6 +3895,10 @@ async function tryAppleLogin(){
 // param ที่ส่งไป-กลับกับ LINE (sessionStorage เก็บคู่กันไว้เทียบกัน CSRF)
 const LINE_LOGIN_CHANNEL_ID='2011067483'; // ไม่ลับ ใช้ฝั่ง client ได้ (channel secret อยู่ ai_proxy.py เท่านั้น)
 const LINE_LOGIN_PROXY_URL='https://34-134-61-137.sslip.io/v1/line/login';
+const LINE_FRIEND_STATUS_URL='https://34-134-61-137.sslip.io/v1/line/friend-status';
+// ลิงก์เพิ่มเพื่อน OA ตาม LINE URL scheme ทางการ (@159hhnpk = basic ID ของ MoneyMind OA)
+// QR ของคู่กันอยู่ที่ assets/line-qr.png (ดึงมาจาก qr-official.line.me ของ LINE เอง)
+const LINE_ADD_FRIEND_URL='https://line.me/R/ti/p/@159hhnpk';
 
 // 🐛 เจอ 2026-08-11: randB64() ใช้ btoa() ธรรมดา (มี +,/,= ที่ไม่ url-safe) — ตัว state OAuth
 // ต้องเดินทางผ่าน redirect หลายชั้น (เราเข้ารหัส → LINE เก็บ/redirect กลับ → เราถอดรหัส) ถ้ามี
@@ -3980,12 +3984,18 @@ async function _handleLineCallback(){
         body:JSON.stringify({code,redirectUri,mode:'link',username:currentUser})});
       const data=await resp.json();
       if(!resp.ok) throw new Error(data.error||'LINE link failed');
-      toast('เชื่อมต่อ LINE สำเร็จ','success');
+      // friendFlag===false = เชื่อมบัญชีสำเร็จ แต่เขาติ๊ก "เพิ่มเพื่อน" ออกตอนขอสิทธิ์
+      // → อย่าบอกแค่ "สำเร็จ" เพราะแจ้งเตือนจะส่งไม่ได้เลย ต้องบอกให้ชัดว่ายังขาดอะไร
+      if(data.friendFlag===false){
+        toast('เชื่อมต่อ LINE แล้ว — แต่ยังต้องเพิ่มบอทเป็นเพื่อนถึงจะรับแจ้งเตือนได้','error',7000);
+      } else {
+        toast('เชื่อมต่อ LINE สำเร็จ','success');
+      }
       // 🐛 เจอตอนเพิ่ม Dashboard banner (2026-08-11): เดิมเรียก renderSettings() ทั้งที่การ์ด
       // "เชื่อมต่อ LINE" อยู่หน้า Profile ไม่ใช่ Settings — ไม่ error แต่ไม่ทำอะไรที่ตั้งใจเลย
       // แก้เป็นเรียกฟังก์ชันที่ถูกต้องตรงๆ (เช็ค typeof เพราะฟังก์ชันนี้ก็เป็น optional เหมือนกัน)
       if(typeof renderLineConnectSection==='function') renderLineConnectSection();
-      if(typeof window._setLineBannerConnected==='function') window._setLineBannerConnected();
+      if(typeof window._setLineBannerConnected==='function') window._setLineBannerConnected(data.friendFlag);
     }
   }catch(e){
     console.error('[line login]',e);
@@ -4534,7 +4544,7 @@ const I18N = {
     aiu_loading:'กำลังโหลดข้อมูลการใช้ AI...',aiu_no_data:'ยังไม่มีข้อมูล',aiu_claude_hint:'รัน <code>python claude_usage_report.py --firestore</code> บนโน้ตบุ๊ก (transcript อยู่ในเครื่อง ไม่ใช่ VM)',aiu_gemini_hint:'อัปเดตทุกวันจาก Cloud Monitoring · หรือรัน <code>python gemini_usage_report.py --firestore</code> บน VM',aiu_by_model:'แยกตามรุ่นโมเดล (ใช้มากสุดบนสุด)',aiu_proj_vs_cap:'คาดการณ์เดือนนี้ vs spend cap',aiu_over_cap:'คาดว่าจะเกิน cap — usage จะถูก pause เมื่อถึง ฿{cap}',aiu_claude_banner:'เป็น<b>ประมาณการแบบ API</b> — คุณใช้ Pro/Max เหมารายเดือน ตัวเลขนี้ดูปริมาณการใช้ ไม่ใช่เงินที่จ่ายจริง',aiu_claude_footer:'* นับจาก transcript Claude Code ทุกโปรเจกต์ในเครื่องนี้ (~/.claude) · ราคา API opus $5/$25 · cache read 0.1× · USDTHB={usdthb}',aiu_gemini_footer:'* ข้อมูลจริงจาก Cloud Monitoring (Gemini API · project Best1) — ครอบคลุมเว็บ Maya + Telegram bot + ทุกสคริปต์ · ราคา flash $0.30/$2.50 ต่อ 1M tok, USDTHB={usdthb}',aiu_today:'วันนี้',aiu_this_month:'เดือนนี้ (ถึงวันนี้)',aiu_days_with_data:'วันที่มีข้อมูล',aiu_avg_per_day:'เฉลี่ย/วัน',aiu_month_projection:'คาดการณ์ทั้งเดือน',aiu_estimate:'ประมาณการ',aiu_daily_cost:'ค่าใช้จ่ายรายวัน (฿)',aiu_daily_detail:'รายละเอียดรายวัน',aiu_baht_per_day:'฿/วัน',
     admin_no_access:'ไม่มีสิทธิ์เข้าถึงหน้านี้',admin_loading:'กำลังโหลดข้อมูล...',admin_fb_not_ready:'Firebase ยังไม่พร้อม',admin_never:'ไม่เคย',admin_just_now:'เมื่อกี้',admin_min_ago:'นาทีที่แล้ว',admin_hr_ago:'ชม.ที่แล้ว',admin_day_ago:'วันที่แล้ว',
     admin_server_usage:'Usage รวม (ฝั่งเซิร์ฟเวอร์)',admin_total_tx:'รายการรวม',admin_total_nw:'Net Worth รวม',admin_has_real_data:'มีข้อมูลจริง',admin_avg_tx_per_user:'รายการ/คน เฉลี่ย',admin_usage_per_user:'การใช้งานต่อคน',admin_user:'ผู้ใช้',admin_last_tx:'รายการล่าสุด',admin_features_used:'ฟีเจอร์ที่ใช้',admin_no_server_usage:'ยังไม่มี usage รวมฝั่งเซิร์ฟเวอร์ — รัน <code>admin_stats.py</code> บน VM (อ่าน userdata ทุกคนผ่าน Service Account → เขียน <code>admin/summary</code>) แล้วรีเฟรช',admin_nw_trend:'เทรนด์ Net Worth รวมย้อนหลัง',
-    admin_online:'ออนไลน์',admin_users:'ผู้ใช้',admin_total_users:'ผู้ใช้ทั้งหมด',admin_in_7_days:'ใน 7 วัน',admin_online_now:'ออนไลน์อยู่',admin_dau_today:'DAU วันนี้',admin_wau_7d:'WAU 7 วัน',admin_mau_30d:'MAU 30 วัน',admin_signup_today:'สมัครวันนี้',admin_churn_30d:'เงียบ >30 วัน',admin_never_login:'ไม่เคยล็อกอิน',admin_has_real_email:'มี email จริง',admin_cumulative_users:'ผู้ใช้สะสม',admin_platform:'แพลตฟอร์ม',admin_search:'ค้นหา',admin_last_seen:'ล่าสุด',admin_online_within_10min:'ออนไลน์ภายใน 10 นาที',admin_load_failed:'โหลดข้อมูลไม่ได้',admin_test_account:'ทดสอบ',admin_show_test_accounts:'แสดงบัญชีทดสอบ',share_app_btn:'แชร์แอปให้เพื่อน',line_connect_btn:'เชื่อมต่อ LINE',share_app_message:'ลองแอปจัดการเงินที่ผมใช้อยู่ดูสิ บันทึกรายรับ-รายจ่ายด้วย AI สแกนใบเสร็จ คำนวณภาษีได้ในตัว ใช้งานฟรี',share_link_copied:'คัดลอกลิงก์แอปแล้ว!',
+    admin_online:'ออนไลน์',admin_users:'ผู้ใช้',admin_total_users:'ผู้ใช้ทั้งหมด',admin_in_7_days:'ใน 7 วัน',admin_online_now:'ออนไลน์อยู่',admin_dau_today:'DAU วันนี้',admin_wau_7d:'WAU 7 วัน',admin_mau_30d:'MAU 30 วัน',admin_signup_today:'สมัครวันนี้',admin_churn_30d:'เงียบ >30 วัน',admin_never_login:'ไม่เคยล็อกอิน',admin_has_real_email:'มี email จริง',admin_cumulative_users:'ผู้ใช้สะสม',admin_platform:'แพลตฟอร์ม',admin_search:'ค้นหา',admin_last_seen:'ล่าสุด',admin_online_within_10min:'ออนไลน์ภายใน 10 นาที',admin_load_failed:'โหลดข้อมูลไม่ได้',admin_test_account:'ทดสอบ',admin_show_test_accounts:'แสดงบัญชีทดสอบ',share_app_btn:'แชร์แอปให้เพื่อน',line_connect_btn:'เชื่อมต่อ LINE',line_notfriend_title:'ยังไม่ได้เพิ่มบอทเป็นเพื่อน',line_notfriend_desc:'เชื่อมต่อบัญชีแล้ว แต่ LINE จะส่งแจ้งเตือนให้ไม่ได้จนกว่าจะเพิ่ม MoneyMind เป็นเพื่อน',line_notfriend_add:'เพิ่มเพื่อนเลย',line_notfriend_recheck:'ตรวจสอบอีกครั้ง',line_notfriend_qr:'อยู่บนคอม? สแกน QR ด้วยมือถือ',share_app_message:'ลองแอปจัดการเงินที่ผมใช้อยู่ดูสิ บันทึกรายรับ-รายจ่ายด้วย AI สแกนใบเสร็จ คำนวณภาษีได้ในตัว ใช้งานฟรี',share_link_copied:'คัดลอกลิงก์แอปแล้ว!',
     sync_not_synced:'ยังไม่ได้ซิงค์',sync_force_title:'บังคับ sync ขึ้น cloud',uploaded:'อัปโหลดแล้ว',loaded_from_cloud:'โหลดจาก Cloud แล้ว',no_cloud_data:'ไม่มีข้อมูลใน Cloud',no_recoverable_data:'ไม่พบข้อมูลที่กู้คืนได้',synced_new_device:'โหลดข้อมูลใหม่จากอุปกรณ์อื่นแล้ว ☁️',db_size_warn:'ข้อมูลของคุณใกล้เต็มขีดจำกัดระบบ (Firestore 1MB/บัญชี) แนะนำ Export ข้อมูลเก่าเก็บไว้ แล้วลบรายการที่ไม่จำเป็นในหน้าตั้งค่า ไม่งั้น sync ข้ามอุปกรณ์อาจล้มเหลว',cloud_load_failed:'โหลด cloud ไม่ได้',new_data_from_device:'มีข้อมูลใหม่จากอุปกรณ์อื่น ☁️ (จะโหลดหลังปิดฟอร์ม)',synced_from_device:'ซิงค์จากอุปกรณ์อื่นแล้ว ☁️',uploaded_to_cloud:'อัปโหลดข้อมูลขึ้น Cloud แล้ว',recover_success:'กู้คืนข้อมูลสำเร็จ ✓',welcome_username:'ยินดีต้อนรับ! ชื่อผู้ใช้',relogin_for_sync:'โปรดออกจากระบบแล้วเข้าสู่ระบบใหม่ 1 ครั้ง เพื่อเปิดการซิงค์ข้อมูล (อัปเดตความปลอดภัย)',
     port_need_name:'กรุณาใส่ชื่อพอร์ต',port_edited:'แก้ไขพอร์ตแล้ว',port_created:'สร้างพอร์ตใหม่แล้ว',port_confirm_delete:'ลบพอร์ตนี้? การลงทุนในพอร์ตจะถูกย้ายไป "ไม่ระบุพอร์ต"',port_not_found_or_unlinked:'ไม่พบพอร์ตหรือยังไม่ได้ลิ้งเป้าหมาย',port_saving_goal_not_found:'ไม่พบเป้าหมายออมที่ลิ้งไว้',port_sent_to_saving:'ส่งยอด {amt} ไปยัง "{name}" แล้ว',
     inv_need_name_first:'กรุณาใส่ชื่อ/Ticker ก่อน',inv_fetching:'กำลังดึง',inv_price:'ราคา',inv_fetch_price_failed:'ดึงราคาไม่ได้',inv_updating_price:'กำลังอัปเดตราคา',inv_update_failed:'อัปเดตไม่ได้',inv_edit:'แก้ไขการลงทุน',inv_need_name:'กรุณาใส่ชื่อ',inv_need_qty:'กรุณาใส่จำนวน',inv_need_buyprice:'กรุณาใส่ราคาซื้อ',inv_added:'เพิ่มการลงทุนแล้ว',inv_confirm_delete:'ต้องการลบการลงทุนนี้?',inv_field_type:'ประเภท',inv_field_linked_debt:'เชื่อมโยงสินเชื่อบ้าน (ไม่บังคับ)',inv_no_linked_debt:'ไม่เชื่อมโยง',inv_linked_debt_hint:'ถ้าเลือก ระบบจะคำนวณส่วนของเจ้าของ (equity) = มูลค่า − หนี้คงเหลือ ให้อัตโนมัติ',inv_equity:'ส่วนของเจ้าของ:',inv_equity_hint:'ส่วนของเจ้าของ = มูลค่า − หนี้คงเหลือของสินเชื่อที่เชื่อมโยง',
@@ -4640,7 +4650,7 @@ const I18N = {
     aiu_loading:'Loading AI usage data...',aiu_no_data:'No data yet for',aiu_claude_hint:'Run <code>python claude_usage_report.py --firestore</code> on your laptop (transcript is local, not on the VM)',aiu_gemini_hint:'Updated daily from Cloud Monitoring · or run <code>python gemini_usage_report.py --firestore</code> on the VM',aiu_by_model:'By Model (highest usage first)',aiu_proj_vs_cap:'This month projection vs spend cap',aiu_over_cap:'Projected to exceed cap — usage will pause at ฿{cap}',aiu_claude_banner:'This is an <b>API-equivalent estimate</b> — you\'re on a Pro/Max flat plan, this number shows usage volume, not actual money paid',aiu_claude_footer:'* Counted from Claude Code transcripts on this machine (~/.claude) · API pricing opus $5/$25 · cache read 0.1× · USDTHB={usdthb}',aiu_gemini_footer:'* Real data from Cloud Monitoring (Gemini API · project Best1) — covers the Maya web app + Telegram bot + all scripts · flash pricing $0.30/$2.50 per 1M tok, USDTHB={usdthb}',aiu_today:'Today',aiu_this_month:'This Month (to date)',aiu_days_with_data:'days with data',aiu_avg_per_day:'Avg/day',aiu_month_projection:'Month Projection',aiu_estimate:'Estimate',aiu_daily_cost:'Daily Cost (฿)',aiu_daily_detail:'Daily Detail',aiu_baht_per_day:'฿/day',
     admin_no_access:'You do not have access to this page',admin_loading:'Loading data...',admin_fb_not_ready:'Firebase not ready yet',admin_never:'Never',admin_just_now:'Just now',admin_min_ago:'min ago',admin_hr_ago:'hr ago',admin_day_ago:'days ago',
     admin_server_usage:'Total Usage (Server-side)',admin_total_tx:'Total Transactions',admin_total_nw:'Total Net Worth',admin_has_real_data:'Has Real Data',admin_avg_tx_per_user:'Avg Tx/User',admin_usage_per_user:'Usage per User',admin_user:'User',admin_last_tx:'Last Transaction',admin_features_used:'Features Used',admin_no_server_usage:'No server-side usage summary yet — run <code>admin_stats.py</code> on the VM (reads all userdata via Service Account → writes <code>admin/summary</code>) then refresh',admin_nw_trend:'Net Worth Trend (Historical)',
-    admin_online:'online',admin_users:'users',admin_total_users:'Total Users',admin_in_7_days:'in 7 days',admin_online_now:'Online Now',admin_dau_today:"Today's DAU",admin_wau_7d:'WAU 7 days',admin_mau_30d:'MAU 30 days',admin_signup_today:'Signed Up Today',admin_churn_30d:'Inactive >30 days',admin_never_login:'never logged in',admin_has_real_email:'Has Real Email',admin_cumulative_users:'Cumulative Users',admin_platform:'Platform',admin_search:'Search',admin_last_seen:'Last Seen',admin_online_within_10min:'Online within 10 minutes',admin_load_failed:'Failed to load data',admin_test_account:'test',admin_show_test_accounts:'Show test accounts',share_app_btn:'Share with friends',line_connect_btn:'Connect LINE',share_app_message:'Check out the finance app I\'ve been using — AI receipt scanning, built-in tax calculator, records income/expenses in seconds. Free to use.',share_link_copied:'App link copied!',
+    admin_online:'online',admin_users:'users',admin_total_users:'Total Users',admin_in_7_days:'in 7 days',admin_online_now:'Online Now',admin_dau_today:"Today's DAU",admin_wau_7d:'WAU 7 days',admin_mau_30d:'MAU 30 days',admin_signup_today:'Signed Up Today',admin_churn_30d:'Inactive >30 days',admin_never_login:'never logged in',admin_has_real_email:'Has Real Email',admin_cumulative_users:'Cumulative Users',admin_platform:'Platform',admin_search:'Search',admin_last_seen:'Last Seen',admin_online_within_10min:'Online within 10 minutes',admin_load_failed:'Failed to load data',admin_test_account:'test',admin_show_test_accounts:'Show test accounts',share_app_btn:'Share with friends',line_connect_btn:'Connect LINE',line_notfriend_title:'Bot not added as a friend yet',line_notfriend_desc:'Your account is linked, but LINE can\'t deliver notifications until you add MoneyMind as a friend',line_notfriend_add:'Add as friend',line_notfriend_recheck:'Check again',line_notfriend_qr:'On desktop? Scan the QR with your phone',share_app_message:'Check out the finance app I\'ve been using — AI receipt scanning, built-in tax calculator, records income/expenses in seconds. Free to use.',share_link_copied:'App link copied!',
     sync_not_synced:'Not synced yet',sync_force_title:'Force sync to cloud',uploaded:'Uploaded',loaded_from_cloud:'Loaded from Cloud',no_cloud_data:'No data in Cloud',no_recoverable_data:'No recoverable data found',synced_new_device:'Loaded new data from another device ☁️',db_size_warn:'Your data is nearing the system limit (Firestore 1MB/account). Recommend exporting old data and deleting unneeded items in Settings, or cross-device sync may fail',cloud_load_failed:'Failed to load from cloud',new_data_from_device:'New data from another device ☁️ (will load after closing this form)',synced_from_device:'Synced from another device ☁️',uploaded_to_cloud:'Uploaded data to Cloud',recover_success:'Data recovered successfully ✓',welcome_username:'Welcome! Username',relogin_for_sync:'Please log out and log back in once to enable data sync (security update)',
     port_need_name:'Please enter a portfolio name',port_edited:'Portfolio edited',port_created:'New portfolio created',port_confirm_delete:'Delete this portfolio? Its investments will move to "Unassigned Portfolio"',port_not_found_or_unlinked:'Portfolio not found or not linked to a goal',port_saving_goal_not_found:'Linked savings goal not found',port_sent_to_saving:'Sent {amt} to "{name}"',
     inv_need_name_first:'Please enter a name/ticker first',inv_fetching:'Fetching',inv_price:'Price',inv_fetch_price_failed:'Failed to fetch price',inv_updating_price:'Updating price for',inv_update_failed:'Update failed',inv_edit:'Edit Investment',inv_need_name:'Please enter a name',inv_need_qty:'Please enter a quantity',inv_need_buyprice:'Please enter a buy price',inv_added:'Investment added',inv_confirm_delete:'Delete this investment?',inv_field_type:'Type',inv_field_linked_debt:'Link to Mortgage (optional)',inv_no_linked_debt:'Not linked',inv_linked_debt_hint:'If selected, equity = value − remaining loan balance is calculated automatically',inv_equity:'Equity:',inv_equity_hint:'Equity = value − remaining balance of the linked loan',
@@ -12691,10 +12701,24 @@ async function renderLineConnectSection(){
   if(!_fs||!currentUser) return;
   try{
     var doc = await _fs.collection('members').doc(currentUser).get();
-    var lineUserId = doc.exists ? doc.data().lineUserId : null;
+    var data = doc.exists ? doc.data() : {};
+    var lineUserId = data.lineUserId;
     var box = document.getElementById(boxId); // re-query กัน DOM เปลี่ยนไปแล้วระหว่างรอ await (nav ออกจากหน้าไปแล้ว)
     if(!box) return;
-    if(lineUserId){
+    if(lineUserId && data.lineFriend===false){
+      // เชื่อมบัญชีแล้วแต่ยังไม่ได้เพิ่มบอทเป็นเพื่อน → push หาเขาไม่ได้เลย ต้องบอกให้ชัด
+      box.innerHTML = '<div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);border-radius:10px;padding:14px">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
+        +'<i class="fas fa-triangle-exclamation" style="color:#f59e0b;font-size:18px"></i>'
+        +'<div><div style="font-weight:700;color:#f59e0b">ยังไม่ได้เพิ่มบอทเป็นเพื่อน</div>'
+        +'<div style="font-size:12px;color:var(--muted)">เชื่อมต่อบัญชีแล้ว แต่ LINE ยังส่งแจ้งเตือนให้ไม่ได้</div></div></div>'
+        +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
+        +'<a class="btn" href="'+LINE_ADD_FRIEND_URL+'" target="_blank" rel="noopener" style="background:#06C755;color:#fff;text-decoration:none">เพิ่มเพื่อนเลย</a>'
+        +'<button class="btn btn-ghost" style="padding:6px 12px;font-size:12px" onclick="recheckLineFriend()">ตรวจสอบอีกครั้ง</button>'
+        +'<img src="assets/line-qr.png" alt="QR เพิ่มเพื่อน" width="64" height="64" style="border-radius:8px;background:#fff;padding:3px">'
+        +'<button class="btn btn-ghost" style="padding:6px 12px;font-size:12px" onclick="lineDisconnectAccount()">ยกเลิกการเชื่อมต่อ</button>'
+        +'</div></div>';
+    } else if(lineUserId){
       box.innerHTML = '<div style="display:flex;align-items:center;gap:10px;background:rgba(6,199,85,.1);border:1px solid rgba(6,199,85,.3);border-radius:10px;padding:12px 14px;flex-wrap:wrap">'
         +'<i class="fas fa-check-circle" style="color:#06C755;font-size:18px"></i>'
         +'<div style="flex:1;min-width:180px"><div style="font-weight:700;color:#06C755">เชื่อมต่อ LINE แล้ว</div>'
@@ -16446,7 +16470,16 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
 (function(){
   const _origRD2=typeof renderDash==='function'?renderDash:null;
   if(!_origRD2) return;
-  let _lineBannerStatus=null; // null=ยังไม่รู้(กำลัง fetch), true=เชื่อมต่อแล้ว, false=ยังไม่เชื่อมต่อ
+  // สถานะมี 3 แบบ ไม่ใช่ 2:
+  //   null           = ยังไม่รู้ (กำลัง fetch)
+  //   false          = ยังไม่เชื่อมต่อ            → การ์ดชวนเชื่อม (กดปิดได้)
+  //   'not-friend'   = เชื่อมแล้วแต่ยังไม่เพิ่มเพื่อนบอท → การ์ดเตือน (ปิดไม่ได้)
+  //   true           = เชื่อมแล้ว + เป็นเพื่อน     → ไม่มีการ์ด
+  //
+  // ทำไมต้องมีสถานะ 'not-friend': bot_prompt=aggressive แค่เด้งช่องให้ติ๊กตอนขอสิทธิ์ ผู้ใช้
+  // ติ๊กออกได้ ถ้าติ๊กออก = lineUserId ถูกบันทึกปกติ แต่ LINE ไม่ให้ push หาคนที่ไม่ได้เป็นเพื่อน
+  // → แจ้งเตือนทุกอย่าง (สรุปรายวัน/งบ/เตือนบิล) เงียบหายหมดโดยไม่มีใครรู้ตัว
+  let _lineBannerStatus=null;
   // cache ไว้กัน query Firestore ซ้ำทุกครั้งที่ renderDash() รัน (หน้านี้ re-render บ่อยมาก)
 
   function _dismissKey(){ return 'mm_line_banner_dismissed_'+(currentUser||''); }
@@ -16456,35 +16489,87 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
     const el=document.getElementById('_lineBanner');
     if(el) el.remove();
   };
-  // ปุ่ม "เชื่อมต่อ LINE" ใน sidebar อยู่ตลอดไม่มีวันหาย (static HTML) — ตรงนี้แค่เติม ✓
-  // ต่อท้ายให้รู้ว่าเชื่อมแล้ว ไม่มีการซ่อนปุ่ม เพราะ user ต้องกดเชื่อมใหม่ได้เสมอ
+  // ปุ่ม "เชื่อมต่อ LINE" ใน sidebar อยู่ตลอดไม่มีวันหาย (static HTML) — ตรงนี้แค่เติมสัญลักษณ์
+  // ต่อท้าย ไม่มีการซ่อนปุ่ม เพราะ user ต้องกดเชื่อมใหม่ได้เสมอ
   function _paintSidebarLineStatus(){
     const s=document.getElementById('sidebar-line-status');
     if(!s) return;
-    s.textContent = _lineBannerStatus===true ? ' ✓' : '';
+    s.textContent = _lineBannerStatus===true ? ' ✓' : (_lineBannerStatus==='not-friend' ? ' ⚠️' : '');
     const btn=document.getElementById('sidebar-line-btn');
     if(btn) btn.title = _lineBannerStatus===true
       ? 'เชื่อมต่อ LINE แล้ว — กดเพื่อเชื่อมต่อใหม่/เปลี่ยนบัญชี LINE'
-      : 'เชื่อมต่อ LINE เพื่อรับแจ้งเตือนและทักบอทบันทึกรายการได้';
+      : (_lineBannerStatus==='not-friend'
+          ? 'เชื่อมต่อแล้วแต่ยังไม่ได้เพิ่มบอทเป็นเพื่อน — แจ้งเตือนยังส่งไม่ได้'
+          : 'เชื่อมต่อ LINE เพื่อรับแจ้งเตือนและทักบอทบันทึกรายการได้');
   }
   window._paintSidebarLineStatus=_paintSidebarLineStatus;
-  // เรียกหลังกดยกเลิกการเชื่อมต่อ — เคลียร์ ✓ ทันทีโดยไม่ต้องรอ renderDash รอบถัดไป
-  window._clearSidebarLineStatus=function(){ _lineBannerStatus=false; _paintSidebarLineStatus(); };
+  // เรียกหลังกดยกเลิกการเชื่อมต่อ — เคลียร์เครื่องหมายทันทีโดยไม่ต้องรอ renderDash รอบถัดไป
+  window._clearSidebarLineStatus=function(){
+    _lineBannerStatus=false; _paintSidebarLineStatus();
+    _renderLineBanner(); // ยกเลิกการเชื่อมต่อแล้ว → การ์ดชวนเชื่อมต่อควรกลับมา (ถ้ายังไม่เคยกดปิด)
+  };
 
-  // เรียกจาก _handleLineCallback() (mode='link') ทันทีหลังเชื่อมต่อสำเร็จ กันการ์ดค้างโชว์
-  window._setLineBannerConnected=function(){ _lineBannerStatus=true; _renderLineBanner(); _paintSidebarLineStatus(); };
+  // เรียกจาก _handleLineCallback() (mode='link') ทันทีหลังเชื่อมต่อสำเร็จ
+  // friendFlag===false → เข้าสถานะเตือน ไม่ใช่ "สำเร็จเรียบร้อย"
+  window._setLineBannerConnected=function(friendFlag){
+    _lineBannerStatus = (friendFlag===false) ? 'not-friend' : true;
+    _renderLineBanner(); _paintSidebarLineStatus();
+  };
+
+  // ตรวจสถานะเพื่อนซ้ำกับ backend (ใช้ channel token ฝั่งเซิร์ฟเวอร์ ไม่ต้อง OAuth ใหม่)
+  // ครอบคลุมเคสที่ผู้ใช้เพิ่งไปกดเพิ่มเพื่อน หรือกลับกันคือไปบล็อก/ลบทีหลัง
+  window.recheckLineFriend=async function(silent){
+    if(!currentUser||!_auth||!_auth.currentUser) return;
+    try{
+      const idToken=await _auth.currentUser.getIdToken();
+      const resp=await fetch(LINE_FRIEND_STATUS_URL,{method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+idToken},
+        body:JSON.stringify({username:currentUser})});
+      const data=await resp.json();
+      if(!resp.ok) throw new Error(data.error||'check failed');
+      if(!data.connected){ _lineBannerStatus=false; }
+      else if(data.friend===false){ _lineBannerStatus='not-friend'; }
+      else if(data.friend===true){ _lineBannerStatus=true; }
+      _renderLineBanner(); _paintSidebarLineStatus();
+      if(typeof renderLineConnectSection==='function' && document.getElementById('line-connect-box')) renderLineConnectSection();
+      if(!silent){
+        toast(_lineBannerStatus===true?'เพิ่มเพื่อนเรียบร้อย รับแจ้งเตือนได้แล้ว':'ยังไม่พบว่าเพิ่มบอทเป็นเพื่อน ลองอีกครั้งหลังกดเพิ่มเพื่อนใน LINE',
+              _lineBannerStatus===true?'success':'error');
+      }
+    }catch(e){ if(!silent) toast('ตรวจสอบไม่สำเร็จ: '+(e.message||e),'error'); }
+  };
 
   function _renderLineBanner(){
     const existing=document.getElementById('_lineBanner');
     if(existing) existing.remove();
-    if(_lineBannerStatus!==false) return; // ยังไม่รู้สถานะ หรือเชื่อมต่อแล้ว → ไม่โชว์
-    if(_isDismissed()) return;
+    if(_lineBannerStatus===null||_lineBannerStatus===true) return; // ยังไม่รู้ / เรียบร้อยแล้ว
     const cont=document.getElementById('pg-dashboard');
     if(!cont) return;
+    const notFriend=(_lineBannerStatus==='not-friend');
+    // การ์ด "ยังไม่ได้เพิ่มเพื่อน" ปิดไม่ได้โดยตั้งใจ — ถ้าปิดได้แล้วผู้ใช้ปิดทิ้ง เขาจะไม่ได้รับ
+    // แจ้งเตือนอะไรเลยตลอดไปโดยไม่รู้สาเหตุ ต่างจากการ์ดชวนเชื่อมต่อที่ปิดได้เพราะไม่ได้เสียหายอะไร
+    if(!notFriend && _isDismissed()) return;
     const banner=document.createElement('div');
     banner.id='_lineBanner';
-    banner.style.cssText='margin-bottom:20px;position:relative;background:linear-gradient(135deg,rgba(6,199,85,.15),rgba(6,199,85,.06));border:1px solid rgba(6,199,85,.35);border-radius:16px;padding:18px 44px 18px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap';
-    banner.innerHTML=`
+    banner.style.cssText='margin-bottom:20px;position:relative;border-radius:16px;padding:18px '
+      +(notFriend?'18px':'44px')+' 18px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;'
+      +(notFriend
+        ? 'background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.06));border:1px solid rgba(245,158,11,.4)'
+        : 'background:linear-gradient(135deg,rgba(6,199,85,.15),rgba(6,199,85,.06));border:1px solid rgba(6,199,85,.35)');
+    banner.innerHTML = notFriend ? `
+      <div style="font-size:28px;flex-shrink:0">⚠️</div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:2px" data-i18n="line_notfriend_title">ยังไม่ได้เพิ่มบอทเป็นเพื่อน</div>
+        <div style="font-size:12px;color:var(--muted)" data-i18n="line_notfriend_desc">เชื่อมต่อบัญชีแล้ว แต่ LINE จะส่งแจ้งเตือนให้ไม่ได้จนกว่าจะเพิ่ม MoneyMind เป็นเพื่อน</div>
+        <div style="margin-top:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <a class="btn" href="${LINE_ADD_FRIEND_URL}" target="_blank" rel="noopener" style="background:#06C755;color:#fff;text-decoration:none;white-space:nowrap" data-i18n="line_notfriend_add">เพิ่มเพื่อนเลย</a>
+          <button class="btn btn-ghost" onclick="recheckLineFriend()" style="white-space:nowrap" data-i18n="line_notfriend_recheck">ตรวจสอบอีกครั้ง</button>
+          <div style="display:flex;align-items:center;gap:8px">
+            <img src="assets/line-qr.png" alt="QR เพิ่มเพื่อน MoneyMind" width="72" height="72" style="border-radius:8px;background:#fff;padding:3px;flex-shrink:0">
+            <span style="font-size:11px;color:var(--muted);max-width:120px" data-i18n="line_notfriend_qr">อยู่บนคอม? สแกน QR ด้วยมือถือ</span>
+          </div>
+        </div>
+      </div>` : `
       <div style="font-size:28px;flex-shrink:0">🔔</div>
       <div style="flex:1;min-width:180px">
         <div style="font-weight:700;font-size:14px;margin-bottom:2px" data-i18n="dash_line_banner_title">เชื่อมต่อ LINE รับแจ้งเตือนการเงิน</div>
@@ -16507,14 +16592,23 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
     // ติ๊ก ✓ ด้วย (เดิม return ก่อนตั้งแต่เช็ค _isDismissed() ทำให้ปุ่มไม่มีวันขึ้น ✓)
     if(_lineBannerStatus===null){
       _fs.collection('members').doc(currentUser).get().then(function(doc){
-        _lineBannerStatus=!!(doc.exists&&doc.data().lineUserId);
+        const d=doc.exists?doc.data():{};
+        if(!d.lineUserId){ _lineBannerStatus=false; }
+        // lineFriend===false เท่านั้นที่ถือว่า "ยังไม่เพิ่มเพื่อน" — undefined แปลว่าเชื่อมต่อไว้
+        // ตั้งแต่ก่อนมีการเช็คนี้ ยังไม่รู้สถานะจริง อย่าเพิ่งขึ้นการ์ดเตือนให้ตกใจฟรี
+        else if(d.lineFriend===false){ _lineBannerStatus='not-friend'; }
+        else { _lineBannerStatus=true; }
         _paintSidebarLineStatus();
-        if(!_isDismissed()) _renderLineBanner();
+        _renderLineBanner();
+        // เชื่อมต่อไว้แต่ยังไม่เคยเช็คสถานะเพื่อนเลย → เช็คเงียบๆ ครั้งเดียวให้รู้ผลจริง
+        if(d.lineUserId && d.lineFriend===undefined && typeof window.recheckLineFriend==='function'){
+          window.recheckLineFriend(true);
+        }
       }).catch(function(){ /* อ่านไม่ได้ — เงียบๆ ไม่โชว์การ์ด ไม่ใช่ error ที่ user ต้องเห็น */ });
       return;
     }
     _paintSidebarLineStatus();
-    if(!_isDismissed()) _renderLineBanner();
+    _renderLineBanner();
   };
 })();
 
