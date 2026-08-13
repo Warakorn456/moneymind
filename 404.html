@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ไม่พบหน้านี้ — MoneyMind</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="mobile/assets/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="mobile/assets/icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a15">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="guides/guide.css">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('mm_landing_theme');
+      if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+</script>
+<style>
+  .notfound{ min-height:60vh; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; text-align:center; padding:60px 20px; gap:10px; }
+  .notfound .code{ font-size:clamp(48px,10vw,88px); font-weight:800; letter-spacing:-.02em;
+    background:linear-gradient(135deg,var(--grada),var(--gradb)); -webkit-background-clip:text;
+    background-clip:text; -webkit-text-fill-color:transparent; }
+  .notfound h1{ font-size:1.4rem; font-weight:800; margin:6px 0 4px; }
+  .notfound p{ color:var(--muted); font-size:.95rem; max-width:44ch; margin-bottom:26px; }
+  .notfound-links{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-bottom:36px; }
+  .notfound-links a{ display:inline-flex; align-items:center; gap:8px; height:42px; padding:0 20px;
+    background:linear-gradient(135deg,var(--grada),var(--gradb)); color:#fff; font-size:.88rem;
+    font-weight:700; text-decoration:none; border-radius:10px; transition:transform .18s,box-shadow .18s; }
+  .notfound-links a:hover{ transform:translateY(-1px); box-shadow:0 8px 20px rgba(124,58,237,.35); }
+  .notfound-guides{ display:flex; flex-direction:column; gap:8px; align-items:center; }
+  .notfound-guides a{ color:var(--primary-l); font-size:.88rem; font-weight:600; text-decoration:none; }
+  .notfound-guides a:hover{ text-decoration:underline; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <a href="landing.html" class="logo">
+      <img class="logo-mark" src="assets/logo.png" alt="โลโก้ MoneyMind" width="36" height="36">
+      <span class="logo-text">MoneyMind</span>
+    </a>
+    <a href="https://app.moneymindth.com/" class="nav-cta">ใช้งานเลย</a>
+  </nav>
+
+  <div class="notfound">
+    <div class="code">404</div>
+    <h1>ไม่พบหน้านี้</h1>
+    <p>ลิงก์ที่คุณตามมาอาจถูกย้ายหรือไม่มีอยู่จริง ลองกลับไปหน้าแรกหรือดูบทความที่เกี่ยวข้องด้านล่างนี้แทนได้</p>
+    <div class="notfound-links">
+      <a href="landing.html"><i class="fas fa-house"></i> กลับหน้าแรก</a>
+      <a href="https://app.moneymindth.com/"><i class="fas fa-arrow-right-to-bracket"></i> เปิดเว็บแอป</a>
+    </div>
+    <div class="notfound-guides">
+      <a href="guides/thai-income-tax-calculation.html">วิธีคำนวณภาษีเงินได้บุคคลธรรมดา</a>
+      <a href="guides/rmf-ssf-thaiesg-comparison.html">RMF, Thai ESG และ SSF ต่างกันยังไง</a>
+      <a href="guides/expense-tracking-habit.html">บันทึกรายรับรายจ่ายไม่ให้เลิกกลางทาง</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="foot-brand"><i class="fas fa-copyright"></i> 2569 MoneyMind — การเงินส่วนบุคคล</div>
+    <div class="foot-links">
+      <a href="landing.html">หน้าแรก</a>
+      <a href="https://app.moneymindth.com/">เว็บแอป</a>
+      <a href="privacy.html">ความเป็นส่วนตัว</a>
+      <a href="terms.html">ข้อตกลงการใช้งาน</a>
+    </div>
+  </footer>
+</div>
+
+</body>
+</html>
