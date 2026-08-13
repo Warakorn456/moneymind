@@ -12792,6 +12792,35 @@ async function renderLineConnectSection(){
   }
 }
 
+// checkbox เลือกรับแจ้งเตือน LINE รายประเภท — อ่าน/เขียน DB.settings ตรงๆ (pattern เดียวกับ
+// toggle อื่นในไฟล์นี้ เช่น saveBudgetRolloverToggle) ไม่ใช่ Firestore members doc เพราะ
+// backend (line_daily_summary.py/line_monthly_report.py) อ่านจาก userdata/{u}.db.settings
+// เตือนบิล (bill_reminder.py) ไม่มี toggle ให้ปิด — ป้องกันพลาดจ่ายเงินอัตโนมัติโดยไม่รู้ตัว
+function _lineNotifPrefsHtml(){
+  var s = (DB && DB.settings) || {};
+  var daily = s.lineNotifDaily !== false;
+  var budget = s.lineNotifBudget !== false;
+  var monthly = s.lineNotifMonthly !== false;
+  function row(field, checked, labelKey){
+    return '<label style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;font-size:13px">'
+      +'<input type="checkbox" '+(checked?'checked':'')+' onchange="saveLineNotifPref(\''+field+'\',this.checked)">'
+      +'<span data-i18n="'+labelKey+'">'+tr(labelKey)+'</span></label>';
+  }
+  return '<div class="prof-section" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">'
+    +'<div style="font-size:12px;color:var(--muted);margin-bottom:4px" data-i18n="line_notif_prefs_title">'+tr('line_notif_prefs_title')+'</div>'
+    +row('lineNotifDaily', daily, 'line_notif_daily')
+    +row('lineNotifBudget', budget, 'line_notif_budget')
+    +row('lineNotifMonthly', monthly, 'line_notif_monthly')
+    +'<div style="font-size:11px;color:var(--muted);margin-top:4px" data-i18n="line_notif_bills_note">'+tr('line_notif_bills_note')+'</div>'
+    +'</div>';
+}
+
+function saveLineNotifPref(field, checked){
+  if(!DB.settings) DB.settings = {};
+  DB.settings[field] = checked;
+  saveDB();
+}
+
 function lineDisconnectAccount(){
   if(!currentUser||!_fs) return;
   if(!confirm('ยกเลิกการเชื่อมต่อ LINE? คุณจะไม่ได้รับการแจ้งเตือนผ่าน LINE อีก')) return;
