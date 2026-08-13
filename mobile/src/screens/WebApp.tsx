@@ -494,6 +494,40 @@ export default function WebApp() {
     return () => sub.remove();
   }, [injectBackPress]);
 
+  // LINE Login hand-off (เพิ่ม 2026-08-13) — แก้บั๊ก "เชื่อมต่อ LINE ไม่ได้": user แตะ "Log-in
+  // with LINE app" บนหน้า access.line.me (ทางลัดของ LINE เอง) → สลับไปแอป LINE จริง → auth
+  // สำเร็จ → LINE redirect กลับมาที่ redirect_uri แต่ไม่มี iOS Universal Links ให้ route กลับเข้า
+  // WebView นี้ เลยเปิดเป็น external browser แยกแทน (สังเกตจากวิดีโอ user ส่งมา) — MoneyMind app
+  // ตัวนี้ยัง backgrounded อยู่เสมอ (ไม่ถูกปิด) ไม่ได้หายไปไหน — index.html's _handleLineCallback()
+  // เจอว่าตัวเองรันอยู่นอกแอป (ไม่มี window._isIOSApp/_isAndroidApp) แล้วโชว์ปุ่ม "กลับไปแอป
+  // MoneyMind" ที่ยิง `moneymind://line-callback?code=...&state=...` (scheme ตั้งไว้แล้วใน
+  // app.json) — ดักที่นี่แล้วสั่งให้ WebView **เดิม** (ยังมี sessionStorage/Firebase Auth ของ
+  // origin app.moneymindth.com ครบเหมือนก่อนสลับไป LINE ทุกประการ เพราะไม่เคยถูกทำลาย) navigate
+  // กลับไปที่ WEB_URL พร้อม code/state แนบท้าย ให้ index.html ประมวลผลผ่าน flow ปกติทุกอย่าง
+  // (ไม่ต้องเขียน handler ใหม่ฝั่งเว็บ — แค่โหลด URL เดิมที่มี query string ก็พอ)
+  const handleLineDeepLink = useCallback((url: string) => {
+    if (!url || !url.startsWith('moneymind://line-callback')) return;
+    const query = url.split('?')[1] || '';
+    if (!query) return;
+    const target = `${WEB_URL}?${query}`;
+    const js = `window.location.replace(${JSON.stringify(target)}); true;`;
+    // WebView อาจยังไม่ mount เสร็จตอน cold-start ผ่าน deep link (Linking.getInitialURL) —
+    // retry เบาๆ เหมือน injectReliable ด้านบน กันเคส ref ยัง null ชั่วคราว
+    let attempts = 0;
+    const tryInject = () => {
+      attempts += 1;
+      if (webViewRef.current) { webViewRef.current.injectJavaScript(js); return; }
+      if (attempts < 10) setTimeout(tryInject, 300);
+    };
+    tryInject();
+  }, []);
+
+  useEffect(() => {
+    Linking.getInitialURL().then((url) => { if (url) handleLineDeepLink(url); }).catch(() => {});
+    const sub = Linking.addEventListener('url', ({ url }) => handleLineDeepLink(url));
+    return () => sub.remove();
+  }, [handleLineDeepLink]);
+
   return (
     <View style={s.wrap}>
       <WebView
