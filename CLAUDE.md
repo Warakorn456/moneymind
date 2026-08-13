@@ -459,7 +459,26 @@ Static file — ไม่ต้อง build:
 | **Gmail (OAuth2)** | credential ID `v7EQvnFH4mbTwfHL` ใน n8n | ดัก bank email |
 | **Telegram Bot** | `@moneymind_alert_bot` token: **ดูใน `.env` (`MM_TG_TOKEN`)** — ไม่จดตรงนี้อีก (rotate แล้ว 2026-07-02 เพราะ token เก่าโชว์อยู่ใน public repo มานาน) chat_id: `8172260229` | แจ้งเตือนและตอบคำสั่ง |
 | **Telegram Group** | MoneyMind Hub — group_id: `-1004296300749` topic หุ้น: thread_id=`3`, topic การเงิน: thread_id=`4`, topic แชทคุย: thread_id=`689` | รับแจ้งเตือนทุก script + AI chat ใน topic 689 |
-| **Google Cloud VM** | e2-micro, us-central1-a, IP: `34.134.61.137` (⚠️ ephemeral — เคยเปลี่ยนมาแล้วครั้งหนึ่งจาก `34.16.55.125` ตอน VM restart ทำให้ TLS setup พังไปพักหนึ่งเพราะ domain ผูกกับ IP เก่า **เช็ค IP จริงด้วย `gcloud compute instances describe moneymind-bot --zone=us-central1-a --format="value(networkInterfaces[0].accessConfigs[0].natIP)"` ก่อนอ้างอิงทุกครั้ง** ถ้าจะกันปัญหานี้ถาวรต้อง reserve static IP เพิ่ม) project: `teak-perigee-497404-b7` | รัน Telegram bot 24/7 + AI proxy (Caddy TLS) |
+| **Google Cloud VM** | e2-micro, us-central1-a, IP: `34.134.61.137` (⚠️ ephemeral — เคยเปลี่ยนมาแล้วครั้งหนึ่งจาก `34.16.55.125` ตอน VM restart ทำให้ TLS setup พังไปพักหนึ่งเพราะ domain ผูกกับ IP เก่า **เช็ค IP จริงด้วย `gcloud compute instances describe moneymind-bot --zone=us-central1-a --format="value(networkInterfaces[0].accessConfigs[0].natIP)"` ก่อนอ้างอิงทุกครั้ง** ถ้าจะกันปัญหานี้ถาวรต้อง reserve static IP เพิ่ม) project: `teak-perigee-497404-b7` | รัน Telegram bot 24/7 + AI proxy (Caddy TLS) + GoatCounter analytics |
+
+---
+
+## Analytics — GoatCounter (self-hosted, เพิ่ม 2026-08-13)
+
+**เหตุผล:** audit รอบ 14 (ดูหัวข้อ Growth Plan ด้านล่าง) ตรวจ network requests จริงบน production พบว่าเว็บ**ไม่มี analytics เลยสักตัว** — ไม่รู้เลยว่ามีคนเข้า `landing.html` กี่คน/กดดาวน์โหลดกี่ % ไม่มีทางวัดผลว่าการแก้ landing page 13 รอบที่ผ่านมาช่วยจริงไหม. เลือก **self-host แทนสมัคร GoatCounter/Plausible hosted** เพราะ "สมัครบัญชี" เป็น prohibited action ที่ทำแทน user ไม่ได้ (ต้องให้ user สมัครเอง) — self-host บน VM เดิมที่มีอยู่แล้วเลยเลี่ยงปัญหานี้ไปได้เลย ไม่ต้องพึ่งบัญชีบุคคลที่สามใดๆ
+
+| ส่วนประกอบ | รายละเอียด |
+|---|---|
+| Binary | GoatCounter v2.7.0 (`/home/warakornbest6/goatcounter/goatcounter`, static Go binary ตัวเดียว ไม่มี dependency ภายนอก, ดาวน์โหลดจาก GitHub release `arp242/goatcounter`) |
+| Database | SQLite ที่ `~/goatcounter/db/goatcounter.sqlite3` — เว็บเดียว (site) ผูกกับ vhost เดียว แยกหน้า/path ด้วย `p=` parameter ของ tracking script เอง (ไม่ต้องสร้างหลาย site) |
+| Service | systemd `goatcounter.service` (`Restart=always`, bind `127.0.0.1:8082 -tls http` — TLS termination อยู่ที่ Caddy ไม่ใช่ตัว GoatCounter เอง) — ใช้ RAM ~46MB (VM มี RAM ว่างพอ ตรวจแล้วก่อนติดตั้ง 587MB available) |
+| Domain | **`stats.34-134-61-137.sslip.io`** (ใช้ sslip.io free wildcard DNS pattern เดียวกับ `ai_proxy` — ไม่ต้องแก้ DNS ของ `moneymindth.com` เลย) — Caddy route เพิ่มใน `/etc/caddy/Caddyfile` (block ใหม่ต่อจาก `34-134-61-137.sslip.io` เดิม) รับ cert Let's Encrypt อัตโนมัติ |
+| Dashboard login | **ดูใน `.env` บน VM (`MM_GOATCOUNTER_EMAIL`/`MM_GOATCOUNTER_PW`/`MM_GOATCOUNTER_URL`)** — ไม่จดรหัสผ่านตรงๆ ที่นี่ (บทเรียนเดิมจาก Telegram token ที่เคยหลุดเพราะจดใน CLAUDE.md ตรงๆ) |
+| Tracking script | `<script data-goatcounter="https://stats.34-134-61-137.sslip.io/count" async src="https://stats.34-134-61-137.sslip.io/count.js"></script>` — ฝังไว้ 3 จุด: `landing.html`, `landing-en.html`, `index.html` (ตัวแอปเอง — เพราะเป็น SPA ที่ URL ไม่เปลี่ยนตอน nav ระหว่างหน้าในแอป จึงนับได้แค่ "เปิดแอปกี่ครั้ง" ไม่ใช่ path ย่อยในแอป ซึ่งก็เพียงพอสำหรับตอนนี้) |
+| Privacy | **ไม่มี cookies เลย** (ยืนยันด้วย `curl -sI` เช็ค `Set-Cookie` header ทั้ง `/count` และ `/count.js` — ไม่มี), ไม่เก็บ IP เต็ม, ไม่มี unique visitor ID ข้ามวัน, aggregate เท่านั้น — มี **bot filtering ในตัว** (ทดสอบยิง `curl` เปล่าๆ ไม่ตั้ง User-Agent จริง → ถูกจัดเข้า table `bots` แยกออกจากสถิติจริงอัตโนมัติ, ยิงด้วย User-Agent เบราว์เซอร์จริง → เข้า `hit_counts`/`paths`/`hit_stats` ปกติ, ยืนยันผ่าน query SQLite ตรง) |
+| Privacy policy | เพิ่ม disclosure ใน `privacy.html` §1 (ข้อมูลที่เราเก็บรวบรวม) — บอกตรงๆ ว่ามีการนับ pageview รวมผ่าน self-hosted GoatCounter ไม่ใช่ Google Analytics ไม่ส่งข้อมูลให้บุคคลที่สาม |
+| Monitoring | **ไม่เพิ่มเข้า `health_monitor.py` SERVICES list** — ใช้ `Restart=always` ของ systemd เองพอ (เหตุผลเดียวกับที่ `moneymind-bot` ไม่ถูก monitor — กัน 409 conflict จาก double-restart) |
+| ทดสอบแล้ว | site login เข้าถึงได้จริง (screenshot ยืนยัน dashboard โหลด), `/count`/`/count.js` ตอบ 200 บน production ทั้ง 3 หน้า, query SQLite ตรงยืนยัน pipeline ทำงานถูก (bot vs real traffic แยกกันถูกต้อง) — **dashboard UI โชว์ "No data received" ชั่วคราวตอนเพิ่งติดตั้งเป็นเรื่องปกติ** (cache/aggregation refresh มีดีเลย์ ไม่ใช่บั๊ก ข้อมูลจริงอยู่ใน `hit_counts`/`paths` แล้วตอนตรวจ) |
 
 ---
 
