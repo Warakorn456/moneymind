@@ -1354,6 +1354,16 @@
       if (e.target.closest('[data-close]')) closeModal();
     });
 
+    // fallback for browsers that don't auto-open a <details> containing the fragment
+    // target (recent Chrome/Firefox/Safari do this natively, but not universally yet)
+    function openDetailsAtHash() {
+      if (!location.hash) return;
+      var el = document.getElementById(location.hash.slice(1));
+      if (el && el.tagName === 'DETAILS') el.open = true;
+    }
+    openDetailsAtHash();
+    window.addEventListener('hashchange', openDetailsAtHash);
+
     document.addEventListener('keydown', function (e) {
       if (!modal.classList.contains('open')) return;
       if (e.key === 'Escape') { closeModal(); return; }
