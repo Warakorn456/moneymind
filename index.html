@@ -4030,6 +4030,23 @@ async function _handleLineCallback(){
   }
 }
 
+// เต็มจอ hardcode สีเข้มเสมอ (ตาม pattern login/lock screen เดิม — ไม่ผ่านธีม เพราะเป็นหน้าจอ
+// ระหว่าง auth handoff สั้นๆ ไม่ใช่หน้าปกติของแอป) — โชว์ตอน LINE callback มาจาก external browser
+// บนมือถือ (ดู gotcha ด้านบนใน _handleLineCallback) พา user กลับเข้าแอปเดิมผ่าน custom URL scheme
+function _showLineReturnToAppPrompt(code,state){
+  const url='moneymind://line-callback?code='+encodeURIComponent(code)+'&state='+encodeURIComponent(state);
+  const box=document.createElement('div');
+  box.style.cssText='position:fixed;inset:0;z-index:99999;background:#0a0a15;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;gap:18px;font-family:Sarabun,sans-serif;';
+  box.innerHTML='<i class="fas fa-mobile-screen-button" style="font-size:44px;color:#06C755"></i>'+
+    '<div style="color:#fff;font-size:18px;font-weight:700">เข้าสู่ระบบ LINE สำเร็จ</div>'+
+    '<div style="color:#94a3b8;font-size:14px;max-width:320px;line-height:1.6">แตะปุ่มด้านล่างเพื่อกลับเข้าแอป MoneyMind แล้วดำเนินการต่อให้เสร็จ</div>'+
+    '<a href="'+url+'" style="background:#06C755;color:#fff;padding:14px 32px;border-radius:12px;font-weight:700;text-decoration:none;font-size:16px">กลับไปแอป MoneyMind</a>'+
+    '<div style="color:#64748b;font-size:12px;margin-top:8px">ถ้าไม่มีอะไรเกิดขึ้น กรุณาเปิดแอป MoneyMind ด้วยตัวเอง</div>';
+  document.body.appendChild(box);
+  // ลองเปิดอัตโนมัติทันทีด้วย (เผื่อ user ไม่ทันสังเกตปุ่ม) — ปุ่มเป็น fallback ถ้า auto ไม่ทำงาน
+  setTimeout(()=>{ window.location.href=url; },300);
+}
+
 // ── Toggle login/register ──
 function switchToRegister(){
   document.getElementById('form-login').style.display='none';
