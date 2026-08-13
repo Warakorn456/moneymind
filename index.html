@@ -3954,6 +3954,24 @@ async function _handleLineCallback(){
   const code=params.get('code');
   const state=params.get('state');
   if(!code||!state) return;
+  // 🐛 เจอ 2026-08-13 (จาก user ส่งวิดีโอ): กด "เชื่อมต่อ LINE" ในแอปมือถือ → แตะ "Log-in with
+  // LINE app" (ทางลัดของ LINE เอง) → สลับไปแอป LINE จริง → auth สำเร็จ → LINE redirect กลับมาที่
+  // redirect_uri ไม่เข้า WebView เดิมของแอป MoneyMind เลย (ไม่มี iOS Universal Links ให้ route กลับ)
+  // แต่เปิดใน external browser แยกต่างหาก (Safari/LINE in-app browser) — context นั้นไม่มี
+  // sessionStorage._lineOAuthState เดิม (คนละ tab/process) validate ไม่ผ่านแน่นอน + ถ้าเป็น mode=link
+  // ก็ไม่มี Firebase Auth session ให้ getIdToken() ด้วย เชื่อมต่อไม่สำเร็จเงียบๆ. **แอป MoneyMind ตัวจริง
+  // ยังทำงานอยู่เบื้องหลังเสมอ** (แค่ backgrounded ไม่ได้ถูกปิด เพราะ LINE app แค่ขึ้นทับหน้าจอชั่วคราว)
+  // sessionStorage ของ WebView เดิมยังอยู่ครบ — เลยส่ง code/state กลับไปให้ WebView เดิมประมวลผลแทน
+  // ผ่าน custom URL scheme `moneymind://` (ตั้งไว้แล้วใน mobile/app.json) แทนที่จะพยายามประมวลผลใน
+  // context แปลกปลอมนี้เอง. เช็คแค่ตอนไม่ใช่ native app (ไม่มี window._isIOSApp/_isAndroidApp — ถ้าอยู่
+  // ใน WebView เดิมจริงๆ flag พวกนี้จะมีเสมอ) + เป็นมือถือ (desktop ไม่มีปัญหานี้เพราะไม่มี LINE app ให้สลับไป)
+  const inNativeApp=!!(window._isIOSApp||window._isAndroidApp);
+  const isMobileUA=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(!inNativeApp && isMobileUA){
+    history.replaceState(null,'',window.location.pathname);
+    _showLineReturnToAppPrompt(code,state);
+    return;
+  }
   const savedState=sessionStorage.getItem('_lineOAuthState');
   sessionStorage.removeItem('_lineOAuthState');
   // ล้าง code/state ออกจาก URL ทันที กัน authorization code ค้างอยู่ใน browser history/URL bar
