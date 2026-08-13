@@ -1341,7 +1341,9 @@
 
     document.addEventListener('click', function (e) {
       var trigger = e.target.closest('#security .link');
-      if (trigger) {
+      // same-page anchors (e.g. "#faq-bank-connection", no path before the #) aren't a
+      // policy-page clause to fetch — let those fall through to native anchor scrolling
+      if (trigger && trigger.getAttribute('href').split('#')[0]) {
         e.preventDefault();
         openModal(trigger.getAttribute('href'));
         return;
