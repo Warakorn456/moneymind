@@ -12768,14 +12768,16 @@ async function renderLineConnectSection(){
         +'<button class="btn btn-ghost" style="padding:6px 12px;font-size:12px" onclick="recheckLineFriend()">ตรวจสอบอีกครั้ง</button>'
         +'<img src="assets/line-qr.png" alt="QR เพิ่มเพื่อน" width="64" height="64" style="border-radius:8px;background:#fff;padding:3px">'
         +'<button class="btn btn-ghost" style="padding:6px 12px;font-size:12px" onclick="lineDisconnectAccount()">ยกเลิกการเชื่อมต่อ</button>'
-        +'</div></div>';
+        +'</div></div>'
+        +_lineNotifPrefsHtml();
     } else if(lineUserId){
       box.innerHTML = '<div style="display:flex;align-items:center;gap:10px;background:rgba(6,199,85,.1);border:1px solid rgba(6,199,85,.3);border-radius:10px;padding:12px 14px;flex-wrap:wrap">'
         +'<i class="fas fa-check-circle" style="color:#06C755;font-size:18px"></i>'
         +'<div style="flex:1;min-width:180px"><div style="font-weight:700;color:#06C755">เชื่อมต่อ LINE แล้ว</div>'
         +'<div style="font-size:12px;color:var(--muted)">รับการแจ้งเตือนสถานะการเงินผ่าน LINE ได้</div></div>'
         +'<button class="btn btn-ghost" style="padding:6px 12px;font-size:12px" onclick="lineDisconnectAccount()">ยกเลิกการเชื่อมต่อ</button>'
-        +'</div>';
+        +'</div>'
+        +_lineNotifPrefsHtml();
     } else {
       box.innerHTML = '<div style="max-width:380px">'
         +'<div style="margin-bottom:10px">เชื่อมต่อ LINE เพื่อรับการแจ้งเตือนสถานะการเงิน (สรุปรายวัน/สัปดาห์ เตือนงบเกิน เตือนบิลใกล้ครบกำหนด) ผ่านแชท LINE</div>'
