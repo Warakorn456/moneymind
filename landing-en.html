@@ -420,8 +420,11 @@
 
   .grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
   /* #security has 5 cards, not a clean multiple of 4 — auto-fit distributes them evenly
-     instead of leaving one card alone on its own row like a fixed 4-column grid would */
-  #security .grid{ grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); }
+     instead of leaving one card alone on its own row like a fixed 4-column grid would.
+     :where() keeps this at the same specificity as plain .grid so the mobile breakpoints
+     below (which target .grid directly) still win at narrow widths as originally designed —
+     an #security .grid selector would otherwise out-specificity those and break them. */
+  :where(#security) .grid{ grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
   .fcard{ background:var(--card);
     border:1px solid var(--border); border-radius:16px; padding:22px 18px; transition:transform .18s,border-color .18s; }
   .fcard:hover{ transform:translateY(-3px); border-color:rgba(167,139,250,.35); }
