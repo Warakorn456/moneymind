@@ -587,6 +587,7 @@ export default function WebApp() {
         onHttpError={handleHttpError}
         onRenderProcessGone={handleRenderProcessGone}
         onShouldStartLoadWithRequest={handleShouldStartLoad}
+        onOpenWindow={handleOpenWindow}
         onNavigationStateChange={(n) => { canGoBack.current = n.canGoBack; }}
         onMessage={handleMessage}
         startInLoadingState
