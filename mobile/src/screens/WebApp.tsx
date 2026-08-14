@@ -17,6 +17,7 @@ import {
 } from '@react-native-google-signin/google-signin';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
+import * as IntentLauncher from 'expo-intent-launcher';
 import { C } from '../config/colors';
 
 // แจ้งเตือนที่มาถึงตอนแอปเปิดอยู่ (foreground) ให้โชว์แบนเนอร์+เสียงเหมือนตอนแอปปิดอยู่
