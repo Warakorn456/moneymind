@@ -732,7 +732,7 @@ export default function WebApp() {
       <WebView
         key={webViewKey}
         ref={webViewRef}
-        source={{ uri: WEB_URL }}
+        source={webSource}
         onLoadEnd={handleLoadEnd}
         onError={handleLoadError}
         onHttpError={handleHttpError}
