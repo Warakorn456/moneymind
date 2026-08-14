@@ -210,11 +210,26 @@ export default function WebApp() {
 
   // onError ยิงเฉพาะตอน navigation หลักของ WebView ล้มเหลว (เช่น ไม่มีเน็ต, DNS ล้มเหลว)
   // ไม่ยิงตอน sub-resource (CDN script/font) โหลดพลาด — นั่นเป็นเรื่องของหน้าเว็บเอง
+  //
+  // 🐛 (เจอ+แก้ 2026-08-14) Android: แตะ "Log-in with LINE app" แล้วเจอ net::ERR_UNKNOWN_URL_SCHEME
+  // เต็มจอ — react-native-webview's Android shouldOverrideUrlLoading ใช้ synchronous bridge call
+  // ที่มี timeout (ดู RNCWebViewClient.java "Did not receive response...defaulting to allow
+  // loading") ถ้าตอบไม่ทันหรือตกไปทาง fallback path, WebView native จะพยายามโหลด intent://
+  // URL ตรงๆ เอง (ก่อนที่ handleShouldStartLoad ด้านล่างจะทันดักไว้) แล้วพังด้วย error นี้ — ดักซ้ำ
+  // เป็น safety net ชั้นที่ 2 ที่นี่: ถ้า URL ที่ล้มเหลวไม่ใช่ http(s) ไม่ต้องโชว์หน้า error เต็มจอ
+  // (ดูเหมือนแอปพังทั้งแอปทั้งที่จริงแค่ปุ่มลัดเปิดแอปอื่นพลาด) ให้ลองส่งต่อ Linking.openURL() แทน
+  // แล้ว reload กลับเข้าหน้าเว็บปกติเงียบๆ
   const handleLoadError = useCallback((e: WebViewErrorEvent) => {
+    const failedUrl = e.nativeEvent.url;
+    if (failedUrl && !/^https?:\/\//i.test(failedUrl)) {
+      Linking.openURL(resolveIntentUrl(failedUrl)).catch(() => {});
+      handleRetry();
+      return;
+    }
     clearWatchdog();
     setLoading(false);
     setLoadError(e.nativeEvent.description || 'ไม่สามารถเชื่อมต่อได้ กรุณาตรวจสอบอินเทอร์เน็ต');
-  }, [clearWatchdog]);
+  }, [clearWatchdog, handleRetry]);
 
   const handleHttpError = useCallback((e: WebViewHttpErrorEvent) => {
     if (e.nativeEvent.statusCode >= 400) {
