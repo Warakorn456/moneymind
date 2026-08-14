@@ -342,14 +342,22 @@ export default function WebApp() {
   const handleLoadError = useCallback((e: WebViewErrorEvent) => {
     const failedUrl = e.nativeEvent.url;
     if (failedUrl && !/^https?:\/\//i.test(failedUrl)) {
-      Linking.openURL(resolveIntentUrl(failedUrl)).catch(() => {});
-      handleRetry();
+      // 🐛 แก้ 2026-08-14: เดิมเรียก handleRetry() ซึ่ง remount WebView กลับไป WEB_URL —
+      // ทำลายหน้า LINE OAuth ที่ user ค้างอยู่ทิ้งทั้งที่เพิ่งเปิดแอปสำเร็จ. เปลี่ยนเป็นพากลับ
+      // ไปหน้า http(s) ล่าสุดที่ user อยู่จริงแทน (โดยปกติคือหน้า login ของ LINE)
+      openExternalUrl(failedUrl);
+      clearWatchdog();
+      appReadyRef.current = false;
+      setLoadError(null);
+      setLoading(true);
+      setWebSource({ uri: lastGoodUrlRef.current });
+      setWebViewKey((k) => k + 1);
       return;
     }
     clearWatchdog();
     setLoading(false);
     setLoadError(e.nativeEvent.description || 'ไม่สามารถเชื่อมต่อได้ กรุณาตรวจสอบอินเทอร์เน็ต');
-  }, [clearWatchdog, handleRetry]);
+  }, [clearWatchdog, openExternalUrl]);
 
   const handleHttpError = useCallback((e: WebViewHttpErrorEvent) => {
     if (e.nativeEvent.statusCode >= 400) {
