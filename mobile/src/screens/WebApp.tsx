@@ -36,6 +36,21 @@ const WEB_HOST = 'app.moneymindth.com';
 // เพราะเว็บ deploy ใหม่ทุกวันแต่แอปในเครื่อง user เป็นเวอร์ชันเก่ากว่าได้เสมอ
 const APP_VERSION = Constants.expoConfig?.version ?? '0.0.0';
 
+// Android's "Intent URI" scheme (ใช้โดย LINE และ identity provider ส่วนใหญ่บน Android สำหรับ
+// ปุ่ม "เปิดด้วยแอป" — รูปแบบ intent://<path>#Intent;scheme=xxx;package=yyy;...;end) — Chromium
+// (ที่ Android System WebView ใช้อยู่ข้างใน) ไม่รู้จัก "intent" เป็น network scheme จริง ถ้าปล่อยให้
+// WebView โหลดตรงๆ จะพังด้วย net::ERR_UNKNOWN_URL_SCHEME (เจอจริงกับปุ่ม "Log-in with LINE app"
+// 2026-08-14) และ Linking.openURL() ของ RN เองก็ parse composite format นี้ไม่ได้เหมือนกัน (แค่ทำ
+// Uri.parse()+ACTION_VIEW ตรงๆ ไม่มี Intent.parseUri() decode ให้) — แกะเอาแค่ scheme=xxx ออกมา
+// สร้างเป็น URL แบบธรรมดา (เช่น line://...) ที่ Linking.openURL() resolve ได้ถูกต้องจริงแทน
+function resolveIntentUrl(url: string): string {
+  if (!url.startsWith('intent://')) return url;
+  const m = /[;#]scheme=([^;]+)/.exec(url);
+  if (!m) return url;
+  const path = url.slice('intent://'.length).split('#Intent')[0];
+  return `${m[1]}://${path}`;
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // Google Sign-In ผ่าน native SDK (@react-native-google-signin) — ไม่ใช้ browser
 // redirect flow แบบ expo-auth-session (ซึ่ง Google กำลัง deprecate + redirect
