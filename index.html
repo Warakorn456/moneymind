@@ -6297,11 +6297,12 @@ function delSav(id){
 // ══════════════════════════════════════════
 function renderDebts(){
   const el=document.getElementById('debt-list');
-  if(!DB.debts.length){ el.innerHTML='<div class="empty"><i class="fas fa-check-circle"></i><p>'+tr('debt_none_great')+'</p></div>'; return; }
+  const sumEl=document.getElementById('debt-summary');
+  if(!DB.debts.length){ if(sumEl) sumEl.innerHTML=''; el.innerHTML='<div class="empty"><i class="fas fa-check-circle"></i><p>'+tr('debt_none_great')+'</p></div>'; return; }
   const now=new Date();
   const nowY=now.getFullYear(), nowM=now.getMonth()+1;
   const MN=monthShortArr();
-  el.innerHTML=DB.debts.map(d=>{
+  const computed=DB.debts.map(d=>{
     // build month range: startDate → dueDate (fallback to 12-month window)
     let sy,sm,ey,em;
     if(d.startDate){ [sy,sm]=d.startDate.split('-').map(Number); }
@@ -6321,6 +6322,15 @@ function renderDebts(){
     const paidAmt=paidCount*(d.pay||0);
     const calcRemaining=Math.max(0,d.total-paidAmt);
     const pct=d.total>0?Math.min(100,paidAmt/d.total*100):0;
+    return {d,months,pm,paidCount,paidAmt,calcRemaining,pct};
+  });
+  const totalRemaining=computed.reduce((s,c)=>s+c.calcRemaining,0);
+  const totalMonthly=DB.debts.reduce((s,d)=>s+(d.pay||0),0);
+  if(sumEl) sumEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">'
+    +'<div class="card" style="padding:14px"><div style="color:var(--muted);font-size:12px">'+tr('debt_total_remaining_all')+'</div><div style="font-size:22px;font-weight:800;color:var(--red)">'+fmt(totalRemaining)+'</div></div>'
+    +'<div class="card" style="padding:14px"><div style="color:var(--muted);font-size:12px">'+tr('debt_total_monthly_all')+'</div><div style="font-size:22px;font-weight:800">'+fmt(totalMonthly)+'</div></div>'
+    +'</div>';
+  el.innerHTML=computed.map(({d,months,pm,paidCount,paidAmt,calcRemaining,pct})=>{
     const chips=months.map(m=>{
       const paid=pm.includes(m.ym);
       return `<button onclick="toggleDebtMonth('${d.id}','${m.ym}')" style="padding:4px 9px;border-radius:8px;font-size:11px;font-weight:${m.isCur?700:400};cursor:pointer;font-family:Sarabun,sans-serif;border:1px solid;transition:.15s;background:${paid?'rgba(16,185,129,.18)':m.isCur?'rgba(124,58,237,.12)':'rgba(255,255,255,.03)'};color:${paid?'#10b981':m.isCur?'#a78bfa':'var(--muted)'};border-color:${paid?'rgba(16,185,129,.45)':m.isCur?'rgba(124,58,237,.4)':'var(--border)'}">${paid?'✓ ':''}${m.label}</button>`;
