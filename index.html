@@ -10134,15 +10134,18 @@ function renderRecurring(){
 //  DB.recurringTx (active expense entries, e.g. rent) into one combined monthly total.
 //  Read-only view; editing stays on the respective source pages.
 // ══════════════════════════════════════════
-function renderFixedCosts(){
-  const el=document.getElementById('fixedcosts-content'); if(!el) return;
+function _fixedCostsTotals(){
   const debts=(DB.debts||[]).filter(d=>(d.pay||0)>0);
   const debtTotal=debts.reduce((s,d)=>s+(d.pay||0),0);
   const subs=getSubs().filter(s=>s.active!==false);
   const subTotal=subs.reduce((s,x)=>s+subMonthly(x),0);
   const recurs=getRecurs().filter(r=>r.active!==false&&r.type==='expense');
   const recurTotal=recurs.reduce((s,x)=>s+(x.amount||0),0);
-  const grandTotal=debtTotal+subTotal+recurTotal;
+  return {debts,debtTotal,subs,subTotal,recurs,recurTotal,grandTotal:debtTotal+subTotal+recurTotal};
+}
+function renderFixedCosts(){
+  const el=document.getElementById('fixedcosts-content'); if(!el) return;
+  const {debts,debtTotal,subs,subTotal,recurs,recurTotal,grandTotal}=_fixedCostsTotals();
 
   function itemRow(name,amt,onclick){
     return '<div class="sub-card" style="cursor:pointer" onclick="'+onclick+'">'
