@@ -18266,21 +18266,34 @@ function _renderStreakCard(){
 })();
 
 // ══════════════════════════════════════════
-//  DASHBOARD — Fixed Monthly Costs card (reuses _fixedCostsTotals from the
-//  รายจ่ายคงที่ page so the two never drift apart)
+//  DASHBOARD — Fixed Monthly Costs card
+//  ดึงจาก DB.plan.items ผ่าน getMonthItems() ตัวเดียวกับที่หน้า "งบดุล & แผนการเงิน"
+//  ใช้แสดงรายการเดือนนั้นๆ (ไม่ใช่ Debts/Subscriptions/รายการซ้ำ — ผู้ใช้ตั้งใจให้ตรงกับ
+//  หมวดหมู่รายจ่ายคงที่ที่ทำไว้ในแผนการเงินอยู่แล้ว) กดที่การ์ดพาไปหน้า งบดุล & แผนการเงิน
 // ══════════════════════════════════════════
 (function(){
   function _renderFixedCostsCard(){
     var wrap=document.getElementById('dash-fixedcosts-card'); if(!wrap) return;
-    var t=_fixedCostsTotals();
-    wrap.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer" onclick="nav(\'fixedcosts\')">'
+    var now=new Date();
+    var curYM=ymStr(now.getFullYear(),now.getMonth()+1);
+    var items=getMonthItems(curYM).filter(function(it){ return it.type==='expense'; });
+    var total=items.reduce(function(s,it){ return s+(it.amount||0); },0);
+    if(!items.length){
+      wrap.innerHTML='<div style="cursor:pointer" onclick="nav(\'balance\')">'
+        +'<div style="font-size:12px;color:var(--muted)">'+_escHtml(tr('fixedcosts_total'))+'</div>'
+        +'<div class="empty" style="padding:10px 0"><i class="fas fa-file-invoice-dollar"></i><p style="font-size:12px">'+_escHtml(tr('fixedcosts_empty'))+'</p></div>'
+      +'</div>';
+      return;
+    }
+    var lines=items.map(function(it){ return _escHtml(it.name)+' '+fmt(it.amount); }).join(' + ');
+    wrap.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer" onclick="nav(\'balance\')">'
       +'<div style="min-width:0">'
         +'<div style="font-size:12px;color:var(--muted)">'+_escHtml(tr('fixedcosts_total'))+'</div>'
-        +'<div style="font-size:26px;font-weight:800;color:var(--red)">'+fmt(t.grandTotal)+'</div>'
+        +'<div style="font-size:26px;font-weight:800;color:var(--red)">'+fmt(total)+'</div>'
       +'</div>'
       +'<i class="fas fa-file-invoice-dollar" style="font-size:26px;color:var(--muted);flex-shrink:0"></i>'
     +'</div>'
-    +'<div style="font-size:12px;color:var(--muted);margin-top:10px">'+_escHtml(tr('fixedcosts_debt_label'))+' '+fmt(t.debtTotal)+' + '+_escHtml(tr('fixedcosts_sub_label'))+' '+fmt(t.subTotal)+' + '+_escHtml(tr('fixedcosts_recur_label'))+' '+fmt(t.recurTotal)+'</div>';
+    +'<div style="font-size:12px;color:var(--muted);margin-top:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" onclick="nav(\'balance\')" title="'+lines.replace(/"/g,'&quot;')+'">'+lines+'</div>';
   }
   var _fcOrig2=renderDash;
   renderDash=function(){
