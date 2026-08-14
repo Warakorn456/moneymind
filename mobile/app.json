@@ -76,7 +76,8 @@
           "color": "#7c3aed"
         }
       ],
-      "./withPodfileModularHeaders"
+      "./withPodfileModularHeaders",
+      "./withAndroidQueries"
     ]
   }
 }
