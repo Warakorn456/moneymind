@@ -272,8 +272,26 @@ export default function WebApp() {
     // browser เหมือนลิงก์ทั่วไป — ผู้ใช้ authorize เสร็จแล้ว LINE redirect กลับมาที่ WEB_HOST
     // ตามปกติ (ตรงกับ allowlist เดิมด้านบนอยู่แล้ว ไม่ต้องแก้อะไรเพิ่ม)
     if (host && (host === 'line.me' || host.endsWith('.line.me'))) return true;
-    Linking.openURL(url).catch(() => {});
+    Linking.openURL(resolveIntentUrl(url)).catch(() => {});
     return false;
+  }, []);
+
+  // Android เท่านั้น — ดัก window.open()/<a target="_blank"> ที่ LINE's "Log-in with LINE app"
+  // อาจใช้เปิด (เพิ่ม 2026-08-14, คู่กับ safety net ใน handleLoadError ด้านบน): ต่างจาก
+  // handleShouldStartLoad ตรงที่ navigation แบบนี้ไปคนละ "window" เลยไม่ผ่าน
+  // onShouldStartLoadWithRequest — ถ้าไม่ตั้ง onOpenWindow ไว้ react-native-webview จะสร้าง
+  // WebView เปล่าที่ไม่มี interceptor ใดๆ มารับแทน (ดู RNCWebChromeClient.java onCreateWindow)
+  // ปล่อยให้พังเงียบๆ อยู่ข้างใน — ใช้ logic เดียวกับ handleShouldStartLoad ทุกประการ
+  const handleOpenWindow = useCallback((e: WebViewOpenWindowEvent) => {
+    const { targetUrl } = e.nativeEvent;
+    if (!targetUrl) return;
+    const m = /^https?:\/\/([^/]+)/i.exec(targetUrl);
+    const host = m ? m[1].toLowerCase() : null;
+    if (host === WEB_HOST || (host && (host === 'line.me' || host.endsWith('.line.me')))) {
+      webViewRef.current?.injectJavaScript(`window.location.href=${JSON.stringify(targetUrl)};true;`);
+      return;
+    }
+    Linking.openURL(resolveIntentUrl(targetUrl)).catch(() => {});
   }, []);
 
   // ส่งผลกลับเข้า WebView — retry จนกว่าจะยืนยันว่า deliver สำเร็จจริง (postMessage กลับมา)
