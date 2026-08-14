@@ -4026,7 +4026,8 @@ async function _handleLineCallback(){
   // LINE app" (ทางลัดของ LINE เอง) → สลับไปแอป LINE จริง → auth สำเร็จ → LINE redirect กลับมาที่
   // redirect_uri ไม่เข้า WebView เดิมของแอป MoneyMind เลย (ไม่มี iOS Universal Links ให้ route กลับ)
   // แต่เปิดใน external browser แยกต่างหาก (Safari/LINE in-app browser) — context นั้นไม่มี
-  // sessionStorage._lineOAuthState เดิม (คนละ tab/process) validate ไม่ผ่านแน่นอน + ถ้าเป็น mode=link
+  // state เดิม (คนละ tab/process — ตอนนั้นเก็บใน sessionStorage, ย้ายเป็น localStorage แล้ว
+  // 2026-08-14 ดู _lineStateSave) validate ไม่ผ่านแน่นอน + ถ้าเป็น mode=link
   // ก็ไม่มี Firebase Auth session ให้ getIdToken() ด้วย เชื่อมต่อไม่สำเร็จเงียบๆ. **แอป MoneyMind ตัวจริง
   // ยังทำงานอยู่เบื้องหลังเสมอ** (แค่ backgrounded ไม่ได้ถูกปิด เพราะ LINE app แค่ขึ้นทับหน้าจอชั่วคราว)
   // sessionStorage ของ WebView เดิมยังอยู่ครบ — เลยส่ง code/state กลับไปให้ WebView เดิมประมวลผลแทน
