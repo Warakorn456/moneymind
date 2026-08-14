@@ -18327,6 +18327,50 @@ function _renderStreakCard(){
   _renderStreakCard();
 })();
 
+// ══════════════════════════════════════════
+//  DASHBOARD — Fixed Monthly Costs card (reuses _fixedCostsTotals from the
+//  รายจ่ายคงที่ page so the two never drift apart)
+// ══════════════════════════════════════════
+(function(){
+  function _renderFixedCostsCard(){
+    var wrap=document.getElementById('dash-fixedcosts-card'); if(!wrap) return;
+    var t=_fixedCostsTotals();
+    wrap.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer" onclick="nav(\'fixedcosts\')">'
+      +'<div style="min-width:0">'
+        +'<div style="font-size:12px;color:var(--muted)">'+_escHtml(tr('fixedcosts_total'))+'</div>'
+        +'<div style="font-size:26px;font-weight:800;color:var(--red)">'+fmt(t.grandTotal)+'</div>'
+      +'</div>'
+      +'<i class="fas fa-file-invoice-dollar" style="font-size:26px;color:var(--muted);flex-shrink:0"></i>'
+    +'</div>'
+    +'<div style="font-size:12px;color:var(--muted);margin-top:10px">'+_escHtml(tr('fixedcosts_debt_label'))+' '+fmt(t.debtTotal)+' + '+_escHtml(tr('fixedcosts_sub_label'))+' '+fmt(t.subTotal)+' + '+_escHtml(tr('fixedcosts_recur_label'))+' '+fmt(t.recurTotal)+'</div>';
+  }
+  var _fcOrig2=renderDash;
+  renderDash=function(){
+    _fcOrig2.apply(this,arguments);
+    var wrap=document.getElementById('dash-fixedcosts-card');
+    if(!wrap){
+      wrap=document.createElement('div');
+      wrap.id='dash-fixedcosts-card';
+      wrap.className='card';
+      wrap.style.cssText='margin-bottom:20px;overflow:hidden;min-width:0;box-sizing:border-box;';
+      var sortable=document.getElementById('dash-sortable');
+      if(sortable) sortable.appendChild(wrap);
+    }
+    _renderFixedCostsCard();
+  };
+  // init ทันที เพราะ renderDash() ต้นทางวิ่งก่อน script block นี้แล้ว
+  var w2=document.getElementById('dash-fixedcosts-card');
+  if(!w2){
+    w2=document.createElement('div');
+    w2.id='dash-fixedcosts-card';
+    w2.className='card';
+    w2.style.cssText='margin-bottom:20px;overflow:hidden;min-width:0;box-sizing:border-box;';
+    var s2=document.getElementById('dash-sortable');
+    if(s2) s2.appendChild(w2);
+  }
+  _renderFixedCostsCard();
+})();
+
 </script>
 
 <!-- Subscription Modal -->
