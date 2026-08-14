@@ -36,19 +36,71 @@ const WEB_HOST = 'app.moneymindth.com';
 // เพราะเว็บ deploy ใหม่ทุกวันแต่แอปในเครื่อง user เป็นเวอร์ชันเก่ากว่าได้เสมอ
 const APP_VERSION = Constants.expoConfig?.version ?? '0.0.0';
 
-// Android's "Intent URI" scheme (ใช้โดย LINE และ identity provider ส่วนใหญ่บน Android สำหรับ
-// ปุ่ม "เปิดด้วยแอป" — รูปแบบ intent://<path>#Intent;scheme=xxx;package=yyy;...;end) — Chromium
-// (ที่ Android System WebView ใช้อยู่ข้างใน) ไม่รู้จัก "intent" เป็น network scheme จริง ถ้าปล่อยให้
-// WebView โหลดตรงๆ จะพังด้วย net::ERR_UNKNOWN_URL_SCHEME (เจอจริงกับปุ่ม "Log-in with LINE app"
-// 2026-08-14) และ Linking.openURL() ของ RN เองก็ parse composite format นี้ไม่ได้เหมือนกัน (แค่ทำ
-// Uri.parse()+ACTION_VIEW ตรงๆ ไม่มี Intent.parseUri() decode ให้) — แกะเอาแค่ scheme=xxx ออกมา
-// สร้างเป็น URL แบบธรรมดา (เช่น line://...) ที่ Linking.openURL() resolve ได้ถูกต้องจริงแทน
-function resolveIntentUrl(url: string): string {
-  if (!url.startsWith('intent://')) return url;
-  const m = /[;#]scheme=([^;]+)/.exec(url);
-  if (!m) return url;
-  const path = url.slice('intent://'.length).split('#Intent')[0];
-  return `${m[1]}://${path}`;
+// ─────────────────────────────────────────────────────────────────────────
+// Android "Intent URI" — ใช้โดย LINE (ปุ่ม "Log-in with LINE app") และ identity provider
+// ส่วนใหญ่บน Android เพื่อเปิดแอป native จากหน้าเว็บ
+//
+// รูปแบบ:  intent://<host><path>?<query>#Intent;scheme=xxx;package=yyy;S.browser_fallback_url=zzz;end
+//    หรือ:  intent:<data>#Intent;...;end   (ไม่มี //)
+//
+// ทำไมต้อง parse เอง (ยืนยันจากการอ่าน source จริง ไม่ใช่เดา):
+//  1. Chromium (เครื่องยนต์ของ Android System WebView) ไม่รู้จัก "intent" เป็น network scheme
+//     ถ้าปล่อยให้โหลดตรงๆ จะพังด้วย net::ERR_UNKNOWN_URL_SCHEME
+//  2. react-native-webview 13.15.0 **ไม่มีโค้ดจัดการ non-http scheme เลยแม้แต่บรรทัดเดียว**
+//     (grep แล้ว: ไม่มี Intent.parseUri, ไม่มี startActivity, ไม่มี browser_fallback_url) —
+//     ทุกอย่างต้องทำใน JS
+//  3. RN's Linking.openURL ทำแค่ `Intent(ACTION_VIEW, Uri.parse(url))` (IntentModule.kt:110-125)
+//     **ไม่เคยเรียก Intent.parseUri(url, URI_INTENT_SCHEME)** ซึ่งเป็นฟังก์ชันเดียวที่ decode
+//     composite format นี้ได้ → ส่ง intent:// ดิบให้มันไม่มีทางสำเร็จ (Android จะ route ไป
+//     เบราว์เซอร์ ซึ่งก็โหลด intent:// ไม่ได้เหมือนกัน = อาการที่ user เจอในวิดีโอ 2026-08-14)
+//
+// 🐛 parser เวอร์ชันก่อน (resolveIntentUrl) พังเพราะถ้าหา `scheme=` ไม่เจอมันคืน URL เดิมกลับไป
+// เฉยๆ แล้วโค้ดข้างนอกก็ยิง Linking.openURL ด้วย URL ดิบ + ทิ้ง package= และ
+// S.browser_fallback_url ไปทั้งคู่ — เวอร์ชันนี้อ่านครบทุก field และมี fallback chain จริง
+type ParsedIntent = {
+  scheme: string | null;
+  pkg: string | null;
+  action: string | null;
+  dataUri: string | null;     // URL ที่เอาไปเปิดแอปได้จริง เช่น line://... หรือ https://...
+  fallbackUrl: string | null;  // S.browser_fallback_url — หน้าเว็บสำรองถ้าเปิดแอปไม่ได้
+};
+
+function parseIntentUri(url: string): ParsedIntent | null {
+  if (!/^intent:/i.test(url)) return null;
+  const hashIdx = url.indexOf('#Intent;');
+  const head = hashIdx >= 0 ? url.slice(0, hashIdx) : url;
+  const frag = hashIdx >= 0 ? url.slice(hashIdx + '#Intent;'.length) : '';
+
+  const params: Record<string, string> = {};
+  for (const seg of frag.split(';')) {
+    if (!seg || seg === 'end') continue;
+    const i = seg.indexOf('=');
+    if (i > 0) params[seg.slice(0, i)] = seg.slice(i + 1);
+  }
+
+  // ตัด prefix ออกให้เหลือ host+path+query — รองรับทั้ง `intent://` และ `intent:` (ไม่มี //)
+  const rest = head.replace(/^intent:(\/\/)?/i, '');
+  const scheme = params.scheme || null;
+  let dataUri: string | null = null;
+  if (scheme) dataUri = `${scheme}://${rest}`;
+  else if (/^[a-z][a-z0-9+.-]*:\/\//i.test(rest)) dataUri = rest; // เป็น full URI มาแล้ว
+
+  let fallbackUrl: string | null = params['S.browser_fallback_url'] || null;
+  if (fallbackUrl) { try { fallbackUrl = decodeURIComponent(fallbackUrl); } catch { /* ใช้ค่าดิบ */ } }
+
+  return { scheme, pkg: params.package || null, action: params.action || null, dataUri, fallbackUrl };
+}
+
+// ยิง launcher แล้วตัดสินว่า "เปิดสำเร็จ" หรือไม่ — ต้อง race กับ timeout สั้นๆ เพราะ
+// startActivityAsync จะ resolve ตอน activity ปลายทาง**จบ**แล้ว (คือตอน user กลับมาจากแอป LINE
+// ซึ่งอาจเป็นนาที) ถ้า await ตรงๆ จะค้าง — แต่ถ้าเปิดไม่ได้จริง (ActivityNotFoundException)
+// มันจะ reject เกือบทันที เลยใช้ "ไม่ reject ภายใน 800ms = เปิดสำเร็จ" เป็นเกณฑ์
+async function launchedOk(fn: () => Promise<unknown>): Promise<boolean> {
+  let rejected = false;
+  const p = fn().catch((e) => { rejected = true; throw e; });
+  p.catch(() => {}); // กัน unhandled rejection
+  await new Promise((r) => setTimeout(r, 800));
+  return !rejected;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
