@@ -3915,34 +3915,73 @@ const LINE_ADD_FRIEND_URL='https://line.me/R/ti/p/@159hhnpk';
 // ต้อง percent-encode ในนั้นอีกต่อไป
 function _randUrlSafe(n){ return randB64(n).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
 
+// เทียบเวอร์ชันแบบ semver 3 ท่อน (a >= b) — ใช้ gate ฟีเจอร์ที่ต้องมีโค้ด native เวอร์ชันใหม่รองรับ
+function _verGte(a,b){
+  const pa=String(a||'0').split('.').map(n=>parseInt(n,10)||0);
+  const pb=String(b||'0').split('.').map(n=>parseInt(n,10)||0);
+  for(let i=0;i<3;i++){ const x=pa[i]||0, y=pb[i]||0; if(x!==y) return x>y; }
+  return true;
+}
+
+// เวอร์ชันแอป native ตัวแรกที่มีโค้ดจัดการ Android Intent URI ครบ (parseIntentUri +
+// expo-intent-launcher + <queries> ใน manifest) — ต่ำกว่านี้ห้ามเปิดปุ่ม "Log-in with LINE app"
+const LINE_APP_LOGIN_MIN_VER='1.3.6';
+
+// LINE OAuth state — เก็บใน localStorage (ไม่ใช่ sessionStorage) พร้อมวันหมดอายุ
+// 🐛 ย้ายจาก sessionStorage 2026-08-14: sessionStorage ผูกกับ WebView instance/แท็บ หายทันทีเมื่อ
+// (ก) แอปมือถือ remount WebView เพื่อกู้หน้า LINE หลังเจอ error (ข) Android App Links เปิดแอปแบบ
+// cold start (แอปถูก kill ไปแล้ว) — ทั้ง 2 เคสเป็น flow ที่ "ควรสำเร็จ" แต่ state หายทำให้ล้มเหลว
+// แบบงงๆ. localStorage อยู่รอดทั้งคู่ ชดเชยเรื่อง CSRF hygiene ด้วยการหมดอายุใน 10 นาที
+const LINE_STATE_KEY='_lineOAuthState';
+const LINE_STATE_TTL_MS=10*60*1000;
+function _lineStateSave(state){
+  try{ localStorage.setItem(LINE_STATE_KEY,JSON.stringify({state,ts:Date.now()})); }catch(e){}
+}
+function _lineStateTake(){ // อ่านแล้วลบทิ้งเสมอ (one-shot) — คืน null ถ้าไม่มี/หมดอายุ/พัง
+  let raw=null;
+  try{ raw=localStorage.getItem(LINE_STATE_KEY); localStorage.removeItem(LINE_STATE_KEY); }catch(e){}
+  if(!raw) return null;
+  try{
+    const o=JSON.parse(raw);
+    if(!o||!o.state) return null;
+    if(Date.now()-(o.ts||0)>LINE_STATE_TTL_MS) return null;
+    return o.state;
+  }catch(e){ return null; }
+}
+function _lineStatePeek(){ // ดูโดยไม่ลบ — ใช้ตอนต้องตัดสินใจก่อนว่าจะประมวลผลที่ context นี้ไหม
+  try{
+    const o=JSON.parse(localStorage.getItem(LINE_STATE_KEY)||'null');
+    if(!o||!o.state) return null;
+    if(Date.now()-(o.ts||0)>LINE_STATE_TTL_MS) return null;
+    return o.state;
+  }catch(e){ return null; }
+}
+
 function _lineAuthUrl(mode){
   const state=mode+':'+_randUrlSafe(12);
-  sessionStorage.setItem('_lineOAuthState',state);
+  _lineStateSave(state);
   const redirectUri=window.location.origin+'/';
-  const params=new URLSearchParams({
+  const params={
     response_type:'code',
     client_id:LINE_LOGIN_CHANNEL_ID,
     redirect_uri:redirectUri,
     state:state,
     scope:'profile openid',
     bot_prompt:'aggressive', // ชวนเพิ่มเพื่อนบอท OA ที่ลิงก์ไว้ระหว่าง login เลย (จำเป็นสำหรับแจ้งเตือนภายหลัง)
-    // 🐛 ใส่กลับคืนแล้ว (2026-08-14 รอบ 2) — เอาออกไปก่อนหน้านี้ในวันเดียวกันเพื่อคืนปุ่ม "Log-in
-    // with LINE app" แต่ user ทดสอบจริงบน Android (เวอร์ชัน 1.3.5 ที่มี native fix ครบแล้ว) แล้ว
-    // เจอบั๊กหนักกว่าเดิม: LINE ไม่ได้รอให้ user แตะปุ่มก่อน — พอโหลดหน้า login เสร็จ **ยิง intent://
-    // URL แบบอัตโนมัติทันทีเพื่อ probe ว่ามีแอป LINE ติดตั้งไหม** (เห็นจากวิดีโอ: จาก MoneyMind
-    // กระโดดตรงไป Chrome ภายนอกพร้อม error "net::ERR_UNKNOWN_URL_SCHEME" ทันทีโดยไม่มีการแตะ
-    // อะไรเลยระหว่างนั้น) — WebView ของแอป (react-native-webview) รับมือ automatic-probe แบบนี้ไม่ได้
-    // สมบูรณ์ (หลุดไปเปิด Chrome ภายนอกแล้ว Chrome เองก็ไม่รู้จัก scheme "intent" เหมือนกัน พังซ้ำสอง
-    // ชั้น) ทำให้ **ทุกครั้งที่กด login ผ่าน LINE บน Android พังทันทีไม่มีทางเลี่ยง** ไม่ใช่แค่ตอนแตะปุ่ม
-    // "Log-in with LINE app" แบบตั้งใจเหมือนที่เข้าใจไว้แต่แรก — `disable_auto_login` คือพารามิเตอร์
-    // ที่ LINE ให้มาโดยเฉพาะเพื่อปิด auto-probe แบบนี้ (ตามชื่อ) ใส่กลับเพื่อหยุดปัญหานี้ทันที เพราะเป็น
-    // fix ฝั่งเว็บล้วนๆ deploy ได้ทันทีโดยไม่ต้อง build แอปใหม่ — **แลกกับการซ่อนปุ่ม/ลิงก์ "Log-in with
-    // LINE app" อีกครั้ง** (login ผ่านอีเมล/รหัสผ่าน หรือ QR code ยังใช้งานได้ปกติ ไม่กระทบ) — โค้ด
-    // native ที่แก้ไว้ก่อนหน้า (WebApp.tsx: resolveIntentUrl/onOpenWindow/handleLoadError safety net)
-    // ยังคงอยู่เป็น defense-in-depth เผื่ออนาคตอยากลองเปิดใหม่หลังหาทางแก้ auto-probe ได้แน่นอนกว่านี้
-    disable_auto_login:'true',
-  });
-  return 'https://access.line.me/oauth2/v2.1/authorize?'+params.toString();
+  };
+  // ── ปุ่ม/ลิงก์ "Log-in with LINE app" — เปิดแบบ version-gated (2026-08-14 รอบ 3) ──
+  // `disable_auto_login=true` สั่ง LINE ไม่ให้เสนอทางลัดเปิดแอป LINE เลย (ทั้งซ่อนลิงก์และไม่ยิง
+  // intent:// probe อัตโนมัติ) — จำเป็นสำหรับทุก context ที่ยังรับมือ Android Intent URI ไม่ได้
+  // ไม่งั้นจะพัง net::ERR_UNKNOWN_URL_SCHEME (ประวัติเต็มดู memory "LINE Login + Bot")
+  //
+  // เอาออก **เฉพาะ** แอป Android เวอร์ชัน >= 1.3.6 ที่มีโค้ดจัดการครบแล้วเท่านั้น เพราะ:
+  //  · เว็บมือถือ/desktop → ไม่มี WebView ของเราคุม intent:// เลย ต้องปิดไว้
+  //  · iOS → ยังไม่มีโค้ดฝั่ง native รองรับ (และ 1.3.4 ยังค้าง Apple review อยู่)
+  //  · Android เก่ากว่า 1.3.6 → ไม่มี parseIntentUri/IntentLauncher จะเจอบั๊กเดิมซ้ำ
+  // ผลคือถ้ารอบนี้ยังพลาด ก็ไม่มีใครนอกจากผู้ทดสอบ Android ตัวใหม่ที่เจอ regression
+  const _lineAppBtnOk = !!window._isAndroidApp && _verGte(window._appVersion, LINE_APP_LOGIN_MIN_VER);
+  if(!_lineAppBtnOk) params.disable_auto_login='true';
+  return 'https://access.line.me/oauth2/v2.1/authorize?'+new URLSearchParams(params).toString();
 }
 
 async function tryLineLogin(){
