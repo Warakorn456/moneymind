@@ -3926,13 +3926,15 @@ function _lineAuthUrl(mode){
     state:state,
     scope:'profile openid',
     bot_prompt:'aggressive', // ชวนเพิ่มเพื่อนบอท OA ที่ลิงก์ไว้ระหว่าง login เลย (จำเป็นสำหรับแจ้งเตือนภายหลัง)
-    // ปิด "Log-in with LINE app" auto-switch (เพิ่ม 2026-08-13) — บนแอปมือถือ (WebView)
-    // ปุ่มนี้สลับไปแอป LINE จริงแล้ว redirect กลับมาที่ redirect_uri ใน browser context ใหม่
-    // (Safari/LINE in-app browser) ที่ไม่มี Firebase Auth session ของ WebView เดิมเลย ทำให้
-    // เชื่อมต่อไม่สำเร็จแบบเงียบๆ (ไม่มี Universal Links ให้ iOS route กลับเข้า native app)
-    // — LINE's official param บังคับให้ล็อกอินผ่านหน้าเว็บ access.line.me ทั้งกระบวนการแทน
-    // (email/password หรือ QR code) ซึ่งอยู่ใน WebView เดิมตลอด redirect กลับมาถูก host ปกติ
-    disable_auto_login:'true',
+    // 🐛 เอา disable_auto_login ออกแล้ว (2026-08-14) — เดิมใส่ไว้ 2026-08-13 กัน "Log-in with
+    // LINE app" สลับไปแอป LINE จริงแล้ว redirect กลับผิด context (Safari/external browser แทน
+    // WebView เดิม ทำให้เชื่อมต่อไม่สำเร็จเงียบๆ) แต่ตอนนั้นซ่อนปุ่มนี้ไปเลยทั้งที่ user อยากให้ใช้ได้
+    // อยู่ — ตอนนี้แก้ต้นเหตุจริงแล้วผ่าน custom URL scheme moneymind://line-callback +
+    // WebApp.tsx Linking listener (ดู CLAUDE.md/memory "LINE Login + Bot" รอบ 2) เลยเอาพารามิเตอร์
+    // นี้ออก ให้ปุ่ม "Log-in with LINE app" กลับมาใช้งานได้ตามปกติ
+    // ⚠️ ใช้ได้เฉพาะแอปเวอร์ชัน 1.3.4 (build 17 iOS / versionCode 13 Android) ขึ้นไปเท่านั้น —
+    // เวอร์ชันเก่ากว่านั้นไม่มี Linking listener รับ scheme นี้ จะเจอบั๊กเดิมซ้ำ (redirect ไปหลุด
+    // external browser) ถ้า user ยังไม่อัปเดตแอป
   });
   return 'https://access.line.me/oauth2/v2.1/authorize?'+params.toString();
 }
