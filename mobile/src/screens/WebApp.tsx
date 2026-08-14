@@ -387,9 +387,19 @@ export default function WebApp() {
   // ก่อนเสมอ: อนุญาต iframe ทุกกรณีให้โหลดในตัวเอง ไม่ผ่าน host allowlist เลย บล็อกเฉพาะ
   // top-level navigation (คือที่ user แตะลิงก์จริง เปลี่ยนทั้งหน้าออกจากแอป) เท่านั้น
   const handleShouldStartLoad = useCallback((req: ShouldStartLoadRequest) => {
-    if (!req.isTopFrame) return true;
     const { url } = req;
-    if (url.startsWith('about:') || url.startsWith('data:') || url.startsWith('blob:')) return true;
+    const isInert = url.startsWith('about:') || url.startsWith('data:') || url.startsWith('blob:');
+    // 🐛 แก้ 2026-08-14: เดิมเป็น `if (!req.isTopFrame) return true;` แบบไม่มีเงื่อนไข ซึ่งปล่อยให้
+    // iframe โหลด scheme อะไรก็ได้รวมถึง intent:// (LINE ใช้ iframe probe หาแอปที่ติดตั้ง) →
+    // WebView โหลดเองแล้วพัง ERR_UNKNOWN_URL_SCHEME. ตอนนี้ปล่อยเฉพาะ iframe ที่เป็น http(s)/
+    // about:/data:/blob: — ยังคงแก้บั๊ก Firebase Auth iframe เดิมไว้ครบ (hidden iframe ไป
+    // moneymind-d97f3.firebaseapp.com ที่เคยทำให้ทั้งแอปเด้งออก Safari) เพราะนั่นเป็น https
+    if (!req.isTopFrame) {
+      if (isInert || /^https?:\/\//i.test(url)) return true;
+      setTimeout(() => { openExternalUrl(url); }, 0);
+      return false;
+    }
+    if (isInert) return true;
     const m = /^https?:\/\/([^/]+)/i.exec(url);
     const host = m ? m[1].toLowerCase() : null;
     if (host === WEB_HOST) return true;
