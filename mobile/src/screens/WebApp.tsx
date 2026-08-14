@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { View, ActivityIndicator, StyleSheet, BackHandler, Platform, Text, Alert, Linking, Pressable } from 'react-native';
 import { WebView } from 'react-native-webview';
-import type { WebViewErrorEvent, WebViewHttpErrorEvent, ShouldStartLoadRequest } from 'react-native-webview/lib/WebViewTypes';
+import type { WebViewErrorEvent, WebViewHttpErrorEvent, ShouldStartLoadRequest, WebViewOpenWindowEvent } from 'react-native-webview/lib/WebViewTypes';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as Print from 'expo-print';
