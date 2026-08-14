@@ -432,8 +432,8 @@ export default function WebApp() {
       webViewRef.current?.injectJavaScript(`window.location.href=${JSON.stringify(targetUrl)};true;`);
       return;
     }
-    Linking.openURL(resolveIntentUrl(targetUrl)).catch(() => {});
-  }, []);
+    openExternalUrl(targetUrl);
+  }, [openExternalUrl]);
 
   // ส่งผลกลับเข้า WebView — retry จนกว่าจะยืนยันว่า deliver สำเร็จจริง (postMessage กลับมา)
   // เจอบั๊กจริง 2026-08-11: Face ID/Apple sheet สำเร็จแล้ว แต่ webViewRef.current อาจยัง null
