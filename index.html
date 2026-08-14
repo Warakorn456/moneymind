@@ -4038,7 +4038,7 @@ async function _handleLineCallback(){
     _showLineReturnToAppPrompt(code,state);
     return;
   }
-  sessionStorage.removeItem('_lineOAuthState');
+  _lineStateTake(); // consume ทิ้ง (one-shot) — ตั้งแต่จุดนี้เราจะประมวลผล callback ที่ context นี้แน่นอน
   // ล้าง code/state ออกจาก URL ทันที กัน authorization code ค้างอยู่ใน browser history/URL bar
   // (ทำก่อนเช็ค state match เสมอ — ไม่ว่าจะ error หรือสำเร็จ กัน user กด refresh แล้วโดนใช้ code ซ้ำ)
   history.replaceState(null,'',window.location.pathname);
