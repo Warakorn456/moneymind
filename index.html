@@ -4087,6 +4087,17 @@ async function _handleLineCallback(){
       if(data.displayName){ try{ await result.user.updateProfile({displayName:data.displayName,photoURL:data.pictureUrl||null}); }catch(e){} }
       await _handleOAuthResult(result,'line',data.lineUserId);
     } else if(mode==='link'){
+      // 🐛 เจอ 2026-08-14 (จาก user ส่งวิดีโอ): กด "เชื่อมต่อ LINE" ตอน login อยู่แล้ว → เปิดแอป LINE
+      // สำเร็จ (auto-approve เพราะมี session LINE ค้างอยู่) → กลับเข้า MoneyMind ผ่าน App Links/
+      // custom scheme ซึ่งทั้งคู่ทำ window.location.replace() = รีโหลดหน้าเว็บทั้งหน้าใหม่หมด
+      // (แม้ native process จะไม่ตายก็ตาม) — JS state ใน memory รวม _auth.currentUser รีเซ็ตกลับ
+      // เป็น null ต้องรอ Firebase SDK restore session จาก IndexedDB ใหม่ (async) แต่
+      // _lineCallbackTimer เรียก _handleLineCallback() ทันทีที่ firebase.auth โหลดเสร็จ (แค่ตัว
+      // SDK พร้อมใช้ ไม่ใช่ auth restore เสร็จ) เช็ค _auth.currentUser ตรงๆ ก่อน restore จะทัน
+      // เลยเจอ null ทั้งที่ user login อยู่จริง ขึ้น "กรุณาเข้าสู่ระบบก่อน" ผิดๆ — แก้ด้วยการรอ
+      // _waitFbAuth() (มีอยู่แล้วในไฟล์ ใช้กับ checkLogin()'s fsLoad() เหตุผลเดียวกันเป๊ะ) ก่อนเช็ค
+      // guard เสมอ — resolve ทันทีถ้า currentUser พร้อมอยู่แล้ว ไม่หน่วงถ้าไม่จำเป็น
+      await _waitFbAuth();
       if(!currentUser||!_auth.currentUser){ toast('กรุณาเข้าสู่ระบบก่อน','error'); return; }
       const idToken=await _auth.currentUser.getIdToken();
       const resp=await fetch(LINE_LOGIN_PROXY_URL,{method:'POST',
