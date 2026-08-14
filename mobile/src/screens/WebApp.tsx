@@ -218,6 +218,10 @@ export default function WebApp() {
   // (แค่ .reload() ไม่พอ เพราะ process ที่ตายไปแล้วไม่รับคำสั่งอะไรอีก)
   const [webViewKey, setWebViewKey] = useState(0);
   const canGoBack = useRef(false);
+  // source เป็น state (ไม่ใช่ literal คงที่) เพื่อให้ error-recovery พากลับไปหน้า http(s) ล่าสุด
+  // ที่ user ค้างอยู่ได้ (เช่นหน้า login ของ LINE) แทนที่จะเด้งกลับหน้าแรกของแอปเสมอ
+  const [webSource, setWebSource] = useState<{ uri: string }>({ uri: WEB_URL });
+  const lastGoodUrlRef = useRef<string>(WEB_URL);
 
   // Safety-net สำหรับ Apple Guideline 2.1.0 "App launches into a blank screen":
   // onLoadEnd ของ WebView บอกแค่ว่า HTML โหลดเสร็จ ไม่ได้แปลว่าเว็บแอป render UI สำเร็จจริง
