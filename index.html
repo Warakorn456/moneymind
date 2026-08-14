@@ -16760,6 +16760,19 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
     // ติ๊ก ✓ ด้วย (เดิม return ก่อนตั้งแต่เช็ค _isDismissed() ทำให้ปุ่มไม่มีวันขึ้น ✓)
     if(_lineBannerStatus===null){
       _fs.collection('members').doc(currentUser).get().then(function(doc){
+        // 🐛 เจอ 2026-08-14 (จาก user ส่งวิดีโอ, ยืนยันซ้ำด้วยการจำลอง race ใน production จริง):
+        // การ fetch นี้เริ่มตอน _lineBannerStatus ยังเป็น null (มักเกิดตั้งแต่โหลดหน้าแรกสุด) แต่
+        // ระหว่างที่ .get() กำลังรอผล (Firestore round-trip) อาจมี _handleLineCallback() (mode='link')
+        // ทำงานเสร็จก่อนแล้วเรียก _setLineBannerConnected(true) ตั้งค่าที่ถูกต้อง+ซ่อนการ์ดไปแล้ว —
+        // แต่ .then() นี้ไม่เคยเช็คซ้ำว่า _lineBannerStatus เปลี่ยนไปหรือยังระหว่างรอ พอ resolve กลับมา
+        // (อาจได้ข้อมูลเก่าจาก "ก่อน" backend เขียน lineUserId เสร็จ เพราะเป็นคนละ request กัน)
+        // ก็เขียนทับค่าที่ถูกต้องอยู่แล้วด้วยค่าเก่าที่ผิด ทำให้การ์ด "เชื่อมต่อเลย" โผล่กลับมาทั้งที่
+        // เชื่อมต่อสำเร็จแล้วจริง — ยืนยัน bug ผ่านการจำลองใน production: บังคับ _lineBannerStatus=null
+        // แล้วแซง _setLineBannerConnected(true) ระหว่างรอ .get() จะเห็นการ์ดโผล่กลับมาผิดๆ ทันที
+        // แก้: เช็คซ้ำก่อนใช้ผลลัพธ์เสมอ — ถ้ามีอะไรมาตั้งค่าไปแล้วระหว่างรอ (ไม่ null อีกต่อไป) ให้ทิ้ง
+        // ผลลัพธ์เก่านี้ไปเลย ไม่เขียนทับ (ค่าที่ตั้งทีหลังจาก event จริงน่าเชื่อถือกว่าผลจาก request
+        // ที่ค้างอยู่นานกว่าเสมอ)
+        if(_lineBannerStatus!==null) return;
         const d=doc.exists?doc.data():{};
         if(!d.lineUserId){ _lineBannerStatus=false; }
         // lineFriend===false เท่านั้นที่ถือว่า "ยังไม่เพิ่มเพื่อน" — undefined แปลว่าเชื่อมต่อไว้
