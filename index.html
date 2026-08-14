@@ -3963,6 +3963,7 @@ async function _handleLineCallback(){
   const code=params.get('code');
   const state=params.get('state');
   if(!code||!state) return;
+  const savedState=sessionStorage.getItem('_lineOAuthState');
   // 🐛 เจอ 2026-08-13 (จาก user ส่งวิดีโอ): กด "เชื่อมต่อ LINE" ในแอปมือถือ → แตะ "Log-in with
   // LINE app" (ทางลัดของ LINE เอง) → สลับไปแอป LINE จริง → auth สำเร็จ → LINE redirect กลับมาที่
   // redirect_uri ไม่เข้า WebView เดิมของแอป MoneyMind เลย (ไม่มี iOS Universal Links ให้ route กลับ)
@@ -3972,16 +3973,26 @@ async function _handleLineCallback(){
   // ยังทำงานอยู่เบื้องหลังเสมอ** (แค่ backgrounded ไม่ได้ถูกปิด เพราะ LINE app แค่ขึ้นทับหน้าจอชั่วคราว)
   // sessionStorage ของ WebView เดิมยังอยู่ครบ — เลยส่ง code/state กลับไปให้ WebView เดิมประมวลผลแทน
   // ผ่าน custom URL scheme `moneymind://` (ตั้งไว้แล้วใน mobile/app.json) แทนที่จะพยายามประมวลผลใน
-  // context แปลกปลอมนี้เอง. เช็คแค่ตอนไม่ใช่ native app (ไม่มี window._isIOSApp/_isAndroidApp — ถ้าอยู่
-  // ใน WebView เดิมจริงๆ flag พวกนี้จะมีเสมอ) + เป็นมือถือ (desktop ไม่มีปัญหานี้เพราะไม่มี LINE app ให้สลับไป)
+  // context แปลกปลอมนี้เอง.
+  //
+  // 🐛 เจอเพิ่ม 2026-08-14 — บั๊กซ้อน: เช็คเดิม `!inNativeApp && isMobileUA` เพียงอย่างเดียว (ไม่เช็ค
+  // savedState ก่อน) ทำให้คนที่ใช้ MoneyMind แบบเว็บล้วนๆ ผ่านเบราว์เซอร์มือถือตรงๆ (ไม่ใช่แอปที่ติดตั้ง
+  // ไว้ — เคสนี้เป็นการใช้งานปกติที่รองรับอยู่แล้ว sessionStorage ไม่เคยหายเพราะอยู่แท็บเดิมตลอด) โดน
+  // เหมารวมว่า "หลุดออกจากแอป" ไปด้วย ทั้งที่ไม่เคยเปิดแอปเลยตั้งแต่แรก — กด "เข้าสู่ระบบด้วย LINE" →
+  // login LINE สำเร็จ → กลับมาเจอปุ่ม "กลับไปแอป MoneyMind" ที่กดแล้วไม่มีอะไรเกิดขึ้น (ไม่มีแอปติดตั้งให้
+  // เปิด) ดูเหมือน "เด้งกลับไปหน้าเว็บเฉยๆ ไม่ได้ล็อกอิน" — แก้โดยเช็ค **savedState หายไปจริงก่อน** (คือ
+  // สัญญาณที่แม่นกว่าว่าอยู่คนละ browser context จากตอนเริ่ม flow จริงๆ — เกิดได้เฉพาะกรณีหลุดออกจาก
+  // WebView ของแอปเท่านั้น เว็บ/เบราว์เซอร์มือถือธรรมดา sessionStorage ไม่มีทางหายเพราะอยู่แท็บเดียวกัน
+  // ตลอด) ก่อนถึงจะสรุปว่าเป็นเคส "หลุดออกจากแอป" แล้วโชว์ปุ่มกลับเข้าแอป — ถ้า savedState ยังตรงอยู่
+  // (เว็บ/มือถือธรรมดาปกติ) ให้ประมวลผล callback ตามปกติเหมือน desktop ไม่ว่าจะเป็น user agent มือถือ
+  // หรือไม่ก็ตาม
   const inNativeApp=!!(window._isIOSApp||window._isAndroidApp);
   const isMobileUA=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if(!inNativeApp && isMobileUA){
+  if((!savedState||state!==savedState) && !inNativeApp && isMobileUA){
     history.replaceState(null,'',window.location.pathname);
     _showLineReturnToAppPrompt(code,state);
     return;
   }
-  const savedState=sessionStorage.getItem('_lineOAuthState');
   sessionStorage.removeItem('_lineOAuthState');
   // ล้าง code/state ออกจาก URL ทันที กัน authorization code ค้างอยู่ใน browser history/URL bar
   // (ทำก่อนเช็ค state match เสมอ — ไม่ว่าจะ error หรือสำเร็จ กัน user กด refresh แล้วโดนใช้ code ซ้ำ)
