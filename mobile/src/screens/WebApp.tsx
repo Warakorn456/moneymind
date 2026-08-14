@@ -410,9 +410,12 @@ export default function WebApp() {
     // browser เหมือนลิงก์ทั่วไป — ผู้ใช้ authorize เสร็จแล้ว LINE redirect กลับมาที่ WEB_HOST
     // ตามปกติ (ตรงกับ allowlist เดิมด้านบนอยู่แล้ว ไม่ต้องแก้อะไรเพิ่ม)
     if (host && (host === 'line.me' || host.endsWith('.line.me'))) return true;
-    Linking.openURL(resolveIntentUrl(url)).catch(() => {});
+    // ⚠️ ต้อง return false แบบ synchronous ทันที — native ฝั่ง Android block UI thread รอ JS ตอบ
+    // แค่ 250ms (RNCWebViewClient.java: SHOULD_OVERRIDE_URL_LOADING_TIMEOUT) ถ้าตอบไม่ทันมันจะ
+    // "ปล่อยให้โหลด" เองแล้วพัง — งานเปิดแอปจึงต้องโยนออกไปนอก call stack นี้เสมอ
+    setTimeout(() => { openExternalUrl(url); }, 0);
     return false;
-  }, []);
+  }, [openExternalUrl]);
 
   // Android เท่านั้น — ดัก window.open()/<a target="_blank"> ที่ LINE's "Log-in with LINE app"
   // อาจใช้เปิด (เพิ่ม 2026-08-14, คู่กับ safety net ใน handleLoadError ด้านบน): ต่างจาก
