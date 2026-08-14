@@ -27,7 +27,7 @@
     },
     "android": {
       "package": "app.moneymind.th",
-      "versionCode": 13,
+      "versionCode": 14,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
