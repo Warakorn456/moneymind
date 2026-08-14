@@ -739,7 +739,11 @@ export default function WebApp() {
         onRenderProcessGone={handleRenderProcessGone}
         onShouldStartLoadWithRequest={handleShouldStartLoad}
         onOpenWindow={handleOpenWindow}
-        onNavigationStateChange={(n) => { canGoBack.current = n.canGoBack; }}
+        onNavigationStateChange={(n) => {
+          canGoBack.current = n.canGoBack;
+          // จำหน้า http(s) ล่าสุดไว้ให้ handleLoadError พากลับมาได้ (เช่นหน้า login ของ LINE)
+          if (/^https?:\/\//i.test(n.url)) lastGoodUrlRef.current = n.url;
+        }}
         onMessage={handleMessage}
         startInLoadingState
         domStorageEnabled
