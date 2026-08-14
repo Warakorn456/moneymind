@@ -695,9 +695,19 @@ export default function WebApp() {
   // กลับไปที่ WEB_URL พร้อม code/state แนบท้าย ให้ index.html ประมวลผลผ่าน flow ปกติทุกอย่าง
   // (ไม่ต้องเขียน handler ใหม่ฝั่งเว็บ — แค่โหลด URL เดิมที่มี query string ก็พอ)
   const handleLineDeepLink = useCallback((url: string) => {
-    if (!url || !url.startsWith('moneymind://line-callback')) return;
+    if (!url) return;
+    // รับ 2 ทาง: (ก) `moneymind://line-callback?...` — custom scheme ที่หน้าเว็บยิงเองเมื่อตรวจพบว่า
+    // callback มาตกอยู่นอกแอป (fallback เดิม ยังต้องเก็บไว้เพราะ App Links อาจ verify ไม่ผ่าน
+    // หรือ user ปิด "Open supported links" เองได้) (ข) `https://app.moneymindth.com/?code=...` —
+    // มาจาก Android App Links (autoVerify) ที่เพิ่ม 2026-08-14 ซึ่ง Android จะ route กลับเข้าแอป
+    // ให้เองอัตโนมัติ ไม่ต้องให้ user กดปุ่ม "กลับไปแอป MoneyMind" อีกทีแล้ว
+    const isCustomScheme = url.startsWith('moneymind://line-callback');
+    const isAppLink = url.startsWith(`${WEB_URL}?`) || url.startsWith(`https://${WEB_HOST}/?`);
+    if (!isCustomScheme && !isAppLink) return;
     const query = url.split('?')[1] || '';
     if (!query) return;
+    // App Link อาจถูกยิงมาจากลิงก์ธรรมดาที่ไม่เกี่ยวกับ LINE เลย — ประมวลผลเฉพาะที่มี code+state จริง
+    if (isAppLink && !/(^|&)code=/.test(query)) return;
     const target = `${WEB_URL}?${query}`;
     const js = `window.location.replace(${JSON.stringify(target)}); true;`;
     // WebView อาจยังไม่ mount เสร็จตอน cold-start ผ่าน deep link (Linking.getInitialURL) —
