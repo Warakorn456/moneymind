@@ -243,8 +243,71 @@ export default function WebApp() {
     appReadyRef.current = false;
     setLoadError(null);
     setLoading(true);
+    setWebSource({ uri: WEB_URL });
     setWebViewKey((k) => k + 1);
   }, [clearWatchdog]);
+
+  // จุดเดียวที่ทุก call site ใช้เปิดอะไรก็ตามที่ไม่ใช่หน้าเว็บของเราเอง — มี fallback chain
+  // เรียงลำดับชัดเจน ถ้าขั้นไหนพลาดจะไล่ลงขั้นถัดไปเสมอ ไม่มีทางตายเงียบเหมือนโค้ดเวอร์ชันก่อน
+  // (ซึ่ง .catch(()=>{}) กลืน error ทุกจุดจนไม่มีใครรู้ว่าพลาดตรงไหน)
+  const openExternalUrl = useCallback(async (url: string) => {
+    const parsed = Platform.OS === 'android' ? parseIntentUri(url) : null;
+
+    // ลิงก์ภายนอกทั่วไป (ไม่ใช่ intent URI) — พฤติกรรมเดิม
+    if (!parsed) {
+      Linking.openURL(url).catch(() => {});
+      return;
+    }
+
+    const tried: string[] = [];
+    console.log('[MM-INTENT] parsed', JSON.stringify(parsed));
+
+    // (1) ยิงแบบระบุ package ปลายทางตรงๆ — เส้นทางหลักที่ควรเปิดแอป LINE สำเร็จ
+    //     นี่คือสิ่งที่ Linking.openURL ทำไม่ได้ (มันตั้ง package ไม่ได้เลย)
+    if (parsed.dataUri && parsed.pkg) {
+      try {
+        const ok = await launchedOk(() => IntentLauncher.startActivityAsync(
+          parsed.action || 'android.intent.action.VIEW',
+          { data: parsed.dataUri as string, packageName: parsed.pkg as string },
+        ));
+        if (ok) return;
+        tried.push('pkg-intent: rejected');
+      } catch (e) { tried.push(`pkg-intent: ${String(e)}`); }
+    }
+
+    // (2) ยิงซ้ำแบบไม่ pin package (เผื่อ package ในลิงก์ผิด/ไม่ได้ติดตั้ง แต่มีแอปอื่นรับ scheme นี้)
+    if (parsed.dataUri) {
+      try {
+        const ok = await launchedOk(() => IntentLauncher.startActivityAsync(
+          parsed.action || 'android.intent.action.VIEW',
+          { data: parsed.dataUri as string },
+        ));
+        if (ok) return;
+        tried.push('intent: rejected');
+      } catch (e) { tried.push(`intent: ${String(e)}`); }
+
+      try {
+        const ok = await launchedOk(() => Linking.openURL(parsed.dataUri as string));
+        if (ok) return;
+        tried.push('linking: rejected');
+      } catch (e) { tried.push(`linking: ${String(e)}`); }
+    }
+
+    // (3) เปิดแอปไม่ได้ → โหลด browser_fallback_url ใน WebView เดิม (คือสิ่งที่ Chrome ทำเอง
+    //     ตามธรรมชาติ) — พา user ไปหน้า login แบบกรอกอีเมล/QR แทน ไม่หลุดออกนอกแอป
+    if (parsed.fallbackUrl && webViewRef.current) {
+      console.log('[MM-INTENT] using browser_fallback_url');
+      webViewRef.current.injectJavaScript(
+        `window.location.replace(${JSON.stringify(parsed.fallbackUrl)});true;`,
+      );
+      return;
+    }
+
+    // (4) หมดทุกทาง → โชว์ให้เห็นกับตา (หน้า login ยังไม่มี Firebase auth จึงส่ง _sendReport
+    //     เข้า Firestore ไม่ได้) user แคปหน้าจอส่งมาได้เลย รอบหน้าจะรู้สาเหตุแน่นอนไม่ต้องเดา
+    console.log('[MM-INTENT] all fallbacks failed', tried.join(' | '));
+    Alert.alert('เปิดแอปไม่สำเร็จ', `${url}\n\n${tried.join('\n')}`);
+  }, []);
 
   // ⚠️ ห้ามรีเซ็ต appReadyRef ที่นี่เด็ดขาด — inline script ของเว็บรันระหว่าง parse หน้า
   // ทำให้ 'appReady' มาถึง *ก่อน* onLoadEnd เสมอบนเน็ตปกติ ถ้ารีเซ็ตทับตรงนี้ flag ที่เพิ่งตั้ง
