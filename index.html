@@ -6297,7 +6297,7 @@ function delSav(id){
 // ══════════════════════════════════════════
 function renderDebts(){
   const el=document.getElementById('debt-list');
-  const sumEl=document.getElementById('debt-summary');
+  const sumEl=document.getElementById('debt-page-summary');
   if(!DB.debts.length){ if(sumEl) sumEl.innerHTML=''; el.innerHTML='<div class="empty"><i class="fas fa-check-circle"></i><p>'+tr('debt_none_great')+'</p></div>'; return; }
   const now=new Date();
   const nowY=now.getFullYear(), nowM=now.getMonth()+1;
