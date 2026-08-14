@@ -4008,7 +4008,7 @@ async function _handleLineCallback(){
   const code=params.get('code');
   const state=params.get('state');
   if(!code||!state) return;
-  const savedState=sessionStorage.getItem('_lineOAuthState');
+  const savedState=_lineStatePeek();
   // 🐛 เจอ 2026-08-13 (จาก user ส่งวิดีโอ): กด "เชื่อมต่อ LINE" ในแอปมือถือ → แตะ "Log-in with
   // LINE app" (ทางลัดของ LINE เอง) → สลับไปแอป LINE จริง → auth สำเร็จ → LINE redirect กลับมาที่
   // redirect_uri ไม่เข้า WebView เดิมของแอป MoneyMind เลย (ไม่มี iOS Universal Links ให้ route กลับ)
