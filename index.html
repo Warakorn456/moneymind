@@ -13047,7 +13047,8 @@ function _renderAdminUsageSection(summary){
     nw:(a,b)=>(a.netWorth||0)-(b.netWorth||0),
     age:(a,b)=>(a.age??-1)-(b.age??-1),
     job:(a,b)=>(a.jobTitle||'').localeCompare(b.jobTitle||''),
-    last:(a,b)=>(a.lastTxDate||'').localeCompare(b.lastTxDate||'')
+    last:(a,b)=>(a.lastTxDate||'').localeCompare(b.lastTxDate||''),
+    aiquota:(a,b)=>(a.aiMonthlyUsed??-1)-(b.aiMonthlyUsed??-1)
   };
   const su=summary.users.slice().sort(sortFns[sortSt.key]||sortFns.nw);
   if(sortSt.dir==='desc') su.reverse();
