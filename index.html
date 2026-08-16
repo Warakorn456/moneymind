@@ -16687,9 +16687,10 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
   };
 
   // เรียกจาก _handleLineCallback() (mode='link') ทันทีหลังเชื่อมต่อสำเร็จ
-  // friendFlag===false → เข้าสถานะเตือน ไม่ใช่ "สำเร็จเรียบร้อย"
+  // friendFlag!==true → เข้าสถานะเตือน ไม่ใช่ "สำเร็จเรียบร้อย" (รวม false และ null/undefined
+  // จากตอน backend เช็ค friendship API สดๆ พลาด — ดูเหตุผลเต็มที่ _handleLineCallback ~4100)
   window._setLineBannerConnected=function(friendFlag){
-    _lineBannerStatus = (friendFlag===false) ? 'not-friend' : true;
+    _lineBannerStatus = (friendFlag!==true) ? 'not-friend' : true;
     _renderLineBanner(); _paintSidebarLineStatus();
   };
 
