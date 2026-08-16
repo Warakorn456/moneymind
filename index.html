@@ -13078,6 +13078,12 @@ function _renderAdminUsageSection(summary){
       <td style="padding:10px 14px;font-size:12px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.jobTitle||'-'}</td>
       <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${u.lastTxDate||'-'}</td>
       <td style="padding:10px 14px;font-size:11px">${featChip(f.inv,tr('investments'))}${featChip(f.debt,tr('debts'))}${featChip(f.save,tr('savings'))}${featChip(f.insurance,tr('insurance'))}${featChip(f.travel,tr('travel'))}${featChip(f.sub,'subs')}</td>
+      <td style="padding:10px 14px;font-size:12px;text-align:right;white-space:nowrap">${(()=>{
+        if(!u.aiTier) return '<span style="color:var(--muted)">-</span>';
+        const moPct=(u.aiMonthlyUsed||0)/(u.aiMonthlyLimit||1);
+        const color=moPct>=0.9?'#ef4444':moPct>=0.7?'#f59e0b':'var(--muted)';
+        return `<span style="color:${color}">${u.aiMonthlyUsed}/${u.aiMonthlyLimit} · ${u.aiDailyUsed}/${u.aiDailyLimit}</span>`;
+      })()}</td>
     </tr>`;
   }).join('');
   const th=(key,label,align)=>`<th onclick="_adminSortUsage('${key}')" style="padding:9px 14px;font-size:11px;color:var(--muted);text-align:${align||'left'};cursor:pointer;user-select:none;white-space:nowrap">${label}${_adminUsageSortLabel(key)}</th>`;
