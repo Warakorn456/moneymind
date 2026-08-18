@@ -748,6 +748,16 @@ export default function WebApp() {
         startInLoadingState
         domStorageEnabled
         javaScriptEnabled
+        // ปิดแคช HTTP ของ WebView (2026-08-18) — GitHub Pages เสิร์ฟ index.html ด้วย
+        // Cache-Control: max-age=600 (10 นาที, ตั้งค่าตายตัวของ GitHub Pages เอง แก้ไม่ได้ผ่าน
+        // config ไฟล์ใดๆ) ทำให้หลัง deploy hotfix ฝั่งเว็บแล้ว ทดสอบซ้ำในแอปมือถือภายใน 10 นาที
+        // (หรือปิด-เปิดแอปใหม่โดยไม่รอ) จะยังได้โค้ดเก่าจาก disk cache — เจอจริงหลายรอบตอนไล่แก้
+        // บั๊ก LINE link (ai_proxy.py fix ไม่ต้องรอเพราะเป็น HTTP POST แยก แต่ index.html เองโดน
+        // cache) ทำให้เข้าใจผิดว่า fix ไม่ทำงาน ทั้งที่ deploy ถูกต้องแล้ว — ปิด cache ให้ WebView
+        // ดึงไฟล์สดทุกครั้งที่เปิดแอปแทน (เทรดออฟ: เปิดแอปช้าลงเล็กน้อยเพราะโหลด HTML ใหม่ทุกครั้ง
+        // แลกกับ fix ฝั่งเว็บมีผลทันทีเสมอ ไม่ต้องรอ build ใหม่ — user เลือกทางนี้เพราะเจอปัญหา
+        // แคชบังหน้าบั๊กจริงมาหลายรอบระหว่าง debug LINE integration)
+        cacheEnabled={false}
         injectedJavaScriptBeforeContentLoaded={INJECT}
         originWhitelist={['*']}
         sharedCookiesEnabled
