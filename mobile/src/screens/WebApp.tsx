@@ -848,7 +848,17 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     gap: 18,
   },
-  logo: { fontSize: 22, fontWeight: '800', color: C.primaryL },
+  brandWrap: { alignItems: 'center', gap: 16 },
+  logoStack: { width: 112, height: 112, alignItems: 'center', justifyContent: 'center' },
+  glow: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: C.primary,
+  },
+  logoImg: { width: 96, height: 96 },
+  wordmark: { fontSize: 22, fontWeight: '700', letterSpacing: 0.4, color: C.text },
   errTitle: { fontSize: 16, fontWeight: '700', color: C.text },
   errMsg: { fontSize: 13, color: C.muted, textAlign: 'center', paddingHorizontal: 32 },
   retryBtn: {
