@@ -820,13 +820,13 @@ export default function WebApp() {
       />
       {loading && !loadError && (
         <View style={s.loader} pointerEvents="none">
-          <Text style={s.logo}>💰 MoneyMind</Text>
+          <LoadingBrand />
           <ActivityIndicator size="large" color={C.primaryL} />
         </View>
       )}
       {loadError && (
         <View style={s.loader}>
-          <Text style={s.logo}>💰 MoneyMind</Text>
+          <LoadingBrand />
           <Text style={s.errTitle}>เชื่อมต่อไม่ได้</Text>
           <Text style={s.errMsg}>{loadError}</Text>
           <Pressable style={s.retryBtn} onPress={handleRetry}>
