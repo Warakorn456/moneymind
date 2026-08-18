@@ -18312,9 +18312,9 @@ function _renderStreakCard(){
 
 // ══════════════════════════════════════════
 //  DASHBOARD — Fixed Monthly Costs card
-//  ดึงจาก DB.plan.items ผ่าน getMonthItems() ตัวเดียวกับที่หน้า "งบดุล & แผนการเงิน"
-//  ใช้แสดงรายการเดือนนั้นๆ (ไม่ใช่ Debts/Subscriptions/รายการซ้ำ — ผู้ใช้ตั้งใจให้ตรงกับ
-//  หมวดหมู่รายจ่ายคงที่ที่ทำไว้ในแผนการเงินอยู่แล้ว) กดที่การ์ดพาไปหน้า งบดุล & แผนการเงิน
+//  ดึงจาก DB.plan.items ผ่าน getMonthItems() (ตัวเดียวกับหน้า "งบดุล & แผนการเงิน")
+//  รวมกับยอด Subscriptions (subMonthly) และยอดผ่อนหนี้สินรายเดือน (DB.debts.pay) —
+//  user ขอให้รวม 3 แหล่งเข้าด้วยกันเป็นยอดเดียว (2026-08-18) กดที่การ์ดพาไปหน้า งบดุล & แผนการเงิน
 // ══════════════════════════════════════════
 (function(){
   function _renderFixedCostsCard(){
@@ -18322,15 +18322,23 @@ function _renderStreakCard(){
     var now=new Date();
     var curYM=ymStr(now.getFullYear(),now.getMonth()+1);
     var items=getMonthItems(curYM).filter(function(it){ return it.type==='expense'; });
-    var total=items.reduce(function(s,it){ return s+(it.amount||0); },0);
-    if(!items.length){
+    var planTotal=items.reduce(function(s,it){ return s+(it.amount||0); },0);
+    var subs=getSubs().filter(function(s){ return s.active!==false; });
+    var subTotal=subs.reduce(function(s,x){ return s+subMonthly(x); },0);
+    var debts=(DB.debts||[]).filter(function(d){ return (d.pay||0)>0; });
+    var debtTotal=debts.reduce(function(s,d){ return s+(d.pay||0); },0);
+    var total=planTotal+subTotal+debtTotal;
+    if(!items.length&&!subs.length&&!debts.length){
       wrap.innerHTML='<div style="cursor:pointer" onclick="nav(\'balance\')">'
         +'<div style="font-size:12px;color:var(--muted)">'+_escHtml(tr('fixedcosts_total'))+'</div>'
         +'<div class="empty" style="padding:10px 0"><i class="fas fa-file-invoice-dollar"></i><p style="font-size:12px">'+_escHtml(tr('fixedcosts_empty'))+'</p></div>'
       +'</div>';
       return;
     }
-    var lines=items.map(function(it){ return _escHtml(it.name)+' '+fmt(it.amount); }).join(' + ');
+    var lineParts=items.map(function(it){ return _escHtml(it.name)+' '+fmt(it.amount); });
+    if(subTotal>0) lineParts.push(_escHtml(tr('fixedcosts_sub_label'))+' '+fmt(subTotal));
+    if(debtTotal>0) lineParts.push(_escHtml(tr('fixedcosts_debt_label'))+' '+fmt(debtTotal));
+    var lines=lineParts.join(' + ');
     wrap.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer" onclick="nav(\'balance\')">'
       +'<div style="min-width:0">'
         +'<div style="font-size:12px;color:var(--muted)">'+_escHtml(tr('fixedcosts_total'))+'</div>'
