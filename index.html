@@ -16455,13 +16455,10 @@ function _showWelcomeOnboard(){
     if(!fab){ setTimeout(init,400); return; }
     fab.removeAttribute('onclick');
 
-    var saved=loadPos();
-    if(saved&&saved.x!=null){
-      setPos(saved.x, saved.y, false);
-    } else {
-      var fw=fab.offsetWidth||56, fh=fab.offsetHeight||56;
-      setPos(window.innerWidth-fw-MARGIN, window.innerHeight-fh-MARGIN, false);
-    }
+    // เริ่มที่มุมขวาล่างเสมอทุกครั้งที่โหลดหน้า (ไม่จำตำแหน่งที่เคยลากไว้ข้ามเซสชัน) —
+    // ระหว่างเซสชันยังลากย้ายตำแหน่งได้ตามปกติผ่าน onDown/onMove/onUp ด้านล่าง
+    var fw=fab.offsetWidth||56, fh=fab.offsetHeight||56;
+    setPos(window.innerWidth-fw-MARGIN, window.innerHeight-fh-MARGIN, false);
 
     fab.addEventListener('mousedown', onDown, {passive:false});
     fab.addEventListener('touchstart', onDown, {passive:false});
