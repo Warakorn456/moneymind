@@ -210,6 +210,60 @@ const INJECT = `(function(){
   };
 })(); true;`;
 
+// แบรนด์มาร์คของหน้าจอโหลด (native overlay ระหว่างรอ WebView โหลด app.moneymindth.com —
+// คนละอันจาก native splash ของ Expo เองที่ขึ้นก่อนหน้านี้ ใช้ splash-icon.png บนพื้น #0d0d1a
+// เดียวกัน จงใจใช้รูปเดิมกันโลโก้เปลี่ยนหน้าตากะทันหันตอนสลับจาก native splash มาที่นี่)
+// แยกเป็น component ของตัวเองกัน animation loop รีสตาร์ท/กระตุกทุกครั้งที่ WebApp re-render
+// (onMessage/navigation state เปลี่ยนบ่อยระหว่างโหลด)
+function LoadingBrand() {
+  const pulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    let mounted = true;
+    AccessibilityInfo.isReduceMotionEnabled().then((reduced) => {
+      if (!mounted || reduced) return;
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulse, {
+            toValue: 1,
+            duration: 2200,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulse, {
+            toValue: 0,
+            duration: 2200,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }).catch(() => {});
+    return () => { mounted = false; };
+  }, [pulse]);
+
+  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] });
+  const glowOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.10, 0.24] });
+  const glowScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] });
+
+  return (
+    <View style={s.brandWrap}>
+      <View style={s.logoStack}>
+        <Animated.View
+          pointerEvents="none"
+          style={[s.glow, { opacity: glowOpacity, transform: [{ scale: glowScale }] }]}
+        />
+        <Animated.Image
+          source={require('../../assets/splash-icon.png')}
+          resizeMode="contain"
+          style={[s.logoImg, { transform: [{ scale }] }]}
+        />
+      </View>
+      <Text style={s.wordmark}>MoneyMind</Text>
+    </View>
+  );
+}
+
 export default function WebApp() {
   const webViewRef = useRef<WebView>(null);
   const [loading, setLoading] = useState(true);
