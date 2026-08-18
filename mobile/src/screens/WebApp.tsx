@@ -210,9 +210,15 @@ const INJECT = `(function(){
   };
 })(); true;`;
 
-// แบรนด์มาร์คของหน้าจอโหลด (native overlay ระหว่างรอ WebView โหลด app.moneymindth.com —
-// คนละอันจาก native splash ของ Expo เองที่ขึ้นก่อนหน้านี้ ใช้ splash-icon.png บนพื้น #0d0d1a
-// เดียวกัน จงใจใช้รูปเดิมกันโลโก้เปลี่ยนหน้าตากะทันหันตอนสลับจาก native splash มาที่นี่)
+// แบรนด์มาร์คของหน้าจอโหลด (native overlay ระหว่างรอ WebView โหลด app.moneymindth.com)
+// 🐛 เจอ 2026-08-18: รอบแรกใช้ splash-icon.png ตามที่ native splash (app.json) อ้างอิงอยู่ —
+// ที่แท้เป็นไฟล์ placeholder เริ่มต้นของ Expo template (วงกลม+เส้นกริดเฉยๆ) ไม่เคยถูกเปลี่ยนเป็น
+// โลโก้จริงเลยตั้งแต่สร้างโปรเจกต์ (native splash ก็โชว์รูปผิดตัวนี้มาตลอด แค่ไม่มีใครสังเกตเพราะ
+// ขึ้นแวบเดียว) แก้โดยใช้ assets/icon.png แทน (โลโก้ตัว "M" สีเขียวจริงของแอป ไฟล์เดียวกับที่
+// เว็บ login ใช้ที่ assets/logo.png และ Play Store แสดงเป็นไอคอนแอป) — ตัวรูปมีกรอบสี่เหลี่ยมมน
+// พื้นเข้ม + แสงเรืองเขียวฝังอยู่ในรูปเองแล้ว จึงไม่ใส่ glow สีม่วงซ้อนเพิ่มอีกชั้น (จะรกและมึนตา)
+// แค่ครอบด้วยกรอบมนตัดขอบ + เงาโทนม่วงเบาๆ ให้เข้ากับธีมแอป (pattern เดียวกับ .login-logo-img
+// ของเว็บ — border-radius + box-shadow สีม่วง)
 // แยกเป็น component ของตัวเองกัน animation loop รีสตาร์ท/กระตุกทุกครั้งที่ WebApp re-render
 // (onMessage/navigation state เปลี่ยนบ่อยระหว่างโหลด)
 function LoadingBrand() {
@@ -242,23 +248,17 @@ function LoadingBrand() {
     return () => { mounted = false; };
   }, [pulse]);
 
-  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] });
-  const glowOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.10, 0.24] });
-  const glowScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] });
+  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.05] });
 
   return (
     <View style={s.brandWrap}>
-      <View style={s.logoStack}>
-        <Animated.View
-          pointerEvents="none"
-          style={[s.glow, { opacity: glowOpacity, transform: [{ scale: glowScale }] }]}
+      <Animated.View style={[s.logoFrame, { transform: [{ scale }] }]}>
+        <Image
+          source={require('../../assets/icon.png')}
+          resizeMode="cover"
+          style={s.logoImg}
         />
-        <Animated.Image
-          source={require('../../assets/splash-icon.png')}
-          resizeMode="contain"
-          style={[s.logoImg, { transform: [{ scale }] }]}
-        />
-      </View>
+      </Animated.View>
       <Text style={s.wordmark}>MoneyMind</Text>
     </View>
   );
