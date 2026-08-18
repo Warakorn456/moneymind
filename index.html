@@ -3637,6 +3637,23 @@ async function _handleOAuthResult(result, providerName, lineUserId){
   const fbUser=result.user;
   const email=fbUser.email||('no-email-'+fbUser.uid+'@'+providerName+'.local');
   const extraFields=lineUserId?{lineUserId}:{};
+  // 🐛 เจอ 2026-08-18 (Android, "คนละ username เชื่อม LINE เดียวกันได้อยู่"): ai_proxy.py's
+  // line_login() mode=link กันซ้ำแล้ว (เช็ค lineUserId ก่อนเขียน) แต่ mode=login (ปุ่ม "เข้าสู่ระบบ
+  // ด้วย LINE" หน้า login) เขียนบัญชีใหม่ผ่าน client ตรงนี้ทั้งหมด ไม่ผ่าน endpoint นั้นเลย —
+  // email เดิม (บรรทัดบน) เป็น synthetic ที่ derive จาก fbUser.uid ('line:'+lineUserId) จะ match
+  // บัญชีเก่าได้ก็ต่อเมื่อบัญชีนั้นถูกสร้างผ่าน mode=login มาแต่แรกเหมือนกันเท่านั้น — ถ้าบัญชีเดิม
+  // สร้างด้วย provider อื่น (password/Google/Apple) แล้วค่อย "เชื่อมต่อ LINE" ทีหลังผ่าน mode=link
+  // (ซึ่งไม่แตะ uid/email เลย) email lookup ด้านล่างจะหาไม่เจอ แล้วตกไปสร้างบัญชีใหม่ซ้อนที่มี
+  // lineUserId เดียวกันแบบเงียบๆ — เพิ่มเช็คแยกด้วย lineUserId ตรงๆ ก่อน ถ้าเจอบัญชีอื่นถืออยู่แล้ว
+  // (uid ไม่ตรง) ให้ปฏิเสธแบบเดียวกับ Google/Apple email collision (_rejectOAuthCollision รองรับ
+  // provider 'line' อยู่แล้ว แค่ไม่เคยมีทางเข้าถึงจุดนี้มาก่อนเพราะ email lookup พลาดไปก่อน)
+  if(lineUserId){
+    const lineSnap=await _fs.collection('members').where('lineUserId','==',lineUserId).limit(1).get();
+    if(!lineSnap.empty){
+      const lineMemberData=lineSnap.docs[0].data();
+      if((lineMemberData.uid||'') && lineMemberData.uid!==fbUser.uid){ await _rejectOAuthCollision(lineMemberData); return; }
+    }
+  }
   const snap=await _fs.collection('members').where('email','==',email).limit(1).get();
   if(!snap.empty){
     // มีบัญชีแล้ว — login
