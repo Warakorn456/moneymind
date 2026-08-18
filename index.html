@@ -16355,9 +16355,6 @@ function _showWelcomeOnboard(){
   var dragging=false, didDrag=false;
   var startX=0, startY=0, origLeft=0, origTop=0;
 
-  function savePos(p){ try{ localStorage.setItem('mm_fab_pos',JSON.stringify(p)); }catch(e){} }
-  function loadPos(){ try{ return JSON.parse(localStorage.getItem('mm_fab_pos')); }catch(e){ return null; } }
-
   function setPos(x,y,animate){
     if(!fab) return;
     var W=window.innerWidth, H=window.innerHeight;
