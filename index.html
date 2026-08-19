@@ -13020,6 +13020,11 @@ renderSettings = function(){
 async function renderLineConnectSection(){
   var el = document.getElementById('pg-settings');
   if(!el) return;
+  // เดิม #pg-settings ไม่ถูก innerHTML reset ทั้งก้อนตอน renderSettings() รันซ้ำ (แค่กรอกค่าฟิลด์
+  // เดิม ดู renderSettings() บรรทัด ~7848) — ต้องลบการ์ดเก่าก่อนเสมอ กันสร้างซ้อนทุกครั้งที่มี action
+  // อื่นในหน้าตั้งค่าเรียก renderSettings() ซ้ำ (เช่น saveKey/savePin ฯลฯ)
+  var oldCard = document.getElementById('line-connect-card');
+  if(oldCard) oldCard.remove();
   var boxId = 'line-connect-box';
   el.insertAdjacentHTML('beforeend','<div class="set-card" id="line-connect-card" style="margin-top:16px"><div class="set-title"><i class="fab fa-line" style="color:#06C755;margin-right:8px"></i>เชื่อมต่อ LINE</div><div id="'+boxId+'" style="font-size:13px;color:var(--muted)">กำลังโหลด...</div></div>');
   if(!_fs||!currentUser) return;
