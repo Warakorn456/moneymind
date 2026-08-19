@@ -852,6 +852,8 @@ $env:PATH += ";C:\Users\warakorn\AppData\Local\Google\Cloud SDK\google-cloud-sdk
 
 ## n8n Workflows
 
+**⚠️ ทั้ง 6 workflows ปิด (active=0) หมดแล้ว ณ 2026-08-19 — n8n เองก็ไม่ได้รันอยู่บนโน้ตบุ๊กเลย** (ต้องสั่ง `npx n8n` เองถึงจะทำงาน ไม่ใช่ background service; `localhost:5678` connection refused ตอนตรวจ) audit พบว่า 4 ตัวถูกแทนที่ด้วย Python/VM scripts ไปแล้วตามที่บันทึกไว้ (budget-alert-01/mm-gemini-monthly-01/mm-notebooklm-01 — ปิดมาก่อนหน้านี้แล้ว) ส่วนอีก 2 ตัวที่เหลือเช็ค execution history ตรงจาก SQLite (`~/.n8n/database.sqlite`) แล้วพบว่า **ใช้งานจริงไม่ได้ทั้งคู่**: `mm-gemini-stock-01` (Daily Stock AI) รันจริง 10 ครั้ง **error 100%** (`ENOTFOUND query1.finance.yahoo.com` ที่ node "Fetch Stock Prices", ครั้งล่าสุดที่พยายาม 2026-07-20) และ `y6gGC6tBWqIeOKbR` (Gmail Import) **ไม่เคยรันเลยสักครั้งในประวัติศาสตร์ทั้งหมด** (0 execution) — user ยืนยันให้ปิดทั้งคู่ (แนะนำ, ไม่ลองแก้) เพราะไม่มีอะไรพึ่ง n8n จริงอยู่แล้ว ตอนนี้ระบบทั้งหมดพึ่ง Python cron บน VM ล้วน (ยืนยัน `cron_health.py` บน VM รายงาน "All cron jobs healthy" ครอบคลุมทั้ง ~30 สคริปต์). แก้ด้วยการ `UPDATE workflow_entity SET active=0` ตรงบน SQLite (n8n ไม่ได้รันอยู่ ไม่มี in-memory cron ให้ต้อง restart กัน) หลัง backup ไฟล์ (`database.sqlite.bak-20260819-151024`) — **ตารางด้านล่างเก็บไว้เป็นเอกสารอ้างอิงประวัติ/pipeline logic เท่านั้น ไม่ใช่ระบบที่ทำงานอยู่จริงอีกต่อไป** ถ้าจะเปิดใช้ใหม่ในอนาคตต้องแก้ node Yahoo Finance (endpoint เปลี่ยน/โดนบล็อก) และเช็ค Gmail OAuth credential (`v7EQvnFH4mbTwfHL`) ว่ายังไม่หมดอายุก่อนเสมอ
+
 ### "MoneyMind Gmail Import" (Workflow ID: `y6gGC6tBWqIeOKbR`)
 - **Pipeline:** Gmail Trigger → Get Gmail Message → Parse Bank Email → Write to Google Sheets
 - **Sheet/Tab:** "PendingTx" — columns: `id, bank, amount, type, desc, date, raw, status, ts`
