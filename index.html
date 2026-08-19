@@ -3209,6 +3209,9 @@ function enterApp(){
 function _enterAppReal(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-root').style.display='flex';
+  // กันปุ่มแชทลอยเด้งไปมุมซ้ายบน (viewport อาจยังไม่ settle ตอน init() เดิมรันตั้งแต่ page load) —
+  // เรียกซ้ำตรงจุดที่รับประกันว่า viewport นิ่งแล้วแน่นอน ดู window._repositionChatFab ~16516
+  setTimeout(function(){ if(typeof window._repositionChatFab==='function') window._repositionChatFab(); }, 0);
   // show username in sidebar
   const ui=document.getElementById('sidebar-user-info');
   const un=document.getElementById('sidebar-username');
@@ -16513,6 +16516,20 @@ function _showWelcomeOnboard(){
 
   document.addEventListener('DOMContentLoaded', init);
   setTimeout(init, 500);
+
+  // 🐛 เจอ 2026-08-19 (จาก user ส่ง screenshot: ปุ่มเด้งไปมุมซ้ายบนทับ sidebar ทุกครั้งที่เข้าระบบ)
+  // — `init()`'s ตำแหน่งเริ่มต้นอ่าน window.innerWidth/innerHeight ตอน DOMContentLoaded/500ms หลัง
+  // page load ซึ่งเป็นจังหวะที่ WebView (cacheEnabled=false โหลดสดทุกครั้งที่เปิดแอป) viewport อาจยัง
+  // ไม่ settle ขนาดจริง (gotcha เดิมที่คอมเมนต์ resize handler ด้านบนบันทึกไว้แล้วว่าเคยเจอปัญหาเดียวกัน)
+  // — ถ้า W/H อ่านได้เล็กผิดปกติตอนนั้น setPos()'s clamp จะได้ผลลัพธ์ใกล้ MARGIN ทั้ง 2 แกน = มุมซ้ายบน
+  // แก้เพิ่มจุดยืนยันตำแหน่งซ้ำที่แม่นยำกว่าเดิม — เรียกจาก _enterAppReal() ตอน login เสร็จจริง
+  // (viewport รับประกันว่านิ่งแล้วแน่นอนตอนนั้น) ไม่แตะ event listener ใดๆ เลย ไม่กระทบการลากขยับ
+  window._repositionChatFab=function(){
+    fab = fab || document.querySelector('.chat-fab');
+    if(!fab) return;
+    var fw=fab.offsetWidth||56, fh=fab.offsetHeight||56;
+    setPos(window.innerWidth-fw-MARGIN, window.innerHeight-fh-MARGIN, false);
+  };
 })();
 
 // ══════════════════════════════════════════
