@@ -17546,8 +17546,8 @@ setTimeout(function(){ if(typeof _gmailStartPoll==='function') _gmailStartPoll()
 
   // Patch doLogout — immediately hide admin nav on logout
   var _navSortDoLogout=doLogout;
-  doLogout=function(){
-    _navSortDoLogout();
+  doLogout=function(skipConfirm){
+    _navSortDoLogout(skipConfirm);
     // after logout currentUser=null, so admin nav must be hidden
     setTimeout(_syncAdminNav, 0);
   };
