@@ -3596,6 +3596,9 @@ function doLogout(){
   fsStop();
   localStorage.removeItem(SESS_KEY);
   currentUser=null;
+  // reset สถานะ LINE ที่ค้างไว้ตั้งแต่บัญชีนี้ — กันโชว์ค้างข้ามบัญชีตอน login ใหม่ (ดู
+  // window._resetLineBannerStatus ~16736 สำหรับรายละเอียดบั๊ก)
+  if(typeof window._resetLineBannerStatus==='function') window._resetLineBannerStatus();
   DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
   document.getElementById('app-root').style.display='none';
   document.getElementById('login-screen').style.display='flex';
@@ -16734,6 +16737,14 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
     _lineBannerStatus=false; _paintSidebarLineStatus();
     _renderLineBanner(); // ยกเลิกการเชื่อมต่อแล้ว → การ์ดชวนเชื่อมต่อควรกลับมา (ถ้ายังไม่เคยกดปิด)
   };
+  // 🐛 เจอ 2026-08-19 (จาก user สลับบัญชีแล้วสถานะ LINE ค้างข้ามบัญชี — เห็นบัญชีที่ไม่เคยเชื่อมต่อ
+  // ขึ้น "เชื่อมต่อแล้ว✓" ผิดๆ, กดยกเลิกบนบัญชีนั้นแล้วสลับกลับบัญชีหลักเจอว่าดูเหมือนถูกยกเลิกไปด้วย
+  // ทั้งที่ Firestore ไม่ได้ถูกแก้ผิดบัญชีเลย): `_lineBannerStatus` เป็น module-level variable ตัวเดียว
+  // ใช้ร่วมกันทุก session — `doLogout()` ไม่เคย reset กลับเป็น null เพราะแอปเป็น SPA ไม่ reload หน้า
+  // ตอนสลับบัญชี ทำให้ `renderDash()`'s guard `if(_lineBannerStatus===null){...fetch...}` ข้ามการเช็ค
+  // สถานะจริงของบัญชีใหม่ไปเลย เอาค่าที่ค้างจากบัญชีก่อนหน้ามาโชว์แทน — เรียกจาก doLogout() ให้บังคับ
+  // fetch สถานะจริงใหม่เสมอทุกครั้งที่ login บัญชีถัดไป
+  window._resetLineBannerStatus=function(){ _lineBannerStatus=null; };
 
   // เรียกจาก _handleLineCallback() (mode='link') ทันทีหลังเชื่อมต่อสำเร็จ
   // friendFlag!==true → เข้าสถานะเตือน ไม่ใช่ "สำเร็จเรียบร้อย" (รวม false และ null/undefined
