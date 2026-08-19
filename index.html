@@ -13005,21 +13005,23 @@ function renderChangePasswordSection(){
 }
 
 // ══════════════════════════════════════════
-//  LINE CONNECT — patch renderProfile ต่ออีกชั้น (เพิ่ม 2026-08-11)
+//  LINE CONNECT — patch renderSettings (ย้ายมาจาก renderProfile 2026-08-19 ตามคำขอ user)
 // ══════════════════════════════════════════
 // ปุ่ม "เชื่อมต่อ LINE" แยกจากปุ่ม login หน้าแรก — สำหรับ user ที่ login อยู่แล้ว (password/Google/Apple)
 // ให้ผูก lineUserId เข้าบัญชีปัจจุบันได้โดยไม่ต้องสร้างบัญชีใหม่ซ้อน (ดู tryLineLogin()/mode='link')
-const _origRenderProfileLine = renderProfile;
-renderProfile = function(){
-  _origRenderProfileLine();
+// เดิมอยู่หน้า "ประวัติส่วนตัว" (profile-content) — ย้ายมาหน้า "ตั้งค่า" (pg-settings) ให้อยู่ใกล้
+// การตั้งค่าบัญชี/การเชื่อมต่ออื่นๆ (Email, Google) ที่ย้ายมารวมกันที่นี่แล้ว
+const _origRenderSettingsLine = renderSettings;
+renderSettings = function(){
+  _origRenderSettingsLine();
   renderLineConnectSection();
 };
 
 async function renderLineConnectSection(){
-  var el = document.getElementById('profile-content');
+  var el = document.getElementById('pg-settings');
   if(!el) return;
   var boxId = 'line-connect-box';
-  el.innerHTML += '<div class="prof-section" style="margin-top:16px"><div class="set-title"><i class="fab fa-line" style="color:#06C755;margin-right:8px"></i>เชื่อมต่อ LINE</div><div id="'+boxId+'" style="font-size:13px;color:var(--muted)">กำลังโหลด...</div></div>';
+  el.insertAdjacentHTML('beforeend','<div class="set-card" id="line-connect-card" style="margin-top:16px"><div class="set-title"><i class="fab fa-line" style="color:#06C755;margin-right:8px"></i>เชื่อมต่อ LINE</div><div id="'+boxId+'" style="font-size:13px;color:var(--muted)">กำลังโหลด...</div></div>');
   if(!_fs||!currentUser) return;
   try{
     var doc = await _fs.collection('members').doc(currentUser).get();
