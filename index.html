@@ -3672,9 +3672,19 @@ async function _handleOAuthResult(result, providerName, lineUserId){
     }
   }
   const snap=await _fs.collection('members').where('email','==',email).limit(1).get();
-  if(!snap.empty){
+  let memberData=snap.empty?null:snap.docs[0].data();
+  // เชื่อมต่อผ่าน currentUser.linkWithPopup/linkWithRedirect (ฟีเจอร์ "เชื่อมต่อ Gmail" ในตั้งค่า) ไม่แตะ
+  // uid/email หลักของบัญชีเดิมเลย — บัญชี password/PIN ส่วนใหญ่ไม่เคยตั้ง recovery email (ดู
+  // ensureAuthForUser ด้านบน) ทำให้ email lookup ด้านบนหาไม่เจอทั้งที่ uid ตรงกับบัญชีเดิมอยู่แล้ว
+  // เช็คซ้ำด้วย uid ก่อนตกไปสร้างบัญชีใหม่ กันสร้างบัญชีซ้อนเงียบๆ (ดู [[project_google_account_linking]])
+  if(!memberData){
+    try{
+      const uidSnap=await _fs.collection('members').where('uid','==',fbUser.uid).limit(1).get();
+      if(!uidSnap.empty) memberData=uidSnap.docs[0].data();
+    }catch(e){}
+  }
+  if(memberData){
     // มีบัญชีแล้ว — login
-    const memberData=snap.docs[0].data();
     // uid ที่ผูกไว้ไม่ตรงกับ session ที่เพิ่ง login = คนละบัญชี/คนละวิธี → ปฏิเสธ
     if((memberData.uid||'') && memberData.uid!==fbUser.uid){ await _rejectOAuthCollision(memberData); return; }
     currentUser=memberData.username;
