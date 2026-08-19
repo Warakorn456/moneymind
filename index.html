@@ -3394,7 +3394,7 @@ function _startHeartbeat(){
   _heartbeatTimer=setInterval(_sendHeartbeat,5*60*1000);
 }
 function _sendHeartbeat(){
-  if(!_fs||!currentUser) return;
+  if(!_fs||!currentUser||window._usernameRenameInProgress) return;
   const isOwner=_ENC&&currentUser===_ENC.user;
   _fs.collection('members').doc(currentUser).set({
     lastSeen:firebase.firestore.FieldValue.serverTimestamp(),
