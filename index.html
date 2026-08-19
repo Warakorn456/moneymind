@@ -3877,6 +3877,123 @@ async function tryGoogleLogin(){
   allBtns.forEach(b=>{ b.disabled=false; b.style.opacity=''; });
 }
 
+// ── Gmail (Google) Account Linking — หน้าตั้งค่า ──
+// ต่างจาก LINE (ไม่ใช่ Firebase provider จริง ต้องมี backend แลก custom token) Google เป็น native
+// Firebase Auth provider อยู่แล้ว (login ด้านบนใช้อยู่) เลยผูกบัญชีได้ตรงๆ ด้วย currentUser.linkWithPopup/
+// linkWithRedirect (เพิ่ม google.com เป็น provider ที่สองให้ Firebase user ปัจจุบัน โดย uid ไม่เปลี่ยน) —
+// Firebase เช็ค duplicate ให้เอง (auth/credential-already-in-use) ไม่ต้อง query Firestore เช็คเองแบบ LINE
+// เว็บเบราว์เซอร์เท่านั้น — บล็อกในแอปมือถือ/in-app browser เหมือน tryGoogleLogin() เดิม
+async function googleLinkAccount(){
+  const msgEl=document.getElementById('google-link-msg');
+  if(msgEl){ msgEl.style.color=''; msgEl.textContent=''; }
+  if(!currentUser || !_auth || !_auth.currentUser){
+    if(msgEl){ msgEl.style.color='#ef4444'; msgEl.textContent='ยังไม่ได้เชื่อมต่อ Cloud กรุณาลองใหม่หรือเข้าสู่ระบบใหม่อีกครั้ง'; }
+    return;
+  }
+  if(window._isAndroidApp||window._isIOSApp||_isInAppBrowser()){
+    if(msgEl){ msgEl.style.color='#f59e0b'; msgEl.textContent='เชื่อมต่อ Gmail ได้เฉพาะผ่านเว็บเบราว์เซอร์เท่านั้น (เปิดผ่าน Chrome/Safari)'; }
+    return;
+  }
+  const btn=document.getElementById('google-link-btn');
+  if(btn){ btn.disabled=true; btn.style.opacity='.5'; }
+  const provider=new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({prompt:'select_account'});
+  const _isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  try{
+    if(_isMobile){
+      localStorage.setItem('mm_google_link_pending','1');
+      if(msgEl) msgEl.textContent='กำลังนำไปยัง Google...';
+      await _auth.currentUser.linkWithRedirect(provider);
+      return;
+    }
+    await _auth.currentUser.linkWithPopup(provider);
+    toast('เชื่อมต่อ Gmail สำเร็จ','success');
+    renderGoogleLinkSettings();
+    return;
+  }catch(err){
+    localStorage.removeItem('mm_google_link_pending');
+    if(err.code==='auth/popup-blocked'||err.code==='auth/operation-not-supported-in-this-environment'){
+      try{
+        localStorage.setItem('mm_google_link_pending','1');
+        if(msgEl) msgEl.textContent='กำลังนำไปยัง Google...';
+        await _auth.currentUser.linkWithRedirect(provider);
+        return;
+      }catch(redirErr){
+        localStorage.removeItem('mm_google_link_pending');
+        if(msgEl){ msgEl.style.color='#ef4444'; msgEl.textContent='เกิดข้อผิดพลาด: '+(redirErr.code||redirErr.message); }
+      }
+    } else if(err.code==='auth/credential-already-in-use'||err.code==='auth/email-already-in-use'){
+      if(msgEl){ msgEl.style.color='#ef4444'; msgEl.textContent='บัญชี Gmail นี้เชื่อมกับบัญชี MoneyMind อื่นอยู่แล้ว'; }
+    } else if(err.code==='auth/popup-closed-by-user'||err.code==='auth/cancelled-popup-request'){
+      // user ปิด popup เอง ไม่ต้อง error
+    } else if(err.code==='auth/network-request-failed'){
+      if(msgEl){ msgEl.style.color='#ef4444'; msgEl.textContent='ไม่มีการเชื่อมต่ออินเทอร์เน็ต'; }
+    } else {
+      if(msgEl){ msgEl.style.color='#ef4444'; msgEl.textContent='เกิดข้อผิดพลาด: '+(err.code||err.message||''); }
+      console.error('[google link]',err);
+    }
+  }
+  if(btn){ btn.disabled=false; btn.style.opacity=''; }
+}
+
+async function googleUnlinkAccount(){
+  if(!_auth||!_auth.currentUser) return;
+  if(!confirm('ยกเลิกการเชื่อมต่อ Gmail? หลังจากนี้จะเข้าสู่ระบบผ่าน Gmail นี้ไม่ได้อีก (ยังใช้ username/password เดิมได้ปกติ)')) return;
+  try{
+    await _auth.currentUser.unlink('google.com');
+    toast('ยกเลิกการเชื่อมต่อ Gmail แล้ว','success');
+  }catch(err){
+    toast('ยกเลิกไม่สำเร็จ: '+(err.code||err.message||''),'error');
+  }
+  renderGoogleLinkSettings();
+}
+
+// เรียกจาก timer ที่ไม่ gate ด้วย currentUser (ต่างจาก _checkGoogleRedirectResult เดิมที่ใช้ตอน login
+// เท่านั้น) เพราะตอน link redirect กลับมา ผู้ใช้ login อยู่แล้วเสมอ (currentUser ตั้งไว้ก่อน redirect ออกไป)
+async function _checkGoogleLinkRedirectResult(){
+  if(!localStorage.getItem('mm_google_link_pending')) return;
+  localStorage.removeItem('mm_google_link_pending');
+  if(!_auth) return;
+  try{
+    const result=await _auth.getRedirectResult();
+    if(result&&result.user) toast('เชื่อมต่อ Gmail สำเร็จ','success');
+  }catch(err){
+    if(err.code==='auth/credential-already-in-use'||err.code==='auth/email-already-in-use'){
+      toast('บัญชี Gmail นี้เชื่อมกับบัญชี MoneyMind อื่นอยู่แล้ว','error');
+    } else if(err.code&&err.code!=='auth/no-current-user'){
+      toast('เชื่อมต่อ Gmail ไม่สำเร็จ: '+err.code,'error');
+    }
+  }
+  const settingsPg=document.getElementById('pg-settings');
+  if(settingsPg && settingsPg.style.display!=='none') renderGoogleLinkSettings();
+}
+
+function renderGoogleLinkSettings(){
+  const cont=document.getElementById('pg-settings');
+  if(!cont||!currentUser) return;
+  const old=document.getElementById('google-link-card');
+  if(old) old.remove();
+  const inApp=window._isAndroidApp||window._isIOSApp||_isInAppBrowser();
+  const linked=!!(_auth&&_auth.currentUser&&_auth.currentUser.providerData&&_auth.currentUser.providerData.some(p=>p.providerId==='google.com'));
+  const linkedEmail=linked?((_auth.currentUser.providerData.find(p=>p.providerId==='google.com')||{}).email||''):'';
+  let html='<div class="set-card" id="google-link-card" style="margin-top:16px">'
+    +'<div class="set-title"><i class="fab fa-google" style="color:#ea4335"></i> เชื่อมต่อ Gmail (Google)</div>'
+    +'<div style="font-size:13px;color:var(--muted);margin-bottom:12px">เชื่อมบัญชี Gmail เข้ากับบัญชี MoneyMind นี้ เพื่อให้กด "เข้าสู่ระบบด้วย Google" ที่หน้า login แล้วเข้าบัญชีเดิมได้เลย</div>';
+  if(inApp){
+    html+='<div style="font-size:13px;color:#f59e0b"><i class="fas fa-exclamation-triangle"></i> เชื่อมต่อ Gmail ได้เฉพาะผ่านเว็บเบราว์เซอร์เท่านั้น (เปิด app.moneymindth.com ผ่าน Chrome/Safari)</div>';
+  } else if(linked){
+    html+='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">'
+      +'<div style="font-size:13px"><i class="fas fa-check-circle" style="color:#10b981"></i> เชื่อมต่อแล้ว'+(linkedEmail?(': <strong>'+_escHtml(linkedEmail)+'</strong>'):'')+'</div>'
+      +'</div>'
+      +'<button class="btn btn-ghost" id="google-link-btn" onclick="googleUnlinkAccount()"><i class="fas fa-link-slash"></i> ยกเลิกการเชื่อมต่อ</button>';
+  } else {
+    html+='<button class="btn btn-primary" id="google-link-btn" onclick="googleLinkAccount()"><i class="fab fa-google"></i> เชื่อมต่อ Gmail</button>';
+  }
+  html+='<div id="google-link-msg" style="font-size:12px;margin-top:8px;min-height:16px"></div>'
+    +'</div>';
+  cont.insertAdjacentHTML('beforeend',html);
+}
+
 async function tryAppleLogin(){
   const errEl=_activeLoginErr();
   const allBtns=[...document.querySelectorAll('.google-btn,.apple-btn')];
