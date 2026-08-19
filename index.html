@@ -3594,8 +3594,8 @@ async function tryRegister(){
 }
 
 // ── Logout ──
-function doLogout(){
-  if(!confirm('ออกจากระบบ?')) return;
+function doLogout(skipConfirm){
+  if(!skipConfirm && !confirm('ออกจากระบบ?')) return;
   fsStop();
   localStorage.removeItem(SESS_KEY);
   currentUser=null;
