@@ -2911,6 +2911,7 @@ function _checkDbSizeWarn(dbJson){
   toast('⚠️ '+tr('db_size_warn'),'error',8000);
 }
 async function fsSave(){
+  if(window._usernameRenameInProgress) return;
   if(!currentUser||!_fs){ setSyncStatus('error'); return; }
   try{
     setSyncStatus('syncing');
