@@ -13113,6 +13113,150 @@ function lineDisconnectAccount(){
     .catch(function(e){ toast('เกิดข้อผิดพลาด: '+e.message,'error'); });
 }
 
+// ══════════════════════════════════════════
+//  CHANGE USERNAME — patch renderSettings (เพิ่ม 2026-08-19)
+// ══════════════════════════════════════════
+// username เป็น Firestore document ID ของทั้ง userdata/{username} และ members/{username} —
+// Firestore ไม่มีทาง "rename" doc ID ตรงๆ ต้อง copy ไป doc ใหม่แล้วลบของเก่า ทำผ่าน
+// runTransaction() เดียวให้ atomic ทั้ง 2 collection (pattern เดียวกับ fsSave() ~2913)
+// ไม่รองรับบัญชี owner (username hardcode อยู่ใน _ENC.user + ผูกกับสคริปต์ VM ~30 ตัว —
+// คนละสเกลจาก feature นี้) — บล็อกแบบเดียวกับ renderChangePasswordSection() ~12988
+const _origRenderSettingsUname = renderSettings;
+renderSettings = function(){
+  _origRenderSettingsUname();
+  renderUsernameChangeSettings();
+};
+
+function renderUsernameChangeSettings(){
+  var cont = document.getElementById('pg-settings');
+  if(!cont || !currentUser) return;
+  var oldCard = document.getElementById('username-change-card');
+  if(oldCard) oldCard.remove();
+  var isOwner = currentUser && _ENC && currentUser.toLowerCase()===(_ENC.user||'').toLowerCase();
+  var html;
+  if(isOwner){
+    html = '<div class="set-card" id="username-change-card" style="margin-top:16px">'
+      +'<div class="set-title"><i class="fas fa-user-pen" style="color:#a78bfa"></i> เปลี่ยนชื่อผู้ใช้</div>'
+      +'<div style="font-size:13px;color:var(--muted);padding:10px 0">บัญชีหลักไม่รองรับการเปลี่ยนชื่อผู้ใช้จากหน้านี้</div>'
+      +'</div>';
+  } else {
+    html = '<div class="set-card" id="username-change-card" style="margin-top:16px">'
+      +'<div class="set-title"><i class="fas fa-user-pen" style="color:#a78bfa"></i> เปลี่ยนชื่อผู้ใช้</div>'
+      +'<div style="font-size:13px;color:var(--muted);margin-bottom:12px">ชื่อผู้ใช้ปัจจุบัน: <strong>'+_escHtml(currentUser)+'</strong> — เปลี่ยนแล้วต้องเข้าสู่ระบบใหม่ด้วยชื่อใหม่</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">'
+      +'<div style="flex:1;min-width:200px"><label class="flabel">ชื่อผู้ใช้ใหม่ (a-z, 0-9, _ ความยาว 3-20)</label>'
+      +'<input type="text" id="uname-change-inp" class="finput" placeholder="ชื่อผู้ใช้ใหม่" maxlength="20"></div>'
+      +'<button class="btn btn-primary" id="uname-change-btn" onclick="doUsernameChange()" style="height:40px"><i class="fas fa-save"></i> เปลี่ยนชื่อผู้ใช้</button>'
+      +'</div>'
+      +'<div id="uname-change-msg" style="font-size:12px;margin-top:8px;min-height:16px"></div>'
+      +'</div>';
+  }
+  cont.insertAdjacentHTML('beforeend', html);
+}
+
+async function doUsernameChange(){
+  var msgEl = document.getElementById('uname-change-msg');
+  var btn = document.getElementById('uname-change-btn');
+  var setMsg = function(text, color){ if(msgEl){ msgEl.style.color=color||''; msgEl.textContent=text; } };
+  setMsg('');
+  var inp = document.getElementById('uname-change-inp');
+  var newUser = ((inp && inp.value) || '').trim().toLowerCase();
+  var oldUser = currentUser;
+  if(!newUser){ setMsg('กรุณากรอกชื่อผู้ใช้ใหม่','#ef4444'); return; }
+  if(!/^[a-z0-9_]{3,20}$/.test(newUser)){ setMsg('ชื่อผู้ใช้ต้องเป็น a-z, 0-9, _ ความยาว 3-20 ตัวอักษร','#ef4444'); return; }
+  if(newUser===oldUser){ setMsg('ชื่อนี้เป็นชื่อปัจจุบันอยู่แล้ว','#ef4444'); return; }
+  if(_ENC && newUser===(_ENC.user||'').toLowerCase()){ setMsg('ไม่สามารถใช้ชื่อนี้ได้','#ef4444'); return; }
+  var localUsers = getUsers();
+  if(localUsers.find(function(u){ return u.username===newUser; })){ setMsg('ชื่อนี้ถูกใช้งานแล้วบนเครื่องนี้','#ef4444'); return; }
+  if(!_fs || !_auth || !_auth.currentUser){ setMsg('ยังไม่ได้เชื่อมต่อ Cloud กรุณาลองใหม่หรือเข้าสู่ระบบใหม่อีกครั้ง','#ef4444'); return; }
+  if(!confirm('เปลี่ยนชื่อผู้ใช้เป็น "'+newUser+'"?\n\nระบบจะออกจากระบบให้คุณเข้าสู่ระบบใหม่ด้วยชื่อนี้ กรุณาจำชื่อใหม่ไว้ให้ดี — ไม่สามารถยกเลิกได้')) return;
+
+  if(btn){ btn.disabled=true; btn.style.opacity='.5'; }
+  window._usernameRenameInProgress = true;
+  // หยุด timer/listener พื้นหลังที่ยึด currentUser (เดิม) ไว้ — ไม่งั้นอาจเขียน/ฟัง doc เก่ากลับมา
+  // ระหว่างที่ transaction กำลังย้าย doc อยู่ (ดู _sendHeartbeat/fsSave guard flag ด้านบนของไฟล์)
+  clearInterval(_heartbeatTimer);
+  clearTimeout(_saveTimer);
+  fsStop();
+
+  var syntheticEmailChanged = false;
+  var wasSynthetic = _auth.currentUser.email === (oldUser+'@moneymind.local');
+  if(wasSynthetic){
+    try{
+      await _auth.currentUser.updateEmail(newUser+'@moneymind.local');
+      syntheticEmailChanged = true;
+    }catch(e){
+      window._usernameRenameInProgress = false;
+      if(btn){ btn.disabled=false; btn.style.opacity=''; }
+      var authErrMsg = (e.code==='auth/requires-recent-login')
+        ? 'กรุณาออกจากระบบแล้วเข้าสู่ระบบใหม่ก่อนเปลี่ยนชื่อผู้ใช้'
+        : (e.code==='auth/email-already-in-use')
+          ? 'ชื่อนี้ถูกใช้งานแล้ว'
+          : 'เกิดข้อผิดพลาด: '+(e.code||e.message||'');
+      setMsg(authErrMsg,'#ef4444');
+      return;
+    }
+  }
+
+  try{
+    await _renameFirestoreTransaction(oldUser, newUser);
+  }catch(e){
+    if(syntheticEmailChanged){
+      // Auth email เปลี่ยนไปแล้วแต่ Firestore ล้มเหลว — ลอง revert กลับก่อนเสมอ กันบัญชีค้าง
+      // อยู่ในสภาพที่ Auth กับ Firestore ไม่ตรงกัน (login ครั้งหน้าจะพัง)
+      try{
+        await _auth.currentUser.updateEmail(oldUser+'@moneymind.local');
+        alert('เปลี่ยนชื่อผู้ใช้ไม่สำเร็จ ('+(e.message||e.code||'')+') — ระบบคืนค่าเดิมให้แล้ว ลองใหม่อีกครั้งได้');
+      }catch(revertErr){
+        alert('เปลี่ยนชื่อผู้ใช้ไม่สำเร็จและคืนค่าเดิมไม่สำเร็จด้วย — กรุณาติดต่อทีมงานทันที (ชื่อเดิม: '+oldUser+', ชื่อใหม่ที่พยายามตั้ง: '+newUser+')');
+      }
+    } else {
+      var errMsg = (e.message==='USERNAME_TAKEN') ? 'ชื่อนี้ถูกใช้งานแล้ว' : 'เกิดข้อผิดพลาด: '+(e.message||e.code||'');
+      setMsg(errMsg,'#ef4444');
+    }
+    window._usernameRenameInProgress = false;
+    if(btn){ btn.disabled=false; btn.style.opacity=''; }
+    return;
+  }
+
+  // สำเร็จทั้งคู่ — migrate local state แล้วบังคับ login ใหม่ (ไม่ hot-swap currentUser สด เพราะ
+  // fsListen()/module state อื่นๆ ผูกกับบัญชีเดิมอยู่ ปลอดภัยกว่าให้ login ใหม่สะอาดๆ)
+  try{
+    var oldData = localStorage.getItem(userDataKey(oldUser));
+    if(oldData){ localStorage.setItem(userDataKey(newUser), oldData); localStorage.removeItem(userDataKey(oldUser)); }
+    var rec = localUsers.find(function(u){ return u.username===oldUser; });
+    if(rec){ rec.username = newUser; saveUsers(localUsers); }
+  }catch(e){}
+
+  doLogout(true);
+  var loginInp = document.getElementById('login-user');
+  if(loginInp) loginInp.value = newUser;
+  window._usernameRenameInProgress = false;
+  alert('เปลี่ยนชื่อผู้ใช้สำเร็จ! กรุณาเข้าสู่ระบบใหม่ด้วยชื่อผู้ใช้: '+newUser);
+}
+
+async function _renameFirestoreTransaction(oldUser, newUser){
+  var membersOldRef = _fs.collection('members').doc(oldUser);
+  var membersNewRef = _fs.collection('members').doc(newUser);
+  var userdataOldRef = _fs.collection('userdata').doc(oldUser);
+  var userdataNewRef = _fs.collection('userdata').doc(newUser);
+  await Promise.race([
+    _fs.runTransaction(async function(t){
+      // ต้องอ่านทั้งหมดก่อน write ใดๆ — ข้อบังคับของ Firestore transaction
+      var membersOldSnap = await t.get(membersOldRef);
+      var userdataOldSnap = await t.get(userdataOldRef);
+      var membersNewSnap = await t.get(membersNewRef);
+      if(membersNewSnap.exists) throw new Error('USERNAME_TAKEN');
+      var membersData = membersOldSnap.exists ? membersOldSnap.data() : {};
+      t.set(membersNewRef, Object.assign({}, membersData, {username:newUser}));
+      if(userdataOldSnap.exists) t.set(userdataNewRef, userdataOldSnap.data());
+      if(membersOldSnap.exists) t.delete(membersOldRef);
+      if(userdataOldSnap.exists) t.delete(userdataOldRef);
+    }),
+    _fsTimeout(20000)
+  ]);
+}
+
 function cpToggleVis(id, btn){
   var inp = document.getElementById(id); if(!inp) return;
   if(inp.type==='password'){ inp.type='text'; btn.innerHTML='<i class="fas fa-eye-slash"></i>'; }
