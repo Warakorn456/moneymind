@@ -9662,6 +9662,15 @@ var _lineCallbackTimer=setInterval(function(){
     try{ _handleLineCallback(); }catch(e){}
   }
 },200);
+// ตรวจ Google link redirect result เมื่อโหลดหน้า — เหมือน LINE ด้านบน ทำงานได้ทั้ง login/logout
+// ต่างจาก Google login timer (gate ด้วย !currentUser) เพราะ "เชื่อมต่อ Gmail" ใน Settings ต้อง login
+// อยู่แล้วเสมอตอน redirect ออกไป/กลับมา — ฟังก์ชันเองเป็น no-op เงียบๆ ถ้าไม่มี pending flag ค้างอยู่
+var _googleLinkCallbackTimer=setInterval(function(){
+  if(typeof firebase!=='undefined'&&firebase.auth){
+    clearInterval(_googleLinkCallbackTimer);
+    try{ _checkGoogleLinkRedirectResult(); }catch(e){}
+  }
+},200);
 
 function buildFinanceContext(){
   const now=new Date();
