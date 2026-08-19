@@ -3609,6 +3609,17 @@ function doLogout(){
 // ── Google Sign-in ──
 // helper: หา errEl จาก form ที่แสดงอยู่ตอนนี้
 function _activeLoginErr(){
+  // 🐛 เจอ 2026-08-19 (จาก user ทดสอบเชื่อมต่อ LINE ซ้ำบัญชี — ไม่เห็น error เลยทั้งที่ backend
+  // ปฏิเสธถูกต้องแล้ว, ยืนยันด้วย Firestore ตรงว่าไม่มี duplicate เกิดขึ้นจริง): เดิมเช็คแค่ว่า
+  // #form-login มี style.display!=='none' ของตัวเอง — แต่ enterApp()/_enterAppReal() ซ่อนแค่
+  // #login-screen (ancestor) ไม่เคยแตะ #form-login โดยตรงเลย ทำให้ฟังก์ชันนี้คืนค่า #login-err
+  // (element จริงที่มีอยู่ใน DOM แต่ถูกซ่อนอยู่ลึกเพราะ ancestor display:none) แม้ตอน login อยู่แล้ว
+  // เต็มตัวก็ตาม — _handleLineCallback()'s mode='link' catch block เจอ errEl ไม่เป็น null เลยเขียน
+  // ข้อความปฏิเสธลง element ที่มองไม่เห็นแทนที่จะ fallback ไป toast() — user เห็นว่า "ไม่มีอะไรเกิดขึ้น"
+  // เข้าใจผิดว่าเชื่อมต่อสำเร็จ. แก้: เช็ค #login-screen เองก่อนเสมอ ถ้าไม่ได้แสดงอยู่ (login แล้ว)
+  // คืน null ทันที ให้ caller ทุกจุด fallback ไป toast() ที่มองเห็นจริง
+  const screen=document.getElementById('login-screen');
+  if(!screen||screen.style.display==='none') return null;
   const forms=['form-login','form-register','form-forgot'];
   for(const id of forms){
     const el=document.getElementById(id);
