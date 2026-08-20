@@ -9,14 +9,14 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/icon.png",
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0d0d1a"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.moneymind.th",
-      "buildNumber": "21",
+      "buildNumber": "23",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -74,6 +74,14 @@
         {
           "icon": "./assets/adaptive-icon.png",
           "color": "#7c3aed"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#0d0d1a"
         }
       ],
       "./withPodfileModularHeaders",

@@ -9,6 +9,7 @@ import * as Notifications from 'expo-notifications';
 import * as StoreReview from 'expo-store-review';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
+import * as SplashScreen from 'expo-splash-screen';
 import {
   GoogleSignin,
   statusCodes,
@@ -118,11 +119,20 @@ async function launchedOk(fn: () => Promise<unknown>): Promise<boolean> {
 const GOOGLE_WEB_CLIENT_ID = '668138190451-6nufstl3plvt62lf64ianq8ffa3qb1kh.apps.googleusercontent.com';
 const GOOGLE_IOS_CLIENT_ID = '668138190451-j0uc44mu6jhke92tl2njsdgbcb0erqo6.apps.googleusercontent.com';
 
-GoogleSignin.configure({
-  webClientId: GOOGLE_WEB_CLIENT_ID,
-  iosClientId: GOOGLE_IOS_CLIENT_ID,
-  offlineAccess: false,
-});
+// ห่อ try/catch (เพิ่ม 2026-08-19) — เดิมเรียกตรงๆ ที่ module top-level: ถ้า native module
+// นี้ throw ตอน evaluate (เช่น native ยัง link ไม่เสร็จ/provisioning ผิด) ทั้ง JS bundle จะ
+// fail ทันทีตั้งแต่ import ก่อนที่ WebApp component หรืออะไรจะมีโอกาส render เลยแม้แต่เฟรมเดียว
+// — อาการจะดูเหมือน "แอปค้าง/จอว่างตั้งแต่เปิด" ซึ่งตรงกับ Apple 2.1(a) "stuck at splash screen"
+// เป๊ะๆ ถ้าเกิดขึ้นจริง ไม่คุ้มเสี่ยงปล่อยให้ throw ขึ้นไปทำลาย module ทั้งไฟล์เพื่อฟีเจอร์เดียว
+try {
+  GoogleSignin.configure({
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+    iosClientId: GOOGLE_IOS_CLIENT_ID,
+    offlineAccess: false,
+  });
+} catch (e) {
+  console.log('[MM-GOOGLE-CONFIGURE] failed', String(e));
+}
 
 // บอก web app ว่ากำลังรันบนแพลตฟอร์มไหน — เดิม hardcode _isAndroidApp=true ทั้ง 2 แพลตฟอร์ม
 // ทำให้ฝั่ง iOS คิดว่าตัวเองเป็น Android เสมอ (ปุ่ม Sign in with Apple ใน index.html
@@ -292,6 +302,39 @@ export default function WebApp() {
     }
   }, []);
 
+  // Safety-net รอบที่ 2 (เพิ่ม 2026-08-19 หลัง Apple reject 1.3.9/build 21 ด้วยเหตุผลเดิมอีกครั้ง
+  // "app stuck at the splash screen") — watchdog เดิมด้านบน (`handleLoadEnd`) เริ่มนับ 15 วิ
+  // แค่ตอน onLoadEnd ยิงแล้วเท่านั้น ถ้า WebView เองไม่เคยไปถึง onLoadEnd เลย (initial request
+  // ช้า/ค้าง — ยิ่งเสี่ยงขึ้นหลังปิด cacheEnabled ที่ต้องโหลด index.html ทั้งไฟล์สดจากเน็ตใหม่
+  // ทุกครั้งที่เปิดแอป ไม่มี HTTP cacheช่วยเลย) ผู้ใช้จะเห็น LoadingBrand+spinner ค้างถาวรไม่มี
+  // ทางออกเลยสักทาง เพราะ watchdog เดิมยังไม่เริ่มนับด้วยซ้ำ — นี่คือช่องโหว่ตัวจริงที่ทำให้
+  // Apple reviewer เจอ "stuck at splash" อีกครั้งทั้งที่มี watchdog อยู่แล้ว 1 ตัว
+  const mountWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearMountWatchdog = useCallback(() => {
+    if (mountWatchdogRef.current) {
+      clearTimeout(mountWatchdogRef.current);
+      mountWatchdogRef.current = null;
+    }
+  }, []);
+
+  // arm ใหม่ทุกครั้งที่ WebView (re)mount จริง (ดู useEffect ผูกกับ webViewKey ด้านล่าง) —
+  // ใช้ functional setLoading เพื่ออ่านค่า loading ล่าสุด ณ ตอน timer ยิงจริง กัน stale closure
+  // (เรียก setTimeout ตอน mount แต่ค่า loading ที่ capture ไว้ตอนนั้นอาจไม่ตรงกับตอนยิงจริง)
+  const armMountWatchdog = useCallback(() => {
+    clearMountWatchdog();
+    mountWatchdogRef.current = setTimeout(() => {
+      mountWatchdogRef.current = null;
+      setLoading((stillLoading) => {
+        if (stillLoading) {
+          SplashScreen.hideAsync().catch(() => {});
+          setLoadError('แอปโหลดไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+        }
+        return stillLoading;
+      });
+    }, 20000);
+  }, [clearMountWatchdog]);
+
   const handleRetry = useCallback(() => {
     clearWatchdog();
     appReadyRef.current = false;
@@ -369,6 +412,13 @@ export default function WebApp() {
   // (คือบั๊กที่ทำให้ Apple reject รอบสอง 2026-07-16: "app redirects to an error page")
   // จุดรีเซ็ต flag ที่ถูกต้องมีแค่ตอน WebView remount จริง: handleRetry / handleRenderProcessGone
   const handleLoadEnd = useCallback(() => {
+    // onLoadEnd ยิงแล้ว = ไม่ต้องพึ่ง mount watchdog อีกต่อไป (watchdog หลัง onLoadEnd ด้านล่าง
+    // รับช่วงต่อแทน — คนละ concern: mount watchdog เฝ้า "โหลดหน้าสำเร็จไหม", ตัวนี้เฝ้า
+    // "เว็บ render UI จริงไหมหลังโหลดหน้าสำเร็จแล้ว")
+    clearMountWatchdog();
+    // ปิด native OS splash screen ตรงนี้ (idempotent — เรียกซ้ำได้ ไม่มีผลถ้าโดนปิดไปแล้ว)
+    // ให้ hand-off จาก native splash ไปที่ LoadingBrand overlay (JS) เนียนสุดเท่าที่ทำได้
+    SplashScreen.hideAsync().catch(() => {});
     setLoading(false);
     clearWatchdog();
     if (!appReadyRef.current) {
@@ -378,9 +428,17 @@ export default function WebApp() {
         }
       }, 15000);
     }
-  }, [clearWatchdog]);
+  }, [clearWatchdog, clearMountWatchdog]);
 
   useEffect(() => () => clearWatchdog(), [clearWatchdog]);
+
+  // arm mount watchdog ทุกครั้งที่ WebView (re)mount จริง — ครอบคลุมทั้ง initial mount
+  // (webViewKey เริ่มที่ 0) และทุก remount (handleRetry/handleLoadError reset branch/
+  // handleRenderProcessGone ล้วนเพิ่ม webViewKey) โดยไม่ต้องเรียก arm ซ้ำมือทุกจุด
+  useEffect(() => {
+    armMountWatchdog();
+    return clearMountWatchdog;
+  }, [webViewKey, armMountWatchdog, clearMountWatchdog]);
 
   // onError ยิงเฉพาะตอน navigation หลักของ WebView ล้มเหลว (เช่น ไม่มีเน็ต, DNS ล้มเหลว)
   // ไม่ยิงตอน sub-resource (CDN script/font) โหลดพลาด — นั่นเป็นเรื่องของหน้าเว็บเอง
@@ -401,6 +459,8 @@ export default function WebApp() {
       // ไปหน้า http(s) ล่าสุดที่ user อยู่จริงแทน (โดยปกติคือหน้า login ของ LINE)
       openExternalUrl(failedUrl);
       clearWatchdog();
+      clearMountWatchdog();
+      SplashScreen.hideAsync().catch(() => {});
       appReadyRef.current = false;
       setLoadError(null);
       setLoading(true);
@@ -409,16 +469,20 @@ export default function WebApp() {
       return;
     }
     clearWatchdog();
+    clearMountWatchdog();
+    SplashScreen.hideAsync().catch(() => {});
     setLoading(false);
     setLoadError(e.nativeEvent.description || 'ไม่สามารถเชื่อมต่อได้ กรุณาตรวจสอบอินเทอร์เน็ต');
-  }, [clearWatchdog, openExternalUrl]);
+  }, [clearWatchdog, clearMountWatchdog, openExternalUrl]);
 
   const handleHttpError = useCallback((e: WebViewHttpErrorEvent) => {
     if (e.nativeEvent.statusCode >= 400) {
+      clearMountWatchdog();
+      SplashScreen.hideAsync().catch(() => {});
       setLoading(false);
       setLoadError(`เซิร์ฟเวอร์ตอบกลับผิดพลาด (${e.nativeEvent.statusCode})`);
     }
-  }, []);
+  }, [clearMountWatchdog]);
 
   // Android เท่านั้น — WebView renderer crash (เจอได้จริงบนเครื่อง RAM น้อยกับ Chart.js/3D globe หนักๆ)
   // ไม่ remount จอจะขาวค้างถาวรจนกว่า user จะ force close เอง
