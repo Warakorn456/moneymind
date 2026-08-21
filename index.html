@@ -9817,12 +9817,21 @@ function buildFinanceContext(){
   ${taxStr}`;
 }
 
-function toggleChat(){
+async function toggleChat(){
   chatOpen=!chatOpen;
   const panel=document.getElementById('chat-panel');
   if(chatOpen){
     panel.classList.remove('hidden');
-    if(chatHistory.length===0){const n=(DB.profile?.name||currentUser||'').split('@')[0];addChatMsg('ai',`สวัสดีค่ะ${n?` คุณ${n}`:''}! 👋 หนูคือมายา เลขาการเงินส่วนตัวของคุณ\nหนูรู้ข้อมูลการเงินทั้งหมดของคุณแล้ว — ถามได้เลยค่ะ`);}
+    if(chatHistory.length===0){
+      const n=(DB.profile?.name||currentUser||'').split('@')[0];
+      // เดิมทักทายว่า "ถามได้เลยค่ะ" เสมอ ไม่ว่าจะมี apiKey/subscription หรือไม่ — ทำให้ผู้ใช้ที่ไม่มีทั้งคู่
+      // เข้าใจผิดว่าถามอะไรก็ได้ ทั้งที่จริงตกไปที่ rulesAI() (คำตอบสำเร็จรูปจำกัด) — แก้ให้ทักทายตรงตามสิทธิ์จริง
+      const hasFullAI=!!DB.settings.apiKey||await _hasActiveSubscription();
+      const greet=hasFullAI
+        ?`สวัสดีค่ะ${n?` คุณ${n}`:''}! 👋 หนูคือมายา เลขาการเงินส่วนตัวของคุณ\nหนูรู้ข้อมูลการเงินทั้งหมดของคุณแล้ว — ถามได้เลยค่ะ`
+        :`สวัสดีค่ะ${n?` คุณ${n}`:''}! 👋 หนูคือมายา\nตอนนี้ยังไม่ได้เปิด AI เต็มรูปแบบ หนูเลยตอบได้แค่คำถามที่ตั้งไว้ล่วงหน้า เช่น สรุปยอด งบประมาณ หนี้สิน เป้าหมายออม\n\nอยากถามอะไรก็ได้แบบเต็มรูปแบบ ใส่ Gemini API Key ฟรีที่ **ตั้งค่า** หรือสมัคร AI Subscription ได้เลยค่ะ`;
+      addChatMsg('ai', greet);
+    }
     setTimeout(()=>document.getElementById('chat-input').focus(),100);
   } else {
     panel.classList.add('hidden');
