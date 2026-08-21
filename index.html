@@ -1914,7 +1914,7 @@
 
   <!-- ════ SETTINGS ════ -->
   <div id="pg-settings" class="page">
-    <div class="set-card">
+    <div class="set-card" id="ai-scan-card">
       <div class="set-title"><i class="fas fa-robot" style="color:var(--primary-l)"></i> <span data-i18n="set_ai_scan_title">AI สแกนใบเสร็จ</span></div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7" data-i18n-html="set_ai_scan_desc">
         ใส่ Google Gemini API Key เพื่อให้ AI อ่านข้อมูลจากรูปใบเสร็จอัตโนมัติ<br>
@@ -1940,7 +1940,7 @@
       </div>
     </div>
     <!-- AI Subscription card เปิดกลับมา 2026-08-13 — เดิมปิดไว้ 2026-08-10 (Omise ยังไม่ผ่าน KYC) ตอนนี้เปิดกลับให้เห็นหน้า checkout จริงเพื่อ resubmit KYC (Omise ระบุว่าเว็บต้องมีหน้า checkout+ราคาให้ตรวจ) — key ที่ผูกอยู่ยังเป็น test mode (pkey_test_/skey_test_) ไม่มีการตัดเงินจริงแม้มีคนกดสมัคร -->
-    <div class="set-card ios-hide">
+    <div class="set-card ios-hide" id="ai-sub-card">
       <div class="set-title"><i class="fas fa-crown" style="color:#f59e0b"></i> <span data-i18n="set_sub_title">AI Subscription</span></div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7" data-i18n="set_sub_desc">
         ไม่อยากหา Gemini API Key เอง? สมัคร subscription ใช้ AI ของแอปได้เลย ไม่ต้องมี key ส่วนตัว
@@ -9817,6 +9817,18 @@ function buildFinanceContext(){
   ${taxStr}`;
 }
 
+// พาไปหน้าตั้งค่าตรงจุดที่เปิด AI เต็มรูปแบบได้ (เรียกจากลิงก์ในข้อความ Maya) — ปิดแชทก่อนกัน panel บังหน้า
+function _mayaOpenSettings(target){
+  if(chatOpen) toggleChat();
+  nav('settings');
+  setTimeout(function(){
+    const id=target==='subscription'?'ai-sub-card':'ai-scan-card';
+    const el=document.getElementById(id);
+    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+    if(target==='apikey'){ const inp=document.getElementById('api-key-in'); if(inp) inp.focus(); }
+  },150);
+}
+
 async function toggleChat(){
   chatOpen=!chatOpen;
   const panel=document.getElementById('chat-panel');
@@ -9829,7 +9841,7 @@ async function toggleChat(){
       const hasFullAI=!!DB.settings.apiKey||await _hasActiveSubscription();
       const greet=hasFullAI
         ?`สวัสดีค่ะ${n?` คุณ${n}`:''}! 👋 หนูคือมายา เลขาการเงินส่วนตัวของคุณ\nหนูรู้ข้อมูลการเงินทั้งหมดของคุณแล้ว — ถามได้เลยค่ะ`
-        :`สวัสดีค่ะ${n?` คุณ${n}`:''}! 👋 หนูคือมายา\nตอนนี้ยังไม่ได้เปิด AI เต็มรูปแบบ หนูเลยตอบได้แค่คำถามที่ตั้งไว้ล่วงหน้า เช่น สรุปยอด งบประมาณ หนี้สิน เป้าหมายออม\n\nอยากถามอะไรก็ได้แบบเต็มรูปแบบ ใส่ Gemini API Key ฟรีที่ **ตั้งค่า** หรือสมัคร AI Subscription ได้เลยค่ะ`;
+        :`สวัสดีค่ะ${n?` คุณ${n}`:''}! 👋 หนูคือมายา\nตอนนี้ยังไม่ได้เปิด AI เต็มรูปแบบ หนูเลยตอบได้แค่คำถามที่ตั้งไว้ล่วงหน้า เช่น สรุปยอด งบประมาณ หนี้สิน เป้าหมายออม\n\nอยากถามอะไรก็ได้แบบเต็มรูปแบบ <u style="cursor:pointer;color:var(--primary-l)" onclick="_mayaOpenSettings('apikey')">ใส่ Gemini API Key ฟรี</u> หรือ <u style="cursor:pointer;color:var(--primary-l)" onclick="_mayaOpenSettings('subscription')">สมัคร AI Subscription</u> ได้เลยค่ะ`;
       addChatMsg('ai', greet);
     }
     setTimeout(()=>document.getElementById('chat-input').focus(),100);
@@ -10054,7 +10066,7 @@ async function sendChat(){
   if(!DB.settings.apiKey && !(await _hasActiveSubscription())){
     await new Promise(r=>setTimeout(r,400)); // simulate thinking
     hideTyping();
-    addChatMsg('ai', rulesAI(msg)+'\n\n<span style="font-size:11px;color:#64748b">🤖 AI ในตัว — ใส่ Gemini API Key ในตั้งค่าเพื่อใช้ AI เต็มรูปแบบ</span>');
+    addChatMsg('ai', rulesAI(msg)+'\n\n<span style="font-size:11px;color:#64748b">🤖 AI ในตัว — <u style="cursor:pointer;color:var(--primary-l)" onclick="_mayaOpenSettings(\'apikey\')">ใส่ Gemini API Key</u> ในตั้งค่าเพื่อใช้ AI เต็มรูปแบบ</span>');
     chatBusy=false; document.getElementById('chat-send').disabled=false; inp.focus(); return;
   }
 
