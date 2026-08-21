@@ -1915,6 +1915,11 @@
   <!-- ════ SETTINGS ════ -->
   <div id="pg-settings" class="page">
     <div class="set-card">
+      <div class="set-title"><i class="fas fa-graduation-cap" style="color:#10b981"></i> <span data-i18n="set_help_title">คำแนะนำการใช้งาน</span></div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7" data-i18n="set_help_desc">ทุกหน้ามีปุ่ม (i) มุมบนขวาอธิบายวิธีใช้หน้านั้น และทุกช่องกรอกข้อมูลมีไอคอน (i) อธิบายว่าต้องกรอกอะไร — หรือถามมายา (AI) ที่ปุ่มวงกลมมุมล่างขวาได้เลยถ้ายังงงอยู่</div>
+      <button class="btn btn-primary" onclick="_showWelcomeOnboard()"><i class="fas fa-rotate"></i> <span data-i18n="set_help_replay">ดูคำแนะนำเริ่มต้นอีกครั้ง</span></button>
+    </div>
+    <div class="set-card">
       <div class="set-title"><i class="fas fa-robot" style="color:var(--primary-l)"></i> <span data-i18n="set_ai_scan_title">AI สแกนใบเสร็จ</span></div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7" data-i18n-html="set_ai_scan_desc">
         ใส่ Google Gemini API Key เพื่อให้ AI อ่านข้อมูลจากรูปใบเสร็จอัตโนมัติ<br>
@@ -4835,6 +4840,7 @@ const I18N = {
     inv_live_loading:'ยังไม่ได้อัปเดตราคา — กดปุ่มเพื่อดึงราคาล่าสุด',inv_refresh_prices:'ดึงราคา',inv_tab_port:'พอร์ต',inv_manage_port:'จัดการพอร์ต',inv_add:'เพิ่มการลงทุน',tax_autofill:'ดึงรายได้อัตโนมัติ',
     inv_none_yet:'ยังไม่มีการลงทุน',inv_add_hint:'กด "+ เพิ่มการลงทุน" เพื่อเริ่มต้น',inv_total_value:'มูลค่ารวม',inv_total_pnl:'กำไร/ขาดทุนรวม',inv_num_ports:'จำนวนพอร์ต',inv_num_assets:'ตัวสินทรัพย์',inv_allocation:'สัดส่วนพอร์ต',inv_no_port:'ยังไม่มีพอร์ต',inv_no_port_hint:'กด "จัดการพอร์ต" เพื่อสร้าง',inv_pnl:'กำไร/ขาดทุน',inv_add_to_port:'เพิ่มในพอร์ตนี้',inv_linked_to:'ลิ้งกับ',inv_sync_to_saving:'ส่งยอดไปเงินออม',inv_goto_savings:'ไปหน้าเงินออม',inv_th_name:'ชื่อ',inv_th_qty:'จำนวน',inv_th_buy_price:'ราคาซื้อ',inv_th_cur_price:'ราคาปัจจุบัน',inv_th_value:'มูลค่า',dca_add_plan:'เพิ่มแผน DCA',
     inv_field_name:'ชื่อ',inv_currency_used:'สกุลเงินที่ใส่:',inv_field_qty:'จำนวนหุ้น / หน่วย',inv_field_buyprice:'ราคาซื้อ / หน่วย (฿)',inv_total_cost:'ต้นทุนรวม (฿)',inv_qty_x_price:'จำนวน × ราคาซื้อ',inv_current_price:'ราคาปัจจุบัน',inv_fetch_price:'ดึงราคา',inv_field_curprice:'ราคา / หน่วย (฿)',inv_last_updated:'อัปเดตล่าสุด',inv_field_curval:'มูลค่าปัจจุบัน (฿)',inv_totalpaid_label:'จำนวนเงินที่จ่ายทั้งหมด (บาท)',inv_totalpaid_hint:'ซื้อผ่านแอปแปลงเงินบาท เช่น dime? กรอกยอดที่จ่ายจริงตรงนี้ ระบบจะคำนวณราคาซื้อ/หน่วยให้เองจากจำนวนหน่วยด้านบน',
+    quickadd_title:'บันทึกเร็ว',quickadd_placeholder:'เช่น ข้าว 120 หรือ +เงินเดือน 25000',quickadd_hint:'พิมพ์ชื่อรายการตามด้วยจำนวนเงิน ระบบจะบันทึกเป็นรายจ่ายอัตโนมัติ (พิมพ์ + นำหน้าถ้าเป็นรายรับ)',set_help_title:'คำแนะนำการใช้งาน',set_help_desc:'ทุกหน้ามีปุ่ม (i) มุมบนขวาอธิบายวิธีใช้หน้านั้น และทุกช่องกรอกข้อมูลมีไอคอน (i) อธิบายว่าต้องกรอกอะไร — หรือถามมายา (AI) ที่ปุ่มวงกลมมุมล่างขวาได้เลยถ้ายังงงอยู่',set_help_replay:'ดูคำแนะนำเริ่มต้นอีกครั้ง',pagehelp_nudge_text:'💡 กดปุ่มนี้เพื่อดูวิธีใช้หน้านี้ หรือถามมายาได้เลยถ้ายังสงสัย',
     tax_year:'ปี',tax_scan_doc:'สแกนเอกสารด้วย AI',tax_scan_doc_hint:'โยนสลิปหรือ ทวิ 50 แล้ว AI จะแยกข้อมูลใส่ช่องให้อัตโนมัติ',tax_salary_slip:'สลิปเงินเดือน',tax_img_or_pdf:'รูปภาพหรือ PDF',tax_tawi50:'ทวิ 50',tax_tawi50_hint:'หนังสือรับรองหักภาษี',tax_income_year:'รายได้ปี',tax_salary:'เงินเดือน/ค่าจ้าง (มาตรา 40(1))',tax_salary_hint:'หัก 50% max ฿100,000',tax_freelance:'รายได้อิสระ/ค่าเช่า (มาตรา 40(2)(8))',tax_freelance_hint:'หัก 50% max ฿100,000',tax_other_income:'รายได้อื่นๆ',tax_other_income_hint:'ปันผล ดอกเบี้ย ฯลฯ',tax_total_income:'รายได้รวม',
     tax_personal_family:'ลดหย่อนส่วนตัวและครอบครัว',tax_self:'ผู้มีเงินได้ (ตัวเอง)',tax_spouse:'คู่สมรส (ไม่มีรายได้)',tax_children:'จำนวนบุตร',tax_person:'คน',tax_parents:'อุปการะบิดามารดา (อายุ 60+)',tax_disabled:'อุปการะคนพิการ/ทุพพลภาพ',
     tax_insurance_deduct:'ลดหย่อนประกัน',tax_life_ins:'ประกันชีวิต/ประกันออมทรัพย์',tax_incl_health:'รวมกับสุขภาพ',tax_health_ins:'ประกันสุขภาพ',tax_incl_life:'รวมชีวิตไม่เกิน 100k',tax_annuity_ins:'ประกันชีวิตแบบบำนาญ',tax_parent_health_ins:'ประกันสุขภาพบิดามารดา',tax_sso:'ประกันสังคม',
@@ -4941,6 +4947,7 @@ const I18N = {
     inv_live_loading:'Not updated yet — press the button to fetch latest prices',inv_refresh_prices:'Refresh Prices',inv_tab_port:'Portfolio',inv_manage_port:'Manage Portfolios',inv_add:'Add Investment',tax_autofill:'Auto-fill Income',
     inv_none_yet:'No investments yet',inv_add_hint:'Click "+ Add Investment" to get started',inv_total_value:'Total Value',inv_total_pnl:'Total P&L',inv_num_ports:'Number of Portfolios',inv_num_assets:'Assets',inv_allocation:'Portfolio Allocation',inv_no_port:'No portfolios yet',inv_no_port_hint:'Click "Manage Portfolios" to create one',inv_pnl:'P&L',inv_add_to_port:'Add to This Portfolio',inv_linked_to:'Linked to',inv_sync_to_saving:'Sync to Savings',inv_goto_savings:'Go to Savings',inv_th_name:'Name',inv_th_qty:'Qty',inv_th_buy_price:'Buy Price',inv_th_cur_price:'Current Price',inv_th_value:'Value',dca_add_plan:'Add DCA Plan',
     inv_field_name:'Name',inv_currency_used:'Currency entered:',inv_field_qty:'Shares / Units',inv_field_buyprice:'Buy Price / Unit (฿)',inv_total_cost:'Total Cost (฿)',inv_qty_x_price:'Qty × Buy Price',inv_current_price:'Current Price',inv_fetch_price:'Fetch Price',inv_field_curprice:'Price / Unit (฿)',inv_last_updated:'Last Updated',inv_field_curval:'Current Value (฿)',inv_totalpaid_label:'Total amount paid (THB)',inv_totalpaid_hint:'Bought through a THB-to-fractional-share app like dime? Enter the amount you actually paid here — we\'ll calculate the price per unit for you from the quantity above.',
+    quickadd_title:'Quick Add',quickadd_placeholder:'e.g. lunch 120 or +salary 25000',quickadd_hint:'Type a description followed by the amount — saved as an expense automatically (add + in front for income)',set_help_title:'Usage Guide',set_help_desc:'Every page has an (i) button top-right explaining how it works, and every input field has an (i) icon explaining what to enter — or just ask Maya (AI) via the circular button bottom-right if you\'re still stuck',set_help_replay:'Replay the getting-started guide',pagehelp_nudge_text:'💡 Tap this button to see how this page works, or just ask Maya if you\'re still unsure',
     tax_year:'Year',tax_scan_doc:'Scan Document with AI',tax_scan_doc_hint:'Upload a pay slip or 50 Tawi form and AI will fill in the fields automatically',tax_salary_slip:'Salary Slip',tax_img_or_pdf:'Image or PDF',tax_tawi50:'50 Tawi',tax_tawi50_hint:'Withholding Tax Certificate',tax_income_year:'Income for Year',tax_salary:'Salary/Wages (Section 40(1))',tax_salary_hint:'50% deduction, max ฿100,000',tax_freelance:'Freelance/Rental Income (Section 40(2)(8))',tax_freelance_hint:'50% deduction, max ฿100,000',tax_other_income:'Other Income',tax_other_income_hint:'Dividends, interest, etc.',tax_total_income:'Total Income',
     tax_personal_family:'Personal & Family Deductions',tax_self:'Taxpayer (Self)',tax_spouse:'Spouse (no income)',tax_children:'Number of Children',tax_person:'person',tax_parents:'Parent Support (age 60+)',tax_disabled:'Disabled/Incapacitated Support',
     tax_insurance_deduct:'Insurance Deductions',tax_life_ins:'Life/Savings Insurance',tax_incl_health:'combined with health',tax_health_ins:'Health Insurance',tax_incl_life:'combined life not exceeding 100k',tax_annuity_ins:'Annuity Life Insurance',tax_parent_health_ins:"Parents' Health Insurance",tax_sso:'Social Security',
@@ -17651,6 +17658,41 @@ if(_origCheckLogin){
 setTimeout(function(){ if(typeof _gmailStartPoll==='function') _gmailStartPoll(); }, 2500);
 
 // ══════════════════════════════════════════
+//  5. PAGE HELP FIRST-VISIT NUDGE (เพิ่ม 2026-08-21)
+//  ปุ่มช่วยเหลือหน้า (i) / ไอคอนคำอธิบายฟิลด์ (i) เป็น opt-in ล้วนๆ ไม่มีอะไร proactive
+//  ชี้ให้ผู้ใช้เห็นเลย — nudge นี้โผล่ "ครั้งเดียวตลอดกาลต่อบัญชี" (ไม่ใช่ทุกหน้า กันน่ารำคาญ)
+//  ตอน nav() ไปหน้าไหนก็ได้เป็นครั้งแรกหลัง deploy ฟีเจอร์นี้ ชี้ไปที่ปุ่ม (i) บน topbar
+//  (ตำแหน่งคงที่ ไม่ใช่ FAB มายาที่ลากขยับได้ — ปลอดภัยกว่าในการคำนวณตำแหน่ง)
+// ══════════════════════════════════════════
+(function(){
+  const _origNavHint=typeof nav==='function'?nav:null;
+  if(!_origNavHint) return;
+  function _hintKey(){ return 'mm_pagehelp_hint_seen_'+(currentUser||''); }
+  nav=function(page){
+    _origNavHint(page);
+    try{
+      if(localStorage.getItem(_hintKey())==='1') return;
+      if(document.getElementById('_onboard-ov')) return;
+      const btn=document.getElementById('page-help-btn');
+      if(!btn) return;
+      localStorage.setItem(_hintKey(),'1');
+      const rect=btn.getBoundingClientRect();
+      const tip=document.createElement('div');
+      tip.id='_pageHelpNudge';
+      tip.className='field-hint-tip';
+      tip.textContent=tr('pagehelp_nudge_text');
+      document.body.appendChild(tip);
+      const tw=tip.offsetWidth;
+      tip.style.left=Math.max(8,Math.min(rect.left+rect.width/2-tw/2,window.innerWidth-tw-8))+'px';
+      tip.style.top=(rect.bottom+8)+'px';
+      const remove=()=>{ const el=document.getElementById('_pageHelpNudge'); if(el) el.remove(); };
+      setTimeout(remove,8000);
+      setTimeout(()=>document.addEventListener('click',remove,{once:true}),0);
+    }catch(e){}
+  };
+})();
+
+// ══════════════════════════════════════════
 //  NAV SORTABLE
 // ══════════════════════════════════════════
 (function initNavSort(){
@@ -18758,6 +18800,39 @@ function _renderStreakCard(){
     if(s2) s2.appendChild(w2);
   }
   _renderFixedCostsCard();
+})();
+
+// ══════════════════════════════════════════
+//  6. QUICK ADD BAR — DASHBOARD (เพิ่ม 2026-08-21)
+//  quickAdd()/undoLastTx() (~บรรทัด 11816) เขียนไว้ครบแล้วมานานพร้อม i18n keys
+//  แต่ไม่เคยมี <input id="quick-add-inp"> อยู่ในหน้าเว็บเลยสักจุด — เป็น dead code
+//  ที่ผู้ใช้ไม่มีทางเจอ ทั้งที่เป็นวิธีบันทึกรายการที่เร็ว/ง่ายที่สุดในแอป (พิมพ์ข้อความ
+//  สั้นๆ เดียว ไม่ต้องเปิด modal หลายฟิลด์) — เพิ่มแค่ UI ให้ไปเรียก logic เดิมที่มีอยู่แล้ว
+// ══════════════════════════════════════════
+(function(){
+  const _origRDqa=typeof renderDash==='function'?renderDash:null;
+  if(!_origRDqa) return;
+  renderDash=function(){
+    _origRDqa.apply(this,arguments);
+    if(document.getElementById('_quickAddCard')) return;
+    const cont=document.getElementById('pg-dashboard');
+    if(!cont) return;
+    const card=document.createElement('div');
+    card.className='card';
+    card.id='_quickAddCard';
+    card.style.cssText='margin-bottom:20px;padding:16px 18px';
+    card.innerHTML=`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <i class="fas fa-bolt" style="color:#f59e0b"></i>
+        <div style="font-size:13px;font-weight:700" data-i18n="quickadd_title">${tr('quickadd_title')}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="quick-add-inp" class="finput" data-i18n-ph="quickadd_placeholder" placeholder="${tr('quickadd_placeholder')}" style="flex:1" onkeypress="if(event.key==='Enter'){event.preventDefault();quickAdd();}">
+        <button class="btn btn-primary" onclick="quickAdd()" style="white-space:nowrap"><i class="fas fa-check"></i> <span data-i18n="save">${tr('save')}</span></button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px" data-i18n="quickadd_hint">${tr('quickadd_hint')}</div>`;
+    cont.insertBefore(card, cont.firstChild);
+  };
 })();
 
 // ══════════════════════════════════════════
