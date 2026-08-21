@@ -2340,12 +2340,17 @@
       <div style="font-size:11px;color:var(--muted);margin-top:4px" data-i18n="inv_linked_debt_hint">ถ้าเลือก ระบบจะคำนวณส่วนของเจ้าของ (equity) = มูลค่า − หนี้คงเหลือ ให้อัตโนมัติ</div>
     </div>
     <div class="frow">
-      <div class="fg"><label class="flabel"><span data-i18n="inv_field_qty">จำนวนหุ้น / หน่วย</span><i class="fas fa-circle-info finfo" onclick="showFieldHint(event,'inv_field_qty')"></i></label><input type="number" id="inv-qty" class="finput" placeholder="0" min="0" step="any" oninput="calcInvTotals()"></div>
+      <div class="fg"><label class="flabel"><span data-i18n="inv_field_qty">จำนวนหุ้น / หน่วย</span><i class="fas fa-circle-info finfo" onclick="showFieldHint(event,'inv_field_qty')"></i></label><input type="number" id="inv-qty" class="finput" placeholder="0" min="0" step="any" oninput="calcInvTotals();calcInvFromTotalPaid()"></div>
       <div class="fg">
         <label class="flabel" id="buyprice-label"><span data-i18n="inv_field_buyprice">ราคาซื้อ / หน่วย (฿)</span><i class="fas fa-circle-info finfo" onclick="showFieldHint(event,'inv_field_buyprice')"></i></label>
         <input type="number" id="inv-buyprice" class="finput" placeholder="0" min="0" step="any" oninput="calcInvTotals()">
         <div id="buyprice-convert" style="font-size:11px;color:var(--cyan);margin-top:3px"></div>
       </div>
+    </div>
+    <div class="fg" id="inv-totalpaid-wrap" style="display:none;margin-bottom:14px">
+      <label class="flabel"><span data-i18n="inv_totalpaid_label">จำนวนเงินที่จ่ายทั้งหมด (บาท)</span></label>
+      <input type="number" id="inv-totalpaid" class="finput" placeholder="เช่น 1000" min="0" step="any" oninput="calcInvFromTotalPaid()">
+      <div style="font-size:11px;color:var(--muted);margin-top:4px" data-i18n="inv_totalpaid_hint">ซื้อผ่านแอปแปลงเงินบาท เช่น dime? กรอกยอดที่จ่ายจริงตรงนี้ ระบบจะคำนวณราคาซื้อ/หน่วยให้เองจากจำนวนหน่วยด้านบน</div>
     </div>
     <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
       <div><div style="font-size:11px;color:var(--muted)" data-i18n="inv_total_cost">ต้นทุนรวม (฿)</div><div id="inv-cost-display" style="font-size:18px;font-weight:700;color:var(--text)">฿0</div></div>
@@ -4829,7 +4834,7 @@ const I18N = {
     debt_add:'เพิ่มหนี้',debt_add_full:'เพิ่มหนี้สิน',debt_name:'ชื่อหนี้',debt_name_ph:'เช่น บัตรเครดิต KTC, สินเชื่อรถ',debt_total_amt:'ยอดหนี้ทั้งหมด (บาท)',debt_remaining_amt:'ยอดคงเหลือ (บาท)',debt_interest:'ดอกเบี้ย (% ต่อปี)',debt_pay_month:'ผ่อน/เดือน (บาท)',debt_start_date:'วันเริ่มผ่อน',debt_due_date:'วันครบกำหนด',
     inv_live_loading:'ยังไม่ได้อัปเดตราคา — กดปุ่มเพื่อดึงราคาล่าสุด',inv_refresh_prices:'ดึงราคา',inv_tab_port:'พอร์ต',inv_manage_port:'จัดการพอร์ต',inv_add:'เพิ่มการลงทุน',tax_autofill:'ดึงรายได้อัตโนมัติ',
     inv_none_yet:'ยังไม่มีการลงทุน',inv_add_hint:'กด "+ เพิ่มการลงทุน" เพื่อเริ่มต้น',inv_total_value:'มูลค่ารวม',inv_total_pnl:'กำไร/ขาดทุนรวม',inv_num_ports:'จำนวนพอร์ต',inv_num_assets:'ตัวสินทรัพย์',inv_allocation:'สัดส่วนพอร์ต',inv_no_port:'ยังไม่มีพอร์ต',inv_no_port_hint:'กด "จัดการพอร์ต" เพื่อสร้าง',inv_pnl:'กำไร/ขาดทุน',inv_add_to_port:'เพิ่มในพอร์ตนี้',inv_linked_to:'ลิ้งกับ',inv_sync_to_saving:'ส่งยอดไปเงินออม',inv_goto_savings:'ไปหน้าเงินออม',inv_th_name:'ชื่อ',inv_th_qty:'จำนวน',inv_th_buy_price:'ราคาซื้อ',inv_th_cur_price:'ราคาปัจจุบัน',inv_th_value:'มูลค่า',dca_add_plan:'เพิ่มแผน DCA',
-    inv_field_name:'ชื่อ',inv_currency_used:'สกุลเงินที่ใส่:',inv_field_qty:'จำนวนหุ้น / หน่วย',inv_field_buyprice:'ราคาซื้อ / หน่วย (฿)',inv_total_cost:'ต้นทุนรวม (฿)',inv_qty_x_price:'จำนวน × ราคาซื้อ',inv_current_price:'ราคาปัจจุบัน',inv_fetch_price:'ดึงราคา',inv_field_curprice:'ราคา / หน่วย (฿)',inv_last_updated:'อัปเดตล่าสุด',inv_field_curval:'มูลค่าปัจจุบัน (฿)',
+    inv_field_name:'ชื่อ',inv_currency_used:'สกุลเงินที่ใส่:',inv_field_qty:'จำนวนหุ้น / หน่วย',inv_field_buyprice:'ราคาซื้อ / หน่วย (฿)',inv_total_cost:'ต้นทุนรวม (฿)',inv_qty_x_price:'จำนวน × ราคาซื้อ',inv_current_price:'ราคาปัจจุบัน',inv_fetch_price:'ดึงราคา',inv_field_curprice:'ราคา / หน่วย (฿)',inv_last_updated:'อัปเดตล่าสุด',inv_field_curval:'มูลค่าปัจจุบัน (฿)',inv_totalpaid_label:'จำนวนเงินที่จ่ายทั้งหมด (บาท)',inv_totalpaid_hint:'ซื้อผ่านแอปแปลงเงินบาท เช่น dime? กรอกยอดที่จ่ายจริงตรงนี้ ระบบจะคำนวณราคาซื้อ/หน่วยให้เองจากจำนวนหน่วยด้านบน',
     tax_year:'ปี',tax_scan_doc:'สแกนเอกสารด้วย AI',tax_scan_doc_hint:'โยนสลิปหรือ ทวิ 50 แล้ว AI จะแยกข้อมูลใส่ช่องให้อัตโนมัติ',tax_salary_slip:'สลิปเงินเดือน',tax_img_or_pdf:'รูปภาพหรือ PDF',tax_tawi50:'ทวิ 50',tax_tawi50_hint:'หนังสือรับรองหักภาษี',tax_income_year:'รายได้ปี',tax_salary:'เงินเดือน/ค่าจ้าง (มาตรา 40(1))',tax_salary_hint:'หัก 50% max ฿100,000',tax_freelance:'รายได้อิสระ/ค่าเช่า (มาตรา 40(2)(8))',tax_freelance_hint:'หัก 50% max ฿100,000',tax_other_income:'รายได้อื่นๆ',tax_other_income_hint:'ปันผล ดอกเบี้ย ฯลฯ',tax_total_income:'รายได้รวม',
     tax_personal_family:'ลดหย่อนส่วนตัวและครอบครัว',tax_self:'ผู้มีเงินได้ (ตัวเอง)',tax_spouse:'คู่สมรส (ไม่มีรายได้)',tax_children:'จำนวนบุตร',tax_person:'คน',tax_parents:'อุปการะบิดามารดา (อายุ 60+)',tax_disabled:'อุปการะคนพิการ/ทุพพลภาพ',
     tax_insurance_deduct:'ลดหย่อนประกัน',tax_life_ins:'ประกันชีวิต/ประกันออมทรัพย์',tax_incl_health:'รวมกับสุขภาพ',tax_health_ins:'ประกันสุขภาพ',tax_incl_life:'รวมชีวิตไม่เกิน 100k',tax_annuity_ins:'ประกันชีวิตแบบบำนาญ',tax_parent_health_ins:'ประกันสุขภาพบิดามารดา',tax_sso:'ประกันสังคม',
@@ -4935,7 +4940,7 @@ const I18N = {
     debt_add:'Add Debt',debt_add_full:'Add Debt',debt_name:'Debt Name',debt_name_ph:'e.g. KTC credit card, car loan',debt_total_amt:'Total Debt (THB)',debt_remaining_amt:'Remaining Balance (THB)',debt_interest:'Interest (% per year)',debt_pay_month:'Payment/month (THB)',debt_start_date:'Start Date',debt_due_date:'Due Date',
     inv_live_loading:'Not updated yet — press the button to fetch latest prices',inv_refresh_prices:'Refresh Prices',inv_tab_port:'Portfolio',inv_manage_port:'Manage Portfolios',inv_add:'Add Investment',tax_autofill:'Auto-fill Income',
     inv_none_yet:'No investments yet',inv_add_hint:'Click "+ Add Investment" to get started',inv_total_value:'Total Value',inv_total_pnl:'Total P&L',inv_num_ports:'Number of Portfolios',inv_num_assets:'Assets',inv_allocation:'Portfolio Allocation',inv_no_port:'No portfolios yet',inv_no_port_hint:'Click "Manage Portfolios" to create one',inv_pnl:'P&L',inv_add_to_port:'Add to This Portfolio',inv_linked_to:'Linked to',inv_sync_to_saving:'Sync to Savings',inv_goto_savings:'Go to Savings',inv_th_name:'Name',inv_th_qty:'Qty',inv_th_buy_price:'Buy Price',inv_th_cur_price:'Current Price',inv_th_value:'Value',dca_add_plan:'Add DCA Plan',
-    inv_field_name:'Name',inv_currency_used:'Currency entered:',inv_field_qty:'Shares / Units',inv_field_buyprice:'Buy Price / Unit (฿)',inv_total_cost:'Total Cost (฿)',inv_qty_x_price:'Qty × Buy Price',inv_current_price:'Current Price',inv_fetch_price:'Fetch Price',inv_field_curprice:'Price / Unit (฿)',inv_last_updated:'Last Updated',inv_field_curval:'Current Value (฿)',
+    inv_field_name:'Name',inv_currency_used:'Currency entered:',inv_field_qty:'Shares / Units',inv_field_buyprice:'Buy Price / Unit (฿)',inv_total_cost:'Total Cost (฿)',inv_qty_x_price:'Qty × Buy Price',inv_current_price:'Current Price',inv_fetch_price:'Fetch Price',inv_field_curprice:'Price / Unit (฿)',inv_last_updated:'Last Updated',inv_field_curval:'Current Value (฿)',inv_totalpaid_label:'Total amount paid (THB)',inv_totalpaid_hint:'Bought through a THB-to-fractional-share app like dime? Enter the amount you actually paid here — we\'ll calculate the price per unit for you from the quantity above.',
     tax_year:'Year',tax_scan_doc:'Scan Document with AI',tax_scan_doc_hint:'Upload a pay slip or 50 Tawi form and AI will fill in the fields automatically',tax_salary_slip:'Salary Slip',tax_img_or_pdf:'Image or PDF',tax_tawi50:'50 Tawi',tax_tawi50_hint:'Withholding Tax Certificate',tax_income_year:'Income for Year',tax_salary:'Salary/Wages (Section 40(1))',tax_salary_hint:'50% deduction, max ฿100,000',tax_freelance:'Freelance/Rental Income (Section 40(2)(8))',tax_freelance_hint:'50% deduction, max ฿100,000',tax_other_income:'Other Income',tax_other_income_hint:'Dividends, interest, etc.',tax_total_income:'Total Income',
     tax_personal_family:'Personal & Family Deductions',tax_self:'Taxpayer (Self)',tax_spouse:'Spouse (no income)',tax_children:'Number of Children',tax_person:'person',tax_parents:'Parent Support (age 60+)',tax_disabled:'Disabled/Incapacitated Support',
     tax_insurance_deduct:'Insurance Deductions',tax_life_ins:'Life/Savings Insurance',tax_incl_health:'combined with health',tax_health_ins:'Health Insurance',tax_incl_life:'combined life not exceeding 100k',tax_annuity_ins:'Annuity Life Insurance',tax_parent_health_ins:"Parents' Health Insurance",tax_sso:'Social Security',
@@ -6976,6 +6981,25 @@ function setCurrency(cur){
     document.getElementById('fx-rate-display').textContent='';
   }
   calcInvTotals();
+  _updateTotalPaidVisibility();
+}
+
+function _updateTotalPaidVisibility(){
+  const isUSD=document.getElementById('inv-currency').value==='USD';
+  const type=document.getElementById('inv-type').value;
+  const fetchable=['หุ้น','กองทุน','คริปโต','ทองคำ'].includes(type);
+  const wrap=document.getElementById('inv-totalpaid-wrap');
+  if(wrap) wrap.style.display=(isUSD&&fetchable)?'':'none';
+}
+
+async function calcInvFromTotalPaid(){
+  const qty=parseFloat(document.getElementById('inv-qty').value)||0;
+  const total=parseFloat(document.getElementById('inv-totalpaid').value)||0;
+  if(qty<=0||total<=0) return;
+  const isUSD=document.getElementById('inv-currency').value==='USD';
+  const fx=isUSD?await getFxRate():1;
+  document.getElementById('inv-buyprice').value=((total/qty)/fx).toFixed(4);
+  calcInvTotals();
 }
 
 // ── Modal helpers ──
@@ -6990,6 +7014,7 @@ function onInvTypeChange(){
     sel.innerHTML='<option value="">'+tr('inv_no_linked_debt')+'</option>'+(DB.debts||[]).map(d=>'<option value="'+d.id+'">'+_escHtml(d.name)+' ('+fmt(d.remaining)+')</option>').join('');
     sel.value=keep;
   }
+  _updateTotalPaidVisibility();
 }
 
 function invNameHint(){
@@ -7096,7 +7121,7 @@ async function refreshInvPrice(id){
 function openInvModal(prePortId){
   document.getElementById('inv-eid').value='';
   document.getElementById('inv-m-title').textContent=tr('inv_add');
-  ['inv-name','inv-qty','inv-buyprice','inv-curprice','inv-updated'].forEach(id=>document.getElementById(id).value='');
+  ['inv-name','inv-qty','inv-buyprice','inv-curprice','inv-updated','inv-totalpaid'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('inv-type').value='หุ้น';
   document.getElementById('inv-cost-display').textContent='฿0';
   document.getElementById('inv-val-display').textContent='฿0';
@@ -7118,6 +7143,7 @@ function editInv(id){
   document.getElementById('inv-name').value=inv.name;
   document.getElementById('inv-type').value=inv.type;
   document.getElementById('inv-qty').value=inv.qty||'';
+  document.getElementById('inv-totalpaid').value='';
   // show in original currency
   const isUSD=inv.currency==='USD';
   setCurrency(inv.currency||'THB');
