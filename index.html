@@ -4096,6 +4096,14 @@ const LINE_FRIEND_STATUS_URL='https://34-134-61-137.sslip.io/v1/line/friend-stat
 // QR ของคู่กันอยู่ที่ assets/line-qr.png (ดึงมาจาก qr-official.line.me ของ LINE เอง)
 const LINE_ADD_FRIEND_URL='https://line.me/R/ti/p/@159hhnpk';
 
+// ── Gmail Connect (นำเข้ารายการจากอีเมลแจ้งเตือนธนาคารอัตโนมัติ, เพิ่ม 2026-08-22) ──
+// คนละ OAuth client จาก "เชื่อมต่อ Gmail (Google)" เดิม (อันนั้นเป็น Firebase Google Sign-In
+// provider ธรรมดา ใช้แค่ login ไม่มี refresh_token ให้ใช้อ่านอีเมล) — ตัวนี้ขอ scope
+// gmail.readonly จริง ต้องมี access_type=offline+prompt=consent ถึงจะได้ refresh_token กลับมา
+const GMAIL_CONNECT_CLIENT_ID='668138190451-dgoi1bglhb3me1sp363j742n1nk1hmou.apps.googleusercontent.com';
+const GMAIL_CONNECT_CALLBACK_URL='https://34-134-61-137.sslip.io/v1/gmail/connect-callback';
+const GMAIL_DISCONNECT_URL='https://34-134-61-137.sslip.io/v1/gmail/disconnect';
+
 // 🐛 เจอ 2026-08-11: randB64() ใช้ btoa() ธรรมดา (มี +,/,= ที่ไม่ url-safe) — ตัว state OAuth
 // ต้องเดินทางผ่าน redirect หลายชั้น (เราเข้ารหัส → LINE เก็บ/redirect กลับ → เราถอดรหัส) ถ้ามี
 // จุดไหนไม่ percent-encode/decode ให้ตรงกัน (เช่น LINE เก็บ/คืนค่าคนละวิธีกับที่เราคาดไว้) จะทำให้
@@ -4329,6 +4337,111 @@ function _showLineReturnToAppPrompt(code,state){
   document.body.appendChild(box);
   // ลองเปิดอัตโนมัติทันทีด้วย (เผื่อ user ไม่ทันสังเกตปุ่ม) — ปุ่มเป็น fallback ถ้า auto ไม่ทำงาน
   setTimeout(()=>{ window.location.href=url; },300);
+}
+
+// ══════════════════════════════════════════
+//  GMAIL CONNECT OAuth (เพิ่ม 2026-08-22) — ดักอีเมลแจ้งเตือนธนาคารอัตโนมัติ, แจ้งเตือนผ่าน LINE
+// ══════════════════════════════════════════
+// ใช้ localStorage key แยกจาก LINE_STATE_KEY โดยตั้งใจ — Gmail/LINE ใช้ redirect_uri เดียวกัน
+// (origin เดียวกัน) กลับมาที่หน้าเดียวกันพร้อม ?code=&state= เหมือนกันเป๊ะ ถ้าใช้ key ร่วมกันจะ
+// เดาไม่ออกว่า callback ที่กลับมาเป็นของ provider ไหน — แต่ละ handler peek แค่ key ของตัวเองเท่านั้น
+// (ดู _handleGmailConnectCallback กับ _handleLineCallback ว่าทำไมต้องเรียกตัวนี้ก่อนเสมอ)
+const GMAIL_CONNECT_STATE_KEY='_gmailConnectOAuthState';
+const GMAIL_CONNECT_STATE_TTL_MS=10*60*1000;
+
+function _gmailConnectStateSave(state){
+  try{ localStorage.setItem(GMAIL_CONNECT_STATE_KEY,JSON.stringify({state,ts:Date.now()})); }catch(e){}
+}
+function _gmailConnectStateTake(){
+  let raw=null;
+  try{ raw=localStorage.getItem(GMAIL_CONNECT_STATE_KEY); localStorage.removeItem(GMAIL_CONNECT_STATE_KEY); }catch(e){}
+  if(!raw) return null;
+  try{
+    const o=JSON.parse(raw);
+    if(!o||!o.state) return null;
+    if(Date.now()-(o.ts||0)>GMAIL_CONNECT_STATE_TTL_MS) return null;
+    return o.state;
+  }catch(e){ return null; }
+}
+function _gmailConnectStatePeek(){
+  try{
+    const o=JSON.parse(localStorage.getItem(GMAIL_CONNECT_STATE_KEY)||'null');
+    if(!o||!o.state) return null;
+    if(Date.now()-(o.ts||0)>GMAIL_CONNECT_STATE_TTL_MS) return null;
+    return o.state;
+  }catch(e){ return null; }
+}
+
+function _gmailConnectAuthUrl(){
+  const state='gmailconnect:'+_randUrlSafe(12);
+  _gmailConnectStateSave(state);
+  const redirectUri=window.location.origin+'/';
+  const params={
+    response_type:'code',
+    client_id:GMAIL_CONNECT_CLIENT_ID,
+    redirect_uri:redirectUri,
+    state:state,
+    scope:'https://www.googleapis.com/auth/gmail.readonly',
+    access_type:'offline',   // ต้องมีถึงจะได้ refresh_token กลับมา (ไม่งั้นได้แค่ access_token อายุสั้น)
+    prompt:'consent',        // บังคับ Google ถามยินยอมใหม่ทุกครั้ง กัน user reconnect แล้วไม่ได้ refresh_token ใหม่
+  };
+  return 'https://accounts.google.com/o/oauth2/v2/auth?'+new URLSearchParams(params).toString();
+}
+
+// เรียกจาก Settings เท่านั้น — ต้อง login อยู่แล้วเสมอ (ไม่มี mode='login' แบบ LINE เพราะ Gmail
+// ไม่ใช่วิธี sign-in ของแอปนี้ เป็นแค่แหล่งข้อมูลอ่านอย่างเดียว)
+function gmailConnectAccount(){
+  if(!currentUser||!_auth||!_auth.currentUser){ toast('กรุณาเข้าสู่ระบบก่อน','error'); return; }
+  window.location.href=_gmailConnectAuthUrl();
+}
+
+async function gmailDisconnectAccount(){
+  if(!currentUser||!_auth||!_auth.currentUser) return;
+  if(!confirm('ยกเลิกการเชื่อมต่อ Gmail? ระบบจะหยุดตรวจอีเมลแจ้งเตือนธนาคารให้')) return;
+  try{
+    const idToken=await _auth.currentUser.getIdToken();
+    const resp=await fetch(GMAIL_DISCONNECT_URL,{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+idToken},
+      body:JSON.stringify({username:currentUser})});
+    const data=await resp.json();
+    if(!resp.ok) throw new Error(data.error||'disconnect failed');
+    toast('ยกเลิกการเชื่อมต่อ Gmail แล้ว','info');
+    if(typeof renderGmailConnectSettings==='function') renderGmailConnectSettings();
+  }catch(e){
+    toast('ยกเลิกไม่สำเร็จ: '+(e.message||e),'error');
+  }
+}
+
+// เรียกทุกครั้งที่โหลดหน้า (เหมือน _handleLineCallback) — no-op เงียบๆ ถ้าไม่มี code/state ค้างอยู่
+// หรือ state ไม่ตรงกับที่ตัวเองบันทึกไว้ (แปลว่า callback นี้เป็นของ provider อื่น เช่น LINE ไม่ใช่ของเรา)
+// **ต้องเรียกก่อน _handleLineCallback() เสมอ** — ถ้า match แล้วเคลียร์ code/state ออกจาก URL ทันที
+// กัน _handleLineCallback() เห็น code/state ของเราแล้วเข้าใจผิดว่าเป็น LINE callback ที่ state ไม่ตรง
+// (จะขึ้น error "เข้าสู่ระบบด้วย LINE ไม่สำเร็จ" ผิดๆ ทั้งที่จริงเป็นคนละ flow กันเลย)
+async function _handleGmailConnectCallback(){
+  const params=new URLSearchParams(window.location.search);
+  const code=params.get('code');
+  const state=params.get('state');
+  if(!code||!state) return;
+  const savedState=_gmailConnectStatePeek();
+  if(!savedState||state!==savedState) return; // ไม่ใช่ callback ของเรา — ปล่อยให้ handler อื่นตัดสินใจ
+  _gmailConnectStateTake();
+  history.replaceState(null,'',window.location.pathname);
+  await _waitFbAuth();
+  if(!currentUser||!_auth.currentUser){ toast('กรุณาเข้าสู่ระบบก่อน','error'); return; }
+  const redirectUri=window.location.origin+'/';
+  try{
+    const idToken=await _auth.currentUser.getIdToken();
+    const resp=await fetch(GMAIL_CONNECT_CALLBACK_URL,{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+idToken},
+      body:JSON.stringify({code,redirectUri,username:currentUser})});
+    const data=await resp.json();
+    if(!resp.ok) throw new Error(data.error||'Gmail connect failed');
+    toast('เชื่อมต่อ Gmail สำเร็จ: '+(data.email||''),'success');
+    if(typeof renderGmailConnectSettings==='function') renderGmailConnectSettings();
+  }catch(e){
+    console.error('[gmail connect]',e);
+    toast('เชื่อมต่อ Gmail ไม่สำเร็จ: '+(e.message||e),'error');
+  }
 }
 
 // ── Toggle login/register ──
@@ -9705,6 +9818,9 @@ if(!currentUser){
 var _lineCallbackTimer=setInterval(function(){
   if(typeof firebase!=='undefined'&&firebase.auth){
     clearInterval(_lineCallbackTimer);
+    // ต้องเรียกก่อน _handleLineCallback() เสมอ — ทั้งคู่ใช้ redirect_uri เดียวกัน (origin เดียวกัน)
+    // ถ้า match เป็นของตัวเองจะเคลียร์ code/state ออกจาก URL ก่อน กัน _handleLineCallback() เข้าใจผิด
+    try{ _handleGmailConnectCallback(); }catch(e){}
     try{ _handleLineCallback(); }catch(e){}
   }
 },200);
@@ -13177,6 +13293,58 @@ function lineDisconnectAccount(){
       if(typeof window._clearSidebarLineStatus==='function') window._clearSidebarLineStatus();
     })
     .catch(function(e){ toast('เกิดข้อผิดพลาด: '+e.message,'error'); });
+}
+
+// ══════════════════════════════════════════
+//  GMAIL CONNECT — patch renderSettings (เพิ่ม 2026-08-22)
+// ══════════════════════════════════════════
+// นำเข้ารายการจากอีเมลแจ้งเตือนธนาคารอัตโนมัติ (ฟังก์ชันเดียวกับที่ owner ใช้ผ่าน Telegram มาตั้งแต่แรก
+// — gmail_bank_alert.py — แต่เปิดให้ user อื่นใช้ได้ด้วย แจ้งเตือนผ่าน LINE แทน Telegram ส่วนตัวของ owner)
+// ต้องเชื่อมต่อ LINE ไว้ก่อนเสมอ ไม่งั้นเชื่อม Gmail ไปก็ไม่มีช่องทางแจ้งเตือนเลย (ตั้งใจไม่รองรับ
+// เชื่อม Gmail แบบไม่มี LINE — บล็อกไว้ตั้งแต่ UI เลยกันสร้าง state ที่ใช้งานไม่ได้จริง)
+// การ์ดนี้เป็นคนละอันจาก "เชื่อมต่อ Gmail (Google)" ที่มีอยู่แล้ว (อันนั้นแค่ผูก Google เป็นวิธี login
+// เพิ่ม ไม่เกี่ยวกับการอ่านอีเมล) — ตั้งชื่อหัวข้อให้ต่างกันชัดเจนกันสับสน
+const _origRenderSettingsGmail = renderSettings;
+renderSettings = function(){
+  _origRenderSettingsGmail();
+  renderGmailConnectSettings();
+};
+
+async function renderGmailConnectSettings(){
+  var el = document.getElementById('pg-settings');
+  if(!el) return;
+  var oldCard = document.getElementById('gmail-connect-card');
+  if(oldCard) oldCard.remove();
+  var boxId = 'gmail-connect-box';
+  el.insertAdjacentHTML('beforeend','<div class="set-card" id="gmail-connect-card" style="margin-top:16px"><div class="set-title"><i class="fas fa-envelope-circle-check" style="color:#ef4444;margin-right:8px"></i>นำเข้ารายการจากอีเมลธนาคาร (Gmail)</div><div id="'+boxId+'" style="font-size:13px;color:var(--muted)">กำลังโหลด...</div></div>');
+  if(!_fs||!currentUser) return;
+  try{
+    var doc = await _fs.collection('members').doc(currentUser).get();
+    var data = doc.exists ? doc.data() : {};
+    var box = document.getElementById(boxId); // re-query กัน DOM เปลี่ยนไปแล้วระหว่างรอ await
+    if(!box) return;
+    if(!data.lineUserId){
+      box.innerHTML = '<div style="background:rgba(100,116,139,.1);border:1px solid var(--border);border-radius:10px;padding:12px 14px">'
+        +'ฟีเจอร์นี้แจ้งเตือนผ่าน LINE — กรุณา<a href="javascript:void(0)" onclick="var c=document.getElementById(\'line-connect-card\');if(c)c.scrollIntoView({behavior:\'smooth\'})" style="color:var(--primary-l)">เชื่อมต่อ LINE</a>ก่อน ถึงจะเชื่อมต่อ Gmail ได้'
+        +'</div>';
+    } else if(data.gmailConnected){
+      box.innerHTML = '<div style="display:flex;align-items:center;gap:10px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:12px 14px;flex-wrap:wrap">'
+        +'<i class="fas fa-check-circle" style="color:#10b981;font-size:18px"></i>'
+        +'<div style="flex:1;min-width:180px"><div style="font-weight:700;color:#10b981">เชื่อมต่อ Gmail แล้ว</div>'
+        +'<div style="font-size:12px;color:var(--muted)">ระบบจะตรวจอีเมลแจ้งเตือนธนาคารแล้วส่งให้กดยืนยันผ่าน LINE อัตโนมัติ</div></div>'
+        +'<button class="btn btn-ghost" style="padding:6px 12px;font-size:12px" onclick="gmailDisconnectAccount()">ยกเลิกการเชื่อมต่อ</button>'
+        +'</div>';
+    } else {
+      box.innerHTML = '<div style="max-width:420px">'
+        +'<div style="margin-bottom:10px">เชื่อมต่อ Gmail เพื่อให้ระบบตรวจอีเมลแจ้งเตือนธุรกรรมธนาคาร (SCB/KBank/กรุงไทย/TTB/กรุงศรี/เกียรตินาคิน) แล้วส่งให้คุณกดยืนยันผ่าน LINE — บันทึกเป็นรายการอัตโนมัติไม่ต้องพิมพ์เอง (อ่านเฉพาะอีเมลแจ้งเตือนธนาคารเท่านั้น ไม่แตะอีเมลอื่น ไม่ลบ/ไม่ส่งอีเมลใดๆ)</div>'
+        +'<button class="btn btn-primary" onclick="gmailConnectAccount()"><i class="fas fa-envelope-circle-check"></i> เชื่อมต่อ Gmail</button>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:8px">Google อาจขึ้นหน้าจอเตือน "แอปยังไม่ได้ยืนยัน" — กด Advanced → ไปที่ MoneyMind (ไม่ปลอดภัย) เพื่อดำเนินการต่อได้ตามปกติ (แอปอยู่ระหว่างขอ verify กับ Google)</div>'
+        +'</div>';
+    }
+  }catch(e){
+    var box2 = document.getElementById(boxId);
+    if(box2) box2.textContent = 'โหลดสถานะไม่สำเร็จ';
+  }
 }
 
 // ══════════════════════════════════════════

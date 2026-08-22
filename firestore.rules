@@ -39,6 +39,22 @@ service cloud.firestore {
       allow write: if ownsAccount(userId) || unclaimed(userId);
     }
 
+    // ── Gmail bank-alert (multi-user, เพิ่ม 2026-08-22) ──
+    // gmailAuth เก็บ Gmail OAuth refresh_token/access_token ต่อ user — ห้าม client อ่าน/เขียนเด็ดขาด
+    // ไม่ใช่แบบ lineUserId (แค่ id อ้างอิง ไม่ sensitive) — token นี้เทียบเท่ารหัสผ่านชั่วคราวเข้าอีเมลจริง
+    // เข้าถึงได้ทางเดียวคือ SA token ฝั่ง server (ai_proxy.py / gmail_bank_alert_multiuser.py) บายพาส rules
+    match /gmailAuth/{userId} {
+      allow read, write: if false;
+    }
+    // gmailPending เก็บธุรกรรมที่ตรวจพบแล้วรอผู้ใช้กดยืนยัน/ข้ามผ่าน LINE — เขียน/ลบโดย server เท่านั้น
+    match /gmailPending/{userId} {
+      allow read, write: if false;
+    }
+    // gmailImportState เก็บ dedup state (message id ที่เคยประมวลผลแล้ว) ต่อ user — server เท่านั้น
+    match /gmailImportState/{userId} {
+      allow read, write: if false;
+    }
+
     // ── สรุป usage หลังบ้าน (เขียนโดย admin_stats.py ผ่าน SA เท่านั้น) ──
     // owner (warakorn) อ่านได้คนเดียว; client เขียนไม่ได้ (SA token บายพาส rules)
     match /admin/{doc} {
