@@ -15643,6 +15643,9 @@ const FINANCIALS_PROXY_URL='https://34-134-61-137.sslip.io/v1/financials';
 // สถิติผู้เข้าชมเว็บรายวัน (GoatCounter self-hosted บน VM เดียวกัน) — owner เท่านั้น ใช้ในหน้า Admin
 // ⚠️ IP เดียวกับ MAYA_PROXY_URL/CHECKOUT_URL/QUOTE_PROXY_URL — แก้พร้อมกันทุกจุดถ้า VM IP เปลี่ยน
 const SITESTATS_URL='https://34-134-61-137.sslip.io/v1/sitestats';
+// ทางส่ง error สำรองตอนยังไม่ได้ login — rule ของ Firestore คือ reports: allow create: if authed()
+// ทำให้ crash ที่หน้า login/สมัคร (อาการที่อยากรู้ที่สุด) เขียนไม่ผ่านแล้วหายเงียบมาตลอด
+const REPORT_URL='https://34-134-61-137.sslip.io/v1/report';
 // omise.js ถูกถอดออกจาก <head> แล้ว (2026-08-22) — เดิมเป็น render-blocking script 32 KB +
 // อีก 1 โดเมน/TLS handshake ในทุก cold start ทั้งที่ใช้เฉพาะตอนกดสมัคร subscription เท่านั้น
 // (เป็นส่วนหนึ่งของการแก้ Apple reject 2.1(a) "stuck at splash"/"error on launch" — ดู
@@ -17914,16 +17917,26 @@ window.shareApp=async function(){
 //   collection 'reports' ให้ authenticated user เท่านั้น — ไม่มี read/list)
 // ══════════════════════════════════════════
 async function _sendReport(payload){
+  const common={
+    ua: navigator.userAgent.slice(0,120),
+    page: (typeof curPage!=='undefined'?curPage:'')
+  };
   try{
-    if(!_fs) return false;
-    await _fs.collection('reports').add(Object.assign({
-      user: currentUser||'(ไม่ได้ login)',
-      ua: navigator.userAgent.slice(0,120),
-      page: (typeof curPage!=='undefined'?curPage:''),
-      ts: firebase.firestore.FieldValue.serverTimestamp()
-    }, payload));
-    return true;
-  }catch(e){ console.warn('[report]',e.message); return false; }
+    if(_fs&&currentUser){
+      await _fs.collection('reports').add(Object.assign({
+        user: currentUser,
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+      }, common, payload));
+      return true;
+    }
+  }catch(e){ console.warn('[report]',e.message); }
+  // ยังไม่ login (หรือเขียน Firestore ไม่ผ่าน) → ส่งผ่าน proxy แทน
+  // ฝั่งเซิร์ฟเวอร์คุมด้วยเพดานต่อ IP/ต่อวัน + เช็ค Origin จึงไม่ต้องผ่อนปรน rule ของ Firestore
+  try{
+    const r=await fetch(REPORT_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(Object.assign({},common,payload))});
+    return r.ok;
+  }catch(e){ console.warn('[report:proxy]',e.message); return false; }
 }
 
 // ══════════════════════════════════════════
