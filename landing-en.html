@@ -778,6 +778,31 @@
 <!-- self-hosted analytics (GoatCounter) — aggregate pageviews only, no cookies, no personal
      data collected; see privacy.html section 1 for the disclosure -->
 <script data-goatcounter="https://stats.34-134-61-137.sslip.io/count" async src="https://stats.34-134-61-137.sslip.io/count.js"></script>
+<!-- Visit beacon (เพิ่ม 2026-08-27) — GoatCounter นับได้แค่ pageviews และไม่ track time-on-page
+     เลย ตัวนี้จึงเก็บ "คนจริง + อยู่นานแค่ไหน" เพิ่ม → POST /v1/visit บน VM เดียวกับ ai_proxy
+     ไม่มี cookie (ใช้ sessionStorage ที่ตายเมื่อปิดแท็บ) ฝั่ง server แฮช IP ทิ้งทันทีไม่เก็บดิบ
+     ⚠️ inline เท่านั้น ห้ามเพิ่มไฟล์ที่บล็อกการ render (เพิ่งไล่แก้ LCP ไปทั้งชุด) -->
+<script>
+(function(){
+  var U='https://34-134-61-137.sslip.io/v1/visit', K='mm_sid', sid;
+  function rnd(){ return ('0000000'+Math.floor(Math.random()*0xffffffff).toString(16)).slice(-8); }
+  try{ sid=sessionStorage.getItem(K)||(rnd()+rnd()+Date.now().toString(16)); sessionStorage.setItem(K,sid); }
+  catch(e){ sid=rnd()+rnd()+Date.now().toString(16); }   // โหมดส่วนตัว: ใช้ครั้งเดียวทิ้ง ห้ามพัง
+  var q=new URLSearchParams(location.search), sent=false;
+  function hit(ev){
+    try{ navigator.sendBeacon(U,new Blob([JSON.stringify({
+      sid:sid, ev:ev, page:location.pathname,
+      ref:ev==='start'&&!sent?document.referrer:'',
+      utm:ev==='start'&&!sent?(q.get('utm_source')||''):''
+    })],{type:'text/plain'})); sent=true; }catch(e){}
+  }
+  hit('start');
+  var t=setInterval(function(){ if(!document.hidden) hit('ping'); },30000);
+  addEventListener('visibilitychange',function(){ if(document.hidden) hit('ping'); });
+  // pagehide ไม่ใช่ beforeunload — Safari/iOS ไม่ยิง beforeunload ให้ตอนปิดแท็บ
+  addEventListener('pagehide',function(){ hit('ping'); clearInterval(t); });
+})();
+</script>
 </head>
 <body>
 
