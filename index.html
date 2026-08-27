@@ -1235,10 +1235,19 @@
     try{ navigator.sendBeacon(U,new Blob([JSON.stringify({
       sid:sid, ev:ev, page:location.pathname,
       ref:ev==='start'&&!sent?document.referrer:'',
-      utm:ev==='start'&&!sent?(q.get('utm_source')||''):''
+      utm:ev==='start'&&!sent?(q.get('utm_source')||''):'',
+      depth:window.__mmDepth||'', clicks:(window.__mmClicks||[]).join(',')
     })],{type:'text/plain'})); sent=true; }catch(e){}
   }
   hit('start');
+  // เปิดให้ nav() ในแอปเรียกได้ — SPA ไม่เปลี่ยน URL ตอนเดินเมนู GoatCounter จึงนับไม่ได้
+  // throttle 2 วิต่อหน้า กันคนกดสลับเมนูรัวๆ แล้วชนเพดาน 60 ครั้ง/IP/นาที
+  var lastPg={};
+  window.__mmPage=function(pg){
+    var now=Date.now(); if(now-(lastPg[pg]||0)<2000) return; lastPg[pg]=now;
+    try{ navigator.sendBeacon(U,new Blob([JSON.stringify({sid:sid,ev:'page',page:pg})],
+      {type:'text/plain'})); }catch(e){}
+  };
   var t=setInterval(function(){ if(!document.hidden) hit('ping'); },30000);
   addEventListener('visibilitychange',function(){ if(document.hidden) hit('ping'); });
   // pagehide ไม่ใช่ beforeunload — Safari/iOS ไม่ยิง beforeunload ให้ตอนปิดแท็บ
@@ -1980,7 +1989,7 @@
         <div id="model-status" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
       </div>
     </div>
-    <!-- AI Subscription card เปิดกลับมา 2026-08-13 — เดิมปิดไว้ 2026-08-10 (Omise ยังไม่ผ่าน KYC) ตอนนี้เปิดกลับให้เห็นหน้า checkout จริงเพื่อ resubmit KYC (Omise ระบุว่าเว็บต้องมีหน้า checkout+ราคาให้ตรวจ) — key ที่ผูกอยู่ยังเป็น test mode (pkey_test_/skey_test_) ไม่มีการตัดเงินจริงแม้มีคนกดสมัคร -->
+    <!-- AI Subscription card เปิดกลับมา 2026-08-13 — เดิมปิดไว้ 2026-08-10 (Omise ยังไม่ผ่าน KYC) ตอนนี้เปิดกลับให้เห็นหน้า checkout จริงเพื่อ resubmit KYC (Omise ระบุว่าเว็บต้องมีหน้า checkout+ราคาให้ตรวจ) — **อัปเดต 2026-08-27: KYC ผ่านแล้ว สลับเป็น live key แล้ว → ตัดเงินจริงเมื่อกดสมัคร** (client ใช้ pkey live แล้ว; ฝั่ง ai_proxy.py ต้องใส่ skey live ใน .env ของ VM ให้ตรงกันด้วย) -->
     <div class="set-card ios-hide" id="ai-sub-card">
       <div class="set-title"><i class="fas fa-crown" style="color:#f59e0b"></i> <span data-i18n="set_sub_title">AI Subscription</span></div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7" data-i18n="set_sub_desc">
@@ -5060,7 +5069,7 @@ const I18N = {
     aiu_loading:'กำลังโหลดข้อมูลการใช้ AI...',aiu_no_data:'ยังไม่มีข้อมูล',aiu_claude_hint:'รัน <code>python claude_usage_report.py --firestore</code> บนโน้ตบุ๊ก (transcript อยู่ในเครื่อง ไม่ใช่ VM)',aiu_gemini_hint:'อัปเดตทุกวันจาก Cloud Monitoring · หรือรัน <code>python gemini_usage_report.py --firestore</code> บน VM',aiu_by_model:'แยกตามรุ่นโมเดล (ใช้มากสุดบนสุด)',aiu_proj_vs_cap:'คาดการณ์เดือนนี้ vs spend cap',aiu_over_cap:'คาดว่าจะเกิน cap — usage จะถูก pause เมื่อถึง ฿{cap}',aiu_claude_banner:'เป็น<b>ประมาณการแบบ API</b> — คุณใช้ Pro/Max เหมารายเดือน ตัวเลขนี้ดูปริมาณการใช้ ไม่ใช่เงินที่จ่ายจริง',aiu_claude_footer:'* นับจาก transcript Claude Code ทุกโปรเจกต์ในเครื่องนี้ (~/.claude) · ราคา API opus $5/$25 · cache read 0.1× · USDTHB={usdthb}',aiu_gemini_footer:'* ข้อมูลจริงจาก Cloud Monitoring (Gemini API · project Best1) — ครอบคลุมเว็บ Maya + Telegram bot + ทุกสคริปต์ · ราคา flash $0.30/$2.50 ต่อ 1M tok, USDTHB={usdthb}',aiu_today:'วันนี้',aiu_this_month:'เดือนนี้ (ถึงวันนี้)',aiu_days_with_data:'วันที่มีข้อมูล',aiu_avg_per_day:'เฉลี่ย/วัน',aiu_month_projection:'คาดการณ์ทั้งเดือน',aiu_estimate:'ประมาณการ',aiu_daily_cost:'ค่าใช้จ่ายรายวัน (฿)',aiu_daily_detail:'รายละเอียดรายวัน',aiu_baht_per_day:'฿/วัน',
     admin_no_access:'ไม่มีสิทธิ์เข้าถึงหน้านี้',admin_loading:'กำลังโหลดข้อมูล...',admin_fb_not_ready:'Firebase ยังไม่พร้อม',admin_never:'ไม่เคย',admin_just_now:'เมื่อกี้',admin_min_ago:'นาทีที่แล้ว',admin_hr_ago:'ชม.ที่แล้ว',admin_day_ago:'วันที่แล้ว',
     admin_server_usage:'Usage รวม (ฝั่งเซิร์ฟเวอร์)',admin_total_tx:'รายการรวม',admin_total_nw:'Net Worth รวม',admin_has_real_data:'มีข้อมูลจริง',admin_avg_tx_per_user:'รายการ/คน เฉลี่ย',admin_usage_per_user:'การใช้งานต่อคน',admin_user:'ผู้ใช้',admin_last_tx:'รายการล่าสุด',admin_features_used:'ฟีเจอร์ที่ใช้',admin_ai_quota:'โควต้า AI (เดือน/วัน)',admin_no_server_usage:'ยังไม่มี usage รวมฝั่งเซิร์ฟเวอร์ — รัน <code>admin_stats.py</code> บน VM (อ่าน userdata ทุกคนผ่าน Service Account → เขียน <code>admin/summary</code>) แล้วรีเฟรช',admin_nw_trend:'เทรนด์ Net Worth รวมย้อนหลัง',
-    admin_online:'ออนไลน์',admin_users:'ผู้ใช้',admin_total_users:'ผู้ใช้ทั้งหมด',admin_in_7_days:'ใน 7 วัน',admin_online_now:'ออนไลน์อยู่',admin_dau_today:'DAU วันนี้',admin_wau_7d:'WAU 7 วัน',admin_mau_30d:'MAU 30 วัน',admin_signup_today:'สมัครวันนี้',admin_churn_30d:'เงียบ >30 วัน',admin_never_login:'ไม่เคยล็อกอิน',admin_has_real_email:'มี email จริง',admin_cumulative_users:'ผู้ใช้สะสม',admin_platform:'แพลตฟอร์ม',admin_search:'ค้นหา',admin_last_seen:'ล่าสุด',admin_online_within_10min:'ออนไลน์ภายใน 10 นาที',admin_load_failed:'โหลดข้อมูลไม่ได้',admin_test_account:'ทดสอบ',admin_show_test_accounts:'แสดงบัญชีทดสอบ',admin_web_views:'ยอดเข้าชมเว็บ',admin_views_note:'ตัวเลขใหญ่คือจำนวนคนที่เข้าวันนี้ ส่วน “เปิดหน้า” คือจำนวนครั้ง — คนเดียวเปิดหลายครั้งได้',admin_v_people:'คนเข้าเว็บ',admin_v_pageviews:'เปิดหน้า',admin_v_sessions:'ครั้งที่เข้า',admin_v_people_note:'เริ่มนับจำนวนคนตั้งแต่ 27 ส.ค. 2569 — ก่อนหน้านั้นมีแต่ยอดเปิดหน้า',admin_v_dur_title:'อยู่บนเว็บนานแค่ไหน',admin_v_dur_median:'อยู่นานประมาณ',admin_v_dur_avg:'เฉลี่ย',admin_v_bounce:'เปิดแล้วปิดเลย',admin_v_dur_note:'ใช้ค่ากลาง (median) ต่อการเข้า 1 ครั้ง ไม่ใช่ค่าเฉลี่ย เพราะแท็บที่เปิดค้างไว้ดันค่าเฉลี่ยให้เพี้ยน',admin_v_b1:'ไม่ถึง 10 วิ',admin_v_b2:'10 วิ–1 นาที',admin_v_b3:'1–5 นาที',admin_v_b4:'เกิน 5 นาที',admin_v_sec:'วิ',admin_v_min:'นาที',admin_v_hours:'ช่วงเวลาที่คนเข้า (เวลาไทย)',admin_v_campaign:'แคมเปญที่ติดแท็ก (utm)',admin_v_signup_daily:'สมัครรายวัน',admin_v_signup_how:'สมัครด้วยวิธีไหน',admin_views_today:'วันนี้',admin_views_yesterday:'เมื่อวาน',admin_views_7d:'7 วัน',admin_views_30d:'30 วัน',admin_views_unavailable:'ดึงสถิติเว็บไม่ได้',admin_views_app:'ตัวแอป',admin_views_landing_th:'หน้าแนะนำ (ไทย)',admin_views_landing_en:'หน้าแนะนำ (อังกฤษ)',admin_views_sources:'มาจากไหน',admin_views_direct:'เข้าตรง / ไม่มีที่มา',admin_conv_title:'หน้าแนะนำ → สมัคร',admin_conv_views:'เข้าชม',admin_conv_signups:'สมัคร',admin_conv_note:'บอกทิศทางคร่าวๆ ไม่ใช่ funnel จริง — บางคนสมัครจากลิงก์ LINE/แชร์โดยไม่ผ่านหน้าแนะนำ และบางคนเข้าชมวันนี้แต่ไปสมัครสัปดาห์หน้า',admin_adoption:'ฟีเจอร์ไหนมีคนใช้จริง',admin_adoption_note:'นับจากผู้ใช้จริง {n} คน (ไม่รวมบัญชีทดสอบ)',admin_adopt_line:'เชื่อม LINE',admin_adopt_line_friend:'เพิ่มบอทเป็นเพื่อนแล้ว',admin_adopt_gmail:'เชื่อม Gmail (ดักอีเมลธนาคาร)',admin_adopt_push:'เปิด push',admin_adopt_login:'วิธีล็อกอิน',admin_dev_title:'ผู้เข้าชมใช้อะไร',admin_dev_mobile:'มือถือ',admin_dev_desktop:'คอม',share_app_btn:'แชร์แอปให้เพื่อน',line_connect_btn:'เชื่อมต่อ LINE',line_connected_btn:'เชื่อมต่อ LINE แล้ว',line_notfriend_title:'ยังไม่ได้เพิ่มบอทเป็นเพื่อน',line_notfriend_desc:'เชื่อมต่อบัญชีแล้ว แต่ LINE จะส่งแจ้งเตือนให้ไม่ได้จนกว่าจะเพิ่ม MoneyMind เป็นเพื่อน',line_notfriend_add:'เพิ่มเพื่อนเลย',line_notfriend_recheck:'ตรวจสอบอีกครั้ง',line_notfriend_qr:'อยู่บนคอม? สแกน QR ด้วยมือถือ',share_app_message:'ลองแอปจัดการเงินที่ผมใช้อยู่ดูสิ บันทึกรายรับ-รายจ่ายด้วย AI สแกนใบเสร็จ คำนวณภาษีได้ในตัว ใช้งานฟรี',share_link_copied:'คัดลอกลิงก์แอปแล้ว!',
+    admin_online:'ออนไลน์',admin_users:'ผู้ใช้',admin_total_users:'ผู้ใช้ทั้งหมด',admin_in_7_days:'ใน 7 วัน',admin_online_now:'ออนไลน์อยู่',admin_dau_today:'DAU วันนี้',admin_wau_7d:'WAU 7 วัน',admin_mau_30d:'MAU 30 วัน',admin_signup_today:'สมัครวันนี้',admin_churn_30d:'เงียบ >30 วัน',admin_never_login:'ไม่เคยล็อกอิน',admin_has_real_email:'มี email จริง',admin_cumulative_users:'ผู้ใช้สะสม',admin_platform:'แพลตฟอร์ม',admin_search:'ค้นหา',admin_last_seen:'ล่าสุด',admin_online_within_10min:'ออนไลน์ภายใน 10 นาที',admin_load_failed:'โหลดข้อมูลไม่ได้',admin_test_account:'ทดสอบ',admin_show_test_accounts:'แสดงบัญชีทดสอบ',admin_web_views:'ยอดเข้าชมเว็บ',admin_views_note:'ตัวเลขใหญ่คือจำนวนคนที่เข้าวันนี้ ส่วน “เปิดหน้า” คือจำนวนครั้ง — คนเดียวเปิดหลายครั้งได้',admin_v_people:'คนเข้าเว็บ',admin_v_pageviews:'เปิดหน้า',admin_v_sessions:'ครั้งที่เข้า',admin_v_people_note:'เริ่มนับจำนวนคนตั้งแต่ 27 ส.ค. 2569 — ก่อนหน้านั้นมีแต่ยอดเปิดหน้า',admin_v_dur_title:'อยู่บนเว็บนานแค่ไหน',admin_v_dur_median:'อยู่นานประมาณ',admin_v_dur_avg:'เฉลี่ย',admin_v_bounce:'เปิดแล้วปิดเลย',admin_v_dur_note:'ใช้ค่ากลาง (median) ต่อการเข้า 1 ครั้ง ไม่ใช่ค่าเฉลี่ย เพราะแท็บที่เปิดค้างไว้ดันค่าเฉลี่ยให้เพี้ยน',admin_v_b1:'ไม่ถึง 10 วิ',admin_v_b2:'10 วิ–1 นาที',admin_v_b3:'1–5 นาที',admin_v_b4:'เกิน 5 นาที',admin_v_sec:'วิ',admin_v_min:'นาที',admin_v_hours:'ช่วงเวลาที่คนเข้า (เวลาไทย)',admin_v_campaign:'แคมเปญที่ติดแท็ก (utm)',admin_v_signup_daily:'สมัครรายวัน',admin_v_signup_how:'สมัครด้วยวิธีไหน',admin_v_vs_prev:'เทียบ 7 วันก่อน',admin_v_people_7d:'คนเข้าเว็บ 7 วัน',admin_v_funnel:'อ่านหน้าแนะนำถึงตรงไหน',admin_v_funnel_note:'นับจากคนที่เลื่อนถึงอย่างน้อยส่วนนั้น — ส่วนที่ตัวเลขตกแรงคือจุดที่คนเลิกอ่าน',admin_v_sec_labels:'หัวหน้าแรก,ตัวอย่างการใช้งาน,ฟีเจอร์,แรงค์/เกม,ความปลอดภัย,ราคา,คำถามที่พบบ่อย,รีวิว,เริ่มใช้งาน 3 ขั้น,ปุ่มปิดท้าย',admin_v_cta:'ปุ่มที่ถูกกด',admin_v_cta_labels:'เข้าแอป,iOS,Android',admin_v_opened:'เปิดดู',admin_v_adopt_note2:'ตัวเลขซ้าย = เปิดดูกี่ครั้งใน 30 วัน · ตัวเลขขวา = มีข้อมูลจริงกี่คน — เปิดเยอะแต่ไม่มีข้อมูล แปลว่าน่าสนใจแต่ใช้ยาก',admin_views_today:'วันนี้',admin_views_yesterday:'เมื่อวาน',admin_views_7d:'7 วัน',admin_views_30d:'30 วัน',admin_views_unavailable:'ดึงสถิติเว็บไม่ได้',admin_views_app:'ตัวแอป',admin_views_landing_th:'หน้าแนะนำ (ไทย)',admin_views_landing_en:'หน้าแนะนำ (อังกฤษ)',admin_views_sources:'มาจากไหน',admin_views_direct:'เข้าตรง / ไม่มีที่มา',admin_conv_title:'หน้าแนะนำ → สมัคร',admin_conv_views:'เข้าชม',admin_conv_signups:'สมัคร',admin_conv_note:'บอกทิศทางคร่าวๆ ไม่ใช่ funnel จริง — บางคนสมัครจากลิงก์ LINE/แชร์โดยไม่ผ่านหน้าแนะนำ และบางคนเข้าชมวันนี้แต่ไปสมัครสัปดาห์หน้า',admin_adoption:'ฟีเจอร์ไหนมีคนใช้จริง',admin_adoption_note:'นับจากผู้ใช้จริง {n} คน (ไม่รวมบัญชีทดสอบ)',admin_adopt_line:'เชื่อม LINE',admin_adopt_line_friend:'เพิ่มบอทเป็นเพื่อนแล้ว',admin_adopt_gmail:'เชื่อม Gmail (ดักอีเมลธนาคาร)',admin_adopt_push:'เปิด push',admin_adopt_login:'วิธีล็อกอิน',admin_dev_title:'ผู้เข้าชมใช้อะไร',admin_dev_mobile:'มือถือ',admin_dev_desktop:'คอม',share_app_btn:'แชร์แอปให้เพื่อน',line_connect_btn:'เชื่อมต่อ LINE',line_connected_btn:'เชื่อมต่อ LINE แล้ว',line_notfriend_title:'ยังไม่ได้เพิ่มบอทเป็นเพื่อน',line_notfriend_desc:'เชื่อมต่อบัญชีแล้ว แต่ LINE จะส่งแจ้งเตือนให้ไม่ได้จนกว่าจะเพิ่ม MoneyMind เป็นเพื่อน',line_notfriend_add:'เพิ่มเพื่อนเลย',line_notfriend_recheck:'ตรวจสอบอีกครั้ง',line_notfriend_qr:'อยู่บนคอม? สแกน QR ด้วยมือถือ',share_app_message:'ลองแอปจัดการเงินที่ผมใช้อยู่ดูสิ บันทึกรายรับ-รายจ่ายด้วย AI สแกนใบเสร็จ คำนวณภาษีได้ในตัว ใช้งานฟรี',share_link_copied:'คัดลอกลิงก์แอปแล้ว!',
     sync_not_synced:'ยังไม่ได้ซิงค์',sync_force_title:'บังคับ sync ขึ้น cloud',uploaded:'อัปโหลดแล้ว',loaded_from_cloud:'โหลดจาก Cloud แล้ว',no_cloud_data:'ไม่มีข้อมูลใน Cloud',no_recoverable_data:'ไม่พบข้อมูลที่กู้คืนได้',synced_new_device:'โหลดข้อมูลใหม่จากอุปกรณ์อื่นแล้ว ☁️',db_size_warn:'ข้อมูลของคุณใกล้เต็มขีดจำกัดระบบ (Firestore 1MB/บัญชี) แนะนำ Export ข้อมูลเก่าเก็บไว้ แล้วลบรายการที่ไม่จำเป็นในหน้าตั้งค่า ไม่งั้น sync ข้ามอุปกรณ์อาจล้มเหลว',cloud_load_failed:'โหลด cloud ไม่ได้',new_data_from_device:'มีข้อมูลใหม่จากอุปกรณ์อื่น ☁️ (จะโหลดหลังปิดฟอร์ม)',synced_from_device:'ซิงค์จากอุปกรณ์อื่นแล้ว ☁️',uploaded_to_cloud:'อัปโหลดข้อมูลขึ้น Cloud แล้ว',recover_success:'กู้คืนข้อมูลสำเร็จ ✓',welcome_username:'ยินดีต้อนรับ! ชื่อผู้ใช้',relogin_for_sync:'โปรดออกจากระบบแล้วเข้าสู่ระบบใหม่ 1 ครั้ง เพื่อเปิดการซิงค์ข้อมูล (อัปเดตความปลอดภัย)',
     port_need_name:'กรุณาใส่ชื่อพอร์ต',port_edited:'แก้ไขพอร์ตแล้ว',port_created:'สร้างพอร์ตใหม่แล้ว',port_confirm_delete:'ลบพอร์ตนี้? การลงทุนในพอร์ตจะถูกย้ายไป "ไม่ระบุพอร์ต"',port_not_found_or_unlinked:'ไม่พบพอร์ตหรือยังไม่ได้ลิ้งเป้าหมาย',port_saving_goal_not_found:'ไม่พบเป้าหมายออมที่ลิ้งไว้',port_sent_to_saving:'ส่งยอด {amt} ไปยัง "{name}" แล้ว',
     inv_need_name_first:'กรุณาใส่ชื่อ/Ticker ก่อน',inv_fetching:'กำลังดึง',inv_price:'ราคา',inv_fetch_price_failed:'ดึงราคาไม่ได้',inv_updating_price:'กำลังอัปเดตราคา',inv_update_failed:'อัปเดตไม่ได้',inv_edit:'แก้ไขการลงทุน',inv_need_name:'กรุณาใส่ชื่อ',inv_need_qty:'กรุณาใส่จำนวน',inv_need_buyprice:'กรุณาใส่ราคาซื้อ',inv_added:'เพิ่มการลงทุนแล้ว',inv_confirm_delete:'ต้องการลบการลงทุนนี้?',inv_field_type:'ประเภท',inv_field_linked_debt:'เชื่อมโยงสินเชื่อบ้าน (ไม่บังคับ)',inv_no_linked_debt:'ไม่เชื่อมโยง',inv_linked_debt_hint:'ถ้าเลือก ระบบจะคำนวณส่วนของเจ้าของ (equity) = มูลค่า − หนี้คงเหลือ ให้อัตโนมัติ',inv_equity:'ส่วนของเจ้าของ:',inv_equity_hint:'ส่วนของเจ้าของ = มูลค่า − หนี้คงเหลือของสินเชื่อที่เชื่อมโยง',
@@ -5166,7 +5175,7 @@ const I18N = {
     aiu_loading:'Loading AI usage data...',aiu_no_data:'No data yet for',aiu_claude_hint:'Run <code>python claude_usage_report.py --firestore</code> on your laptop (transcript is local, not on the VM)',aiu_gemini_hint:'Updated daily from Cloud Monitoring · or run <code>python gemini_usage_report.py --firestore</code> on the VM',aiu_by_model:'By Model (highest usage first)',aiu_proj_vs_cap:'This month projection vs spend cap',aiu_over_cap:'Projected to exceed cap — usage will pause at ฿{cap}',aiu_claude_banner:'This is an <b>API-equivalent estimate</b> — you\'re on a Pro/Max flat plan, this number shows usage volume, not actual money paid',aiu_claude_footer:'* Counted from Claude Code transcripts on this machine (~/.claude) · API pricing opus $5/$25 · cache read 0.1× · USDTHB={usdthb}',aiu_gemini_footer:'* Real data from Cloud Monitoring (Gemini API · project Best1) — covers the Maya web app + Telegram bot + all scripts · flash pricing $0.30/$2.50 per 1M tok, USDTHB={usdthb}',aiu_today:'Today',aiu_this_month:'This Month (to date)',aiu_days_with_data:'days with data',aiu_avg_per_day:'Avg/day',aiu_month_projection:'Month Projection',aiu_estimate:'Estimate',aiu_daily_cost:'Daily Cost (฿)',aiu_daily_detail:'Daily Detail',aiu_baht_per_day:'฿/day',
     admin_no_access:'You do not have access to this page',admin_loading:'Loading data...',admin_fb_not_ready:'Firebase not ready yet',admin_never:'Never',admin_just_now:'Just now',admin_min_ago:'min ago',admin_hr_ago:'hr ago',admin_day_ago:'days ago',
     admin_server_usage:'Total Usage (Server-side)',admin_total_tx:'Total Transactions',admin_total_nw:'Total Net Worth',admin_has_real_data:'Has Real Data',admin_avg_tx_per_user:'Avg Tx/User',admin_usage_per_user:'Usage per User',admin_user:'User',admin_last_tx:'Last Transaction',admin_features_used:'Features Used',admin_ai_quota:'AI Quota (mo/day)',admin_no_server_usage:'No server-side usage summary yet — run <code>admin_stats.py</code> on the VM (reads all userdata via Service Account → writes <code>admin/summary</code>) then refresh',admin_nw_trend:'Net Worth Trend (Historical)',
-    admin_online:'online',admin_users:'users',admin_total_users:'Total Users',admin_in_7_days:'in 7 days',admin_online_now:'Online Now',admin_dau_today:"Today's DAU",admin_wau_7d:'WAU 7 days',admin_mau_30d:'MAU 30 days',admin_signup_today:'Signed Up Today',admin_churn_30d:'Inactive >30 days',admin_never_login:'never logged in',admin_has_real_email:'Has Real Email',admin_cumulative_users:'Cumulative Users',admin_platform:'Platform',admin_search:'Search',admin_last_seen:'Last Seen',admin_online_within_10min:'Online within 10 minutes',admin_load_failed:'Failed to load data',admin_test_account:'test',admin_show_test_accounts:'Show test accounts',admin_web_views:'Website Views',admin_views_note:'The big number is people who visited today; “views” counts page opens — one person can open many',admin_v_people:'visitors',admin_v_pageviews:'views',admin_v_sessions:'visits',admin_v_people_note:'Visitor counting started 27 Aug 2026 — before that only page opens were recorded',admin_v_dur_title:'How long they stay',admin_v_dur_median:'typical visit',admin_v_dur_avg:'average',admin_v_bounce:'left right away',admin_v_dur_note:'Median per visit, not the mean — tabs left open skew the average badly',admin_v_b1:'under 10s',admin_v_b2:'10s–1m',admin_v_b3:'1–5m',admin_v_b4:'over 5m',admin_v_sec:'s',admin_v_min:'m',admin_v_hours:'When they visit (Bangkok time)',admin_v_campaign:'Tagged campaigns (utm)',admin_v_signup_daily:'signups per day',admin_v_signup_how:'How they signed up',admin_views_today:'today',admin_views_yesterday:'yesterday',admin_views_7d:'7 days',admin_views_30d:'30 days',admin_views_unavailable:'Could not load website stats',admin_views_app:'App',admin_views_landing_th:'Landing (TH)',admin_views_landing_en:'Landing (EN)',admin_views_sources:'Traffic sources',admin_views_direct:'Direct / no referrer',admin_conv_title:'Landing → sign-up',admin_conv_views:'views',admin_conv_signups:'signed up',admin_conv_note:'Directional only, not a true funnel — some people sign up from a LINE/shared link without seeing the landing page, and some visit today but sign up next week',admin_adoption:'Feature adoption',admin_adoption_note:'Out of {n} real users (test accounts excluded)',admin_adopt_line:'LINE connected',admin_adopt_line_friend:'Added bot as friend',admin_adopt_gmail:'Gmail connected (bank alerts)',admin_adopt_push:'Push enabled',admin_adopt_login:'Login method',admin_dev_title:'What visitors use',admin_dev_mobile:'Mobile',admin_dev_desktop:'Desktop',share_app_btn:'Share with friends',line_connect_btn:'Connect LINE',line_connected_btn:'LINE Connected',line_notfriend_title:'Bot not added as a friend yet',line_notfriend_desc:'Your account is linked, but LINE can\'t deliver notifications until you add MoneyMind as a friend',line_notfriend_add:'Add as friend',line_notfriend_recheck:'Check again',line_notfriend_qr:'On desktop? Scan the QR with your phone',share_app_message:'Check out the finance app I\'ve been using — AI receipt scanning, built-in tax calculator, records income/expenses in seconds. Free to use.',share_link_copied:'App link copied!',
+    admin_online:'online',admin_users:'users',admin_total_users:'Total Users',admin_in_7_days:'in 7 days',admin_online_now:'Online Now',admin_dau_today:"Today's DAU",admin_wau_7d:'WAU 7 days',admin_mau_30d:'MAU 30 days',admin_signup_today:'Signed Up Today',admin_churn_30d:'Inactive >30 days',admin_never_login:'never logged in',admin_has_real_email:'Has Real Email',admin_cumulative_users:'Cumulative Users',admin_platform:'Platform',admin_search:'Search',admin_last_seen:'Last Seen',admin_online_within_10min:'Online within 10 minutes',admin_load_failed:'Failed to load data',admin_test_account:'test',admin_show_test_accounts:'Show test accounts',admin_web_views:'Website Views',admin_views_note:'The big number is people who visited today; “views” counts page opens — one person can open many',admin_v_people:'visitors',admin_v_pageviews:'views',admin_v_sessions:'visits',admin_v_people_note:'Visitor counting started 27 Aug 2026 — before that only page opens were recorded',admin_v_dur_title:'How long they stay',admin_v_dur_median:'typical visit',admin_v_dur_avg:'average',admin_v_bounce:'left right away',admin_v_dur_note:'Median per visit, not the mean — tabs left open skew the average badly',admin_v_b1:'under 10s',admin_v_b2:'10s–1m',admin_v_b3:'1–5m',admin_v_b4:'over 5m',admin_v_sec:'s',admin_v_min:'m',admin_v_hours:'When they visit (Bangkok time)',admin_v_campaign:'Tagged campaigns (utm)',admin_v_signup_daily:'signups per day',admin_v_signup_how:'How they signed up',admin_v_vs_prev:'vs previous 7 days',admin_v_people_7d:'visitors, 7 days',admin_v_funnel:'How far down the landing page they get',admin_v_funnel_note:'Counts visits that scrolled at least that far — the biggest drop is where people stop reading',admin_v_sec_labels:'Hero,Preview,Features,Rank,Security,Pricing,FAQ,Reviews,How to start,Final CTA',admin_v_cta:'Buttons clicked',admin_v_cta_labels:'Open app,iOS,Android',admin_v_opened:'opened',admin_v_adopt_note2:'Left = times opened in 30 days · right = people with real data — opened a lot but no data means interesting yet hard to use',admin_views_today:'today',admin_views_yesterday:'yesterday',admin_views_7d:'7 days',admin_views_30d:'30 days',admin_views_unavailable:'Could not load website stats',admin_views_app:'App',admin_views_landing_th:'Landing (TH)',admin_views_landing_en:'Landing (EN)',admin_views_sources:'Traffic sources',admin_views_direct:'Direct / no referrer',admin_conv_title:'Landing → sign-up',admin_conv_views:'views',admin_conv_signups:'signed up',admin_conv_note:'Directional only, not a true funnel — some people sign up from a LINE/shared link without seeing the landing page, and some visit today but sign up next week',admin_adoption:'Feature adoption',admin_adoption_note:'Out of {n} real users (test accounts excluded)',admin_adopt_line:'LINE connected',admin_adopt_line_friend:'Added bot as friend',admin_adopt_gmail:'Gmail connected (bank alerts)',admin_adopt_push:'Push enabled',admin_adopt_login:'Login method',admin_dev_title:'What visitors use',admin_dev_mobile:'Mobile',admin_dev_desktop:'Desktop',share_app_btn:'Share with friends',line_connect_btn:'Connect LINE',line_connected_btn:'LINE Connected',line_notfriend_title:'Bot not added as a friend yet',line_notfriend_desc:'Your account is linked, but LINE can\'t deliver notifications until you add MoneyMind as a friend',line_notfriend_add:'Add as friend',line_notfriend_recheck:'Check again',line_notfriend_qr:'On desktop? Scan the QR with your phone',share_app_message:'Check out the finance app I\'ve been using — AI receipt scanning, built-in tax calculator, records income/expenses in seconds. Free to use.',share_link_copied:'App link copied!',
     sync_not_synced:'Not synced yet',sync_force_title:'Force sync to cloud',uploaded:'Uploaded',loaded_from_cloud:'Loaded from Cloud',no_cloud_data:'No data in Cloud',no_recoverable_data:'No recoverable data found',synced_new_device:'Loaded new data from another device ☁️',db_size_warn:'Your data is nearing the system limit (Firestore 1MB/account). Recommend exporting old data and deleting unneeded items in Settings, or cross-device sync may fail',cloud_load_failed:'Failed to load from cloud',new_data_from_device:'New data from another device ☁️ (will load after closing this form)',synced_from_device:'Synced from another device ☁️',uploaded_to_cloud:'Uploaded data to Cloud',recover_success:'Data recovered successfully ✓',welcome_username:'Welcome! Username',relogin_for_sync:'Please log out and log back in once to enable data sync (security update)',
     port_need_name:'Please enter a portfolio name',port_edited:'Portfolio edited',port_created:'New portfolio created',port_confirm_delete:'Delete this portfolio? Its investments will move to "Unassigned Portfolio"',port_not_found_or_unlinked:'Portfolio not found or not linked to a goal',port_saving_goal_not_found:'Linked savings goal not found',port_sent_to_saving:'Sent {amt} to "{name}"',
     inv_need_name_first:'Please enter a name/ticker first',inv_fetching:'Fetching',inv_price:'Price',inv_fetch_price_failed:'Failed to fetch price',inv_updating_price:'Updating price for',inv_update_failed:'Update failed',inv_edit:'Edit Investment',inv_need_name:'Please enter a name',inv_need_qty:'Please enter a quantity',inv_need_buyprice:'Please enter a buy price',inv_added:'Investment added',inv_confirm_delete:'Delete this investment?',inv_field_type:'Type',inv_field_linked_debt:'Link to Mortgage (optional)',inv_no_linked_debt:'Not linked',inv_linked_debt_hint:'If selected, equity = value − remaining loan balance is calculated automatically',inv_equity:'Equity:',inv_equity_hint:'Equity = value − remaining balance of the linked loan',
@@ -5229,6 +5238,9 @@ function nav(page){
   document.getElementById('page-title').textContent=PAGE_TITLE[page];
   curPage=page;
   renderPage(page);
+  // นับว่าหน้าไหนในแอปถูกเปิดจริง (ยอดรวมล้วน ไม่ผูกกับบัญชี — ดู privacy.html)
+  // ตอบคนละคำถามกับ "ฟีเจอร์ไหนมีข้อมูล": เปิดเยอะแต่ไม่มีข้อมูล = น่าสนใจแต่ใช้ยาก
+  try{ if(window.__mmPage) window.__mmPage('/app/'+page); }catch(e){}
   if(window.innerWidth<=700) closeSidebar();
   // เริ่ม/หยุด auto-refresh ตามหน้า
   if(page==='investments') startInvAutoRefresh();
@@ -13865,9 +13877,14 @@ function _renderAdminUsageSection(summary){
     const rm=window._adminRealMembers||[];
     const n=rm.length;
     const bf=t.byFeature||{};
+    // ยอด "เปิดดู" มาจาก beacon ของ nav() (ยอดรวมล้วน ไม่ผูกกับบัญชี) — คู่กับ "มีข้อมูล"
+    // แล้วอ่านออกทันทีว่าฟีเจอร์ไหนคนสนใจแต่ใช้ไม่เป็น กับฟีเจอร์ไหนไม่มีใครหาเจอเลย
+    const ap=window._adminAppPages||{};
     const rows=[
-      [tr('investments'),bf.inv],[tr('debts'),bf.debt],[tr('savings'),bf.save],
-      [tr('insurance'),bf.insurance],[tr('travel'),bf.travel],['Subscriptions',bf.sub],
+      [tr('investments'),bf.inv,ap.investments],[tr('debts'),bf.debt,ap.debts],
+      [tr('savings'),bf.save,ap.savings],
+      [tr('insurance'),bf.insurance,ap.insurance],[tr('travel'),bf.travel,ap.travel],
+      ['Subscriptions',bf.sub,ap.subscriptions],
       [tr('admin_adopt_line'),rm.filter(m=>m.lineUserId).length],
       [tr('admin_adopt_line_friend'),rm.filter(m=>m.lineFriend).length],
       [tr('admin_adopt_gmail'),t.gmailConnected],
@@ -13875,12 +13892,14 @@ function _renderAdminUsageSection(summary){
     ].filter(r=>r[1]!=null);
     if(!rows.length||!n) return '';
     const base=Math.max(n,1);
-    const bar=(label,cnt)=>{
+    const bar=(label,cnt,opens)=>{
       const pct=Math.round(cnt/base*100);
       const col=cnt===0?'#ef4444':pct>=50?'#10b981':pct>=20?'#f59e0b':'#818cf8';
       return '<div style="margin-top:9px">'
         +'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">'
-        +'<span style="color:var(--muted)">'+label+'</span>'
+        +'<span style="color:var(--muted)">'+label
+          +(opens?'<span style="font-size:10px;opacity:.75"> · '+tr('admin_v_opened')+' '+opens+'</span>':'')
+        +'</span>'
         +'<span style="font-weight:700;color:'+col+'">'+cnt+' <span style="color:var(--muted);font-weight:400">('+pct+'%)</span></span></div>'
         +'<div class="pbar"><div class="pfill" style="width:'+Math.max(1,pct)+'%;background:'+col+'"></div></div></div>';
     };
@@ -13892,8 +13911,8 @@ function _renderAdminUsageSection(summary){
     return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px">'
       +'<div style="font-size:10px;font-weight:700;color:#818cf8;text-transform:uppercase;letter-spacing:.6px">'
       +'<i class="fas fa-list-check" style="margin-right:5px"></i>'+tr('admin_adoption')+'</div>'
-      +'<div style="font-size:11px;color:var(--muted);margin-top:3px">'+tr('admin_adoption_note').replace('{n}',n)+'</div>'
-      +rows.map(r=>bar(r[0],r[1])).join('')
+      +'<div style="font-size:11px;color:var(--muted);margin-top:3px">'+tr('admin_adoption_note').replace('{n}',n)+(Object.keys(window._adminAppPages||{}).length?' · '+tr('admin_v_adopt_note2'):'')+'</div>'
+      +rows.map(r=>bar(r[0],r[1],r[2])).join('')
       +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:13px;padding-top:11px;border-top:1px solid rgba(255,255,255,.07)">'
       +'<span style="font-size:11px;color:var(--muted);margin-right:2px">'+tr('admin_adopt_login')+'</span>'+provChips+'</div>'
       +'</div>';
@@ -13945,6 +13964,20 @@ function _renderAdminSiteStats(st,signups){
     return box('<div style="font-size:12px;color:var(--muted);margin-top:9px"><i class="fas fa-triangle-exclamation" style="margin-right:5px"></i>'+tr('admin_views_unavailable')+'</div>');
   const nf=n=>Number(n||0).toLocaleString('en-US');
   const chip=(label,val)=>'<span style="color:var(--muted)">'+label+' <b style="color:var(--text);font-weight:800">'+nf(val)+'</b></span>';
+  const chipEl=(txt,strong)=>'<span style="font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.05);color:'
+    +(strong?'var(--text)':'var(--muted)')+'">'+txt+'</span>';
+  // ── เทียบกับ 7 วันก่อนหน้า — ตัวเลขเดี่ยวๆ ตอบไม่ได้ว่า "ที่แก้ไปได้ผลไหม" ──
+  // ⚠️ lowerBetter ต้องส่งให้ถูก: bounce rate ลดลง = ดี ถ้าลืมสีจะกลับด้านและอ่านผิดทันที
+  // prev = 0 หรือไม่มี = ไม่มีฐานเทียบ ต้องไม่แสดงอะไรเลย ห้ามโชว์ 100% หรือ ∞
+  const pv=st.prev||null;
+  const delta=(cur,prv,lowerBetter)=>{
+    if(prv===null||prv===undefined||!isFinite(prv)||prv===0||cur===null||cur===undefined) return '';
+    const pct=Math.round((cur-prv)/prv*1000)/10;
+    if(pct===0) return '<span style="font-size:10px;color:var(--muted);margin-left:4px">–</span>';
+    const up=pct>0, good=lowerBetter?!up:up;
+    return '<span style="font-size:10px;font-weight:800;margin-left:4px;color:'+(good?'#34d399':'#f87171')+'">'
+      +(up?'\u25b2':'\u25bc')+Math.abs(pct)+'%</span>';
+  };
   const pages=(st.byPage||[]).slice(0,4);
   const maxPage=pages.length?Math.max(...pages.map(r=>r.views||0),1):1;
   const pageRows=pages.map(r=>{
@@ -13973,10 +14006,12 @@ function _renderAdminSiteStats(st,signups){
       +'<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px">'
         +'<i class="fas fa-hourglass-half" style="margin-right:5px"></i>'+tr('admin_v_dur_title')+'</div>'
       +'<div style="font-size:11px;color:var(--muted)">'+tr('admin_v_dur_avg')+' '+fmtDur(dur.avgSec)
-        +(st.bounceRate===null||st.bounceRate===undefined?'':' · '+tr('admin_v_bounce')+' <b style="color:#f87171;font-weight:800">'+st.bounceRate+'%</b>')
+        +(st.bounceRate===null||st.bounceRate===undefined?'':' · '+tr('admin_v_bounce')+' <b style="color:#f87171;font-weight:800">'+st.bounceRate+'%</b>'
+          +delta(st.bounceRate,pv&&pv.bounceRate,true))
       +'</div></div>'
       +'<div style="display:flex;align-items:baseline;gap:8px;margin-top:6px">'
       +'<span style="font-size:22px;font-weight:900;color:#34d399;line-height:1.1">'+fmtDur(dur.medianSec)+'</span>'
+      +delta(dur.medianSec,pv&&pv.medianSec,false)
       +'<span style="font-size:11px;color:var(--muted)">'+tr('admin_v_dur_median')+'</span></div>'
       +dur.buckets.map(function(b,i){
         const w=Math.max(2,Math.round(b/bmax*100));
@@ -13989,6 +14024,37 @@ function _renderAdminSiteStats(st,signups){
       +'</div>';
   })():'';
 
+  // ── อ่านหน้าแนะนำถึงตรงไหนแล้วเลิก ──
+  // funnel = "เลื่อนถึงอย่างน้อยส่วนนี้" ตัวเลขจึงลดหลั่นเสมอ ส่วนที่ตกแรงที่สุด = จุดที่ควรไปแก้
+  // ⚠️ ลำดับมาจาก LANDING_SECTIONS ฝั่ง server แล้ว ห้ามเรียงใหม่ที่นี่
+  const fn=Array.isArray(st.funnel)?st.funnel:[];
+  const funnelSection=fn.length?(function(){
+    const labels=tr('admin_v_sec_labels').split(',');
+    const top=fn[0].sessions||1;
+    const ctaLabels=tr('admin_v_cta_labels').split(',');
+    const ctaKey={app:0,ios:1,android:2};
+    const cta=(st.ctaClicks||[]).filter(c=>ctaKey[c.cta]!==undefined);
+    return '<div style="margin-top:16px;padding-top:13px;border-top:1px solid rgba(255,255,255,.07)">'
+      +'<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px">'
+      +'<i class="fas fa-arrow-down-wide-short" style="margin-right:5px"></i>'+tr('admin_v_funnel')+'</div>'
+      +fn.map(function(r,i){
+        const pct=Math.round((r.sessions||0)/top*100);
+        // ตกจากขั้นก่อนหน้าเกิน 25% = จุดที่คนเลิกอ่านจริงจัง ทำให้เห็นด้วยตาทันที
+        const drop=i>0?((fn[i-1].sessions||0)-(r.sessions||0))/Math.max(1,fn[i-1].sessions||1):0;
+        return '<div style="margin-top:7px">'
+          +'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">'
+          +'<span style="color:var(--muted)">'+(labels[i]||r.section)+'</span>'
+          +'<span style="font-weight:700">'+pct+'% <span style="color:var(--muted);font-weight:400;font-size:10px">('+nf(r.sessions)+')</span></span></div>'
+          +'<div class="pbar"><div class="pfill" style="width:'+Math.max(2,pct)+'%;background:'
+          +(drop>0.25?'#f87171':'#34d399')+'"></div></div></div>';
+      }).join('')
+      +(cta.length?'<div style="margin-top:11px;font-size:10px;color:var(--muted)">'+tr('admin_v_cta')+'</div>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px">'
+        +cta.map(c=>chipEl(ctaLabels[ctaKey[c.cta]]+' '+nf(c.sessions),true)).join('')+'</div>':'')
+      +'<div style="font-size:10px;color:var(--muted);margin-top:7px;line-height:1.6">'+tr('admin_v_funnel_note')+'</div>'
+      +'</div>';
+  })():'';
+
   // ── แหล่งที่มาของทราฟฟิก — ไม่มีข้อมูลก็ซ่อนทั้งก้อน ไม่โชว์หัวข้อว่างๆ ──
   // 'เข้าตรง' แยกออกมาต่อท้ายเป็นสีจาง เพราะเป็นก้อนใหญ่สุดเสมอ ถ้าเอาไปเรียงปนกับช่องทางจริง
   // จะกินพื้นที่อันดับ 1 ตลอดโดยไม่บอกอะไรเลย
@@ -13997,8 +14063,6 @@ function _renderAdminSiteStats(st,signups){
   // ไม่ใช่ตัวเลขที่ต้องเฝ้าดูรายวัน — chip แถวเดียวพอ
   const ff=st.formFactor||{};
   const ffTotal=(ff.mobile||0)+(ff.desktop||0);
-  const chipEl=(txt,strong)=>'<span style="font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.05);color:'
-    +(strong?'var(--text)':'var(--muted)')+'">'+txt+'</span>';
   // แถบ 24 ชั่วโมง — มาจาก hit_counts ที่เก็บเป็นราย "ชั่วโมง" อยู่แล้ว ไม่ต้องเก็บอะไรใหม่
   const hrs=Array.isArray(st.hours)&&st.hours.length===24?st.hours:null;
   const hoursStrip=hrs&&hrs.some(x=>x>0)?(function(){
@@ -14026,20 +14090,21 @@ function _renderAdminSiteStats(st,signups){
   // ── conversion: เข้าหน้าแนะนำ -> สมัคร ──
   // ตั้งใจไม่ทำเป็นกราฟรายวัน: ยอด landing จริงต่อวันเป็นหลักหน่วย (0-27) กราฟ % รายวัน
   // จะแกว่ง 0%/100% เป็นสัญญาณรบกวนล้วนๆ ดูเป็นช่วง 7/30 วันมีความหมายกว่ามาก
-  const convRow=(label,views,signed)=>{
+  const convRow=(label,views,signed,signedPrev)=>{
     const pct=views>0?Math.round(signed/views*1000)/10:null;
     return '<div style="display:flex;justify-content:space-between;gap:10px;font-size:11px;margin-top:5px">'
       +'<span style="color:var(--muted)">'+label+'</span>'
       +'<span><b style="font-weight:800">'+nf(views)+'</b> <span style="color:var(--muted)">'+tr('admin_conv_views')+'</span>'
       +' <i class="fas fa-arrow-right" style="font-size:9px;color:var(--muted);margin:0 3px"></i> '
       +'<b style="font-weight:800">'+nf(signed)+'</b> <span style="color:var(--muted)">'+tr('admin_conv_signups')+'</span>'
+      +delta(signed,signedPrev,false)
       +(pct===null?'':' <span style="color:#f59e0b;font-weight:800">('+pct+'%)</span>')+'</span></div>';
   };
   const convSection=(signups&&(st.landingD30||st.landingD7))?(
     '<div style="margin-top:16px;padding-top:13px;border-top:1px solid rgba(255,255,255,.07)">'
     +'<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px">'
     +'<i class="fas fa-filter" style="margin-right:5px"></i>'+tr('admin_conv_title')+'</div>'
-    +convRow(tr('admin_views_7d'),st.landingD7||0,signups.d7||0)
+    +convRow(tr('admin_views_7d'),st.landingD7||0,signups.d7||0,signups.prev7)
     +convRow(tr('admin_views_30d'),st.landingD30||0,signups.d30||0)
     +'<div style="font-size:10px;color:var(--muted);margin-top:7px;line-height:1.6">'+tr('admin_conv_note')+'</div>'
     +'</div>'):'';
@@ -14078,7 +14143,9 @@ function _renderAdminSiteStats(st,signups){
   const bigNum=hasPeople?todayPeople:st.today;
   const bigLbl=hasPeople?tr('admin_v_people'):tr('admin_v_pageviews');
   const headChips=[chip(tr('admin_views_yesterday'),st.yesterday),chip(tr('admin_views_7d'),st.d7),chip(tr('admin_views_30d'),st.d30)];
-  if(hasPeople) headChips.unshift(chip(tr('admin_v_people')+' '+tr('admin_views_30d'),st.peopleD30));
+  if(hasPeople) headChips.unshift(chip(tr('admin_v_people_7d'),st.peopleD7)
+    +delta(st.peopleD7,pv&&pv.people,false)
+    +(pv?'<span style="font-size:10px;color:var(--muted);margin-left:4px">('+tr('admin_v_vs_prev')+')</span>':''));
   return box(
      '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-top:6px">'
     +'<div style="font-size:11px;color:var(--muted);max-width:320px;line-height:1.6">'
@@ -14089,7 +14156,7 @@ function _renderAdminSiteStats(st,signups){
     +'</div></div>'
     +'<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;margin:10px 0 12px">'+headChips.join('')+'</div>'
     +'<div style="position:relative;height:120px;width:100%"><canvas id="admin-visitors-chart"></canvas></div>'
-    +pageRows+durSection+convSection+srcSection+devSection);
+    +pageRows+durSection+funnelSection+convSection+srcSection+devSection);
 }
 // กราฟแท่ง 30 วัน — ต้อง destroy ตัวเดิมก่อนเสมอ เพราะ renderAdmin() แทน innerHTML ทั้งก้อน
 // (canvas เดิมถูกทิ้ง แต่ instance ของ Chart.js ยังอ้าง context เก่าค้างอยู่ ทำให้กราฟไม่ขึ้น/ซ้อน)
@@ -14291,7 +14358,14 @@ async function renderAdmin(){
     window._adminSummary=summary;
     window._adminRealMembers=realMembers;
     const usageSection=`<div id="admin-usage-wrap">${_renderAdminUsageSection(summary)}</div>`;
-    const siteStatsSection=_renderAdminSiteStats(siteStats,{d7:new7,d30:new30});
+    // ยอดสมัครช่วงเทียบ = 7 วันก่อนหน้า 7 วันล่าสุด — realMembers โหลดมาแล้ว ไม่ต้องยิง Firestore เพิ่ม
+    // ⚠️ ฝั่งนี้เป็นหน้าต่างแบบ rolling (นับถอยหลังจากตอนนี้) ส่วน prev ฝั่ง server เป็นราย
+    // "วันปฏิทิน" — ขอบต่างกันได้ไม่เกิน 1 วัน แต่ ▲▼ ของสมัครเทียบกับ new7 ที่เป็น rolling
+    // เหมือนกัน จึงยังสอดคล้องกันในตัวเอง (อย่าเอาไปเทียบข้ามกับตัวเลขคนเข้าเว็บตรงๆ)
+    const prev7=realMembers.filter(m=>m.createdAt&&m.createdAt.getTime()<d7&&m.createdAt.getTime()>=d7-7*864e5).length;
+    // เก็บไว้ให้ _renderAdminUsageSection ใช้ — และให้ค้างอยู่ตอน _adminSortUsage re-render ตาราง
+    window._adminAppPages=(siteStats&&siteStats.appPages)||{};
+    const siteStatsSection=_renderAdminSiteStats(siteStats,{d7:new7,d30:new30,prev7:prev7});
 
     el.innerHTML=`
     <!-- Header -->
@@ -15758,8 +15832,10 @@ async function _hasActiveSubscription(){
 //  AI SUBSCRIPTION CHECKOUT (Omise) — เพิ่ม 2026-07-03
 // ══════════════════════════════════════════
 // public key ปลอดภัยฝัง client ได้ (คนละแบบกับ secret key ที่อยู่ ai_proxy.py เท่านั้น)
-// ⚠️ ตอนนี้เป็น test-mode key — รอ Omise KYC ผ่านแล้วต้องสลับเป็น live key (pkey_live_...)
-const OMISE_PUBLIC_KEY='pkey_test_687yjtg5eyyn7qpswzz';
+// ✅ LIVE key แล้ว (สลับ 2026-08-27 หลัง Omise KYC ผ่าน) — ตัดเงินจริง!
+// หมายเหตุ: live key ของ Omise ไม่มีคำว่า live ในชื่อ (`pkey_<id>`) ต่างจาก test ที่เป็น `pkey_test_<id>`
+// key เดิม (test): pkey_test_687yjtg5eyyn7qpswzz
+const OMISE_PUBLIC_KEY='pkey_68th1dzc7trcij5z3rw';
 const CHECKOUT_URL='https://34-134-61-137.sslip.io/v1/checkout';
 // ราคาหุ้นผ่าน VM ของเราเอง (yfinance ฝั่งเซิร์ฟเวอร์) แทนพึ่ง free CORS proxy บุคคลที่สามอย่างเดียว
 // ฟรี ไม่มีค่าใช้จ่ายเพิ่ม (VM รันอยู่แล้ว) — ต้อง login (Firebase session) แต่ไม่ต้องมี subscription

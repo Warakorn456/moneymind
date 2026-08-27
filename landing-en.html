@@ -793,14 +793,52 @@
     try{ navigator.sendBeacon(U,new Blob([JSON.stringify({
       sid:sid, ev:ev, page:location.pathname,
       ref:ev==='start'&&!sent?document.referrer:'',
-      utm:ev==='start'&&!sent?(q.get('utm_source')||''):''
+      utm:ev==='start'&&!sent?(q.get('utm_source')||''):'',
+      depth:window.__mmDepth||'', clicks:(window.__mmClicks||[]).join(',')
     })],{type:'text/plain'})); sent=true; }catch(e){}
   }
   hit('start');
+  // เปิดให้ nav() ในแอปเรียกได้ — SPA ไม่เปลี่ยน URL ตอนเดินเมนู GoatCounter จึงนับไม่ได้
+  // throttle 2 วิต่อหน้า กันคนกดสลับเมนูรัวๆ แล้วชนเพดาน 60 ครั้ง/IP/นาที
+  var lastPg={};
+  window.__mmPage=function(pg){
+    var now=Date.now(); if(now-(lastPg[pg]||0)<2000) return; lastPg[pg]=now;
+    try{ navigator.sendBeacon(U,new Blob([JSON.stringify({sid:sid,ev:'page',page:pg})],
+      {type:'text/plain'})); }catch(e){}
+  };
   var t=setInterval(function(){ if(!document.hidden) hit('ping'); },30000);
   addEventListener('visibilitychange',function(){ if(document.hidden) hit('ping'); });
   // pagehide ไม่ใช่ beforeunload — Safari/iOS ไม่ยิง beforeunload ให้ตอนปิดแท็บ
   addEventListener('pagehide',function(){ hit('ping'); clearInterval(t); });
+})();
+</script>
+<!-- อ่านถึง section ไหนแล้วเลิก + กดปุ่มไหน (เพิ่ม 2026-08-27) — บอกว่าควรไปแก้ตรงไหนของหน้า
+     ⚠️ ห้ามยิง beacon เพิ่มต่อการเลื่อน 1 ครั้ง — เก็บค่าไว้ในตัวแปรเฉยๆ แล้วให้ ping 30 วิ /
+     pagehide ที่มีอยู่แล้วพาไปเอง ไม่งั้นชนเพดาน 60 ครั้ง/IP/นาที ตั้งแต่คนแรกที่เลื่อนเร็วๆ
+     ⚠️ ลำดับใน SEC ต้องตรงกับ LANDING_SECTIONS ใน mm_webstats.py เป๊ะ ไม่งั้น funnel อ่านผิด -->
+<script>
+(function(){
+  var SEC=['hero','preview','features','rank','security','pricing','faq','reviews','how','cta'];
+  window.__mmDepth=SEC[0]; window.__mmClicks=[];
+  var far=0;
+  try{
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(!e.isIntersecting) return;
+        var i=SEC.indexOf(e.target.id);
+        if(i>far){ far=i; window.__mmDepth=SEC[i]; }
+      });
+    },{threshold:0.35});
+    SEC.forEach(function(id){ var el=document.getElementById(id); if(el) io.observe(el); });
+  }catch(e){}   // เบราว์เซอร์เก่าไม่มี IntersectionObserver — ปล่อยผ่าน หน้าเว็บห้ามพัง
+  addEventListener('click',function(e){
+    var a=e.target&&e.target.closest?e.target.closest('a'):null;
+    if(!a||!a.href) return;
+    var k=a.href.indexOf('apps.apple.com')>-1?'ios'
+         :a.href.indexOf('play.google.com')>-1?'android'
+         :/app\.moneymindth\.com\/?($|\?|#)/.test(a.href)?'app':'';
+    if(k&&window.__mmClicks.indexOf(k)<0) window.__mmClicks.push(k);
+  },true);
 })();
 </script>
 </head>
