@@ -828,7 +828,10 @@
         var i=SEC.indexOf(e.target.id);
         if(i>far){ far=i; window.__mmDepth=SEC[i]; }
       });
-    },{threshold:0.35});
+      // 🐛 เดิมใช้ threshold:0.35 — section ที่สูงกว่าจอ (pricing/faq/reviews) ไม่มีทางเห็น
+      // พร้อมกัน 35% ได้เลย observer จึงไม่ยิงและ depth ค้างที่ hero ตลอด (เจอตอนทดสอบ
+      // บน production จริง) ใช้ 0 = "เห็นแม้แต่นิดเดียวก็ถือว่าเลื่อนมาถึงแล้ว" ตรงกับ funnel
+    },{threshold:0});
     SEC.forEach(function(id){ var el=document.getElementById(id); if(el) io.observe(el); });
   }catch(e){}   // เบราว์เซอร์เก่าไม่มี IntersectionObserver — ปล่อยผ่าน หน้าเว็บห้ามพัง
   addEventListener('click',function(e){
