@@ -1232,6 +1232,7 @@
   catch(e){ sid=rnd()+rnd()+Date.now().toString(16); }   // โหมดส่วนตัว: ใช้ครั้งเดียวทิ้ง ห้ามพัง
   var q=new URLSearchParams(location.search), sent=false;
   function hit(ev){
+    try{ if(window.__mmDepthScan) window.__mmDepthScan(); }catch(e){}
     try{ navigator.sendBeacon(U,new Blob([JSON.stringify({
       sid:sid, ev:ev, page:location.pathname,
       ref:ev==='start'&&!sent?document.referrer:'',

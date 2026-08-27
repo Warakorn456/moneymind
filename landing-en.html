@@ -790,6 +790,7 @@
   catch(e){ sid=rnd()+rnd()+Date.now().toString(16); }   // โหมดส่วนตัว: ใช้ครั้งเดียวทิ้ง ห้ามพัง
   var q=new URLSearchParams(location.search), sent=false;
   function hit(ev){
+    try{ if(window.__mmDepthScan) window.__mmDepthScan(); }catch(e){}
     try{ navigator.sendBeacon(U,new Blob([JSON.stringify({
       sid:sid, ev:ev, page:location.pathname,
       ref:ev==='start'&&!sent?document.referrer:'',
@@ -820,20 +821,26 @@
 (function(){
   var SEC=['hero','preview','features','rank','security','pricing','faq','reviews','how','cta'];
   window.__mmDepth=SEC[0]; window.__mmClicks=[];
-  var far=0;
-  try{
-    var io=new IntersectionObserver(function(es){
-      es.forEach(function(e){
-        if(!e.isIntersecting) return;
-        var i=SEC.indexOf(e.target.id);
-        if(i>far){ far=i; window.__mmDepth=SEC[i]; }
-      });
-      // 🐛 เดิมใช้ threshold:0.35 — section ที่สูงกว่าจอ (pricing/faq/reviews) ไม่มีทางเห็น
-      // พร้อมกัน 35% ได้เลย observer จึงไม่ยิงและ depth ค้างที่ hero ตลอด (เจอตอนทดสอบ
-      // บน production จริง) ใช้ 0 = "เห็นแม้แต่นิดเดียวก็ถือว่าเลื่อนมาถึงแล้ว" ตรงกับ funnel
-    },{threshold:0});
-    SEC.forEach(function(id){ var el=document.getElementById(id); if(el) io.observe(el); });
-  }catch(e){}   // เบราว์เซอร์เก่าไม่มี IntersectionObserver — ปล่อยผ่าน หน้าเว็บห้ามพัง
+  // เดิมใช้ IntersectionObserver แต่พิสูจน์ไม่ได้ว่ายิงจริง (บนแท็บที่ไม่ได้อยู่หน้าจอ
+  // callback ไม่มาเลยแม้แต่ element ที่มองเห็นอยู่) เปลี่ยนมาคิดจากตำแหน่งตรงๆ แทน —
+  // ตรวจสอบง่าย ไม่มีเงื่อนไข threshold ให้พลาด และไม่ต้องรอ callback ของเบราว์เซอร์
+  // "ถึง section นี้แล้ว" = ขอบบนของมันเลื่อนขึ้นมาเหนือกลางจอ
+  window.__mmDepthScan=function(){
+    var far=0;
+    for(var i=0;i<SEC.length;i++){
+      var el=document.getElementById(SEC[i]);
+      if(el&&el.getBoundingClientRect().top<window.innerHeight*0.5) far=i;
+    }
+    if(SEC.indexOf(window.__mmDepth)<far) window.__mmDepth=SEC[far];
+  };
+  // scroll listener แบบ passive + throttle ด้วย rAF — อัปเดตแค่ตัวแปร ไม่ยิง beacon
+  // (beacon ยังเกาะ ping 30 วิ / pagehide เหมือนเดิม ไม่งั้นชนเพดาน 60 ครั้ง/IP/นาที)
+  var tick=false;
+  addEventListener('scroll',function(){
+    if(tick) return; tick=true;
+    requestAnimationFrame(function(){ tick=false; try{ window.__mmDepthScan(); }catch(e){} });
+  },{passive:true});
+  try{ window.__mmDepthScan(); }catch(e){}
   addEventListener('click',function(e){
     var a=e.target&&e.target.closest?e.target.closest('a'):null;
     if(!a||!a.href) return;
