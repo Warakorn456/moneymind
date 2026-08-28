@@ -2960,6 +2960,9 @@ const _fbConfig={
   appId:'1:668138190451:web:d181da0bf022bcc0c09c06'
 };
 let _fs=null, _auth=null, _fsUnsub=null, _pendingRemoteSync=false, _lastSaveTs=0, _saveTimer=null;
+// สถานะ subscription สำหรับป้าย PRO ในแถบข้าง — ต้องประกาศ "ก่อน" checkLogin() ตามกฎ TDZ ของไฟล์นี้
+// เพราะ _renderTierBadge() ถูกเรียกได้ตั้งแต่ระหว่าง init ก่อนจะถึงบรรทัดที่ประกาศไว้ท้ายไฟล์
+let _subProActive=false, _subProFetched=false;
 function _flushPendingSync(){ if(!_pendingRemoteSync) return; _pendingRemoteSync=false; setTimeout(()=>{ renderPage(curPage); toast(tr('synced_new_device'),'success'); },120); }
 (function initFirebase(){
   try{
@@ -3724,7 +3727,7 @@ function doLogout(skipConfirm){
   // window._resetLineBannerStatus ~16736 สำหรับรายละเอียดบั๊ก)
   if(typeof window._resetLineBannerStatus==='function') window._resetLineBannerStatus();
   // เหตุผลเดียวกัน: ป้าย PRO ค้างจากบัญชีที่จ่ายเงินแล้ว ไปโผล่ในบัญชีถัดไปที่ไม่ได้จ่าย
-  if(typeof _subProActive!=='undefined') _subProActive=false;
+  _subProActive=false; _subProFetched=false;
   DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
   document.getElementById('app-root').style.display='none';
   document.getElementById('login-screen').style.display='flex';
@@ -17264,12 +17267,12 @@ window._showAllRanksDetail=function(){
   }catch(e){console.error('allRanks',e);}
 };
 
-// สถานะ subscription สำหรับป้าย PRO — cache ไว้เพราะ _renderTierBadge() เป็น sync
-// แต่ _getSubscriptionInfo() ต้องยิง Firestore; re-render อีกทีเมื่อผลกลับมา
-let _subProActive=false;
+// อ่านสถานะ subscription แล้ว re-render ป้ายอันดับถ้าค่าเปลี่ยน (state ประกาศไว้ต้นไฟล์ใกล้ _fs)
+// เรียกได้ 2 ทาง: lazy จาก _renderTierBadge() (ครั้งเดียวต่อ session) และเรียกตรงๆ ตอนสมัครสำเร็จ
 async function _refreshProBadge(){
   try{
     const info=await _getSubscriptionInfo();
+    _subProFetched=true;
     const next=!!info.active;
     if(next!==_subProActive){ _subProActive=next; _renderTierBadge(); }
   }catch(e){}  // อ่านไม่ได้ = ไม่โชว์ป้าย ไม่ต้องรบกวน user
@@ -17278,6 +17281,10 @@ async function _refreshProBadge(){
 function _renderTierBadge(){
   const el=document.getElementById('_tierBadge');
   if(!el) return;
+  // 🐛 checkLogin() (กู้ session ตอน reload) ไม่ได้เรียก _enterAppReal() — มันทำ enter-app logic ซ้ำเองในตัว
+  // เรียก _refreshProBadge() แค่ที่ _enterAppReal() เลยครอบแค่ fresh login ไม่ครอบ session restore
+  // → ดึงสถานะแบบ lazy ตรงนี้แทน เพราะ badge นี้ถูก render ทุก path อยู่แล้ว (ยิง Firestore ครั้งเดียวต่อ session)
+  if(!_subProFetched && typeof currentUser!=='undefined' && currentUser){ _subProFetched=true; _refreshProBadge(); }
   try{
     const nw=calcNetWorth().netWorth;
     const tiers=_WT_DATA.th.tiers;
