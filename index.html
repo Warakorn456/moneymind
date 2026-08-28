@@ -89,6 +89,10 @@
     .logo{padding:24px 20px;border-bottom:1px solid var(--border)}
     .logo h1{font-size:20px;font-weight:800;background:linear-gradient(135deg,var(--primary-l),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
     .logo p{font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:.5px}
+    /* โลโก้แอปจริงแทนอิโมจิ 💰 (2026-08-28) — img ต้องเป็น sibling ของ h1 ไม่ใช่ลูก
+       เพราะ .logo h1 ใช้ -webkit-background-clip:text ทำ gradient ตัวอักษร ถ้าเอา img ไปไว้ข้างในเสี่ยงโดน clip หาย */
+    .logo-row{display:flex;align-items:center;gap:9px}
+    .logo-img{width:26px;height:26px;border-radius:7px;flex-shrink:0;display:block}
     .nav-wrap{flex:1;padding:10px 0;overflow-y:auto}
     .nav-item{display:flex;align-items:center;gap:12px;padding:11px 20px;cursor:pointer;color:var(--muted);font-size:14px;font-weight:500;position:relative;transition:all .2s}
     .nav-item:hover{background:rgba(124,58,237,.1);color:var(--text)}
@@ -1385,7 +1389,10 @@
 <!-- Sidebar -->
 <nav class="sidebar" id="sidebar">
   <div class="logo">
-    <h1>💰 MoneyMind</h1>
+    <div class="logo-row">
+      <img src="assets/logo.png" alt="" class="logo-img">
+      <h1>MoneyMind</h1>
+    </div>
     <p id="app-tagline">การเงินส่วนบุคคล</p>
     <div id="_tierBadge" style="margin-top:6px"></div>
   </div>
@@ -3325,6 +3332,8 @@ function _enterAppReal(){
   // กันปุ่มแชทลอยเด้งไปมุมซ้ายบน (viewport อาจยังไม่ settle ตอน init() เดิมรันตั้งแต่ page load) —
   // เรียกซ้ำตรงจุดที่รับประกันว่า viewport นิ่งแล้วแน่นอน ดู window._repositionChatFab ~16516
   setTimeout(function(){ if(typeof window._repositionChatFab==='function') window._repositionChatFab(); }, 0);
+  // ป้าย PRO ในแถบข้าง — อ่านสถานะ subscription ของบัญชีที่เพิ่ง login (async, re-render เองเมื่อผลกลับมา)
+  if(typeof _refreshProBadge==='function') _refreshProBadge();
   // show username in sidebar
   const ui=document.getElementById('sidebar-user-info');
   const un=document.getElementById('sidebar-username');
@@ -3714,6 +3723,8 @@ function doLogout(skipConfirm){
   // reset สถานะ LINE ที่ค้างไว้ตั้งแต่บัญชีนี้ — กันโชว์ค้างข้ามบัญชีตอน login ใหม่ (ดู
   // window._resetLineBannerStatus ~16736 สำหรับรายละเอียดบั๊ก)
   if(typeof window._resetLineBannerStatus==='function') window._resetLineBannerStatus();
+  // เหตุผลเดียวกัน: ป้าย PRO ค้างจากบัญชีที่จ่ายเงินแล้ว ไปโผล่ในบัญชีถัดไปที่ไม่ได้จ่าย
+  if(typeof _subProActive!=='undefined') _subProActive=false;
   DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
   document.getElementById('app-root').style.display='none';
   document.getElementById('login-screen').style.display='flex';
@@ -15946,6 +15957,7 @@ async function subscribeWithCard(){
         closeM('m-subscribe');
         toast(tr('sub_success'),'success');
         renderSubscriptionBox();
+        _refreshProBadge();
       } else {
         errEl.textContent=tr('sub_pending');
       }
@@ -15992,6 +16004,7 @@ async function _subPollStatus(triesLeft){
     closeM('m-subscribe');
     toast(tr('sub_success'),'success');
     renderSubscriptionBox();
+    _refreshProBadge();
     return;
   }
   setTimeout(()=>_subPollStatus(triesLeft-1), triesLeft>80?3000:6000);
@@ -17251,6 +17264,17 @@ window._showAllRanksDetail=function(){
   }catch(e){console.error('allRanks',e);}
 };
 
+// สถานะ subscription สำหรับป้าย PRO — cache ไว้เพราะ _renderTierBadge() เป็น sync
+// แต่ _getSubscriptionInfo() ต้องยิง Firestore; re-render อีกทีเมื่อผลกลับมา
+let _subProActive=false;
+async function _refreshProBadge(){
+  try{
+    const info=await _getSubscriptionInfo();
+    const next=!!info.active;
+    if(next!==_subProActive){ _subProActive=next; _renderTierBadge(); }
+  }catch(e){}  // อ่านไม่ได้ = ไม่โชว์ป้าย ไม่ต้องรบกวน user
+}
+
 function _renderTierBadge(){
   const el=document.getElementById('_tierBadge');
   if(!el) return;
@@ -17293,6 +17317,7 @@ function _renderTierBadge(){
         <i class="fas ${rank.icon}" style="font-size:9px;color:${rank.color}"></i>
         <span style="font-size:10.5px;font-weight:800;color:${rank.color};letter-spacing:.4px">${rank.name}</span>
         <span style="font-size:9px;color:${rank.color};opacity:.65;font-weight:600">Lv.${tier.lv}/8</span>
+        ${_subProActive?`<span style="width:1px;height:11px;background:${rank.color}55;margin:0 1px"></span><i class="fas fa-crown" style="font-size:8.5px;color:#fbbf24"></i><span style="font-size:9.5px;font-weight:800;letter-spacing:.5px;background:linear-gradient(135deg,#fcd34d,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent">PRO</span>`:''}
       </div>
     </div>`;
   }catch(e){ el.innerHTML=''; }
