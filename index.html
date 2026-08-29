@@ -6391,7 +6391,7 @@ async function _pdfToJpegParts(file, scale=2.0){
 }
 
 // โมเดลสำหรับ statement — 2.5-flash ปิด thinking ด้วย thinkingBudget:0
-const STMT_MODEL_PREF=['gemini-2.5-flash','gemini-2.5-flash-preview','gemini-2.0-flash','gemini-2.0-flash-lite'];
+const STMT_MODEL_PREF=['gemini-2.5-flash','gemini-2.5-flash-lite','gemini-3.5-flash'];
 
 async function aiReadStatement(b64,mime){
   const prompt=`อ่านรายการธุรกรรมทั้งหมดจาก Bank Statement นี้ แล้วตอบเป็น JSON array เท่านั้น ไม่มีข้อความอื่น ไม่มี markdown ไม่มี code block
@@ -9751,7 +9751,7 @@ async function processPaySlip(file){
     const {data}=await callGemini(
       [{role:'user',parts:[{inline_data:{mime_type:mime,data:b64}},{text:prompt}]}],
       {temperature:0,maxOutputTokens:1024,thinkingConfig:{thinkingBudget:0}},
-      ['gemini-2.5-flash','gemini-2.0-flash','gemini-2.5-flash-preview','gemini-2.0-flash-lite'],
+      ['gemini-2.5-flash','gemini-2.5-flash-lite','gemini-3.5-flash'],
       'payslip'
     );
     const _sp=data.candidates?.[0]?.content?.parts||[];
@@ -9818,7 +9818,7 @@ async function processTawi50(file){
 - pvd = กองทุนสำรองเลี้ยงชีพรวมทั้งปี (ถ้าไม่ระบุใส่ 0)
 - year = ปีภาษี ค.ศ. (ถ้าพบ พ.ศ. ให้ลบ 543 เช่น 2567→2024)
 ถ้าไม่พบฟิลด์ใดให้ใส่ 0 หรือ string ว่าง ห้ามละฟิลด์`;
-    const _tawi50Models=['gemini-2.5-flash','gemini-2.0-flash','gemini-2.5-flash-preview','gemini-2.0-flash-lite'];
+    const _tawi50Models=['gemini-2.5-flash','gemini-2.5-flash-lite','gemini-3.5-flash'];
     const {data}=await callGemini(
       [{role:'user',parts:[...imageParts,{text:prompt}]}],
       {temperature:0,maxOutputTokens:1024,thinkingConfig:{thinkingBudget:0}},
