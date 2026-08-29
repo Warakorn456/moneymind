@@ -1981,17 +1981,17 @@
       <div class="fg">
         <label class="flabel">Google Gemini API Key</label>
         <div style="display:flex;gap:8px">
-          <input type="password" id="api-key-in" class="finput" placeholder="AIza...">
+          <input type="password" id="api-key-in" class="finput" placeholder="AQ... หรือ AIza...">
           <button class="btn btn-primary" onclick="saveKey()" data-i18n="save">บันทึก</button>
         </div>
-        <div style="font-size:12px;color:var(--muted);margin-top:6px" data-i18n="set_get_key_hint">รับ Key ฟรีได้ที่ aistudio.google.com → Get API Key</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px" data-i18n="set_get_key_hint">รับ Key ฟรีได้ที่ aistudio.google.com → Get API Key (คีย์ใหม่จะขึ้นต้นด้วย AQ.)</div>
       </div>
       <div id="key-status"></div>
       <div id="ai-quota-box" style="display:none;margin-top:10px"></div>
       <div class="fg" style="margin-top:14px">
         <label class="flabel">Gemini Model <span style="font-weight:400;color:var(--muted)" data-i18n="set_model_hint">(ปล่อยว่างให้ระบบเลือกอัตโนมัติ)</span></label>
         <div style="display:flex;gap:8px">
-          <input type="text" id="model-in" class="finput" placeholder="เช่น gemini-2.5-flash หรือ gemini-2.0-flash-lite">
+          <input type="text" id="model-in" class="finput" placeholder="เช่น gemini-2.5-flash หรือ gemini-3.5-flash">
           <button class="btn btn-primary" onclick="saveModel()" data-i18n="save">บันทึก</button>
         </div>
         <div id="model-status" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
@@ -2095,6 +2095,8 @@
     <div class="modal" style="max-width:420px">
       <div class="modal-title"><i class="fas fa-crown" style="color:#f59e0b"></i><span data-i18n="sub_modal_title">สมัคร AI Subscription</span> <i class="fas fa-times" style="margin-left:auto;cursor:pointer;color:var(--muted)" onclick="closeM('m-subscribe')"></i></div>
       <div id="sub-modal-body">
+        <!-- รายการสิทธิ์ที่ได้ — เติมโดย openSubscribeModal() หลังดึงโควตาจริงจาก /v1/quota-status -->
+        <div id="sub-benefits"></div>
         <div style="text-align:center;margin-bottom:18px">
           <div style="font-size:28px;font-weight:900;color:#f59e0b">฿299<span style="font-size:13px;color:var(--muted);font-weight:400"> / <span data-i18n="sub_per_month">เดือน</span></span></div>
         </div>
@@ -4729,10 +4731,11 @@ function checkLogin(){
 // ══════════════════════════════════════════
 let _geminiModel = null;
 const _failedModels = new Set();
-// ลำดับจากใหม่ → เก่า; lite ก่อน full เพราะ quota ต่ำกว่า
+// ลำดับจากใหม่ → เก่า
+// 2026-08-29: ถอด gemini-2.0-flash / -lite ออก (Google ขึ้นสถานะ Shut down แล้ว) และถอด
+// gemini-2.5-flash-preview ที่ 404 มานาน — เหลือรุ่นที่ยัง stable จริงเท่านั้น
 const GEMINI_PREFER = [
-  'gemini-2.5-flash-preview','gemini-2.5-flash',
-  'gemini-2.0-flash-lite','gemini-2.0-flash',
+  'gemini-3.5-flash','gemini-2.5-flash','gemini-2.5-flash-lite',
 ];
 
 async function getModel(){
@@ -4744,7 +4747,7 @@ async function getModel(){
   _geminiModel=null;
   // ดึง list จาก API
   try{
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${DB.settings.apiKey}`);
+    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models',{headers:{'x-goog-api-key':DB.settings.apiKey}});
     if(r.ok){
       const d=await r.json();
       const BAD_SUFFIX=/-(tts|embedding|aqa|imagen|vision-rater)/i;
@@ -4762,7 +4765,7 @@ async function getModel(){
   }catch{}
   // static fallback — skip failed ones
   for(const m of GEMINI_PREFER){ if(!_failedModels.has(m)){ _geminiModel=m; return m; } }
-  return 'gemini-2.0-flash-lite';
+  return 'gemini-2.5-flash';
 }
 
 // URL proxy สำหรับเรียก Gemini native generateContent (สแกนใบเสร็จ/statement/ภาษี) ผ่าน subscription
@@ -4814,8 +4817,8 @@ async function callGemini(contents, genConfig={temperature:0.7,maxOutputTokens:8
     const model=modelPref
       ? (modelPref.find(m=>!_failedModels.has(m)) || await getModel())
       : await getModel();
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${DB.settings.apiKey}`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{
+      method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':DB.settings.apiKey},
       body:JSON.stringify({contents,generationConfig:genConfig})
     });
     if(r.ok) return {data:await r.json(), model};
@@ -5010,8 +5013,8 @@ const I18N = {
     have_account:'มีบัญชีแล้ว?',login_link:'เข้าสู่ระบบ',forgot_sub:'รีเซ็ตรหัสผ่าน',
     forgot_desc:'Firebase จะส่งลิงก์รีเซ็ตรหัสผ่านไปยัง <strong style="color:#a78bfa">Email</strong> ที่ลงทะเบียนไว้',ph_forgot_email:'Email ที่ใช้สมัคร',sending:'กำลังส่ง...',forgot_send_btn:'ส่งอีเมลรีเซ็ตรหัสผ่าน',
     no_email_help:'ไม่มี Email ผูกกับบัญชี/กู้ไม่ได้?',contact_us:'ติดต่อทีมงาน',back_to:'กลับไป',privacy_link:'นโยบายความเป็นส่วนตัว',terms_link:'ข้อกำหนดการใช้งาน',
-    set_ai_scan_title:'AI สแกนใบเสร็จ',set_ai_scan_desc:'ใส่ Google Gemini API Key เพื่อให้ AI อ่านข้อมูลจากรูปใบเสร็จอัตโนมัติ<br>กุญแจเก็บใน browser ของคุณเท่านั้น ไม่มีการส่งออกไปที่อื่น',save:'บันทึก',set_get_key_hint:'รับ Key ฟรีได้ที่ aistudio.google.com → Get API Key',set_model_hint:'(ปล่อยว่างให้ระบบเลือกอัตโนมัติ)',
-    set_sub_title:'AI Subscription',set_sub_desc:'ไม่อยากหา Gemini API Key เอง? สมัคร subscription ใช้ AI ของแอปได้เลย ไม่ต้องมี key ส่วนตัว',sub_active:'Subscription ใช้งานอยู่',sub_until:'ถึงวันที่',sub_subscribe_btn:'สมัคร Subscription ฿299/เดือน',sub_modal_title:'สมัคร AI Subscription',sub_per_month:'เดือน',sub_pay_card:'บัตรเครดิต/เดบิต',sub_card_name:'ชื่อบนบัตร',sub_card_number:'หมายเลขบัตร',sub_pay_now:'ชำระเงิน ฿299',sub_waiting_payment:'สแกน QR เพื่อชำระเงิน — กำลังรอการยืนยัน...',sub_need_relogin:'ต้อง login ใหม่เพื่อสมัคร subscription',sub_fill_all:'กรอกข้อมูลบัตรให้ครบ',sub_processing:'กำลังดำเนินการ...',sub_card_invalid:'ข้อมูลบัตรไม่ถูกต้อง',sub_payment_failed:'ชำระเงินไม่สำเร็จ',sub_pending:'รอการยืนยันการชำระเงิน...',sub_success:'สมัคร Subscription สำเร็จ!',sub_qr_failed:'สร้าง QR ไม่สำเร็จ',sub_poll_timeout:'ยังไม่ได้รับการยืนยัน — ถ้าชำระเงินแล้ว ปิดหน้าต่างนี้แล้วเปิดหน้าตั้งค่าใหม่อีกครั้ง ระบบจะอัปเดตให้เอง',
+    set_ai_scan_title:'AI สแกนใบเสร็จ',set_ai_scan_desc:'ใส่ Google Gemini API Key เพื่อให้ AI อ่านข้อมูลจากรูปใบเสร็จอัตโนมัติ<br>กุญแจเก็บใน browser ของคุณเท่านั้น ไม่มีการส่งออกไปที่อื่น',save:'บันทึก',set_get_key_hint:'รับ Key ฟรีได้ที่ aistudio.google.com → Get API Key (คีย์ใหม่จะขึ้นต้นด้วย AQ.)',set_model_hint:'(ปล่อยว่างให้ระบบเลือกอัตโนมัติ)',
+    set_sub_title:'AI Subscription',set_sub_desc:'ไม่อยากหา Gemini API Key เอง? สมัคร subscription ใช้ AI ของแอปได้เลย ไม่ต้องมี key ส่วนตัว',sub_active:'Subscription ใช้งานอยู่',sub_until:'ถึงวันที่',sub_subscribe_btn:'สมัคร Subscription ฿299/เดือน',sub_modal_title:'สมัคร AI Subscription',sub_per_month:'เดือน',sub_pay_card:'บัตรเครดิต/เดบิต',sub_card_name:'ชื่อบนบัตร',sub_card_number:'หมายเลขบัตร',sub_pay_now:'ชำระเงิน ฿299',sub_waiting_payment:'สแกน QR เพื่อชำระเงิน — กำลังรอการยืนยัน...',sub_need_relogin:'ต้อง login ใหม่เพื่อสมัคร subscription',sub_fill_all:'กรอกข้อมูลบัตรให้ครบ',sub_processing:'กำลังดำเนินการ...',sub_card_invalid:'ข้อมูลบัตรไม่ถูกต้อง',sub_payment_failed:'ชำระเงินไม่สำเร็จ',sub_pending:'รอการยืนยันการชำระเงิน...',sub_success:'สมัคร Subscription สำเร็จ!',sub_qr_failed:'สร้าง QR ไม่สำเร็จ',sub_poll_timeout:'ยังไม่ได้รับการยืนยัน — ถ้าชำระเงินแล้ว ปิดหน้าต่างนี้แล้วเปิดหน้าตั้งค่าใหม่อีกครั้ง ระบบจะอัปเดตให้เอง',pro_ben_title_promo:'สมัครแล้วได้อะไรบ้าง',pro_ben_title_active:'สิทธิพิเศษของคุณ',pro_ben_maya:'แชทกับมายาเต็มรูปแบบ — สั่งบันทึก แก้ไข ค้นหารายการด้วยข้อความได้',pro_ben_maya_free:'ตอนนี้ตอบได้เฉพาะคำถามสำเร็จรูป',pro_ben_scan:'สแกนใบเสร็จ สลิปเงินเดือน ทวิ 50 และ statement (รูปภาพ) ด้วย AI',pro_ben_nokey:'ไม่ต้องมี Gemini API Key ของตัวเอง',pro_ben_quota_head:'โควตา AI',pro_ben_free_label:'ตอนนี้ (ฟรี)',pro_ben_pro_label:'PRO',pro_ben_per_month:'ครั้ง/เดือน',pro_ben_per_day:'ครั้ง/วัน',pro_ben_used_month:'ใช้ไปเดือนนี้',pro_ben_used_day:'ใช้ไปวันนี้',pro_ben_expiry:'ใช้ได้ถึง',pro_ben_pdf_note:'หมายเหตุ: statement ไฟล์ PDF ยังต้องใช้ Gemini API Key ส่วนตัว',pro_ben_quota_unavailable:'ดึงโควตาไม่ได้ตอนนี้ — ลองใหม่อีกครั้งภายหลัง',
     set_cloud_title:'Firebase Cloud Sync',set_cloud_desc:'ซิงค์ข้อมูลข้ามอุปกรณ์ผ่าน Firebase Firestore',set_test_conn:'ทดสอบการเชื่อมต่อ',set_upload_cloud:'อัปโหลดขึ้น Cloud',set_load_cloud:'โหลดจาก Cloud',set_recover:'กู้คืนข้อมูล',
     set_delacc_title:'ลบบัญชี',set_delacc_desc:'ลบบัญชีและข้อมูลทั้งหมดของคุณอย่างถาวร ทั้งในเครื่องและบนคลาวด์ — การกระทำนี้ไม่สามารถกู้คืนได้',set_delacc_btn:'ลบบัญชีของฉันอย่างถาวร',
     set_pin_title:'ตั้ง PIN สำหรับปลดล็อก',set_pin_none:'ยังไม่ได้ตั้ง PIN',set_pin_active:'✅ ตั้ง PIN แล้ว — ใช้ปลดล็อกแทนรหัสผ่านได้',set_pin_new:'PIN ใหม่ (6 หลัก)',set_pin_confirm:'ยืนยัน PIN',set_pin_save:'บันทึก PIN',set_pin_delete:'ลบ PIN',
@@ -5116,8 +5119,8 @@ const I18N = {
     have_account:'Already have an account?',login_link:'Log In',forgot_sub:'Reset Password',
     forgot_desc:'Firebase will send a password reset link to your registered <strong style="color:#a78bfa">Email</strong>',ph_forgot_email:'Your registered email',sending:'Sending...',forgot_send_btn:'Send Reset Email',
     no_email_help:"No email linked / can't recover?",contact_us:'Contact us',back_to:'Back to',privacy_link:'Privacy Policy',terms_link:'Terms of Service',
-    set_ai_scan_title:'AI Receipt Scan',set_ai_scan_desc:'Enter your Google Gemini API Key to let AI read receipt images automatically<br>The key is stored only in your browser, never sent anywhere else',save:'Save',set_get_key_hint:'Get a free key at aistudio.google.com → Get API Key',set_model_hint:'(leave blank for auto-select)',
-    set_sub_title:'AI Subscription',set_sub_desc:'Don\'t want to get your own Gemini API Key? Subscribe to use the app\'s AI without a personal key',sub_active:'Subscription active',sub_until:'until',sub_subscribe_btn:'Subscribe ฿299/month',sub_modal_title:'Subscribe to AI',sub_per_month:'month',sub_pay_card:'Credit/Debit Card',sub_card_name:'Name on card',sub_card_number:'Card number',sub_pay_now:'Pay ฿299',sub_waiting_payment:'Scan QR to pay — waiting for confirmation...',sub_need_relogin:'Please log in again to subscribe',sub_fill_all:'Please fill in all card details',sub_processing:'Processing...',sub_card_invalid:'Invalid card details',sub_payment_failed:'Payment failed',sub_pending:'Waiting for payment confirmation...',sub_success:'Subscription successful!',sub_qr_failed:'Failed to generate QR code',sub_poll_timeout:'Still not confirmed — if you have already paid, close this window and reopen Settings; it will update automatically',
+    set_ai_scan_title:'AI Receipt Scan',set_ai_scan_desc:'Enter your Google Gemini API Key to let AI read receipt images automatically<br>The key is stored only in your browser, never sent anywhere else',save:'Save',set_get_key_hint:'Get a free key at aistudio.google.com → Get API Key (new keys start with AQ.)',set_model_hint:'(leave blank for auto-select)',
+    set_sub_title:'AI Subscription',set_sub_desc:'Don\'t want to get your own Gemini API Key? Subscribe to use the app\'s AI without a personal key',sub_active:'Subscription active',sub_until:'until',sub_subscribe_btn:'Subscribe ฿299/month',sub_modal_title:'Subscribe to AI',sub_per_month:'month',sub_pay_card:'Credit/Debit Card',sub_card_name:'Name on card',sub_card_number:'Card number',sub_pay_now:'Pay ฿299',sub_waiting_payment:'Scan QR to pay — waiting for confirmation...',sub_need_relogin:'Please log in again to subscribe',sub_fill_all:'Please fill in all card details',sub_processing:'Processing...',sub_card_invalid:'Invalid card details',sub_payment_failed:'Payment failed',sub_pending:'Waiting for payment confirmation...',sub_success:'Subscription successful!',sub_qr_failed:'Failed to generate QR code',sub_poll_timeout:'Still not confirmed — if you have already paid, close this window and reopen Settings; it will update automatically',pro_ben_title_promo:'What you get',pro_ben_title_active:'Your PRO benefits',pro_ben_maya:'Full Maya chat — add, edit and search entries just by typing',pro_ben_maya_free:'Right now she only answers preset questions',pro_ben_scan:'AI scanning for receipts, payslips, tax forms and bank statements (images)',pro_ben_nokey:'No Gemini API Key of your own needed',pro_ben_quota_head:'AI quota',pro_ben_free_label:'Now (free)',pro_ben_pro_label:'PRO',pro_ben_per_month:'/month',pro_ben_per_day:'/day',pro_ben_used_month:'Used this month',pro_ben_used_day:'Used today',pro_ben_expiry:'Active until',pro_ben_pdf_note:'Note: PDF statements still require your own Gemini API Key',pro_ben_quota_unavailable:'Could not load quota right now — try again later',
     set_cloud_title:'Firebase Cloud Sync',set_cloud_desc:'Sync data across devices via Firebase Firestore',set_test_conn:'Test Connection',set_upload_cloud:'Upload to Cloud',set_load_cloud:'Load from Cloud',set_recover:'Recover Data',
     set_delacc_title:'Delete Account',set_delacc_desc:'Permanently delete your account and all your data, both on this device and in the cloud — this cannot be undone.',set_delacc_btn:'Delete My Account Permanently',
     set_pin_title:'Set Unlock PIN',set_pin_none:'No PIN set',set_pin_active:'✅ PIN is set — use it to unlock instead of password',set_pin_new:'New PIN (6 digits)',set_pin_confirm:'Confirm PIN',set_pin_save:'Save PIN',set_pin_delete:'Delete PIN',
@@ -6330,9 +6333,9 @@ async function uploadToGeminiFileAPI(bytes, mime, apiKey){
   const tail=enc.encode(`\r\n--${boundary}--`);
   const body=new Uint8Array(head.length+bytes.length+tail.length);
   body.set(head,0); body.set(bytes,head.length); body.set(tail,head.length+bytes.length);
-  const res=await fetch(`https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=multipart&key=${apiKey}`,{
+  const res=await fetch('https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=multipart',{
     method:'POST',
-    headers:{'Content-Type':`multipart/related; boundary=${boundary}`},
+    headers:{'Content-Type':`multipart/related; boundary=${boundary}`,'x-goog-api-key':apiKey},
     body
   });
   if(!res.ok){const e=await res.json(); throw new Error(tr('stmt_upload_failed')+': '+(e.error?.message||res.status));}
@@ -6349,7 +6352,7 @@ async function waitGeminiFile(uri, apiKey, maxWaitMs=20000){
   while(Date.now()<end){
     await new Promise(r=>setTimeout(r,900));
     try{
-      const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/${name}?key=${apiKey}`);
+      const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/${name}`,{headers:{'x-goog-api-key':apiKey}});
       if(!r.ok) return; // ถ้าดึงไม่ได้ก็ลองใช้ URI เลย
       const d=await r.json();
       if(d.state==='ACTIVE') return;
@@ -10303,8 +10306,16 @@ async function sendChat(){
     }
   }catch(e){
     // Gemini ล้มเหลว → fallback rules
+    // ⚠️ ห้ามกลืน e — mayaAgent โยน 'Gemini <status>: <body>' มาให้แล้ว การทิ้งมันทำให้เคส
+    //    AQ key (2026-08-29) เหลือแค่ "ไม่พร้อมใช้งาน" จน debug จากรายงาน user ไม่ได้เลย
     hideTyping();
-    addChatMsg('ai', rulesAI(msg)+'\n\n<span style="font-size:11px;color:#f59e0b">⚠️ Gemini ไม่พร้อมใช้งาน ใช้ AI ในตัวแทน</span>');
+    const _k=DB.settings.apiKey;
+    let detail=String((e&&e.message)||e||'');
+    if(_k) detail=detail.split(_k).join('***'); // กันคีย์หลุดไปกับรายงาน
+    detail=detail.slice(0,160);
+    console.error('[maya]',e);
+    _sendReport({kind:'error',message:'maya failed: '+detail,source:_k?'own-key':'proxy'});
+    addChatMsg('ai', rulesAI(msg)+'\n\n<span style="font-size:11px;color:#f59e0b">⚠️ Gemini ไม่พร้อมใช้งาน ใช้ AI ในตัวแทน<br>'+_escHtml(detail)+'</span>');
   }
   chatBusy=false;
   document.getElementById('chat-send').disabled=false;
@@ -15893,6 +15904,82 @@ async function _getSubscriptionInfo(){
   }catch(e){ return {active:false}; }
 }
 
+// ── สิทธิพิเศษ PRO — ใช้ร่วมกัน 2 ที่: หน้าชวนสมัคร (#sub-benefits) และป๊อบอัพตอนกดป้าย PRO ──
+// ⚠️ ตัวเลขโควตาทุกตัวต้องมาจาก /v1/quota-status เท่านั้น ห้าม hardcode ในเว็บ — ค่าจริงอยู่ที่
+// mm_secrets.py บน VM และ override ได้ด้วย env ถ้าเดาเองแล้วโฆษณาไม่ตรงกับที่ลูกค้าจ่ายเงินได้จริง
+// เป็นปัญหาหนักกว่าการไม่โชว์เลข → ดึงไม่ได้ = ซ่อนเฉพาะส่วนโควตา ไม่ใส่เลขสำรอง
+async function _fetchQuotaPlans(){
+  try{
+    if(!_auth||!_auth.currentUser||!currentUser) return null;
+    const idToken=await _auth.currentUser.getIdToken();
+    const r=await fetch(QUOTA_STATUS_URL+'?username='+encodeURIComponent(currentUser),{headers:{'Authorization':'Bearer '+idToken}});
+    if(!r.ok) return null;
+    return await r.json();
+  }catch(e){ return null; }
+}
+
+function _proBenRow(icon,text,sub){
+  return `<div style="display:flex;gap:9px;align-items:flex-start;margin-bottom:9px">
+    <i class="fas ${icon}" style="color:#f59e0b;font-size:12px;margin-top:3px;width:14px;text-align:center;flex-shrink:0"></i>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13px;line-height:1.5">${text}</div>
+      ${sub?`<div style="font-size:11px;color:var(--muted);margin-top:1px">${sub}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function _proQuotaHtml(q,active){
+  if(!q) return `<div style="font-size:12px;color:var(--muted)">${tr('pro_ben_quota_unavailable')}</div>`;
+  if(active){
+    if(!q.monthly||!q.daily) return '';
+    const mPct=q.monthly.limit?Math.round(Math.min(100,q.monthly.used/q.monthly.limit*100)):0;
+    return `<div style="font-size:12.5px;margin-bottom:5px">${tr('pro_ben_used_month')}: <b>${q.monthly.used}/${q.monthly.limit}</b></div>
+      <div class="pbar"><div class="pfill" style="width:${mPct}%"></div></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:7px">${tr('pro_ben_used_day')}: ${q.daily.used}/${q.daily.limit}</div>`;
+  }
+  const p=q.plans;
+  if(!p||!p.free||!p.subscription) return `<div style="font-size:12px;color:var(--muted)">${tr('pro_ben_quota_unavailable')}</div>`;
+  const line=(label,v,gold)=>`<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:5px 0">
+      <span style="font-size:12px;color:${gold?'#f59e0b':'var(--muted)'};font-weight:${gold?'800':'400'}">${label}</span>
+      <span style="font-size:12.5px;font-weight:${gold?'800':'600'};color:${gold?'#f59e0b':'var(--text)'}">${v.monthly} ${tr('pro_ben_per_month')} · ${v.daily} ${tr('pro_ben_per_day')}</span>
+    </div>`;
+  return line(tr('pro_ben_free_label'),p.free,false)+line(tr('pro_ben_pro_label'),p.subscription,true);
+}
+
+// mode: 'promo' = ยังไม่ได้สมัคร (เทียบฟรี vs PRO) | 'active' = สมัครแล้ว (โชว์โควตาที่ใช้ไปจริง)
+function _proBenefitsHtml(q,mode){
+  const active=mode==='active';
+  return `<div style="font-size:13.5px;font-weight:800;margin-bottom:11px">${active?tr('pro_ben_title_active'):tr('pro_ben_title_promo')}</div>
+    ${_proBenRow('fa-comments',tr('pro_ben_maya'),active?'':tr('pro_ben_maya_free'))}
+    ${_proBenRow('fa-receipt',tr('pro_ben_scan'),'')}
+    ${_proBenRow('fa-key',tr('pro_ben_nokey'),'')}
+    <div style="border-top:1px solid var(--border);margin:11px 0 9px"></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:5px">${tr('pro_ben_quota_head')}</div>
+    ${_proQuotaHtml(q,active)}
+    <div style="font-size:11px;color:var(--muted);margin-top:11px;line-height:1.5">${tr('pro_ben_pdf_note')}</div>`;
+}
+
+// ป๊อบอัพตอนกดป้าย PRO ในแถบข้าง — ลอกโครง overlay จาก _showRankPopup() (dynamic-inject, คลิกพื้นหลังปิด)
+async function _showProBenefits(){
+  let ov=document.getElementById('_proBenOv');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='_proBenOv';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+    ov.onclick=e=>{if(e.target===ov)ov.remove();};
+    document.body.appendChild(ov);
+  }
+  const shell=body=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:22px 18px;max-width:400px;width:100%;max-height:88vh;overflow-y:auto;position:relative">
+    <button onclick="document.getElementById('_proBenOv').remove()" style="position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--muted);font-size:15px;display:flex;align-items:center;justify-content:center">&#10005;</button>
+    <div style="display:flex;align-items:center;gap:7px;margin-bottom:14px"><i class="fas fa-crown" style="color:#fbbf24"></i><span style="font-size:15px;font-weight:900;letter-spacing:.5px">PRO</span></div>
+    ${body}</div>`;
+  ov.innerHTML=shell(`<div style="font-size:13px;color:var(--muted)">${tr('sub_processing')}</div>`);
+  const [q,info]=await Promise.all([_fetchQuotaPlans(),_getSubscriptionInfo()]);
+  if(!document.getElementById('_proBenOv')) return; // ผู้ใช้ปิดไปแล้วระหว่างรอ
+  const expiry=(info&&info.expiry)?`<div style="border-top:1px solid var(--border);margin-top:12px;padding-top:10px;font-size:12px;color:var(--muted)">${tr('pro_ben_expiry')} <b style="color:var(--text)">${info.expiry}</b></div>`:'';
+  ov.innerHTML=shell(_proBenefitsHtml(q,'active')+expiry);
+}
+
 async function renderSubscriptionBox(){
   const el=document.getElementById('subscription-status-box');
   if(!el) return;
@@ -15916,7 +16003,15 @@ function openSubscribeModal(){
   document.getElementById('sub-promptpay-box').style.display='none';
   document.getElementById('sub-error').textContent='';
   _ensureOmise().catch(()=>{}); // เริ่มโหลดล่วงหน้าตั้งแต่เปิด modal — subscribeWithCard() รออีกที
+  // เปิด modal ก่อน แล้วค่อยเติมรายการสิทธิ์ทีหลัง (ยิง /v1/quota-status) เพื่อไม่ให้ modal เปิดช้ารอ network
+  const ben=document.getElementById('sub-benefits');
+  if(ben) ben.innerHTML='';
   openM('m-subscribe');
+  _fetchQuotaPlans().then(q=>{
+    const el=document.getElementById('sub-benefits');
+    if(!el||!document.getElementById('m-subscribe').classList.contains('show')) return; // ปิดไปแล้ว
+    el.innerHTML=`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px">${_proBenefitsHtml(q,'promo')}</div>`;
+  });
 }
 
 function _subShowCardForm(){
@@ -16013,15 +16108,76 @@ async function _subPollStatus(triesLeft){
   setTimeout(()=>_subPollStatus(triesLeft-1), triesLeft>80?3000:6000);
 }
 
-// agent loop — เรียก Gemini (OpenAI-compat) ป้อนผล tool กลับจนได้คำตอบ
-// key ส่วนตัว (DB.settings.apiKey) → เรียก Gemini ตรง | ไม่มี key → ต้องมี subscription (เช็คมาก่อนแล้ว
-// จากจุดเรียกใน sendChat) → เรียกผ่าน ai_proxy.py ด้วย Firebase ID token แทน key
+let _mayaCallSeq=0;
+// ── ตัวแปลง OpenAI-shape ↔ Gemini native ─────────────────────────────────────
+// 2026-08-29: คีย์ AI Studio แบบใหม่ (AQ.) ถูกปฏิเสธบน OpenAI-compat shim
+// (/v1beta/openai/chat/completions รับแต่ Authorization: Bearer และไม่อ่าน x-goog-api-key เลย
+//  — ยืนยันด้วยการยิงจริง: ส่ง x-goog-api-key ได้ 400 "Missing or invalid Authorization header")
+// และ ก.ย. 2026 คีย์ AIza เดิมจะถูกปฏิเสธทั้งหมด → path คีย์ส่วนตัวต้องย้ายไป native generateContent
+// เก็บ messages เป็นรูป OpenAI ไว้เหมือนเดิม เพื่อให้ loop/MAYA_IMPLS/path proxy ไม่ต้องแก้อะไรเลย
+function _mayaToGemini(messages){
+  const contents=[];
+  let systemInstruction=null;
+  for(const m of messages){
+    if(m.role==='system'){ systemInstruction={parts:[{text:m.content}]}; continue; }
+    if(m.role==='tool'){
+      let response; try{ response=JSON.parse(m.content); }catch(e){ response={result:m.content}; }
+      if(response===null||typeof response!=='object'||Array.isArray(response)) response={result:response};
+      const part={functionResponse:{name:m.name,response}};
+      const last=contents[contents.length-1];
+      // รวม tool result ที่ติดกันไว้ใน turn เดียว (Gemini คาดหวังแบบนั้นเมื่อโมเดลเรียกหลาย tool พร้อมกัน)
+      if(last&&last.role==='user'&&last.parts.every(p=>p.functionResponse)) last.parts.push(part);
+      else contents.push({role:'user',parts:[part]});
+      continue;
+    }
+    if(m.role==='assistant'){
+      const parts=[];
+      if(m.content) parts.push({text:m.content});
+      (m.tool_calls||[]).forEach(tc=>{
+        let args={}; try{ args=JSON.parse(tc.function.arguments||'{}'); }catch(e){}
+        parts.push({functionCall:{name:tc.function.name,args}});
+      });
+      if(parts.length) contents.push({role:'model',parts});
+      continue;
+    }
+    contents.push({role:'user',parts:[{text:m.content}]});
+  }
+  return {contents,systemInstruction};
+}
+
+function _mayaGeminiTools(){
+  return [{functionDeclarations:MAYA_TOOLS.map(t=>{
+    const f=t.function, fd={name:f.name,description:f.description};
+    if(f.parameters&&Object.keys(f.parameters.properties||{}).length) fd.parameters=f.parameters;
+    return fd;
+  })}];
+}
+
+// คืนค่าเป็น message รูป OpenAI เพื่อให้ code ที่เหลือใน loop ใช้ต่อได้เหมือนเดิม
+function _mayaFromGemini(j){
+  const cand=j.candidates&&j.candidates[0];
+  if(!cand||!cand.content) return null;
+  // .thought = ส่วน reasoning ของโมเดล ไม่ใช่คำตอบ ต้องกรองทิ้งเสมอ (gotcha เดิมของโปรเจกต์)
+  const parts=(cand.content.parts||[]).filter(p=>!p.thought);
+  const text=parts.filter(p=>typeof p.text==='string').map(p=>p.text).join('').trim();
+  const calls=parts.filter(p=>p.functionCall).map((p,i)=>({
+    id:'call_'+(++_mayaCallSeq)+'_'+i, type:'function',
+    function:{name:p.functionCall.name,arguments:JSON.stringify(p.functionCall.args||{})}
+  }));
+  const m={role:'assistant',content:text};
+  if(calls.length) m.tool_calls=calls;
+  return m;
+}
+
+// agent loop — ป้อนผล tool กลับจนได้คำตอบ
+// key ส่วนตัว (DB.settings.apiKey) → เรียก Gemini native ตรง | ไม่มี key → ต้องมี subscription
+// (เช็คมาก่อนแล้วจากจุดเรียกใน sendChat) → เรียกผ่าน ai_proxy.py (OpenAI-compat) ด้วย Firebase ID token
 async function mayaAgent(userMsg){
   if(!await ensureAIConsent()) return (currentLang==='en'?'AI features are turned off. Tap an AI feature again to enable them anytime.':'ฟีเจอร์ AI ถูกปิดอยู่ กดใช้ฟีเจอร์ AI อีกครั้งเพื่อเปิดใช้งานได้ทุกเมื่อ');
   const key=DB.settings.apiKey;
   const useProxy=!key;
   const model=(DB.settings.geminiModel&&!/tts|embedding|aqa/i.test(DB.settings.geminiModel))?DB.settings.geminiModel:'gemini-2.5-flash';
-  const url=useProxy?MAYA_PROXY_URL:'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+  const url=useProxy?MAYA_PROXY_URL:`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
   const sys=buildFinanceContext()+`
 
 == กฎการใช้ tool ==
@@ -16040,20 +16196,22 @@ async function mayaAgent(userMsg){
 
   let retriedEmpty=false;
   for(let step=0;step<5;step++){
-    const bodyObj={model,messages,tools:MAYA_TOOLS,tool_choice:'auto',temperature:0.5};
-    let headers;
+    let bodyObj, headers;
     if(useProxy){
       if(!_auth||!_auth.currentUser) throw new Error('Session AI หมดอายุ — ลอง login ใหม่อีกครั้ง');
       const idToken=await _auth.currentUser.getIdToken();
       headers={'Authorization':'Bearer '+idToken,'Content-Type':'application/json'};
-      bodyObj.username=currentUser;
+      bodyObj={model,messages,tools:MAYA_TOOLS,tool_choice:'auto',temperature:0.5,username:currentUser};
     } else {
-      headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'};
+      headers={'Content-Type':'application/json','x-goog-api-key':key};
+      const conv=_mayaToGemini(messages);
+      bodyObj={contents:conv.contents,tools:_mayaGeminiTools(),generationConfig:{temperature:0.5}};
+      if(conv.systemInstruction) bodyObj.systemInstruction=conv.systemInstruction;
     }
     const r=await fetch(url,{method:'POST',headers,body:JSON.stringify(bodyObj)});
     if(!r.ok) throw new Error('Gemini '+r.status+': '+(await r.text()).slice(0,200));
     const j=await r.json();
-    const m=j.choices&&j.choices[0]&&j.choices[0].message;
+    const m=useProxy?(j.choices&&j.choices[0]&&j.choices[0].message):_mayaFromGemini(j);
     if(!m) throw new Error('ไม่ได้รับคำตอบ');
     const calls=m.tool_calls;
     if(!calls||!calls.length){
@@ -17324,7 +17482,7 @@ function _renderTierBadge(){
         <i class="fas ${rank.icon}" style="font-size:9px;color:${rank.color}"></i>
         <span style="font-size:10.5px;font-weight:800;color:${rank.color};letter-spacing:.4px">${rank.name}</span>
         <span style="font-size:9px;color:${rank.color};opacity:.65;font-weight:600">Lv.${tier.lv}/8</span>
-        ${_subProActive?`<span style="width:1px;height:11px;background:${rank.color}55;margin:0 1px"></span><i class="fas fa-crown" style="font-size:8.5px;color:#fbbf24"></i><span style="font-size:9.5px;font-weight:800;letter-spacing:.5px;background:linear-gradient(135deg,#fcd34d,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent">PRO</span>`:''}
+        ${_subProActive?`<span style="width:1px;height:11px;background:${rank.color}55;margin:0 1px"></span><span onclick="event.stopPropagation();_showProBenefits()" title="${tr('pro_ben_title_active')}" style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><i class="fas fa-crown" style="font-size:8.5px;color:#fbbf24"></i><span style="font-size:9.5px;font-weight:800;letter-spacing:.5px;background:linear-gradient(135deg,#fcd34d,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent">PRO</span></span>`:''}
       </div>
     </div>`;
   }catch(e){ el.innerHTML=''; }
