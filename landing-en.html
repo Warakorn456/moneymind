@@ -789,6 +789,24 @@
   try{ sid=sessionStorage.getItem(K)||(rnd()+rnd()+Date.now().toString(16)); sessionStorage.setItem(K,sid); }
   catch(e){ sid=rnd()+rnd()+Date.now().toString(16); }   // โหมดส่วนตัว: ใช้ครั้งเดียวทิ้ง ห้ามพัง
   var q=new URLSearchParams(location.search), sent=false;
+  // ── first-touch: จำว่า user มาจากไหน "ครั้งแรก" ที่เข้าเว็บ (เพิ่ม 2026-08-31) ──
+  // เขียนครั้งเดียวแล้วห้ามทับ — ครั้งหลังๆ referrer จะกลายเป็นเว็บเราเอง ถ้าทับทุกครั้ง
+  // ทุกคนจะกลายเป็น "เข้าตรง" หมด แล้วตอบไม่ได้เลยว่าโพสต์ช่องทางไหนได้ user จริง
+  // ⚠️ เก็บแค่ "ชื่อโดเมน/ชื่อแคมเปญ" ไม่เก็บ URL เต็มหรือ query string (ดู privacy.html)
+  window.__mmAcq=function(){
+    try{ var v=localStorage.getItem('mm_acq'); if(v) return v; }catch(e){}
+    var s=q.get('utm_source')||'';
+    if(!s&&document.referrer){
+      try{
+        var h=new URL(document.referrer).hostname.toLowerCase().replace(/^www\./,'');
+        if(h&&h.indexOf('moneymindth.com')<0) s=h;   // referrer ภายในไม่ใช่ช่องทางหาคนใหม่
+      }catch(e){}
+    }
+    s=(s||'direct').toLowerCase().replace(/[^a-z0-9._-]/g,'').slice(0,40);
+    try{ localStorage.setItem('mm_acq',s); }catch(e){}   // โหมดส่วนตัวโยน error ได้ ห้ามพัง
+    return s;
+  };
+  try{ window.__mmAcq(); }catch(e){}
   function hit(ev){
     try{ if(window.__mmDepthScan) window.__mmDepthScan(); }catch(e){}
     try{ navigator.sendBeacon(U,new Blob([JSON.stringify({
@@ -848,6 +866,16 @@
          :a.href.indexOf('play.google.com')>-1?'android'
          :/app\.moneymindth\.com\/?($|\?|#)/.test(a.href)?'app':'';
     if(k&&window.__mmClicks.indexOf(k)<0) window.__mmClicks.push(k);
+    // landing อยู่ moneymindth.com แต่ตัวแอปอยู่ app.moneymindth.com — คนละ origin
+    // localStorage จึงข้ามไปไม่ได้ ต้องส่งต่อทาง query string ตอนกดปุ่มเข้าแอป
+    if(k==='app'){
+      // เช็คด้วย searchParams ไม่ใช่ indexOf('a=') — indexOf จะ false-positive กับ query
+      // อย่าง ?data=1 ที่มีสตริง "a=" อยู่ข้างใน แล้วจะไม่ติดแท็กให้เลย
+      try{
+        var u=new URL(a.href,location.href);
+        if(!u.searchParams.has('a')){ u.searchParams.set('a',window.__mmAcq()); a.href=u.toString(); }
+      }catch(e){}
+    }
   },true);
 })();
 </script>

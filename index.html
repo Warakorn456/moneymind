@@ -1235,6 +1235,24 @@
   try{ sid=sessionStorage.getItem(K)||(rnd()+rnd()+Date.now().toString(16)); sessionStorage.setItem(K,sid); }
   catch(e){ sid=rnd()+rnd()+Date.now().toString(16); }   // โหมดส่วนตัว: ใช้ครั้งเดียวทิ้ง ห้ามพัง
   var q=new URLSearchParams(location.search), sent=false;
+  // ── first-touch: มาจากช่องทางไหน (เพิ่ม 2026-08-31) ──
+  // landing อยู่ moneymindth.com ส่วนตัวแอปอยู่ app.moneymindth.com คนละ origin → localStorage
+  // ข้ามมาไม่ได้ landing จึงแปะ `?a=` มากับลิงก์ตอนกดปุ่มเข้าแอป (ดู landing.html)
+  // เขียนครั้งเดียวแล้วห้ามทับ ไม่งั้นครั้งหลังๆ ทุกคนจะกลายเป็น "เข้าตรง" หมด
+  // ⚠️ ค่านี้จะถูกเขียนลง members ตอนสมัคร ซึ่ง rule เป็น `allow read: if true` = สาธารณะ
+  //    เก็บได้แค่ชื่อโดเมน/ชื่อแคมเปญเท่านั้น ห้ามใส่ URL เต็มหรืออะไรที่ระบุตัวบุคคล
+  try{
+    if(!localStorage.getItem('mm_acq')){
+      var _s=q.get('a')||q.get('utm_source')||'';
+      if(!_s&&document.referrer){
+        try{
+          var _h=new URL(document.referrer).hostname.toLowerCase().replace(/^www\./,'');
+          if(_h&&_h.indexOf('moneymindth.com')<0) _s=_h;   // referrer ภายในไม่ใช่ช่องทางหาคนใหม่
+        }catch(e){}
+      }
+      localStorage.setItem('mm_acq',(_s||'direct').toLowerCase().replace(/[^a-z0-9._-]/g,'').slice(0,40));
+    }
+  }catch(e){}   // โหมดส่วนตัว/ปิด storage โยน error ได้ — หน้าเว็บห้ามพัง
   function hit(ev){
     try{ if(window.__mmDepthScan) window.__mmDepthScan(); }catch(e){}
     try{ navigator.sendBeacon(U,new Blob([JSON.stringify({
@@ -1251,6 +1269,15 @@
   window.__mmPage=function(pg){
     var now=Date.now(); if(now-(lastPg[pg]||0)<2000) return; lastPg[pg]=now;
     try{ navigator.sendBeacon(U,new Blob([JSON.stringify({sid:sid,ev:'page',page:pg})],
+      {type:'text/plain'})); }catch(e){}
+  };
+  // การกระทำที่ "ทำสำเร็จแล้ว" ในแอป (เพิ่ม 2026-08-31) — ตอบคำถามที่ __mmPage ตอบไม่ได้:
+  // เปิดหน้ารายการ 238 ครั้ง แล้วกดบันทึกสำเร็จจริงกี่ครั้ง — ส่วนต่างคือ friction ที่ควรไปแก้
+  // ⚠️ ต้องเรียกตอน "สำเร็จ" เท่านั้น ไม่ใช่ตอนกดปุ่ม ไม่งั้นวัด friction ไม่ได้เลย
+  // throttle สั้นกว่า __mmPage (1 วิ) เพราะดับเบิลคลิกต้องไม่นับซ้ำ แต่คนกรอกรัวๆ ต้องนับครบ
+  window.__mmAct=function(ev){
+    var now=Date.now(), k='a:'+ev; if(now-(lastPg[k]||0)<1000) return; lastPg[k]=now;
+    try{ navigator.sendBeacon(U,new Blob([JSON.stringify({sid:sid,ev:'act',page:'/act/'+ev})],
       {type:'text/plain'})); }catch(e){}
   };
   var t=setInterval(function(){ if(!document.hidden) hit('ping'); },30000);
@@ -3514,6 +3541,22 @@ function cancel2FALogin(){
   try{ localStorage.removeItem(SESS_KEY); }catch(e){}
 }
 
+// แหล่งที่มาตอนสมัคร (first-touch — เก็บไว้ใน localStorage โดย beacon ใน <head>, เพิ่ม 2026-08-31)
+// เดิม utm/ref อยู่ในตาราง visit_sessions แบบไม่ผูกกับใครเลย จึงตอบได้แค่ "คนเข้าเว็บมาจากไหน"
+// แต่ตอบไม่ได้ว่า "ช่องทางไหนได้ user ที่อยู่ยาว" ซึ่งเป็นคำถามที่ใช้ตัดสินใจได้จริง
+// ⚠️ เขียนเฉพาะตอน "สร้างบัญชี" เท่านั้น ห้ามเขียนทับตอน login ไม่งั้นค่าจะเพี้ยนไปตามครั้งล่าสุด
+// ⚠️ members มี rule `allow read: if true` (จำเป็น เพราะ login ต้อง lookup username จาก email
+//    ตั้งแต่ยังไม่ auth) → field นี้เป็นข้อมูลสาธารณะโดยพฤตินัยเหมือน email/platform/provider เดิม
+//    จึงเก็บได้แค่ชื่อโดเมน/ชื่อแคมเปญ ห้ามใส่ URL เต็มหรืออะไรที่ระบุตัวบุคคลลงไปเด็ดขาด
+function _acqFields(){
+  try{
+    const s=localStorage.getItem('mm_acq');
+    if(s) return {acqSource:String(s).slice(0,40),
+                  acqAt:firebase.firestore.FieldValue.serverTimestamp()};
+  }catch(e){}
+  return {};
+}
+
 let _heartbeatTimer=null;
 function _startHeartbeat(){
   clearInterval(_heartbeatTimer);
@@ -3602,7 +3645,7 @@ async function tryLogin(){
           if(existDoc.exists && (existDoc.data().uid||'')!==fbUser.uid){ autoUser=autoUser.substring(0,11)+'_'+Date.now().toString().slice(-4); }
         }catch(e){}
         try{
-          await _fs.collection('members').doc(autoUser).set({ username:autoUser, email:user, uid:fbUser.uid, createdAt:firebase.firestore.FieldValue.serverTimestamp(), platform:(window._isAndroidApp?'android':window._isIOSApp?'ios':'web') });
+          await _fs.collection('members').doc(autoUser).set({ username:autoUser, email:user, uid:fbUser.uid, createdAt:firebase.firestore.FieldValue.serverTimestamp(), platform:(window._isAndroidApp?'android':window._isIOSApp?'ios':'web'), ..._acqFields() });
         }catch(e){ errEl.textContent='ไม่พบบัญชีที่ใช้ Email นี้'; btn.disabled=false; btn.textContent=tr('login_btn'); return; }
         currentUser=autoUser;
         DB={ transactions:[], savings:[], debts:[], investments:[], settings:{apiKey:''}, tax:{}, plan:{monthlyIncome:0,otherAssets:0,items:[],extraAssets:[],extraDebts:[]}, profile:{} };
@@ -3705,7 +3748,8 @@ async function tryRegister(){
           email:email,
           uid:fbUid,
           createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-          platform:(window._isAndroidApp?'android':window._isIOSApp?'ios':'web')
+          platform:(window._isAndroidApp?'android':window._isIOSApp?'ios':'web'),
+          ..._acqFields()
         });
       }catch(e){ console.warn('[members] save error:',e.message); }
     }
@@ -3841,6 +3885,7 @@ async function _handleOAuthResult(result, providerName, lineUserId){
       platform:(window._isAndroidApp?'android':window._isIOSApp?'ios':'web'),
       createdAt:firebase.firestore.FieldValue.serverTimestamp(),
       lastSeen:firebase.firestore.FieldValue.serverTimestamp(),
+      ..._acqFields(),
       ...extraFields,
     });
     const salt=randB64(16);
@@ -5087,7 +5132,7 @@ const I18N = {
     aiu_loading:'กำลังโหลดข้อมูลการใช้ AI...',aiu_no_data:'ยังไม่มีข้อมูล',aiu_claude_hint:'รัน <code>python claude_usage_report.py --firestore</code> บนโน้ตบุ๊ก (transcript อยู่ในเครื่อง ไม่ใช่ VM)',aiu_gemini_hint:'อัปเดตทุกวันจาก Cloud Monitoring · หรือรัน <code>python gemini_usage_report.py --firestore</code> บน VM',aiu_by_model:'แยกตามรุ่นโมเดล (ใช้มากสุดบนสุด)',aiu_proj_vs_cap:'คาดการณ์เดือนนี้ vs spend cap',aiu_over_cap:'คาดว่าจะเกิน cap — usage จะถูก pause เมื่อถึง ฿{cap}',aiu_claude_banner:'เป็น<b>ประมาณการแบบ API</b> — คุณใช้ Pro/Max เหมารายเดือน ตัวเลขนี้ดูปริมาณการใช้ ไม่ใช่เงินที่จ่ายจริง',aiu_claude_footer:'* นับจาก transcript Claude Code ทุกโปรเจกต์ในเครื่องนี้ (~/.claude) · ราคา API opus $5/$25 · cache read 0.1× · USDTHB={usdthb}',aiu_gemini_footer:'* ข้อมูลจริงจาก Cloud Monitoring (Gemini API · project Best1) — ครอบคลุมเว็บ Maya + Telegram bot + ทุกสคริปต์ · ราคา flash $0.30/$2.50 ต่อ 1M tok, USDTHB={usdthb}',aiu_today:'วันนี้',aiu_this_month:'เดือนนี้ (ถึงวันนี้)',aiu_days_with_data:'วันที่มีข้อมูล',aiu_avg_per_day:'เฉลี่ย/วัน',aiu_month_projection:'คาดการณ์ทั้งเดือน',aiu_estimate:'ประมาณการ',aiu_daily_cost:'ค่าใช้จ่ายรายวัน (฿)',aiu_daily_detail:'รายละเอียดรายวัน',aiu_baht_per_day:'฿/วัน',
     admin_no_access:'ไม่มีสิทธิ์เข้าถึงหน้านี้',admin_loading:'กำลังโหลดข้อมูล...',admin_fb_not_ready:'Firebase ยังไม่พร้อม',admin_never:'ไม่เคย',admin_just_now:'เมื่อกี้',admin_min_ago:'นาทีที่แล้ว',admin_hr_ago:'ชม.ที่แล้ว',admin_day_ago:'วันที่แล้ว',
     admin_server_usage:'Usage รวม (ฝั่งเซิร์ฟเวอร์)',admin_total_tx:'รายการรวม',admin_total_nw:'Net Worth รวม',admin_has_real_data:'มีข้อมูลจริง',admin_avg_tx_per_user:'รายการ/คน เฉลี่ย',admin_usage_per_user:'การใช้งานต่อคน',admin_user:'ผู้ใช้',admin_last_tx:'รายการล่าสุด',admin_features_used:'ฟีเจอร์ที่ใช้',admin_ai_quota:'โควต้า AI (เดือน/วัน)',admin_no_server_usage:'ยังไม่มี usage รวมฝั่งเซิร์ฟเวอร์ — รัน <code>admin_stats.py</code> บน VM (อ่าน userdata ทุกคนผ่าน Service Account → เขียน <code>admin/summary</code>) แล้วรีเฟรช',admin_nw_trend:'เทรนด์ Net Worth รวมย้อนหลัง',
-    admin_online:'ออนไลน์',admin_users:'ผู้ใช้',admin_total_users:'ผู้ใช้ทั้งหมด',admin_in_7_days:'ใน 7 วัน',admin_online_now:'ออนไลน์อยู่',admin_dau_today:'DAU วันนี้',admin_wau_7d:'WAU 7 วัน',admin_mau_30d:'MAU 30 วัน',admin_signup_today:'สมัครวันนี้',admin_churn_30d:'เงียบ >30 วัน',admin_never_login:'ไม่เคยล็อกอิน',admin_has_real_email:'มี email จริง',admin_cumulative_users:'ผู้ใช้สะสม',admin_platform:'แพลตฟอร์ม',admin_search:'ค้นหา',admin_last_seen:'ล่าสุด',admin_online_within_10min:'ออนไลน์ภายใน 10 นาที',admin_load_failed:'โหลดข้อมูลไม่ได้',admin_test_account:'ทดสอบ',admin_show_test_accounts:'แสดงบัญชีทดสอบ',admin_web_views:'ยอดเข้าชมเว็บ',admin_views_note:'ตัวเลขใหญ่คือจำนวนคนที่เข้าวันนี้ ส่วน “เปิดหน้า” คือจำนวนครั้ง — คนเดียวเปิดหลายครั้งได้',admin_v_people:'คนเข้าเว็บ',admin_v_pageviews:'เปิดหน้า',admin_v_sessions:'ครั้งที่เข้า',admin_v_people_note:'เริ่มนับจำนวนคนตั้งแต่ 27 ส.ค. 2569 — ก่อนหน้านั้นมีแต่ยอดเปิดหน้า',admin_v_dur_title:'อยู่บนเว็บนานแค่ไหน',admin_v_dur_median:'อยู่นานประมาณ',admin_v_dur_avg:'เฉลี่ย',admin_v_bounce:'เปิดแล้วปิดเลย',admin_v_dur_note:'ใช้ค่ากลาง (median) ต่อการเข้า 1 ครั้ง ไม่ใช่ค่าเฉลี่ย เพราะแท็บที่เปิดค้างไว้ดันค่าเฉลี่ยให้เพี้ยน',admin_v_b1:'ไม่ถึง 10 วิ',admin_v_b2:'10 วิ–1 นาที',admin_v_b3:'1–5 นาที',admin_v_b4:'เกิน 5 นาที',admin_v_sec:'วิ',admin_v_min:'นาที',admin_v_hours:'ช่วงเวลาที่คนเข้า (เวลาไทย)',admin_v_campaign:'แคมเปญที่ติดแท็ก (utm)',admin_v_signup_daily:'สมัครรายวัน',admin_v_signup_how:'สมัครด้วยวิธีไหน',admin_v_vs_prev:'เทียบ 7 วันก่อน',admin_v_people_7d:'คนเข้าเว็บ 7 วัน',admin_v_funnel:'อ่านหน้าแนะนำถึงตรงไหน',admin_v_funnel_note:'นับจากคนที่เลื่อนถึงอย่างน้อยส่วนนั้น — ส่วนที่ตัวเลขตกแรงคือจุดที่คนเลิกอ่าน',admin_v_sec_labels:'หัวหน้าแรก,ตัวอย่างการใช้งาน,ฟีเจอร์,แรงค์/เกม,ความปลอดภัย,ราคา,คำถามที่พบบ่อย,รีวิว,เริ่มใช้งาน 3 ขั้น,ปุ่มปิดท้าย',admin_v_cta:'ปุ่มที่ถูกกด',admin_v_cta_labels:'เข้าแอป,iOS,Android',admin_v_opened:'เปิดดู',admin_v_adopt_note2:'ตัวเลขซ้าย = เปิดดูกี่ครั้งใน 30 วัน · ตัวเลขขวา = มีข้อมูลจริงกี่คน — เปิดเยอะแต่ไม่มีข้อมูล แปลว่าน่าสนใจแต่ใช้ยาก',admin_views_today:'วันนี้',admin_views_yesterday:'เมื่อวาน',admin_views_7d:'7 วัน',admin_views_30d:'30 วัน',admin_views_unavailable:'ดึงสถิติเว็บไม่ได้',admin_views_app:'ตัวแอป',admin_views_landing_th:'หน้าแนะนำ (ไทย)',admin_views_landing_en:'หน้าแนะนำ (อังกฤษ)',admin_views_sources:'มาจากไหน',admin_views_direct:'เข้าตรง / ไม่มีที่มา',admin_conv_title:'หน้าแนะนำ → สมัคร',admin_conv_views:'เข้าชม',admin_conv_signups:'สมัคร',admin_conv_note:'บอกทิศทางคร่าวๆ ไม่ใช่ funnel จริง — บางคนสมัครจากลิงก์ LINE/แชร์โดยไม่ผ่านหน้าแนะนำ และบางคนเข้าชมวันนี้แต่ไปสมัครสัปดาห์หน้า',admin_adoption:'ฟีเจอร์ไหนมีคนใช้จริง',admin_adoption_note:'นับจากผู้ใช้จริง {n} คน (ไม่รวมบัญชีทดสอบ)',admin_adopt_line:'เชื่อม LINE',admin_adopt_line_friend:'เพิ่มบอทเป็นเพื่อนแล้ว',admin_adopt_gmail:'เชื่อม Gmail (ดักอีเมลธนาคาร)',admin_adopt_push:'เปิด push',admin_adopt_login:'วิธีล็อกอิน',admin_dev_title:'ผู้เข้าชมใช้อะไร',admin_dev_mobile:'มือถือ',admin_dev_desktop:'คอม',share_app_btn:'แชร์แอปให้เพื่อน',line_connect_btn:'เชื่อมต่อ LINE',line_connected_btn:'เชื่อมต่อ LINE แล้ว',line_notfriend_title:'ยังไม่ได้เพิ่มบอทเป็นเพื่อน',line_notfriend_desc:'เชื่อมต่อบัญชีแล้ว แต่ LINE จะส่งแจ้งเตือนให้ไม่ได้จนกว่าจะเพิ่ม MoneyMind เป็นเพื่อน',line_notfriend_add:'เพิ่มเพื่อนเลย',line_notfriend_recheck:'ตรวจสอบอีกครั้ง',line_notfriend_qr:'อยู่บนคอม? สแกน QR ด้วยมือถือ',share_app_message:'ลองแอปจัดการเงินที่ผมใช้อยู่ดูสิ บันทึกรายรับ-รายจ่ายด้วย AI สแกนใบเสร็จ คำนวณภาษีได้ในตัว ใช้งานฟรี',share_link_copied:'คัดลอกลิงก์แอปแล้ว!',
+    admin_online:'ออนไลน์',admin_users:'ผู้ใช้',admin_total_users:'ผู้ใช้ทั้งหมด',admin_in_7_days:'ใน 7 วัน',admin_online_now:'ออนไลน์อยู่',admin_dau_today:'DAU วันนี้',admin_wau_7d:'WAU 7 วัน',admin_mau_30d:'MAU 30 วัน',admin_signup_today:'สมัครวันนี้',admin_churn_30d:'เงียบ >30 วัน',admin_never_login:'ไม่เคยล็อกอิน',admin_has_real_email:'มี email จริง',admin_cumulative_users:'ผู้ใช้สะสม',admin_platform:'แพลตฟอร์ม',admin_search:'ค้นหา',admin_last_seen:'ล่าสุด',admin_online_within_10min:'ออนไลน์ภายใน 10 นาที',admin_load_failed:'โหลดข้อมูลไม่ได้',admin_test_account:'ทดสอบ',admin_show_test_accounts:'แสดงบัญชีทดสอบ',admin_web_views:'ยอดเข้าชมเว็บ',admin_views_note:'ตัวเลขใหญ่คือจำนวนคนที่เข้าวันนี้ ส่วน “เปิดหน้า” คือจำนวนครั้ง — คนเดียวเปิดหลายครั้งได้',admin_v_people:'คนเข้าเว็บ',admin_v_pageviews:'เปิดหน้า',admin_v_sessions:'ครั้งที่เข้า',admin_v_people_note:'เริ่มนับจำนวนคนตั้งแต่ 27 ส.ค. 2569 — ก่อนหน้านั้นมีแต่ยอดเปิดหน้า',admin_v_dur_title:'อยู่บนเว็บนานแค่ไหน',admin_v_dur_median:'อยู่นานประมาณ',admin_v_dur_avg:'เฉลี่ย',admin_v_bounce:'เปิดแล้วปิดเลย',admin_v_dur_note:'ใช้ค่ากลาง (median) ต่อการเข้า 1 ครั้ง ไม่ใช่ค่าเฉลี่ย เพราะแท็บที่เปิดค้างไว้ดันค่าเฉลี่ยให้เพี้ยน',admin_v_b1:'ไม่ถึง 10 วิ',admin_v_b2:'10 วิ–1 นาที',admin_v_b3:'1–5 นาที',admin_v_b4:'เกิน 5 นาที',admin_v_sec:'วิ',admin_v_min:'นาที',admin_v_hours:'ช่วงเวลาที่คนเข้า (เวลาไทย)',admin_v_campaign:'แคมเปญที่ติดแท็ก (utm)',admin_v_signup_daily:'สมัครรายวัน',admin_v_signup_how:'สมัครด้วยวิธีไหน',admin_v_vs_prev:'เทียบ 7 วันก่อน',admin_v_people_7d:'คนเข้าเว็บ 7 วัน',admin_v_funnel:'อ่านหน้าแนะนำถึงตรงไหน',admin_v_funnel_note:'นับจากคนที่เลื่อนถึงอย่างน้อยส่วนนั้น — ส่วนที่ตัวเลขตกแรงคือจุดที่คนเลิกอ่าน',admin_v_sec_labels:'หัวหน้าแรก,ตัวอย่างการใช้งาน,ฟีเจอร์,แรงค์/เกม,ความปลอดภัย,ราคา,คำถามที่พบบ่อย,รีวิว,เริ่มใช้งาน 3 ขั้น,ปุ่มปิดท้าย',admin_v_cta:'ปุ่มที่ถูกกด',admin_v_cta_labels:'เข้าแอป,iOS,Android',admin_v_opened:'เปิดดู',admin_v_adopt_note2:'ตัวเลขซ้าย = เปิดดูกี่ครั้งใน 30 วัน · ตัวเลขขวา = มีข้อมูลจริงกี่คน — เปิดเยอะแต่ไม่มีข้อมูล แปลว่าน่าสนใจแต่ใช้ยาก',admin_views_today:'วันนี้',admin_views_yesterday:'เมื่อวาน',admin_views_7d:'7 วัน',admin_views_30d:'30 วัน',admin_views_unavailable:'ดึงสถิติเว็บไม่ได้',admin_views_app:'ตัวแอป',admin_views_landing_th:'หน้าแนะนำ (ไทย)',admin_views_landing_en:'หน้าแนะนำ (อังกฤษ)',admin_views_sources:'มาจากไหน',admin_views_direct:'เข้าตรง / ไม่มีที่มา',admin_conv_title:'หน้าแนะนำ → สมัคร',admin_conv_views:'เข้าชม',admin_conv_signups:'สมัคร',admin_conv_note:'บอกทิศทางคร่าวๆ ไม่ใช่ funnel จริง — บางคนสมัครจากลิงก์ LINE/แชร์โดยไม่ผ่านหน้าแนะนำ และบางคนเข้าชมวันนี้แต่ไปสมัครสัปดาห์หน้า',admin_adoption:'ฟีเจอร์ไหนมีคนใช้จริง',admin_adoption_note:'นับจากผู้ใช้จริง {n} คน (ไม่รวมบัญชีทดสอบ)',admin_adopt_line:'เชื่อม LINE',admin_adopt_line_friend:'เพิ่มบอทเป็นเพื่อนแล้ว',admin_adopt_gmail:'เชื่อม Gmail (ดักอีเมลธนาคาร)',admin_adopt_push:'เปิด push',admin_adopt_login:'วิธีล็อกอิน',admin_dev_title:'ผู้เข้าชมใช้อะไร',admin_dev_mobile:'มือถือ',admin_dev_desktop:'คอม',admin_lc_atrisk:'กำลังจะหลุด',admin_lc_atrisk_sub:'เงียบ 8–30 วัน',admin_lc_active:'ใช้อยู่',admin_lc_dormant:'หลุดแล้ว',admin_lc_never:'ไม่เคยเข้า',admin_hist_dau:'DAU ย้อนหลัง',admin_act_title:'สมัครแล้วได้ใช้จริงไหม',admin_act_note:'จากคนที่สมัครใน 30 วันล่าสุด {n} คน — เทียบเป็นรายวันเพราะใช้วันที่ของรายการที่บันทึก ไม่ใช่เวลาที่กดปุ่ม',admin_act_sameday:'บันทึกรายการวันเดียวกับที่สมัคร',admin_act_7d:'บันทึกภายใน 7 วัน',admin_act_never:'ยังไม่เคยบันทึกอะไรเลย',admin_ret_title:'คนสมัครแล้วอยู่ต่อไหม',admin_ret_note:'แต่ละแถวคือรุ่นที่สมัครสัปดาห์นั้น ตัวเลขคือ % ที่ยังกลับมาใช้ในสัปดาห์นั้น · ช่องว่าง = ยังไม่ถึงเวลาวัด หรือยังไม่ได้เริ่มเก็บ ไม่ใช่ 0%',admin_ret_since:'เริ่มเก็บสัปดาห์',admin_ret_cohort:'รุ่น',admin_ret_people:'คน',admin_ret_wait:'ยังไม่มีข้อมูล retention มากพอ — ตัวเลขจะเริ่มอ่านได้หลังผ่านไปอีก 1 สัปดาห์',admin_err_title:'อะไรพังบ่อยสุด 7 วัน',admin_err_note:'จับจาก error จริงในเบราว์เซอร์ของผู้ใช้ (เดิมส่งเข้า Telegram แล้วทิ้ง ไม่เหลือให้ดูย้อนหลัง)',admin_err_times:'ครั้ง',admin_err_people:'คน',admin_err_last:'ล่าสุด',admin_actd_title:'เปิดหน้าแล้วทำสำเร็จจริงกี่ครั้ง',admin_actd_note:'ยอดรวม 30 วัน ไม่ผูกกับบัญชีใคร · นับตอนทำสำเร็จเท่านั้น ไม่ใช่ตอนกดปุ่ม — เปิดเยอะแต่สำเร็จน้อย คือจุดที่คนทำไม่สำเร็จ',admin_actd_opens:'เปิดหน้า',admin_actd_done:'สำเร็จ',admin_actd_tx_add:'บันทึกรายการ',admin_actd_receipt_scan:'สแกนใบเสร็จ/สลิป',admin_actd_maya_ask:'ถาม Maya แล้วได้คำตอบ',admin_actd_bank_add:'เพิ่มบัญชีธนาคาร',admin_actd_budget_set:'ตั้งงบรายหมวด',admin_actd_debt_add:'เพิ่มหนี้สิน',admin_acq_note:'ช่องทางที่ผูกกับบัญชีจริง — เริ่มเก็บ 1 ก.ย. 2569 บัญชีที่สมัครก่อนหน้านั้นไม่มีข้อมูลนี้',admin_acq_signups:'สมัคร',admin_acq_still:'ยังใช้อยู่',share_app_btn:'แชร์แอปให้เพื่อน',line_connect_btn:'เชื่อมต่อ LINE',line_connected_btn:'เชื่อมต่อ LINE แล้ว',line_notfriend_title:'ยังไม่ได้เพิ่มบอทเป็นเพื่อน',line_notfriend_desc:'เชื่อมต่อบัญชีแล้ว แต่ LINE จะส่งแจ้งเตือนให้ไม่ได้จนกว่าจะเพิ่ม MoneyMind เป็นเพื่อน',line_notfriend_add:'เพิ่มเพื่อนเลย',line_notfriend_recheck:'ตรวจสอบอีกครั้ง',line_notfriend_qr:'อยู่บนคอม? สแกน QR ด้วยมือถือ',share_app_message:'ลองแอปจัดการเงินที่ผมใช้อยู่ดูสิ บันทึกรายรับ-รายจ่ายด้วย AI สแกนใบเสร็จ คำนวณภาษีได้ในตัว ใช้งานฟรี',share_link_copied:'คัดลอกลิงก์แอปแล้ว!',
     sync_not_synced:'ยังไม่ได้ซิงค์',sync_force_title:'บังคับ sync ขึ้น cloud',uploaded:'อัปโหลดแล้ว',loaded_from_cloud:'โหลดจาก Cloud แล้ว',no_cloud_data:'ไม่มีข้อมูลใน Cloud',no_recoverable_data:'ไม่พบข้อมูลที่กู้คืนได้',synced_new_device:'โหลดข้อมูลใหม่จากอุปกรณ์อื่นแล้ว ☁️',db_size_warn:'ข้อมูลของคุณใกล้เต็มขีดจำกัดระบบ (Firestore 1MB/บัญชี) แนะนำ Export ข้อมูลเก่าเก็บไว้ แล้วลบรายการที่ไม่จำเป็นในหน้าตั้งค่า ไม่งั้น sync ข้ามอุปกรณ์อาจล้มเหลว',cloud_load_failed:'โหลด cloud ไม่ได้',new_data_from_device:'มีข้อมูลใหม่จากอุปกรณ์อื่น ☁️ (จะโหลดหลังปิดฟอร์ม)',synced_from_device:'ซิงค์จากอุปกรณ์อื่นแล้ว ☁️',uploaded_to_cloud:'อัปโหลดข้อมูลขึ้น Cloud แล้ว',recover_success:'กู้คืนข้อมูลสำเร็จ ✓',welcome_username:'ยินดีต้อนรับ! ชื่อผู้ใช้',relogin_for_sync:'โปรดออกจากระบบแล้วเข้าสู่ระบบใหม่ 1 ครั้ง เพื่อเปิดการซิงค์ข้อมูล (อัปเดตความปลอดภัย)',
     port_need_name:'กรุณาใส่ชื่อพอร์ต',port_edited:'แก้ไขพอร์ตแล้ว',port_created:'สร้างพอร์ตใหม่แล้ว',port_confirm_delete:'ลบพอร์ตนี้? การลงทุนในพอร์ตจะถูกย้ายไป "ไม่ระบุพอร์ต"',port_not_found_or_unlinked:'ไม่พบพอร์ตหรือยังไม่ได้ลิ้งเป้าหมาย',port_saving_goal_not_found:'ไม่พบเป้าหมายออมที่ลิ้งไว้',port_sent_to_saving:'ส่งยอด {amt} ไปยัง "{name}" แล้ว',
     inv_need_name_first:'กรุณาใส่ชื่อ/Ticker ก่อน',inv_fetching:'กำลังดึง',inv_price:'ราคา',inv_fetch_price_failed:'ดึงราคาไม่ได้',inv_updating_price:'กำลังอัปเดตราคา',inv_update_failed:'อัปเดตไม่ได้',inv_edit:'แก้ไขการลงทุน',inv_need_name:'กรุณาใส่ชื่อ',inv_need_qty:'กรุณาใส่จำนวน',inv_need_buyprice:'กรุณาใส่ราคาซื้อ',inv_added:'เพิ่มการลงทุนแล้ว',inv_confirm_delete:'ต้องการลบการลงทุนนี้?',inv_field_type:'ประเภท',inv_field_linked_debt:'เชื่อมโยงสินเชื่อบ้าน (ไม่บังคับ)',inv_no_linked_debt:'ไม่เชื่อมโยง',inv_linked_debt_hint:'ถ้าเลือก ระบบจะคำนวณส่วนของเจ้าของ (equity) = มูลค่า − หนี้คงเหลือ ให้อัตโนมัติ',inv_equity:'ส่วนของเจ้าของ:',inv_equity_hint:'ส่วนของเจ้าของ = มูลค่า − หนี้คงเหลือของสินเชื่อที่เชื่อมโยง',
@@ -5193,7 +5238,7 @@ const I18N = {
     aiu_loading:'Loading AI usage data...',aiu_no_data:'No data yet for',aiu_claude_hint:'Run <code>python claude_usage_report.py --firestore</code> on your laptop (transcript is local, not on the VM)',aiu_gemini_hint:'Updated daily from Cloud Monitoring · or run <code>python gemini_usage_report.py --firestore</code> on the VM',aiu_by_model:'By Model (highest usage first)',aiu_proj_vs_cap:'This month projection vs spend cap',aiu_over_cap:'Projected to exceed cap — usage will pause at ฿{cap}',aiu_claude_banner:'This is an <b>API-equivalent estimate</b> — you\'re on a Pro/Max flat plan, this number shows usage volume, not actual money paid',aiu_claude_footer:'* Counted from Claude Code transcripts on this machine (~/.claude) · API pricing opus $5/$25 · cache read 0.1× · USDTHB={usdthb}',aiu_gemini_footer:'* Real data from Cloud Monitoring (Gemini API · project Best1) — covers the Maya web app + Telegram bot + all scripts · flash pricing $0.30/$2.50 per 1M tok, USDTHB={usdthb}',aiu_today:'Today',aiu_this_month:'This Month (to date)',aiu_days_with_data:'days with data',aiu_avg_per_day:'Avg/day',aiu_month_projection:'Month Projection',aiu_estimate:'Estimate',aiu_daily_cost:'Daily Cost (฿)',aiu_daily_detail:'Daily Detail',aiu_baht_per_day:'฿/day',
     admin_no_access:'You do not have access to this page',admin_loading:'Loading data...',admin_fb_not_ready:'Firebase not ready yet',admin_never:'Never',admin_just_now:'Just now',admin_min_ago:'min ago',admin_hr_ago:'hr ago',admin_day_ago:'days ago',
     admin_server_usage:'Total Usage (Server-side)',admin_total_tx:'Total Transactions',admin_total_nw:'Total Net Worth',admin_has_real_data:'Has Real Data',admin_avg_tx_per_user:'Avg Tx/User',admin_usage_per_user:'Usage per User',admin_user:'User',admin_last_tx:'Last Transaction',admin_features_used:'Features Used',admin_ai_quota:'AI Quota (mo/day)',admin_no_server_usage:'No server-side usage summary yet — run <code>admin_stats.py</code> on the VM (reads all userdata via Service Account → writes <code>admin/summary</code>) then refresh',admin_nw_trend:'Net Worth Trend (Historical)',
-    admin_online:'online',admin_users:'users',admin_total_users:'Total Users',admin_in_7_days:'in 7 days',admin_online_now:'Online Now',admin_dau_today:"Today's DAU",admin_wau_7d:'WAU 7 days',admin_mau_30d:'MAU 30 days',admin_signup_today:'Signed Up Today',admin_churn_30d:'Inactive >30 days',admin_never_login:'never logged in',admin_has_real_email:'Has Real Email',admin_cumulative_users:'Cumulative Users',admin_platform:'Platform',admin_search:'Search',admin_last_seen:'Last Seen',admin_online_within_10min:'Online within 10 minutes',admin_load_failed:'Failed to load data',admin_test_account:'test',admin_show_test_accounts:'Show test accounts',admin_web_views:'Website Views',admin_views_note:'The big number is people who visited today; “views” counts page opens — one person can open many',admin_v_people:'visitors',admin_v_pageviews:'views',admin_v_sessions:'visits',admin_v_people_note:'Visitor counting started 27 Aug 2026 — before that only page opens were recorded',admin_v_dur_title:'How long they stay',admin_v_dur_median:'typical visit',admin_v_dur_avg:'average',admin_v_bounce:'left right away',admin_v_dur_note:'Median per visit, not the mean — tabs left open skew the average badly',admin_v_b1:'under 10s',admin_v_b2:'10s–1m',admin_v_b3:'1–5m',admin_v_b4:'over 5m',admin_v_sec:'s',admin_v_min:'m',admin_v_hours:'When they visit (Bangkok time)',admin_v_campaign:'Tagged campaigns (utm)',admin_v_signup_daily:'signups per day',admin_v_signup_how:'How they signed up',admin_v_vs_prev:'vs previous 7 days',admin_v_people_7d:'visitors, 7 days',admin_v_funnel:'How far down the landing page they get',admin_v_funnel_note:'Counts visits that scrolled at least that far — the biggest drop is where people stop reading',admin_v_sec_labels:'Hero,Preview,Features,Rank,Security,Pricing,FAQ,Reviews,How to start,Final CTA',admin_v_cta:'Buttons clicked',admin_v_cta_labels:'Open app,iOS,Android',admin_v_opened:'opened',admin_v_adopt_note2:'Left = times opened in 30 days · right = people with real data — opened a lot but no data means interesting yet hard to use',admin_views_today:'today',admin_views_yesterday:'yesterday',admin_views_7d:'7 days',admin_views_30d:'30 days',admin_views_unavailable:'Could not load website stats',admin_views_app:'App',admin_views_landing_th:'Landing (TH)',admin_views_landing_en:'Landing (EN)',admin_views_sources:'Traffic sources',admin_views_direct:'Direct / no referrer',admin_conv_title:'Landing → sign-up',admin_conv_views:'views',admin_conv_signups:'signed up',admin_conv_note:'Directional only, not a true funnel — some people sign up from a LINE/shared link without seeing the landing page, and some visit today but sign up next week',admin_adoption:'Feature adoption',admin_adoption_note:'Out of {n} real users (test accounts excluded)',admin_adopt_line:'LINE connected',admin_adopt_line_friend:'Added bot as friend',admin_adopt_gmail:'Gmail connected (bank alerts)',admin_adopt_push:'Push enabled',admin_adopt_login:'Login method',admin_dev_title:'What visitors use',admin_dev_mobile:'Mobile',admin_dev_desktop:'Desktop',share_app_btn:'Share with friends',line_connect_btn:'Connect LINE',line_connected_btn:'LINE Connected',line_notfriend_title:'Bot not added as a friend yet',line_notfriend_desc:'Your account is linked, but LINE can\'t deliver notifications until you add MoneyMind as a friend',line_notfriend_add:'Add as friend',line_notfriend_recheck:'Check again',line_notfriend_qr:'On desktop? Scan the QR with your phone',share_app_message:'Check out the finance app I\'ve been using — AI receipt scanning, built-in tax calculator, records income/expenses in seconds. Free to use.',share_link_copied:'App link copied!',
+    admin_online:'online',admin_users:'users',admin_total_users:'Total Users',admin_in_7_days:'in 7 days',admin_online_now:'Online Now',admin_dau_today:"Today's DAU",admin_wau_7d:'WAU 7 days',admin_mau_30d:'MAU 30 days',admin_signup_today:'Signed Up Today',admin_churn_30d:'Inactive >30 days',admin_never_login:'never logged in',admin_has_real_email:'Has Real Email',admin_cumulative_users:'Cumulative Users',admin_platform:'Platform',admin_search:'Search',admin_last_seen:'Last Seen',admin_online_within_10min:'Online within 10 minutes',admin_load_failed:'Failed to load data',admin_test_account:'test',admin_show_test_accounts:'Show test accounts',admin_web_views:'Website Views',admin_views_note:'The big number is people who visited today; “views” counts page opens — one person can open many',admin_v_people:'visitors',admin_v_pageviews:'views',admin_v_sessions:'visits',admin_v_people_note:'Visitor counting started 27 Aug 2026 — before that only page opens were recorded',admin_v_dur_title:'How long they stay',admin_v_dur_median:'typical visit',admin_v_dur_avg:'average',admin_v_bounce:'left right away',admin_v_dur_note:'Median per visit, not the mean — tabs left open skew the average badly',admin_v_b1:'under 10s',admin_v_b2:'10s–1m',admin_v_b3:'1–5m',admin_v_b4:'over 5m',admin_v_sec:'s',admin_v_min:'m',admin_v_hours:'When they visit (Bangkok time)',admin_v_campaign:'Tagged campaigns (utm)',admin_v_signup_daily:'signups per day',admin_v_signup_how:'How they signed up',admin_v_vs_prev:'vs previous 7 days',admin_v_people_7d:'visitors, 7 days',admin_v_funnel:'How far down the landing page they get',admin_v_funnel_note:'Counts visits that scrolled at least that far — the biggest drop is where people stop reading',admin_v_sec_labels:'Hero,Preview,Features,Rank,Security,Pricing,FAQ,Reviews,How to start,Final CTA',admin_v_cta:'Buttons clicked',admin_v_cta_labels:'Open app,iOS,Android',admin_v_opened:'opened',admin_v_adopt_note2:'Left = times opened in 30 days · right = people with real data — opened a lot but no data means interesting yet hard to use',admin_views_today:'today',admin_views_yesterday:'yesterday',admin_views_7d:'7 days',admin_views_30d:'30 days',admin_views_unavailable:'Could not load website stats',admin_views_app:'App',admin_views_landing_th:'Landing (TH)',admin_views_landing_en:'Landing (EN)',admin_views_sources:'Traffic sources',admin_views_direct:'Direct / no referrer',admin_conv_title:'Landing → sign-up',admin_conv_views:'views',admin_conv_signups:'signed up',admin_conv_note:'Directional only, not a true funnel — some people sign up from a LINE/shared link without seeing the landing page, and some visit today but sign up next week',admin_adoption:'Feature adoption',admin_adoption_note:'Out of {n} real users (test accounts excluded)',admin_adopt_line:'LINE connected',admin_adopt_line_friend:'Added bot as friend',admin_adopt_gmail:'Gmail connected (bank alerts)',admin_adopt_push:'Push enabled',admin_adopt_login:'Login method',admin_dev_title:'What visitors use',admin_dev_mobile:'Mobile',admin_dev_desktop:'Desktop',admin_lc_atrisk:'Slipping away',admin_lc_atrisk_sub:'quiet 8–30 days',admin_lc_active:'still active',admin_lc_dormant:'gone',admin_lc_never:'never logged in',admin_hist_dau:'DAU over time',admin_act_title:'Do sign-ups actually start using it?',admin_act_note:'Out of {n} people who signed up in the last 30 days — compared by day, since it uses the date on the record, not the moment they tapped save',admin_act_sameday:'Logged a record the same day they signed up',admin_act_7d:'Logged one within 7 days',admin_act_never:'Never logged anything',admin_ret_title:'Do sign-ups stick around?',admin_ret_note:'Each row is the week people signed up; the number is the % who came back that week · a blank cell means not measured yet, not 0%',admin_ret_since:'tracking since week',admin_ret_cohort:'Cohort',admin_ret_people:'people',admin_ret_wait:'Not enough retention data yet — numbers become readable after another week',admin_err_title:'What breaks most, last 7 days',admin_err_note:'Captured from real errors in users\' browsers (previously relayed to Telegram and discarded, leaving no history)',admin_err_times:'times',admin_err_people:'people',admin_err_last:'last seen',admin_actd_title:'Opened the page — but did they finish?',admin_actd_note:'30-day totals, not tied to any account · counted only on success, not on tapping the button — lots of opens with few completions is where people get stuck',admin_actd_opens:'opens',admin_actd_done:'completed',admin_actd_tx_add:'Logged a record',admin_actd_receipt_scan:'Scanned a receipt/slip',admin_actd_maya_ask:'Asked Maya and got an answer',admin_actd_bank_add:'Added a bank account',admin_actd_budget_set:'Set a category budget',admin_actd_debt_add:'Added a debt',admin_acq_note:'Channels tied to real accounts — tracking started 1 Sep 2026; accounts created before that have no data here',admin_acq_signups:'signed up',admin_acq_still:'still active',share_app_btn:'Share with friends',line_connect_btn:'Connect LINE',line_connected_btn:'LINE Connected',line_notfriend_title:'Bot not added as a friend yet',line_notfriend_desc:'Your account is linked, but LINE can\'t deliver notifications until you add MoneyMind as a friend',line_notfriend_add:'Add as friend',line_notfriend_recheck:'Check again',line_notfriend_qr:'On desktop? Scan the QR with your phone',share_app_message:'Check out the finance app I\'ve been using — AI receipt scanning, built-in tax calculator, records income/expenses in seconds. Free to use.',share_link_copied:'App link copied!',
     sync_not_synced:'Not synced yet',sync_force_title:'Force sync to cloud',uploaded:'Uploaded',loaded_from_cloud:'Loaded from Cloud',no_cloud_data:'No data in Cloud',no_recoverable_data:'No recoverable data found',synced_new_device:'Loaded new data from another device ☁️',db_size_warn:'Your data is nearing the system limit (Firestore 1MB/account). Recommend exporting old data and deleting unneeded items in Settings, or cross-device sync may fail',cloud_load_failed:'Failed to load from cloud',new_data_from_device:'New data from another device ☁️ (will load after closing this form)',synced_from_device:'Synced from another device ☁️',uploaded_to_cloud:'Uploaded data to Cloud',recover_success:'Data recovered successfully ✓',welcome_username:'Welcome! Username',relogin_for_sync:'Please log out and log back in once to enable data sync (security update)',
     port_need_name:'Please enter a portfolio name',port_edited:'Portfolio edited',port_created:'New portfolio created',port_confirm_delete:'Delete this portfolio? Its investments will move to "Unassigned Portfolio"',port_not_found_or_unlinked:'Portfolio not found or not linked to a goal',port_saving_goal_not_found:'Linked savings goal not found',port_sent_to_saving:'Sent {amt} to "{name}"',
     inv_need_name_first:'Please enter a name/ticker first',inv_fetching:'Fetching',inv_price:'Price',inv_fetch_price_failed:'Failed to fetch price',inv_updating_price:'Updating price for',inv_update_failed:'Update failed',inv_edit:'Edit Investment',inv_need_name:'Please enter a name',inv_need_qty:'Please enter a quantity',inv_need_buyprice:'Please enter a buy price',inv_added:'Investment added',inv_confirm_delete:'Delete this investment?',inv_field_type:'Type',inv_field_linked_debt:'Link to Mortgage (optional)',inv_no_linked_debt:'Not linked',inv_linked_debt_hint:'If selected, equity = value − remaining loan balance is calculated automatically',inv_equity:'Equity:',inv_equity_hint:'Equity = value − remaining balance of the linked loan',
@@ -6061,6 +6106,7 @@ function saveTx(){
   if(bankId) _adjustBankBalance(bankId, type, amt);
   if(savingDestBankId) _adjustBankBalance(savingDestBankId, 'income', amt);
   saveDB(); closeM('m-tx'); renderPage(curPage);
+  try{ if(window.__mmAct) window.__mmAct('tx_add'); }catch(e){}
   _maybeAskReview();
 }
 
@@ -6251,6 +6297,7 @@ function saveFromReceipt(){
       DB.transactions.push({id:uid(),type:'expense',amount:parseFloat(it.amount),category:cat,date,description:it.description||getCat(cat,'expense').label});
     });
     saveDB(); _onbComplete('ai'); closeM('m-img'); renderPage(curPage);
+    try{ if(window.__mmAct) window.__mmAct('receipt_scan'); }catch(e){}
     toast(tr('scan_saved_n_items').replace('{n}',valid.length),'success');
   } else {
     const amt=parseFloat(document.getElementById('ai-amt').value);
@@ -6263,6 +6310,7 @@ function saveFromReceipt(){
       DB.transactions.push({id:uid(),type:'expense',amount:deduct,category:'other_exp',date,description:tr('scan_deduction_desc')+' - '+desc});
     }
     saveDB(); _onbComplete('ai'); closeM('m-img'); renderPage(curPage);
+    try{ if(window.__mmAct) window.__mmAct('receipt_scan'); }catch(e){}
     toast(type==='income'?tr('scan_saved_salary'):tr('scan_saved_receipt'),'success');
   }
 }
@@ -6830,6 +6878,7 @@ function saveDebt(){
   if(id){ const i=DB.debts.findIndex(d=>d.id===id); if(i>=0) DB.debts[i]={...DB.debts[i],...obj}; toast(tr('edited'),'success'); }
   else { DB.debts.push({id:uid(),...obj}); toast(tr('debt_added'),'success'); }
   saveDB(); closeM('m-debt'); renderDebts();
+  try{ if(window.__mmAct) window.__mmAct('debt_add'); }catch(e){}
 }
 
 function delDebt(id){
@@ -7986,6 +8035,7 @@ function saveBank(){
   if(id){ const i=banks.findIndex(b=>b.id===id); if(i>=0) banks[i]={...banks[i],...obj}; toast(tr('edited'),'success'); }
   else { banks.push({id:uid(),...obj}); toast(tr('bank_added'),'success'); }
   saveDB(); closeM('m-bank'); renderBanks(); renderDashBanks();
+  try{ if(window.__mmAct) window.__mmAct('bank_add'); }catch(e){}
 }
 
 function deleteBank(id){
@@ -11262,6 +11312,7 @@ function saveCatBudget(catId,val){
   if(!DB.settings.catBudgets) DB.settings.catBudgets={};
   DB.settings.catBudgets[catId]=parseFloat(val)||0;
   saveDB();
+  try{ if(window.__mmAct) window.__mmAct('budget_set'); }catch(e){}
   renderCatBudgetSettings();
   renderCatBudgetProgress();
   checkNotifications();
@@ -13929,6 +13980,59 @@ function _renderAdminUsageSection(summary){
         +'<span style="font-weight:700;color:'+col+'">'+cnt+' <span style="color:var(--muted);font-weight:400">('+pct+'%)</span></span></div>'
         +'<div class="pbar"><div class="pfill" style="width:'+Math.max(1,pct)+'%;background:'+col+'"></div></div></div>';
     };
+    // ── activation (เพิ่ม 2026-08-31) — "มีข้อมูลไหม" ด้านบนเป็นยอดสะสมตลอดกาล ตอบไม่ได้ว่า
+    //    onboarding ตอนนี้ดีขึ้นหรือแย่ลง ตัวนี้ดูเฉพาะคนที่สมัครใน 30 วันล่าสุด และดู "เร็วแค่ไหน"
+    //    ⚠️ firstTxDate คือวันที่ของรายการที่ user กรอก ไม่ใช่เวลาที่กดบันทึก — ป้ายจึงเขียนว่า
+    //    "วันเดียวกับที่สมัคร" ห้ามเขียนว่า "ภายใน 24 ชั่วโมง"
+    const act=t.activation;
+    const actSection=(act&&act.cohort)?(()=>{
+      const abar=(label,cnt,higherIsBetter)=>{
+        const pct=Math.round(cnt/Math.max(1,act.cohort)*100);
+        const col=higherIsBetter
+          ?(pct>=50?'#10b981':pct>=20?'#f59e0b':'#ef4444')
+          :(pct>=50?'#ef4444':pct>=20?'#f59e0b':'#10b981');
+        return '<div style="margin-top:9px">'
+          +'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">'
+          +'<span style="color:var(--muted)">'+label+'</span>'
+          +'<span style="font-weight:700;color:'+col+'">'+cnt+' <span style="color:var(--muted);font-weight:400">('+pct+'%)</span></span></div>'
+          +'<div class="pbar"><div class="pfill" style="width:'+Math.max(1,pct)+'%;background:'+col+'"></div></div></div>';
+      };
+      return '<div style="margin-top:13px;padding-top:11px;border-top:1px solid rgba(255,255,255,.07)">'
+        +'<div style="font-size:11px;font-weight:700;color:var(--text)">'+tr('admin_act_title')+'</div>'
+        +'<div style="font-size:10px;color:var(--muted);margin-top:2px;line-height:1.5">'+tr('admin_act_note').replace('{n}',act.cohort)+'</div>'
+        +abar(tr('admin_act_sameday'),act.sameDay||0,true)
+        +abar(tr('admin_act_7d'),act.within7d||0,true)
+        +abar(tr('admin_act_never'),act.never||0,false)
+        +'</div>';
+    })():'';
+
+    // ── เปิดหน้าแล้วทำสำเร็จไหม (เพิ่ม 2026-08-31) — ช่องว่างระหว่าง 2 ขั้วที่มีอยู่เดิม
+    //    "เปิดหน้ากี่ครั้ง" (ap) กับ "มีข้อมูลจริงกี่คน" (bf) มองไม่เห็นคนที่เปิดแล้วลองแล้วไม่สำเร็จ
+    //    ⚠️ ทั้งสองฝั่งเป็นยอดรวมล้วน ไม่ผูกกับบัญชี — เทียบเป็นสัดส่วนคร่าวๆ ได้ แต่ไม่ใช่ funnel
+    //    รายคน (คนเดียวเปิด 10 ครั้งแล้วบันทึกครั้งเดียวก็ให้ผลเหมือนคน 10 คนเปิดคนละครั้ง)
+    const acts=window._adminActions||{};
+    const actDoneSection=Object.keys(acts).length?(()=>{
+      const defs=[['tx_add','transactions'],['receipt_scan',''],['maya_ask',''],
+                  ['bank_add','banks'],['budget_set','catbudget'],['debt_add','debts']];
+      const lines=defs.filter(d=>acts[d[0]]!=null).map(([k,pageKey])=>{
+        const done=acts[k]||0, opens=pageKey?(ap[pageKey]||0):0;
+        const pct=opens?Math.round(done/opens*100):null;
+        const col=pct==null?'#818cf8':pct>=30?'#10b981':pct>=10?'#f59e0b':'#ef4444';
+        return '<div style="display:flex;justify-content:space-between;gap:10px;font-size:11px;padding:5px 0;border-top:1px solid rgba(255,255,255,.05)">'
+          +'<span style="color:var(--muted)">'+tr('admin_actd_'+k)+'</span>'
+          +'<span style="white-space:nowrap">'
+          +(opens?'<span style="color:var(--muted)">'+tr('admin_actd_opens')+' '+opens+' · </span>':'')
+          +'<span style="font-weight:700;color:'+col+'">'+tr('admin_actd_done')+' '+done+'</span>'
+          +(pct!=null?'<span style="color:var(--muted)"> ('+pct+'%)</span>':'')
+          +'</span></div>';
+      }).join('');
+      if(!lines) return '';
+      return '<div style="margin-top:13px;padding-top:11px;border-top:1px solid rgba(255,255,255,.07)">'
+        +'<div style="font-size:11px;font-weight:700;color:var(--text)">'+tr('admin_actd_title')+'</div>'
+        +'<div style="font-size:10px;color:var(--muted);margin-top:2px;line-height:1.5">'+tr('admin_actd_note')+'</div>'
+        +'<div style="margin-top:4px">'+lines+'</div></div>';
+    })():'';
+
     // วิธี login — นับเป็นสัดส่วนของ user จริง ไม่ใช่ฟีเจอร์ที่ "ใช้" เลยแยกเป็นแถว chip
     const prov={};
     rm.forEach(m=>{ const k=m.provider||'password'; prov[k]=(prov[k]||0)+1; });
@@ -13939,9 +14043,89 @@ function _renderAdminUsageSection(summary){
       +'<i class="fas fa-list-check" style="margin-right:5px"></i>'+tr('admin_adoption')+'</div>'
       +'<div style="font-size:11px;color:var(--muted);margin-top:3px">'+tr('admin_adoption_note').replace('{n}',n)+(Object.keys(window._adminAppPages||{}).length?' · '+tr('admin_v_adopt_note2'):'')+'</div>'
       +rows.map(r=>bar(r[0],r[1],r[2])).join('')
+      +actDoneSection
+      +actSection
       +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:13px;padding-top:11px;border-top:1px solid rgba(255,255,255,.07)">'
       +'<span style="font-size:11px;color:var(--muted);margin-right:2px">'+tr('admin_adopt_login')+'</span>'+provChips+'</div>'
       +'</div>';
+  })();
+
+  // ── cohort retention (admin/retention, เพิ่ม 2026-08-31) — ตัวเดียวที่ตอบว่า "คนหลุดตอนไหน" ──
+  // stickiness บอกได้แค่ว่ามีปัญหา แต่หลุดสัปดาห์แรกกับหลุดเดือนที่สองแก้คนละเรื่องกันสิ้นเชิง
+  // ⚠️ ช่องว่างมี 2 ความหมาย และทั้งคู่ "ไม่ใช่ 0%":
+  //    k < fromWeek = สัปดาห์นั้นผ่านไปก่อนเราเริ่มเก็บ · k > maxWeek = ยังมาไม่ถึง
+  const retentionSection=(()=>{
+    const R=window._adminRetention;
+    const grid=(R&&Array.isArray(R.grid))?R.grid:[];
+    if(!grid.length) return '';
+    const rows=grid.slice(0,8);
+    const maxCol=Math.min(7,Math.max.apply(null,rows.map(g=>g.maxWeek||0)));
+    const cols=[]; for(let k=0;k<=maxCol;k++) cols.push(k);
+    const blank='<td style="padding:6px 4px;text-align:center;color:#334155">·</td>';
+    const body=rows.map(g=>{
+      const size=g.size||0;
+      let prev=null;
+      const tds=cols.map(k=>{
+        if(k<(g.fromWeek||0)||k>(g.maxWeek||0)) return blank;
+        const n=(g.weeks||{})[String(k)]||0;
+        const pct=size?Math.round(n/size*100):0;
+        // ตกจากช่องที่วัดได้ก่อนหน้าเกิน 40 จุด = จุดที่คนหลุด (แนวเดียวกับ funnel ของ landing)
+        const drop=(prev!=null&&prev-pct>40);
+        prev=pct;
+        const col=pct>=50?'#10b981':pct>=20?'#f59e0b':pct>0?'#818cf8':'#ef4444';
+        return '<td style="padding:6px 4px;text-align:center;font-size:11px;font-weight:700;color:'+col
+          +';background:'+col+(drop?'2e':'14')+(drop?';box-shadow:inset 0 0 0 1px rgba(239,68,68,.55)':'')+'">'
+          +pct+'%<span style="display:block;font-size:9px;font-weight:400;color:var(--muted)">'+n+'</span></td>';
+      }).join('');
+      return '<tr><td style="padding:6px 8px;font-size:11px;white-space:nowrap">'+g.cohort
+        +'<span style="color:var(--muted);font-size:10px"> · '+size+' '+tr('admin_ret_people')+'</span></td>'+tds+'</tr>';
+    }).join('');
+    // ทุกแถวมีช่องที่วัดได้แค่ช่องเดียว = เพิ่งเริ่มเก็บ ยังอ่านเทรนด์ไม่ได้ ต้องบอกให้ชัด
+    const onlyDiagonal=rows.every(g=>(g.fromWeek||0)>=(g.maxWeek||0));
+    return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px">'
+      +'<div style="font-size:10px;font-weight:700;color:#22d3ee;text-transform:uppercase;letter-spacing:.6px">'
+      +'<i class="fas fa-users" style="margin-right:5px"></i>'+tr('admin_ret_title')+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5">'+tr('admin_ret_note')
+      +(R.since?' · '+tr('admin_ret_since')+' '+R.since:'')+'</div>'
+      +(onlyDiagonal?'<div style="font-size:11px;color:#f59e0b;margin-top:7px"><i class="fas fa-hourglass-half" style="margin-right:4px"></i>'+tr('admin_ret_wait')+'</div>':'')
+      +'<div style="overflow-x:auto;margin-top:10px"><table style="width:100%;border-collapse:separate;border-spacing:2px;min-width:420px">'
+      +'<thead><tr><th style="padding:4px 8px;font-size:10px;color:var(--muted);text-align:left">'+tr('admin_ret_cohort')+'</th>'
+      +cols.map(k=>'<th style="padding:4px;font-size:10px;color:var(--muted)">W'+k+'</th>').join('')+'</tr></thead>'
+      +'<tbody>'+body+'</tbody></table></div></div>';
+  })();
+
+  // ── error ที่เจอบ่อยสุด (admin/errorStats, เพิ่ม 2026-08-31) ──
+  // client จับ error/unhandledrejection ส่งเข้า Firestore มาตั้งนานแล้ว แต่ report_relay.py
+  // ส่ง Telegram แล้วลบทิ้งทันที → เลื่อนผ่านไปในแชท ไม่มีทางรู้ว่าตัวไหนเกิดบ่อย/กระทบกี่คน
+  // ไม่มี error เลย = ซ่อนทั้งบล็อก ห้ามโชว์ "0"
+  const errorSection=(()=>{
+    const E=window._adminErrors;
+    const errs=(E&&E.errors)?E.errors:null;
+    if(!errs) return '';
+    const cutoff=new Date(Date.now()-7*864e5).toISOString().slice(0,10);
+    const list=Object.keys(errs).map(fp=>{
+      const e=errs[fp]||{};
+      const days=e.days||{};
+      const hits=Object.keys(days).reduce((s,d)=>d>=cutoff?s+(days[d]||0):s,0);
+      const pages=e.pages||{};
+      const topPage=Object.keys(pages).sort((a,b)=>pages[b]-pages[a])[0]||'';
+      return {hits,users:(e.users||[]).length,msg:e.msg||'',page:topPage,last:e.last||''};
+    }).filter(x=>x.hits>0).sort((a,b)=>b.hits-a.hits).slice(0,5);
+    if(!list.length) return '';
+    const rows=list.map(x=>'<div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid rgba(255,255,255,.05)">'
+      +'<div style="min-width:0;flex:1">'
+      +'<div style="font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_escHtml(x.msg)+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-top:1px">'
+      +(x.page?_escHtml(x.page)+' · ':'')+tr('admin_err_last')+' '+x.last+'</div></div>'
+      +'<div style="text-align:right;white-space:nowrap">'
+      +'<span style="font-size:13px;font-weight:800;color:#ef4444">'+x.hits+'</span>'
+      +'<span style="font-size:10px;color:var(--muted)"> '+tr('admin_err_times')+' · '+x.users+' '+tr('admin_err_people')+'</span>'
+      +'</div></div>').join('');
+    return '<div style="background:var(--surface);border:1px solid rgba(239,68,68,.25);border-radius:14px;padding:16px;margin-bottom:14px">'
+      +'<div style="font-size:10px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:.6px">'
+      +'<i class="fas fa-bug" style="margin-right:5px"></i>'+tr('admin_err_title')+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5">'+tr('admin_err_note')+'</div>'
+      +'<div style="margin-top:6px">'+rows+'</div></div>';
   })();
 
   return `
@@ -13953,6 +14137,8 @@ function _renderAdminUsageSection(summary){
     ${statCard((t.avgTx||0).toLocaleString(),tr('admin_avg_tx_per_user'),'#f59e0b')}
   </div>
   ${adoptionSection}
+  ${retentionSection}
+  ${errorSection}
   ${(window._adminHistory&&window._adminHistory.length>1)?`
   <div style="background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(16,185,129,.02));border:1px solid rgba(16,185,129,.22);border-radius:14px;padding:16px;margin-bottom:14px">
     <div style="font-size:10px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px"><i class="fas fa-chart-area" style="margin-right:5px"></i>${tr('admin_nw_trend')}</div>
@@ -14161,6 +14347,25 @@ function _renderAdminSiteStats(st,signups){
     +(camps.length?'<div style="margin-top:11px;font-size:10px;color:var(--muted)">'+tr('admin_v_campaign')+'</div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px">'
       +camps.map(c=>chipEl(c.utm+' '+nf(c.people)+' '+tr('admin_v_people'),true)).join('')+'</div>':'')
+    // ── ช่องทางไหนได้ "คนที่สมัครแล้วอยู่ยาว" (เพิ่ม 2026-08-31) ──
+    // แถวด้านบนมาจาก visit_sessions ที่ไม่ผูกกับใคร ตอบได้แค่ "คนเข้าเว็บมาจากไหน"
+    // ส่วนตรงนี้ผูกกับบัญชีจริง (members.acqSource) จึงตอบต่อได้ว่าสมัครกี่คน ยังใช้อยู่กี่คน
+    // ⚠️ นับเฉพาะคนที่สมัครหลังวันเริ่มเก็บ — บัญชีเก่าไม่มี field นี้และย้อนหลังไม่ได้
+    +(()=>{
+      const acq=((window._adminSummary||{}).totals||{}).acquisition||[];
+      if(!acq.length) return '';
+      return '<div style="margin-top:13px;padding-top:11px;border-top:1px solid rgba(255,255,255,.07)">'
+        +'<div style="font-size:10px;color:var(--muted);line-height:1.5">'+tr('admin_acq_note')+'</div>'
+        +acq.slice(0,8).map(a=>{
+          const col=a.activePct>=50?'#10b981':a.activePct>=20?'#f59e0b':'#ef4444';
+          return '<div style="display:flex;justify-content:space-between;gap:10px;font-size:11px;margin-top:6px">'
+            +'<span style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%">'+_escHtml(a.source)+'</span>'
+            +'<span style="white-space:nowrap"><span style="font-weight:700">'+a.signups+'</span>'
+            +'<span style="color:var(--muted)"> '+tr('admin_acq_signups')+' · </span>'
+            +'<span style="font-weight:700;color:'+col+'">'+a.active7d+'</span>'
+            +'<span style="color:var(--muted)"> '+tr('admin_acq_still')+' ('+a.activePct+'%)</span></span></div>';
+        }).join('')+'</div>';
+    })()
     +'</div>'):'';
   // หัวการ์ด: ตัวใหญ่ = "คน" (สิ่งที่อยากรู้จริง) ตัวรอง = ยอดเปิดหน้าแบบเดิม
   // ⚠️ beacon เพิ่งเริ่มเก็บ 2026-08-27 — วันก่อนหน้านั้นไม่มีข้อมูลคนเลย ถ้ายังไม่มีข้อมูล
@@ -14281,6 +14486,18 @@ async function renderAdmin(){
     }catch(e){}
     window._adminHistory=history;
 
+    // ── cohort retention + สถิติ error (เขียนโดย admin_stats.py / report_relay.py ผ่าน SA, 2026-08-31) ──
+    // ยังไม่มี doc = cron รอบใหม่ยังไม่วิ่ง ไม่ใช่ error → แต่ละ section ซ่อนตัวเองไป
+    window._adminRetention=null; window._adminErrors=null;
+    try{
+      const rd=await _fs.collection('admin').doc('retention').get();
+      if(rd.exists){ const raw=rd.data()||{}; window._adminRetention=raw.json?JSON.parse(raw.json):raw; }
+    }catch(e){}
+    try{
+      const ed=await _fs.collection('admin').doc('errorStats').get();
+      if(ed.exists){ const raw=ed.data()||{}; window._adminErrors=raw.json?JSON.parse(raw.json):raw; }
+    }catch(e){}
+
     // ── ยอดเข้าชมเว็บรายวันจาก GoatCounter (/v1/sitestats บน VM) — ยิงคู่ขนาน ไม่ต่อคิวกับ Firestore ──
     // คืน null ถ้าดึงไม่ได้ (VM ล่ม/ไม่ใช่ owner) → การ์ดโชว์สถานะแทน ไม่ทำให้หน้าทั้งหน้าล้ม
     const siteStats=await _sitePendingStats;
@@ -14302,6 +14519,19 @@ async function renderAdmin(){
     const new30=realMembers.filter(m=>m.createdAt&&m.createdAt.getTime()>=d30).length;
     const churn=realMembers.filter(m=>m.lastSeen&&m.lastSeen.getTime()<d30).length;
     const never=realMembers.filter(m=>!m.lastSeen).length;
+    // ── lifecycle (เพิ่ม 2026-08-31) — การ์ดเดิมโชว์แค่ "เงียบ >30 วัน" ซึ่งคือคนที่หลุดไปแล้ว
+    //    กลุ่มที่ทำอะไรได้จริงคือ "เงียบ 8–30 วัน" (ยังดึงกลับได้ และส่ง LINE หาได้เพราะมี lineUserId)
+    //    ⚠️ นิยามต้องตรงกับ member_stats() ใน admin_stats.py เป๊ะ — สมัครใหม่ ≤7 วันนับเป็น "ใหม่"
+    //    ก่อนเสมอ เพราะยังเร็วเกินกว่าจะตัดสินว่าอยู่หรือไป (ไม่งั้นจะไปโป่งอยู่ในกลุ่ม "ใช้อยู่")
+    //    คำนวณสดฝั่งนี้ ไม่ใช้ค่าจาก summary เพื่อให้ขอบเวลาตรงกับ dau/wau/mau บนการ์ดข้างกัน
+    let lcNew=0,lcActive=0,lcAtRisk=0;
+    realMembers.forEach(m=>{
+      if(!m.lastSeen) return;                                  // never — นับแยกอยู่แล้ว
+      const seen=m.lastSeen.getTime();
+      if(m.createdAt&&m.createdAt.getTime()>=d7) lcNew++;
+      else if(seen>=d7) lcActive++;
+      else if(seen>=d30) lcAtRisk++;                           // churn นับ <d30 ไปแล้ว
+    });
     const withEmail=realMembers.filter(m=>m.email&&!/@moneymind\.local$/i.test(m.email)).length;
     const stickiness=mau?Math.round(dau/mau*100):0;
 
@@ -14341,8 +14571,15 @@ async function renderAdmin(){
     // growth (สมัครรายวัน → สะสม)
     const growth={};
     realMembers.forEach(m=>{ if(m.createdAt){ const k=m.createdAt.toISOString().slice(0,10); growth[k]=(growth[k]||0)+1; }});
-    const gkeys=Object.keys(growth).sort();
-    let cum=0; const gcum=gkeys.map(k=>{cum+=growth[k]; return cum;});
+    // แกน x = วันที่มีคนสมัคร ∪ วันที่มี snapshot รายวัน — ต้องรวมกันไม่งั้น DAU ของวันที่ไม่มีใคร
+    // สมัครจะไม่มีที่ลง (และเส้นสะสมเดิมก็ได้แกนที่ต่อเนื่องขึ้นเป็นผลพลอยได้)
+    const histByDate={}; (history||[]).forEach(h=>{ if(h&&h.date) histByDate[h.date]=h; });
+    const gkeys=Array.from(new Set(Object.keys(growth).concat(Object.keys(histByDate)))).sort();
+    let cum=0; const gcum=gkeys.map(k=>{cum+=(growth[k]||0); return cum;});
+    // DAU ย้อนหลัง — เริ่มเก็บ 2026-08-31 วันก่อนหน้าต้องเป็น null ให้ Chart.js เว้นช่วง
+    // (spanGaps:false) ห้าม plot 0 ไม่งั้นได้เส้นแบนติดพื้นทอดยาวซึ่งอ่านผิดเป็น "ไม่มีใครเข้าเลย"
+    const gdau=gkeys.map(k=>{ const h=histByDate[k]; return (h&&h.dau!=null)?h.dau:null; });
+    const hasDauHistory=gdau.some(v=>v!=null);
 
     const statCard=(val,label,color,sub='')=>`<div style="background:var(--surface);border:1px solid ${color}33;border-radius:14px;padding:14px;text-align:center">
       <div style="font-size:28px;font-weight:800;color:${color}">${val}</div>
@@ -14391,6 +14628,7 @@ async function renderAdmin(){
     const prev7=realMembers.filter(m=>m.createdAt&&m.createdAt.getTime()<d7&&m.createdAt.getTime()>=d7-7*864e5).length;
     // เก็บไว้ให้ _renderAdminUsageSection ใช้ — และให้ค้างอยู่ตอน _adminSortUsage re-render ตาราง
     window._adminAppPages=(siteStats&&siteStats.appPages)||{};
+    window._adminActions=(siteStats&&siteStats.actions)||{};
     const siteStatsSection=_renderAdminSiteStats(siteStats,{d7:new7,d30:new30,prev7:prev7});
 
     el.innerHTML=`
@@ -14420,7 +14658,9 @@ async function renderAdmin(){
       ${statCardSm(wau,tr('admin_wau_7d'),'#22d3ee','','fa-calendar-week')}
       ${statCardSm(mau,tr('admin_mau_30d'),'#818cf8','','fa-calendar')}
       ${statCardSm(newToday,tr('admin_signup_today'),'#f59e0b','','fa-user-plus')}
-      ${statCardSm(churn,tr('admin_churn_30d'),'#ef4444',never?(never+' '+tr('admin_never_login')):'','fa-user-clock')}
+      ${statCardSm(lcAtRisk,tr('admin_lc_atrisk'),'#f59e0b',
+        tr('admin_lc_active')+' '+lcActive+' · '+tr('admin_lc_dormant')+' '+churn
+        +(never?(' · '+tr('admin_lc_never')+' '+never):''),'fa-user-clock')}
       ${statCardSm(withEmail,tr('admin_has_real_email'),'#34d399',total?Math.round(withEmail/total*100)+'%':'','fa-envelope')}
     </div>
 
@@ -14485,7 +14725,8 @@ async function renderAdmin(){
         _adminChart=new Chart(cv,{type:'line',
           data:{labels:gkeys.map(k=>k.slice(5)),datasets:[
             {label:tr('admin_cumulative_users'),data:gcum,borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.15)',fill:true,tension:.3,pointRadius:2,yAxisID:'y',order:1},
-            {label:tr('admin_v_signup_daily'),type:'bar',data:gkeys.map(k=>growth[k]),backgroundColor:'rgba(52,211,153,.45)',borderRadius:2,yAxisID:'y2',order:2}]},
+            {label:tr('admin_v_signup_daily'),type:'bar',data:gkeys.map(k=>growth[k]||0),backgroundColor:'rgba(52,211,153,.45)',borderRadius:2,yAxisID:'y2',order:2},
+            ...(hasDauHistory?[{label:tr('admin_hist_dau'),data:gdau,borderColor:'#06b6d4',backgroundColor:'transparent',fill:false,tension:.3,pointRadius:2,borderWidth:2,spanGaps:false,yAxisID:'y2',order:0}]:[])]},
           options:{responsive:true,maintainAspectRatio:false,
             plugins:{legend:{display:true,labels:{color:_chartTickColor(),boxWidth:10,font:{size:10}}}},
             scales:{y:{beginAtZero:true,ticks:{color:_chartTickColor(),precision:0},grid:{color:_chartGridColor(.1)}},
@@ -16216,7 +16457,7 @@ async function mayaAgent(userMsg){
     const calls=m.tool_calls;
     if(!calls||!calls.length){
       const content=(m.content||'').trim();
-      if(content) return content;
+      if(content){ try{ if(window.__mmAct) window.__mmAct('maya_ask'); }catch(e){} return content; }
       // เจอ response ว่างเปล่าไม่เรียก tool เลย (โมเดลเงียบทั้งที่ควรเรียก search_transactions) — ลองเตือนอีกครั้งก่อนยอมแพ้
       if(!retriedEmpty){
         retriedEmpty=true;
