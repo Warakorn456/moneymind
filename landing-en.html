@@ -866,8 +866,10 @@
          :a.href.indexOf('play.google.com')>-1?'android'
          :/app\.moneymindth\.com\/?($|\?|#)/.test(a.href)?'app':'';
     if(k&&window.__mmClicks.indexOf(k)<0) window.__mmClicks.push(k);
-    // landing อยู่ moneymindth.com แต่ตัวแอปอยู่ app.moneymindth.com — คนละ origin
-    // localStorage จึงข้ามไปไม่ได้ ต้องส่งต่อทาง query string ตอนกดปุ่มเข้าแอป
+    // แปะแหล่งที่มาไปกับลิงก์เข้าแอปด้วย — ปัจจุบัน landing กับตัวแอปอยู่โฮสต์เดียวกัน
+    // (CNAME = app.moneymindth.com) localStorage จึงข้ามให้อยู่แล้ว แต่ยังทำไว้เพราะ
+    // (1) ถ้าย้าย landing ไปโดเมนแยกเมื่อไหร่ ต้องยังทำงานได้โดยไม่ต้องแก้อะไร
+    // (2) ลิงก์ที่ถูกก๊อปไปแชร์ต่อจะพาแหล่งที่มาติดไปด้วย
     if(k==='app'){
       // เช็คด้วย searchParams ไม่ใช่ indexOf('a=') — indexOf จะ false-positive กับ query
       // อย่าง ?data=1 ที่มีสตริง "a=" อยู่ข้างใน แล้วจะไม่ติดแท็กให้เลย
