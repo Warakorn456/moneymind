@@ -14059,7 +14059,10 @@ function _renderAdminUsageSection(summary){
     const R=window._adminRetention;
     const grid=(R&&Array.isArray(R.grid))?R.grid:[];
     if(!grid.length) return '';
-    const rows=grid.slice(0,8);
+    // รุ่นที่ช่องแรกที่วัดได้อยู่เลยคอลัมน์สุดท้าย (W7) จะได้แถวว่างล้วน — ตัดทิ้งไปเลย
+    // ไม่งั้นรุ่นเก่าๆ จะกลายเป็นแถวจุดเรียงกันที่ไม่ได้บอกอะไร แล้วกลบรุ่นที่อ่านได้จริง
+    const rows=grid.filter(g=>(g.fromWeek||0)<=7).slice(0,8);
+    if(!rows.length) return '';
     const maxCol=Math.min(7,Math.max.apply(null,rows.map(g=>g.maxWeek||0)));
     const cols=[]; for(let k=0;k<=maxCol;k++) cols.push(k);
     const blank='<td style="padding:6px 4px;text-align:center;color:#334155">·</td>';
