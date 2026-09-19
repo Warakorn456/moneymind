@@ -1221,6 +1221,13 @@
     .finput:focus,.fselect:focus{border-color:rgba(124,58,237,.6);box-shadow:0 0 0 3px rgba(124,58,237,.13)}
     ::-webkit-scrollbar-thumb{background:linear-gradient(rgba(124,58,237,.45),rgba(6,182,212,.35));border-radius:10px}
     ::-webkit-scrollbar-thumb:hover{background:linear-gradient(rgba(124,58,237,.7),rgba(6,182,212,.55))}
+    /* ปุ่ม + เพิ่มรายการ (มือถือ, 2026-09-19) — ทุกหน้าที่ไม่มีปุ่มเพิ่มอยู่แล้ว */
+    .add-fab{display:none;position:fixed;right:18px;bottom:calc(18px + 50px + 14px + env(safe-area-inset-bottom,0px));z-index:7990;width:48px;height:48px;border-radius:50%;background:var(--surface,#13131f);border:1px solid rgba(124,58,237,.5);color:var(--primary-l,#a78bfa);font-size:20px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.35);align-items:center;justify-content:center}
+    @media(max-width:700px){ .add-fab.on{display:flex} }
+    .toast-act{margin-left:auto;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+    .toast-act:hover{background:rgba(255,255,255,.2)}
+    .tx-simple .finfo{display:none}
+    .tx-ios-hint{font-size:12px;color:var(--muted);margin:-4px 0 8px;display:none}
   </style>
 <!-- self-hosted analytics (GoatCounter) — aggregate pageviews only, no cookies, no personal
      data collected; see privacy.html section 1 for the disclosure. This is a single-page
@@ -1370,6 +1377,7 @@
       </button>
       <div class="login-err" id="login-err"></div>
       <div class="login-toggle" id="pw-toggle" style="margin-top:14px"><span onclick="togglePasswordForm()" data-i18n="login_use_password">ใช้ชื่อผู้ใช้ / รหัสผ่านแทน</span></div>
+      <div style="margin-top:10px;font-size:11px;color:#475569;text-align:center"><a href="privacy.html" target="_blank" style="color:#64748b" data-i18n="privacy_policy">นโยบายความเป็นส่วนตัว</a> · <a href="terms.html" target="_blank" style="color:#64748b" data-i18n="terms_link">ข้อกำหนดการใช้งาน</a></div>
       <div id="pw-form" style="display:none;margin-top:10px">
       <input class="login-inp" id="login-user" type="text" placeholder="ชื่อผู้ใช้ หรือ Email" data-i18n-ph="ph_login_user" autocomplete="username email">
       <input class="login-inp" id="login-pass" type="password" placeholder="รหัสผ่าน" data-i18n-ph="ph_login_pass" autocomplete="current-password"
@@ -2194,7 +2202,7 @@
     <div class="frow" style="align-items:flex-end">
       <div class="fg" style="flex:2">
         <label class="flabel"><span data-i18n="tx_amount">จำนวนเงิน</span><i class="fas fa-circle-info finfo" onclick="showFieldHint(event,'tx_amount')"></i></label>
-        <input type="number" inputmode="decimal" id="tx-amt" class="finput" placeholder="0.00" min="0" step="0.01" oninput="calcTxConvert()">
+        <input type="number" inputmode="decimal" id="tx-amt" class="finput" placeholder="0.00" min="0" step="0.01" oninput="calcTxConvert()" onkeydown="txEnterKey(event)" enterkeyhint="done">
       </div>
       <div class="fg" style="flex:1">
         <label class="flabel"><span data-i18n="tx_currency">สกุลเงิน</span><i class="fas fa-circle-info finfo" onclick="showFieldHint(event,'tx_currency')"></i></label>
@@ -2209,12 +2217,13 @@
         </select>
       </div>
     </div>
+    <div id="tx-ios-hint" class="tx-ios-hint"><i class="fas fa-hand-pointer"></i> <span data-i18n="tx_tap_amount_hint">แตะช่องจำนวนเงินเพื่อเริ่มพิมพ์</span></div>
     <div id="tx-convert-display" style="display:none;font-size:12px;color:var(--cyan);margin-top:-6px;margin-bottom:8px;padding:6px 10px;background:rgba(6,182,212,.08);border-radius:8px"></div>
     <div class="frow">
       <div class="fg"><label class="flabel"><span data-i18n="tx_category">หมวดหมู่</span><i class="fas fa-circle-info finfo" onclick="showFieldHint(event,'tx_category')"></i></label><select id="tx-cat" class="fselect" onchange="autoSetTxFixed()"></select></div>
       <div class="fg"><label class="flabel"><span data-i18n="tx_date">วันที่</span><i class="fas fa-circle-info finfo" onclick="showFieldHint(event,'tx_date')"></i></label><input type="date" id="tx-date" class="finput"></div>
     </div>
-    <div class="fg"><label class="flabel"><span data-i18n="tx_description">รายละเอียด</span><i class="fas fa-circle-info finfo" onclick="showFieldHint(event,'tx_description')"></i></label><input type="text" id="tx-desc" class="finput" placeholder="เช่น ค่าอาหารกลางวัน, เงินเดือน" data-i18n-ph="tx_desc_ph"></div>
+    <div class="fg"><label class="flabel"><span data-i18n="tx_description">รายละเอียด</span><i class="fas fa-circle-info finfo" onclick="showFieldHint(event,'tx_description')"></i></label><input type="text" id="tx-desc" class="finput" placeholder="เช่น ค่าอาหารกลางวัน, เงินเดือน" data-i18n-ph="tx_desc_ph" list="tx-desc-list" onkeydown="txEnterKey(event)" enterkeyhint="done" autocomplete="off"><datalist id="tx-desc-list"></datalist></div>
     <div class="fg">
       <label class="flabel"><span data-i18n="tx_tags_label">แท็ก (กด Enter หรือ , เพื่อเพิ่ม)</span><i class="fas fa-circle-info finfo" onclick="showFieldHint(event,'tx_tags_label')"></i></label>
       <div class="tag-input-wrap" id="tx-tag-wrap" onclick="document.getElementById('tx-tag-inp').focus()">
@@ -2281,6 +2290,7 @@
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeM('m-tx')" data-i18n="cancel">ยกเลิก</button>
       <button class="btn btn-ghost" id="tx-split-btn" onclick="toggleTxSplit()" style="display:none"><i class="fas fa-cut"></i> <span data-i18n="tx_split_cat_short">แยกหมวด</span></button>
+      <button class="btn btn-ghost" id="tx-save-next-btn" onclick="window._txSaveAndNext=true;saveTx()" style="display:none"><i class="fas fa-plus"></i> <span data-i18n="tx_save_next">บันทึกแล้วเพิ่มต่อ</span></button>
       <button class="btn btn-primary" onclick="saveTx()" data-i18n="save">บันทึก</button>
     </div>
   </div>
@@ -3566,6 +3576,8 @@ function enterApp(){
 function _enterAppReal(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-root').style.display='flex';
+  if(typeof window._showPdpaIfNeeded==='function') window._showPdpaIfNeeded();
+  _updateAddFab();
   // กันปุ่มแชทลอยเด้งไปมุมซ้ายบน (viewport อาจยังไม่ settle ตอน init() เดิมรันตั้งแต่ page load) —
   // เรียกซ้ำตรงจุดที่รับประกันว่า viewport นิ่งแล้วแน่นอน ดู window._repositionChatFab ~16516
   setTimeout(function(){ if(typeof window._repositionChatFab==='function') window._repositionChatFab(); }, 0);
@@ -3691,16 +3703,16 @@ function _show2FABackupCodes(codes){
   document.getElementById('totp-backup-list').innerHTML=codes.map(c=>'<div class="mono" style="font-family:monospace;font-size:14px;padding:6px 10px;background:var(--surface2);border-radius:6px;margin-bottom:6px;text-align:center;letter-spacing:1px">'+c+'</div>').join('');
   openM('m-totp-backup');
 }
-function disable2FA(){
-  if(!confirm(tr('totp_confirm_disable'))) return;
+async function disable2FA(){
+  if(!await mmConfirm(tr('totp_confirm_disable'),{danger:true})) return;
   delete DB.settings.totpSecret;
   delete DB.settings.totpEnabled;
   delete DB.settings.totpBackupCodes;
   saveDB(); renderSettings();
   toast(tr('totp_disabled'),'info');
 }
-function regenerate2FABackupCodes(){
-  if(!confirm(tr('totp_confirm_regen'))) return;
+async function regenerate2FABackupCodes(){
+  if(!await mmConfirm(tr('totp_confirm_regen'),{danger:true})) return;
   const codes=_totpGenerateBackupCodes();
   DB.settings.totpBackupCodes=codes;
   saveDB();
@@ -3953,7 +3965,7 @@ async function tryRegister(){
 
 // ── Logout ──
 async function doLogout(skipConfirm){
-  if(!skipConfirm && !confirm('ออกจากระบบ?')) return;
+  if(!skipConfirm && !await mmConfirm(tr('logout_confirm'),{ok:tr('logout_btn'),danger:true})) return;
   // 🐛 2026-09-19: เดิมไม่ flush _saveTimer → แก้ไข ≤1.5 วิสุดท้ายก่อนกดออกไม่เคยขึ้น cloud (ค้างใน local เครื่องนี้)
   if(_saveTimer){ clearTimeout(_saveTimer); _saveTimer=null; try{ await fsSave(); }catch(e){} }
   fsStop();
@@ -3961,6 +3973,7 @@ async function doLogout(skipConfirm){
   try{ if(_auth&&_auth.currentUser) await _auth.signOut(); }catch(e){}
   localStorage.removeItem(SESS_KEY);
   currentUser=null;
+  _updateAddFab();
   // reset สถานะ LINE ที่ค้างไว้ตั้งแต่บัญชีนี้ — กันโชว์ค้างข้ามบัญชีตอน login ใหม่ (ดู
   // window._resetLineBannerStatus ~16736 สำหรับรายละเอียดบั๊ก)
   if(typeof window._resetLineBannerStatus==='function') window._resetLineBannerStatus();
@@ -4305,7 +4318,7 @@ async function googleLinkAccount(){
 
 async function googleUnlinkAccount(){
   if(!_auth||!_auth.currentUser) return;
-  if(!confirm('ยกเลิกการเชื่อมต่อ Gmail? หลังจากนี้จะเข้าสู่ระบบผ่าน Gmail นี้ไม่ได้อีก (ยังใช้ username/password เดิมได้ปกติ)')) return;
+  if(!await mmConfirm('ยกเลิกการเชื่อมต่อ Gmail? หลังจากนี้จะเข้าสู่ระบบผ่าน Gmail นี้ไม่ได้อีก (ยังใช้ username/password เดิมได้ปกติ)',{danger:true})) return;
   try{
     await _auth.currentUser.unlink('google.com');
     toast('ยกเลิกการเชื่อมต่อ Gmail แล้ว','success');
@@ -4740,7 +4753,7 @@ function gmailConnectAccount(){
 
 async function gmailDisconnectAccount(){
   if(!currentUser||!_auth||!_auth.currentUser) return;
-  if(!confirm('ยกเลิกการเชื่อมต่อ Gmail? ระบบจะหยุดตรวจอีเมลแจ้งเตือนธนาคารให้')) return;
+  if(!await mmConfirm('ยกเลิกการเชื่อมต่อ Gmail? ระบบจะหยุดตรวจอีเมลแจ้งเตือนธนาคารให้',{danger:true})) return;
   try{
     const idToken=await _auth.currentUser.getIdToken();
     const resp=await fetch(GMAIL_DISCONNECT_URL,{method:'POST',
@@ -5377,7 +5390,7 @@ const I18N = {
     aiu_loading:'กำลังโหลดข้อมูลการใช้ AI...',aiu_no_data:'ยังไม่มีข้อมูล',aiu_claude_hint:'รัน <code>python claude_usage_report.py --firestore</code> บนโน้ตบุ๊ก (transcript อยู่ในเครื่อง ไม่ใช่ VM)',aiu_gemini_hint:'อัปเดตทุกวันจาก Cloud Monitoring · หรือรัน <code>python gemini_usage_report.py --firestore</code> บน VM',aiu_by_model:'แยกตามรุ่นโมเดล (ใช้มากสุดบนสุด)',aiu_proj_vs_cap:'คาดการณ์เดือนนี้ vs spend cap',aiu_over_cap:'คาดว่าจะเกิน cap — usage จะถูก pause เมื่อถึง ฿{cap}',aiu_claude_banner:'เป็น<b>ประมาณการแบบ API</b> — คุณใช้ Pro/Max เหมารายเดือน ตัวเลขนี้ดูปริมาณการใช้ ไม่ใช่เงินที่จ่ายจริง',aiu_claude_footer:'* นับจาก transcript Claude Code ทุกโปรเจกต์ในเครื่องนี้ (~/.claude) · ราคา API opus $5/$25 · cache read 0.1× · USDTHB={usdthb}',aiu_gemini_footer:'* ข้อมูลจริงจาก Cloud Monitoring (Gemini API · project Best1) — ครอบคลุมเว็บ Maya + Telegram bot + ทุกสคริปต์ · ราคา flash $0.30/$2.50 ต่อ 1M tok, USDTHB={usdthb}',aiu_today:'วันนี้',aiu_this_month:'เดือนนี้ (ถึงวันนี้)',aiu_days_with_data:'วันที่มีข้อมูล',aiu_avg_per_day:'เฉลี่ย/วัน',aiu_month_projection:'คาดการณ์ทั้งเดือน',aiu_estimate:'ประมาณการ',aiu_daily_cost:'ค่าใช้จ่ายรายวัน (฿)',aiu_daily_detail:'รายละเอียดรายวัน',aiu_baht_per_day:'฿/วัน',
     admin_no_access:'ไม่มีสิทธิ์เข้าถึงหน้านี้',admin_loading:'กำลังโหลดข้อมูล...',admin_fb_not_ready:'Firebase ยังไม่พร้อม',admin_never:'ไม่เคย',admin_just_now:'เมื่อกี้',admin_min_ago:'นาทีที่แล้ว',admin_hr_ago:'ชม.ที่แล้ว',admin_day_ago:'วันที่แล้ว',
     admin_server_usage:'Usage รวม (ฝั่งเซิร์ฟเวอร์)',admin_total_tx:'รายการรวม',admin_total_nw:'Net Worth รวม',admin_has_real_data:'มีข้อมูลจริง',admin_avg_tx_per_user:'รายการ/คน เฉลี่ย',admin_usage_per_user:'การใช้งานต่อคน',admin_user:'ผู้ใช้',admin_last_tx:'รายการล่าสุด',admin_features_used:'ฟีเจอร์ที่ใช้',admin_ai_quota:'โควต้า AI (เดือน/วัน)',admin_no_server_usage:'ยังไม่มี usage รวมฝั่งเซิร์ฟเวอร์ — รัน <code>admin_stats.py</code> บน VM (อ่าน userdata ทุกคนผ่าน Service Account → เขียน <code>admin/summary</code>) แล้วรีเฟรช',admin_nw_trend:'เทรนด์ Net Worth รวมย้อนหลัง',
-    pin_wrong:'PIN ไม่ถูกต้อง',pin_locked_wait:'ใส่ PIN ผิดหลายครั้ง — รอ {s} วินาที',import_bad_field:'ไฟล์ไม่ถูกต้อง: ส่วน {f} ผิดรูปแบบ',set_archive:'เก็บถาวรรายการเก่า',archive_desc:'ดาวน์โหลดรายการก่อนปีที่เลือกเป็นไฟล์ JSON แล้วลบออกจากแอปเพื่อลดขนาดข้อมูล (ระบบสร้างจุดคืนค่าให้ก่อนอัตโนมัติ)',archive_before:'รายการก่อนปี {y} ({n} รายการ)',archive_size:'ขนาดข้อมูลตอนนี้ {kb} KB ({pct}% ของขีดจำกัด 1 MB)',archive_run:'ดาวน์โหลดแล้วลบ',archive_nothing:'ยังไม่มีรายการเก่าพอที่จะเก็บถาวร',archive_done:'เก็บถาวรแล้ว {n} รายการ — ไฟล์อยู่ในโฟลเดอร์ดาวน์โหลด',local_storage_full:'พื้นที่เก็บข้อมูลในเครื่องเต็ม — ข้อมูลยังบันทึกขึ้นคลาวด์ตามปกติ แต่ควรลบ Snapshot เก่าในตั้งค่า',admin_online:'ออนไลน์',admin_users:'ผู้ใช้',admin_total_users:'ผู้ใช้ทั้งหมด',admin_in_7_days:'ใน 7 วัน',admin_online_now:'ออนไลน์อยู่',admin_dau_today:'DAU วันนี้',admin_wau_7d:'WAU 7 วัน',admin_mau_30d:'MAU 30 วัน',admin_signup_today:'สมัครวันนี้',admin_churn_30d:'เงียบ >30 วัน',admin_never_login:'ไม่เคยล็อกอิน',admin_has_real_email:'มี email จริง',admin_cumulative_users:'ผู้ใช้สะสม',admin_platform:'แพลตฟอร์ม',admin_search:'ค้นหา',admin_last_seen:'ล่าสุด',admin_signup_at:'สมัครเมื่อ',admin_online_within_10min:'ออนไลน์ภายใน 10 นาที',admin_load_failed:'โหลดข้อมูลไม่ได้',admin_test_account:'ทดสอบ',admin_show_test_accounts:'แสดงบัญชีทดสอบ',admin_web_views:'ยอดเข้าชมเว็บ',admin_views_note:'ตัวเลขใหญ่คือจำนวนคนที่เข้าวันนี้ ส่วน “เปิดหน้า” คือจำนวนครั้ง — คนเดียวเปิดหลายครั้งได้',admin_v_people:'คนเข้าเว็บ',admin_v_pageviews:'เปิดหน้า',admin_v_sessions:'ครั้งที่เข้า',admin_v_people_note:'เริ่มนับจำนวนคนตั้งแต่ 27 ส.ค. 2569 — ก่อนหน้านั้นมีแต่ยอดเปิดหน้า',admin_v_dur_title:'อยู่บนเว็บนานแค่ไหน',admin_v_dur_median:'อยู่นานประมาณ',admin_v_dur_avg:'เฉลี่ย',admin_v_bounce:'เปิดแล้วปิดเลย',admin_v_dur_note:'ใช้ค่ากลาง (median) ต่อการเข้า 1 ครั้ง ไม่ใช่ค่าเฉลี่ย เพราะแท็บที่เปิดค้างไว้ดันค่าเฉลี่ยให้เพี้ยน',admin_v_b1:'ไม่ถึง 10 วิ',admin_v_b2:'10 วิ–1 นาที',admin_v_b3:'1–5 นาที',admin_v_b4:'เกิน 5 นาที',admin_v_sec:'วิ',admin_v_min:'นาที',admin_v_hours:'ช่วงเวลาที่คนเข้า (เวลาไทย)',admin_v_campaign:'แคมเปญที่ติดแท็ก (utm)',admin_v_signup_daily:'สมัครรายวัน',admin_v_signup_how:'สมัครด้วยวิธีไหน',admin_v_vs_prev:'เทียบ 7 วันก่อน',admin_v_people_7d:'คนเข้าเว็บ 7 วัน',admin_v_funnel:'อ่านหน้าแนะนำถึงตรงไหน',admin_v_funnel_note:'นับจากคนที่เลื่อนถึงอย่างน้อยส่วนนั้น — ส่วนที่ตัวเลขตกแรงคือจุดที่คนเลิกอ่าน',admin_v_sec_labels:'หัวหน้าแรก,ตัวอย่างการใช้งาน,ฟีเจอร์,แรงค์/เกม,ความปลอดภัย,ราคา,คำถามที่พบบ่อย,รีวิว,เริ่มใช้งาน 3 ขั้น,ปุ่มปิดท้าย',admin_v_cta:'ปุ่มที่ถูกกด',admin_v_cta_labels:'เข้าแอป,iOS,Android',admin_v_opened:'เปิดดู',admin_v_adopt_note2:'ตัวเลขซ้าย = เปิดดูกี่ครั้งใน 30 วัน · ตัวเลขขวา = มีข้อมูลจริงกี่คน — เปิดเยอะแต่ไม่มีข้อมูล แปลว่าน่าสนใจแต่ใช้ยาก',admin_views_today:'วันนี้',admin_views_yesterday:'เมื่อวาน',admin_views_7d:'7 วัน',admin_views_30d:'30 วัน',admin_views_unavailable:'ดึงสถิติเว็บไม่ได้',admin_views_app:'ตัวแอป',admin_views_landing_th:'หน้าแนะนำ (ไทย)',admin_views_landing_en:'หน้าแนะนำ (อังกฤษ)',admin_views_sources:'มาจากไหน',admin_views_direct:'เข้าตรง / ไม่มีที่มา',admin_conv_title:'หน้าแนะนำ → สมัคร',admin_conv_views:'เข้าชม',admin_conv_signups:'สมัคร',admin_conv_note:'บอกทิศทางคร่าวๆ ไม่ใช่ funnel จริง — บางคนสมัครจากลิงก์ LINE/แชร์โดยไม่ผ่านหน้าแนะนำ และบางคนเข้าชมวันนี้แต่ไปสมัครสัปดาห์หน้า',admin_adoption:'ฟีเจอร์ไหนมีคนใช้จริง',admin_adoption_note:'นับจากผู้ใช้จริง {n} คน (ไม่รวมบัญชีทดสอบ)',admin_adopt_line:'เชื่อม LINE',admin_adopt_line_friend:'เพิ่มบอทเป็นเพื่อนแล้ว',admin_adopt_gmail:'เชื่อม Gmail (ดักอีเมลธนาคาร)',admin_adopt_push:'เปิด push',admin_adopt_login:'วิธีล็อกอิน',admin_dev_title:'ผู้เข้าชมใช้อะไร',admin_dev_mobile:'มือถือ',admin_dev_desktop:'คอม',admin_lc_atrisk:'กำลังจะหลุด',admin_lc_atrisk_sub:'เงียบ 8–30 วัน',admin_lc_active:'ใช้อยู่',admin_lc_dormant:'หลุดแล้ว',admin_lc_never:'ไม่เคยเข้า',admin_hist_dau:'DAU ย้อนหลัง',admin_act_title:'สมัครแล้วได้ใช้จริงไหม',admin_act_note:'จากคนที่สมัครใน 30 วันล่าสุด {n} คน — เทียบเป็นรายวันเพราะใช้วันที่ของรายการที่บันทึก ไม่ใช่เวลาที่กดปุ่ม',admin_act_sameday:'บันทึกรายการวันเดียวกับที่สมัคร',admin_act_7d:'บันทึกภายใน 7 วัน',admin_act_never:'ยังไม่เคยบันทึกอะไรเลย',admin_ret_title:'คนสมัครแล้วอยู่ต่อไหม',admin_ret_note:'แต่ละแถวคือรุ่นที่สมัครสัปดาห์นั้น ตัวเลขคือ % ที่ยังกลับมาใช้ในสัปดาห์นั้น · ช่องว่าง = ยังไม่ถึงเวลาวัด หรือยังไม่ได้เริ่มเก็บ ไม่ใช่ 0%',admin_ret_since:'เริ่มเก็บสัปดาห์',admin_ret_cohort:'รุ่น',admin_ret_people:'คน',admin_ret_wait:'ยังไม่มีข้อมูล retention มากพอ — ตัวเลขจะเริ่มอ่านได้หลังผ่านไปอีก 1 สัปดาห์',admin_err_title:'อะไรพังบ่อยสุด 7 วัน',admin_err_note:'จับจาก error จริงในเบราว์เซอร์ของผู้ใช้ (เดิมส่งเข้า Telegram แล้วทิ้ง ไม่เหลือให้ดูย้อนหลัง)',admin_err_times:'ครั้ง',admin_err_people:'คน',admin_err_last:'ล่าสุด',admin_actd_title:'เปิดหน้าแล้วทำสำเร็จจริงกี่ครั้ง',admin_actd_note:'ยอดรวม 30 วัน ไม่ผูกกับบัญชีใคร · นับตอนทำสำเร็จเท่านั้น ไม่ใช่ตอนกดปุ่ม — เปิดเยอะแต่สำเร็จน้อย คือจุดที่คนทำไม่สำเร็จ',admin_actd_opens:'เปิดหน้า',admin_actd_done:'สำเร็จ',admin_actd_tx_add:'บันทึกรายการ',admin_actd_receipt_scan:'สแกนใบเสร็จ/สลิป',admin_actd_maya_ask:'ถาม Maya แล้วได้คำตอบ',admin_actd_bank_add:'เพิ่มบัญชีธนาคาร',admin_actd_budget_set:'ตั้งงบรายหมวด',admin_actd_debt_add:'เพิ่มหนี้สิน',admin_acq_note:'ช่องทางที่ผูกกับบัญชีจริง — เริ่มเก็บ 1 ก.ย. 2569 บัญชีที่สมัครก่อนหน้านั้นไม่มีข้อมูลนี้',admin_acq_signups:'สมัคร',admin_acq_still:'ยังใช้อยู่',share_app_btn:'แชร์แอปให้เพื่อน',line_connect_btn:'เชื่อมต่อ LINE',line_connected_btn:'เชื่อมต่อ LINE แล้ว',line_notfriend_title:'ยังไม่ได้เพิ่มบอทเป็นเพื่อน',line_notfriend_desc:'เชื่อมต่อบัญชีแล้ว แต่ LINE จะส่งแจ้งเตือนให้ไม่ได้จนกว่าจะเพิ่ม MoneyMind เป็นเพื่อน',line_notfriend_add:'เพิ่มเพื่อนเลย',line_notfriend_recheck:'ตรวจสอบอีกครั้ง',line_notfriend_qr:'อยู่บนคอม? สแกน QR ด้วยมือถือ',share_app_message:'ลองแอปจัดการเงินที่ผมใช้อยู่ดูสิ บันทึกรายรับ-รายจ่ายด้วย AI สแกนใบเสร็จ คำนวณภาษีได้ในตัว ใช้งานฟรี',share_link_copied:'คัดลอกลิงก์แอปแล้ว!',
+    pdpa_title:'นโยบายความเป็นส่วนตัว',pdpa_body:'MoneyMind เก็บข้อมูลการเงินส่วนตัวของคุณ (รายรับ-รายจ่าย, เงินออม, หนี้สิน ฯลฯ) ไว้บน Firebase Cloud ที่เข้ารหัสและเข้าถึงได้เฉพาะบัญชีของคุณเท่านั้น เราไม่เปิดเผยข้อมูลให้บุคคลภายนอก ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล (PDPA) พ.ศ. 2562',pdpa_f1:'เข้ารหัสทั้งหมด',pdpa_f2:'เฉพาะบัญชีคุณ',pdpa_f3:'ไม่ขายข้อมูล',pdpa_accept:'ยอมรับและดำเนินการต่อ',pdpa_foot:'การใช้งานถือว่าคุณยอมรับ',privacy_policy:'นโยบายความเป็นส่วนตัว',terms_link:'ข้อกำหนดการใช้งาน',undo_btn:'เลิกทำ',undo_done:'กู้คืนรายการแล้ว',logout_confirm:'ออกจากระบบ?',logout_btn:'ออกจากระบบ',sub_confirm_delete:'ลบ subscription นี้?',sav_confirm_delete:'ต้องการลบเป้าหมายนี้?',tx_save_next:'บันทึกแล้วเพิ่มต่อ',tx_frequent_cats:'ใช้บ่อย',tx_need_amount:'ใส่จำนวนเงินก่อน',tx_added:'เพิ่มรายการแล้ว',tx_added_carry:'เพิ่มรายการและตั้งเป็นงบเดือนหน้าแล้ว',tx_full_form_unlocked:'ปลดล็อกช่องเพิ่มเติมแล้ว: สกุลเงิน แท็ก ธนาคาร คงที่/แปรผัน และแยกหมวด — ไม่บังคับกรอก',tx_tap_amount_hint:'แตะช่องจำนวนเงินเพื่อเริ่มพิมพ์',tx_discard_confirm:'ยังไม่ได้บันทึก — ทิ้งข้อมูลที่กรอกไว้?',tx_discard_ok:'ทิ้ง',confirm_ok:'ตกลง',pin_wrong:'PIN ไม่ถูกต้อง',pin_locked_wait:'ใส่ PIN ผิดหลายครั้ง — รอ {s} วินาที',import_bad_field:'ไฟล์ไม่ถูกต้อง: ส่วน {f} ผิดรูปแบบ',set_archive:'เก็บถาวรรายการเก่า',archive_desc:'ดาวน์โหลดรายการก่อนปีที่เลือกเป็นไฟล์ JSON แล้วลบออกจากแอปเพื่อลดขนาดข้อมูล (ระบบสร้างจุดคืนค่าให้ก่อนอัตโนมัติ)',archive_before:'รายการก่อนปี {y} ({n} รายการ)',archive_size:'ขนาดข้อมูลตอนนี้ {kb} KB ({pct}% ของขีดจำกัด 1 MB)',archive_run:'ดาวน์โหลดแล้วลบ',archive_nothing:'ยังไม่มีรายการเก่าพอที่จะเก็บถาวร',archive_done:'เก็บถาวรแล้ว {n} รายการ — ไฟล์อยู่ในโฟลเดอร์ดาวน์โหลด',local_storage_full:'พื้นที่เก็บข้อมูลในเครื่องเต็ม — ข้อมูลยังบันทึกขึ้นคลาวด์ตามปกติ แต่ควรลบ Snapshot เก่าในตั้งค่า',admin_online:'ออนไลน์',admin_users:'ผู้ใช้',admin_total_users:'ผู้ใช้ทั้งหมด',admin_in_7_days:'ใน 7 วัน',admin_online_now:'ออนไลน์อยู่',admin_dau_today:'DAU วันนี้',admin_wau_7d:'WAU 7 วัน',admin_mau_30d:'MAU 30 วัน',admin_signup_today:'สมัครวันนี้',admin_churn_30d:'เงียบ >30 วัน',admin_never_login:'ไม่เคยล็อกอิน',admin_has_real_email:'มี email จริง',admin_cumulative_users:'ผู้ใช้สะสม',admin_platform:'แพลตฟอร์ม',admin_search:'ค้นหา',admin_last_seen:'ล่าสุด',admin_signup_at:'สมัครเมื่อ',admin_online_within_10min:'ออนไลน์ภายใน 10 นาที',admin_load_failed:'โหลดข้อมูลไม่ได้',admin_test_account:'ทดสอบ',admin_show_test_accounts:'แสดงบัญชีทดสอบ',admin_web_views:'ยอดเข้าชมเว็บ',admin_views_note:'ตัวเลขใหญ่คือจำนวนคนที่เข้าวันนี้ ส่วน “เปิดหน้า” คือจำนวนครั้ง — คนเดียวเปิดหลายครั้งได้',admin_v_people:'คนเข้าเว็บ',admin_v_pageviews:'เปิดหน้า',admin_v_sessions:'ครั้งที่เข้า',admin_v_people_note:'เริ่มนับจำนวนคนตั้งแต่ 27 ส.ค. 2569 — ก่อนหน้านั้นมีแต่ยอดเปิดหน้า',admin_v_dur_title:'อยู่บนเว็บนานแค่ไหน',admin_v_dur_median:'อยู่นานประมาณ',admin_v_dur_avg:'เฉลี่ย',admin_v_bounce:'เปิดแล้วปิดเลย',admin_v_dur_note:'ใช้ค่ากลาง (median) ต่อการเข้า 1 ครั้ง ไม่ใช่ค่าเฉลี่ย เพราะแท็บที่เปิดค้างไว้ดันค่าเฉลี่ยให้เพี้ยน',admin_v_b1:'ไม่ถึง 10 วิ',admin_v_b2:'10 วิ–1 นาที',admin_v_b3:'1–5 นาที',admin_v_b4:'เกิน 5 นาที',admin_v_sec:'วิ',admin_v_min:'นาที',admin_v_hours:'ช่วงเวลาที่คนเข้า (เวลาไทย)',admin_v_campaign:'แคมเปญที่ติดแท็ก (utm)',admin_v_signup_daily:'สมัครรายวัน',admin_v_signup_how:'สมัครด้วยวิธีไหน',admin_v_vs_prev:'เทียบ 7 วันก่อน',admin_v_people_7d:'คนเข้าเว็บ 7 วัน',admin_v_funnel:'อ่านหน้าแนะนำถึงตรงไหน',admin_v_funnel_note:'นับจากคนที่เลื่อนถึงอย่างน้อยส่วนนั้น — ส่วนที่ตัวเลขตกแรงคือจุดที่คนเลิกอ่าน',admin_v_sec_labels:'หัวหน้าแรก,ตัวอย่างการใช้งาน,ฟีเจอร์,แรงค์/เกม,ความปลอดภัย,ราคา,คำถามที่พบบ่อย,รีวิว,เริ่มใช้งาน 3 ขั้น,ปุ่มปิดท้าย',admin_v_cta:'ปุ่มที่ถูกกด',admin_v_cta_labels:'เข้าแอป,iOS,Android',admin_v_opened:'เปิดดู',admin_v_adopt_note2:'ตัวเลขซ้าย = เปิดดูกี่ครั้งใน 30 วัน · ตัวเลขขวา = มีข้อมูลจริงกี่คน — เปิดเยอะแต่ไม่มีข้อมูล แปลว่าน่าสนใจแต่ใช้ยาก',admin_views_today:'วันนี้',admin_views_yesterday:'เมื่อวาน',admin_views_7d:'7 วัน',admin_views_30d:'30 วัน',admin_views_unavailable:'ดึงสถิติเว็บไม่ได้',admin_views_app:'ตัวแอป',admin_views_landing_th:'หน้าแนะนำ (ไทย)',admin_views_landing_en:'หน้าแนะนำ (อังกฤษ)',admin_views_sources:'มาจากไหน',admin_views_direct:'เข้าตรง / ไม่มีที่มา',admin_conv_title:'หน้าแนะนำ → สมัคร',admin_conv_views:'เข้าชม',admin_conv_signups:'สมัคร',admin_conv_note:'บอกทิศทางคร่าวๆ ไม่ใช่ funnel จริง — บางคนสมัครจากลิงก์ LINE/แชร์โดยไม่ผ่านหน้าแนะนำ และบางคนเข้าชมวันนี้แต่ไปสมัครสัปดาห์หน้า',admin_adoption:'ฟีเจอร์ไหนมีคนใช้จริง',admin_adoption_note:'นับจากผู้ใช้จริง {n} คน (ไม่รวมบัญชีทดสอบ)',admin_adopt_line:'เชื่อม LINE',admin_adopt_line_friend:'เพิ่มบอทเป็นเพื่อนแล้ว',admin_adopt_gmail:'เชื่อม Gmail (ดักอีเมลธนาคาร)',admin_adopt_push:'เปิด push',admin_adopt_login:'วิธีล็อกอิน',admin_dev_title:'ผู้เข้าชมใช้อะไร',admin_dev_mobile:'มือถือ',admin_dev_desktop:'คอม',admin_lc_atrisk:'กำลังจะหลุด',admin_lc_atrisk_sub:'เงียบ 8–30 วัน',admin_lc_active:'ใช้อยู่',admin_lc_dormant:'หลุดแล้ว',admin_lc_never:'ไม่เคยเข้า',admin_hist_dau:'DAU ย้อนหลัง',admin_act_title:'สมัครแล้วได้ใช้จริงไหม',admin_act_note:'จากคนที่สมัครใน 30 วันล่าสุด {n} คน — เทียบเป็นรายวันเพราะใช้วันที่ของรายการที่บันทึก ไม่ใช่เวลาที่กดปุ่ม',admin_act_sameday:'บันทึกรายการวันเดียวกับที่สมัคร',admin_act_7d:'บันทึกภายใน 7 วัน',admin_act_never:'ยังไม่เคยบันทึกอะไรเลย',admin_ret_title:'คนสมัครแล้วอยู่ต่อไหม',admin_ret_note:'แต่ละแถวคือรุ่นที่สมัครสัปดาห์นั้น ตัวเลขคือ % ที่ยังกลับมาใช้ในสัปดาห์นั้น · ช่องว่าง = ยังไม่ถึงเวลาวัด หรือยังไม่ได้เริ่มเก็บ ไม่ใช่ 0%',admin_ret_since:'เริ่มเก็บสัปดาห์',admin_ret_cohort:'รุ่น',admin_ret_people:'คน',admin_ret_wait:'ยังไม่มีข้อมูล retention มากพอ — ตัวเลขจะเริ่มอ่านได้หลังผ่านไปอีก 1 สัปดาห์',admin_err_title:'อะไรพังบ่อยสุด 7 วัน',admin_err_note:'จับจาก error จริงในเบราว์เซอร์ของผู้ใช้ (เดิมส่งเข้า Telegram แล้วทิ้ง ไม่เหลือให้ดูย้อนหลัง)',admin_err_times:'ครั้ง',admin_err_people:'คน',admin_err_last:'ล่าสุด',admin_actd_title:'เปิดหน้าแล้วทำสำเร็จจริงกี่ครั้ง',admin_actd_note:'ยอดรวม 30 วัน ไม่ผูกกับบัญชีใคร · นับตอนทำสำเร็จเท่านั้น ไม่ใช่ตอนกดปุ่ม — เปิดเยอะแต่สำเร็จน้อย คือจุดที่คนทำไม่สำเร็จ',admin_actd_opens:'เปิดหน้า',admin_actd_done:'สำเร็จ',admin_actd_tx_add:'บันทึกรายการ',admin_actd_receipt_scan:'สแกนใบเสร็จ/สลิป',admin_actd_maya_ask:'ถาม Maya แล้วได้คำตอบ',admin_actd_bank_add:'เพิ่มบัญชีธนาคาร',admin_actd_budget_set:'ตั้งงบรายหมวด',admin_actd_debt_add:'เพิ่มหนี้สิน',admin_acq_note:'ช่องทางที่ผูกกับบัญชีจริง — เริ่มเก็บ 1 ก.ย. 2569 บัญชีที่สมัครก่อนหน้านั้นไม่มีข้อมูลนี้',admin_acq_signups:'สมัคร',admin_acq_still:'ยังใช้อยู่',share_app_btn:'แชร์แอปให้เพื่อน',line_connect_btn:'เชื่อมต่อ LINE',line_connected_btn:'เชื่อมต่อ LINE แล้ว',line_notfriend_title:'ยังไม่ได้เพิ่มบอทเป็นเพื่อน',line_notfriend_desc:'เชื่อมต่อบัญชีแล้ว แต่ LINE จะส่งแจ้งเตือนให้ไม่ได้จนกว่าจะเพิ่ม MoneyMind เป็นเพื่อน',line_notfriend_add:'เพิ่มเพื่อนเลย',line_notfriend_recheck:'ตรวจสอบอีกครั้ง',line_notfriend_qr:'อยู่บนคอม? สแกน QR ด้วยมือถือ',share_app_message:'ลองแอปจัดการเงินที่ผมใช้อยู่ดูสิ บันทึกรายรับ-รายจ่ายด้วย AI สแกนใบเสร็จ คำนวณภาษีได้ในตัว ใช้งานฟรี',share_link_copied:'คัดลอกลิงก์แอปแล้ว!',
     sync_not_synced:'ยังไม่ได้ซิงค์',sync_force_title:'บังคับ sync ขึ้น cloud',uploaded:'อัปโหลดแล้ว',loaded_from_cloud:'โหลดจาก Cloud แล้ว',no_cloud_data:'ไม่มีข้อมูลใน Cloud',no_recoverable_data:'ไม่พบข้อมูลที่กู้คืนได้',synced_new_device:'โหลดข้อมูลใหม่จากอุปกรณ์อื่นแล้ว ☁️',db_size_warn:'ข้อมูลของคุณใกล้เต็มขีดจำกัดระบบ (Firestore 1MB/บัญชี) แนะนำ Export ข้อมูลเก่าเก็บไว้ แล้วลบรายการที่ไม่จำเป็นในหน้าตั้งค่า ไม่งั้น sync ข้ามอุปกรณ์อาจล้มเหลว',cloud_load_failed:'โหลด cloud ไม่ได้',new_data_from_device:'มีข้อมูลใหม่จากอุปกรณ์อื่น ☁️ (จะโหลดหลังปิดฟอร์ม)',synced_from_device:'ซิงค์จากอุปกรณ์อื่นแล้ว ☁️',uploaded_to_cloud:'อัปโหลดข้อมูลขึ้น Cloud แล้ว',recover_success:'กู้คืนข้อมูลสำเร็จ ✓',welcome_username:'ยินดีต้อนรับ! ชื่อผู้ใช้',relogin_for_sync:'โปรดออกจากระบบแล้วเข้าสู่ระบบใหม่ 1 ครั้ง เพื่อเปิดการซิงค์ข้อมูล (อัปเดตความปลอดภัย)',
     port_need_name:'กรุณาใส่ชื่อพอร์ต',port_edited:'แก้ไขพอร์ตแล้ว',port_created:'สร้างพอร์ตใหม่แล้ว',port_confirm_delete:'ลบพอร์ตนี้? การลงทุนในพอร์ตจะถูกย้ายไป "ไม่ระบุพอร์ต"',port_not_found_or_unlinked:'ไม่พบพอร์ตหรือยังไม่ได้ลิ้งเป้าหมาย',port_saving_goal_not_found:'ไม่พบเป้าหมายออมที่ลิ้งไว้',port_sent_to_saving:'ส่งยอด {amt} ไปยัง "{name}" แล้ว',
     inv_need_name_first:'กรุณาใส่ชื่อ/Ticker ก่อน',inv_fetching:'กำลังดึง',inv_price:'ราคา',inv_fetch_price_failed:'ดึงราคาไม่ได้',inv_updating_price:'กำลังอัปเดตราคา',inv_update_failed:'อัปเดตไม่ได้',inv_edit:'แก้ไขการลงทุน',inv_need_name:'กรุณาใส่ชื่อ',inv_need_qty:'กรุณาใส่จำนวน',inv_need_buyprice:'กรุณาใส่ราคาซื้อ',inv_added:'เพิ่มการลงทุนแล้ว',inv_confirm_delete:'ต้องการลบการลงทุนนี้?',inv_field_type:'ประเภท',inv_field_linked_debt:'เชื่อมโยงสินเชื่อบ้าน (ไม่บังคับ)',inv_no_linked_debt:'ไม่เชื่อมโยง',inv_linked_debt_hint:'ถ้าเลือก ระบบจะคำนวณส่วนของเจ้าของ (equity) = มูลค่า − หนี้คงเหลือ ให้อัตโนมัติ',inv_equity:'ส่วนของเจ้าของ:',inv_equity_hint:'ส่วนของเจ้าของ = มูลค่า − หนี้คงเหลือของสินเชื่อที่เชื่อมโยง',
@@ -5483,7 +5496,7 @@ const I18N = {
     aiu_loading:'Loading AI usage data...',aiu_no_data:'No data yet for',aiu_claude_hint:'Run <code>python claude_usage_report.py --firestore</code> on your laptop (transcript is local, not on the VM)',aiu_gemini_hint:'Updated daily from Cloud Monitoring · or run <code>python gemini_usage_report.py --firestore</code> on the VM',aiu_by_model:'By Model (highest usage first)',aiu_proj_vs_cap:'This month projection vs spend cap',aiu_over_cap:'Projected to exceed cap — usage will pause at ฿{cap}',aiu_claude_banner:'This is an <b>API-equivalent estimate</b> — you\'re on a Pro/Max flat plan, this number shows usage volume, not actual money paid',aiu_claude_footer:'* Counted from Claude Code transcripts on this machine (~/.claude) · API pricing opus $5/$25 · cache read 0.1× · USDTHB={usdthb}',aiu_gemini_footer:'* Real data from Cloud Monitoring (Gemini API · project Best1) — covers the Maya web app + Telegram bot + all scripts · flash pricing $0.30/$2.50 per 1M tok, USDTHB={usdthb}',aiu_today:'Today',aiu_this_month:'This Month (to date)',aiu_days_with_data:'days with data',aiu_avg_per_day:'Avg/day',aiu_month_projection:'Month Projection',aiu_estimate:'Estimate',aiu_daily_cost:'Daily Cost (฿)',aiu_daily_detail:'Daily Detail',aiu_baht_per_day:'฿/day',
     admin_no_access:'You do not have access to this page',admin_loading:'Loading data...',admin_fb_not_ready:'Firebase not ready yet',admin_never:'Never',admin_just_now:'Just now',admin_min_ago:'min ago',admin_hr_ago:'hr ago',admin_day_ago:'days ago',
     admin_server_usage:'Total Usage (Server-side)',admin_total_tx:'Total Transactions',admin_total_nw:'Total Net Worth',admin_has_real_data:'Has Real Data',admin_avg_tx_per_user:'Avg Tx/User',admin_usage_per_user:'Usage per User',admin_user:'User',admin_last_tx:'Last Transaction',admin_features_used:'Features Used',admin_ai_quota:'AI Quota (mo/day)',admin_no_server_usage:'No server-side usage summary yet — run <code>admin_stats.py</code> on the VM (reads all userdata via Service Account → writes <code>admin/summary</code>) then refresh',admin_nw_trend:'Net Worth Trend (Historical)',
-    pin_wrong:'Wrong PIN',pin_locked_wait:'Too many wrong PINs — wait {s} s',import_bad_field:'Invalid file: section {f} is malformed',set_archive:'Archive old entries',archive_desc:'Download entries before the chosen year as JSON, then remove them from the app to shrink your data (a restore point is created first)',archive_before:'Entries before {y} ({n} items)',archive_size:'Current data size {kb} KB ({pct}% of the 1 MB limit)',archive_run:'Download & remove',archive_nothing:'Not enough old entries to archive yet',archive_done:'Archived {n} entries — file saved to Downloads',local_storage_full:'Device storage is full — your data still syncs to the cloud, but please delete old snapshots in Settings',admin_online:'online',admin_users:'users',admin_total_users:'Total Users',admin_in_7_days:'in 7 days',admin_online_now:'Online Now',admin_dau_today:"Today's DAU",admin_wau_7d:'WAU 7 days',admin_mau_30d:'MAU 30 days',admin_signup_today:'Signed Up Today',admin_churn_30d:'Inactive >30 days',admin_never_login:'never logged in',admin_has_real_email:'Has Real Email',admin_cumulative_users:'Cumulative Users',admin_platform:'Platform',admin_search:'Search',admin_last_seen:'Last Seen',admin_signup_at:'Signed Up',admin_online_within_10min:'Online within 10 minutes',admin_load_failed:'Failed to load data',admin_test_account:'test',admin_show_test_accounts:'Show test accounts',admin_web_views:'Website Views',admin_views_note:'The big number is people who visited today; “views” counts page opens — one person can open many',admin_v_people:'visitors',admin_v_pageviews:'views',admin_v_sessions:'visits',admin_v_people_note:'Visitor counting started 27 Aug 2026 — before that only page opens were recorded',admin_v_dur_title:'How long they stay',admin_v_dur_median:'typical visit',admin_v_dur_avg:'average',admin_v_bounce:'left right away',admin_v_dur_note:'Median per visit, not the mean — tabs left open skew the average badly',admin_v_b1:'under 10s',admin_v_b2:'10s–1m',admin_v_b3:'1–5m',admin_v_b4:'over 5m',admin_v_sec:'s',admin_v_min:'m',admin_v_hours:'When they visit (Bangkok time)',admin_v_campaign:'Tagged campaigns (utm)',admin_v_signup_daily:'signups per day',admin_v_signup_how:'How they signed up',admin_v_vs_prev:'vs previous 7 days',admin_v_people_7d:'visitors, 7 days',admin_v_funnel:'How far down the landing page they get',admin_v_funnel_note:'Counts visits that scrolled at least that far — the biggest drop is where people stop reading',admin_v_sec_labels:'Hero,Preview,Features,Rank,Security,Pricing,FAQ,Reviews,How to start,Final CTA',admin_v_cta:'Buttons clicked',admin_v_cta_labels:'Open app,iOS,Android',admin_v_opened:'opened',admin_v_adopt_note2:'Left = times opened in 30 days · right = people with real data — opened a lot but no data means interesting yet hard to use',admin_views_today:'today',admin_views_yesterday:'yesterday',admin_views_7d:'7 days',admin_views_30d:'30 days',admin_views_unavailable:'Could not load website stats',admin_views_app:'App',admin_views_landing_th:'Landing (TH)',admin_views_landing_en:'Landing (EN)',admin_views_sources:'Traffic sources',admin_views_direct:'Direct / no referrer',admin_conv_title:'Landing → sign-up',admin_conv_views:'views',admin_conv_signups:'signed up',admin_conv_note:'Directional only, not a true funnel — some people sign up from a LINE/shared link without seeing the landing page, and some visit today but sign up next week',admin_adoption:'Feature adoption',admin_adoption_note:'Out of {n} real users (test accounts excluded)',admin_adopt_line:'LINE connected',admin_adopt_line_friend:'Added bot as friend',admin_adopt_gmail:'Gmail connected (bank alerts)',admin_adopt_push:'Push enabled',admin_adopt_login:'Login method',admin_dev_title:'What visitors use',admin_dev_mobile:'Mobile',admin_dev_desktop:'Desktop',admin_lc_atrisk:'Slipping away',admin_lc_atrisk_sub:'quiet 8–30 days',admin_lc_active:'still active',admin_lc_dormant:'gone',admin_lc_never:'never logged in',admin_hist_dau:'DAU over time',admin_act_title:'Do sign-ups actually start using it?',admin_act_note:'Out of {n} people who signed up in the last 30 days — compared by day, since it uses the date on the record, not the moment they tapped save',admin_act_sameday:'Logged a record the same day they signed up',admin_act_7d:'Logged one within 7 days',admin_act_never:'Never logged anything',admin_ret_title:'Do sign-ups stick around?',admin_ret_note:'Each row is the week people signed up; the number is the % who came back that week · a blank cell means not measured yet, not 0%',admin_ret_since:'tracking since week',admin_ret_cohort:'Cohort',admin_ret_people:'people',admin_ret_wait:'Not enough retention data yet — numbers become readable after another week',admin_err_title:'What breaks most, last 7 days',admin_err_note:'Captured from real errors in users\' browsers (previously relayed to Telegram and discarded, leaving no history)',admin_err_times:'times',admin_err_people:'people',admin_err_last:'last seen',admin_actd_title:'Opened the page — but did they finish?',admin_actd_note:'30-day totals, not tied to any account · counted only on success, not on tapping the button — lots of opens with few completions is where people get stuck',admin_actd_opens:'opens',admin_actd_done:'completed',admin_actd_tx_add:'Logged a record',admin_actd_receipt_scan:'Scanned a receipt/slip',admin_actd_maya_ask:'Asked Maya and got an answer',admin_actd_bank_add:'Added a bank account',admin_actd_budget_set:'Set a category budget',admin_actd_debt_add:'Added a debt',admin_acq_note:'Channels tied to real accounts — tracking started 1 Sep 2026; accounts created before that have no data here',admin_acq_signups:'signed up',admin_acq_still:'still active',share_app_btn:'Share with friends',line_connect_btn:'Connect LINE',line_connected_btn:'LINE Connected',line_notfriend_title:'Bot not added as a friend yet',line_notfriend_desc:'Your account is linked, but LINE can\'t deliver notifications until you add MoneyMind as a friend',line_notfriend_add:'Add as friend',line_notfriend_recheck:'Check again',line_notfriend_qr:'On desktop? Scan the QR with your phone',share_app_message:'Check out the finance app I\'ve been using — AI receipt scanning, built-in tax calculator, records income/expenses in seconds. Free to use.',share_link_copied:'App link copied!',
+    pdpa_title:'Privacy policy',pdpa_body:'MoneyMind stores your personal finance data (income, expenses, savings, debts, etc.) on Firebase Cloud, encrypted and accessible only from your account. We never share it with third parties, in line with Thailand\'s Personal Data Protection Act (PDPA).',pdpa_f1:'Encrypted',pdpa_f2:'Your account only',pdpa_f3:'Never sold',pdpa_accept:'Accept and continue',pdpa_foot:'By using the app you accept the',privacy_policy:'Privacy policy',terms_link:'Terms of use',undo_btn:'Undo',undo_done:'Entry restored',logout_confirm:'Log out?',logout_btn:'Log out',sub_confirm_delete:'Delete this subscription?',sav_confirm_delete:'Delete this goal?',tx_save_next:'Save & add another',tx_frequent_cats:'Frequent',tx_need_amount:'Enter an amount first',tx_added:'Entry added',tx_added_carry:'Entry added and carried to next month\'s budget',tx_full_form_unlocked:'More fields unlocked: currency, tags, bank, fixed/variable and split — all optional',tx_tap_amount_hint:'Tap the amount field to start typing',tx_discard_confirm:'Not saved yet — discard what you typed?',tx_discard_ok:'Discard',confirm_ok:'OK',pin_wrong:'Wrong PIN',pin_locked_wait:'Too many wrong PINs — wait {s} s',import_bad_field:'Invalid file: section {f} is malformed',set_archive:'Archive old entries',archive_desc:'Download entries before the chosen year as JSON, then remove them from the app to shrink your data (a restore point is created first)',archive_before:'Entries before {y} ({n} items)',archive_size:'Current data size {kb} KB ({pct}% of the 1 MB limit)',archive_run:'Download & remove',archive_nothing:'Not enough old entries to archive yet',archive_done:'Archived {n} entries — file saved to Downloads',local_storage_full:'Device storage is full — your data still syncs to the cloud, but please delete old snapshots in Settings',admin_online:'online',admin_users:'users',admin_total_users:'Total Users',admin_in_7_days:'in 7 days',admin_online_now:'Online Now',admin_dau_today:"Today's DAU",admin_wau_7d:'WAU 7 days',admin_mau_30d:'MAU 30 days',admin_signup_today:'Signed Up Today',admin_churn_30d:'Inactive >30 days',admin_never_login:'never logged in',admin_has_real_email:'Has Real Email',admin_cumulative_users:'Cumulative Users',admin_platform:'Platform',admin_search:'Search',admin_last_seen:'Last Seen',admin_signup_at:'Signed Up',admin_online_within_10min:'Online within 10 minutes',admin_load_failed:'Failed to load data',admin_test_account:'test',admin_show_test_accounts:'Show test accounts',admin_web_views:'Website Views',admin_views_note:'The big number is people who visited today; “views” counts page opens — one person can open many',admin_v_people:'visitors',admin_v_pageviews:'views',admin_v_sessions:'visits',admin_v_people_note:'Visitor counting started 27 Aug 2026 — before that only page opens were recorded',admin_v_dur_title:'How long they stay',admin_v_dur_median:'typical visit',admin_v_dur_avg:'average',admin_v_bounce:'left right away',admin_v_dur_note:'Median per visit, not the mean — tabs left open skew the average badly',admin_v_b1:'under 10s',admin_v_b2:'10s–1m',admin_v_b3:'1–5m',admin_v_b4:'over 5m',admin_v_sec:'s',admin_v_min:'m',admin_v_hours:'When they visit (Bangkok time)',admin_v_campaign:'Tagged campaigns (utm)',admin_v_signup_daily:'signups per day',admin_v_signup_how:'How they signed up',admin_v_vs_prev:'vs previous 7 days',admin_v_people_7d:'visitors, 7 days',admin_v_funnel:'How far down the landing page they get',admin_v_funnel_note:'Counts visits that scrolled at least that far — the biggest drop is where people stop reading',admin_v_sec_labels:'Hero,Preview,Features,Rank,Security,Pricing,FAQ,Reviews,How to start,Final CTA',admin_v_cta:'Buttons clicked',admin_v_cta_labels:'Open app,iOS,Android',admin_v_opened:'opened',admin_v_adopt_note2:'Left = times opened in 30 days · right = people with real data — opened a lot but no data means interesting yet hard to use',admin_views_today:'today',admin_views_yesterday:'yesterday',admin_views_7d:'7 days',admin_views_30d:'30 days',admin_views_unavailable:'Could not load website stats',admin_views_app:'App',admin_views_landing_th:'Landing (TH)',admin_views_landing_en:'Landing (EN)',admin_views_sources:'Traffic sources',admin_views_direct:'Direct / no referrer',admin_conv_title:'Landing → sign-up',admin_conv_views:'views',admin_conv_signups:'signed up',admin_conv_note:'Directional only, not a true funnel — some people sign up from a LINE/shared link without seeing the landing page, and some visit today but sign up next week',admin_adoption:'Feature adoption',admin_adoption_note:'Out of {n} real users (test accounts excluded)',admin_adopt_line:'LINE connected',admin_adopt_line_friend:'Added bot as friend',admin_adopt_gmail:'Gmail connected (bank alerts)',admin_adopt_push:'Push enabled',admin_adopt_login:'Login method',admin_dev_title:'What visitors use',admin_dev_mobile:'Mobile',admin_dev_desktop:'Desktop',admin_lc_atrisk:'Slipping away',admin_lc_atrisk_sub:'quiet 8–30 days',admin_lc_active:'still active',admin_lc_dormant:'gone',admin_lc_never:'never logged in',admin_hist_dau:'DAU over time',admin_act_title:'Do sign-ups actually start using it?',admin_act_note:'Out of {n} people who signed up in the last 30 days — compared by day, since it uses the date on the record, not the moment they tapped save',admin_act_sameday:'Logged a record the same day they signed up',admin_act_7d:'Logged one within 7 days',admin_act_never:'Never logged anything',admin_ret_title:'Do sign-ups stick around?',admin_ret_note:'Each row is the week people signed up; the number is the % who came back that week · a blank cell means not measured yet, not 0%',admin_ret_since:'tracking since week',admin_ret_cohort:'Cohort',admin_ret_people:'people',admin_ret_wait:'Not enough retention data yet — numbers become readable after another week',admin_err_title:'What breaks most, last 7 days',admin_err_note:'Captured from real errors in users\' browsers (previously relayed to Telegram and discarded, leaving no history)',admin_err_times:'times',admin_err_people:'people',admin_err_last:'last seen',admin_actd_title:'Opened the page — but did they finish?',admin_actd_note:'30-day totals, not tied to any account · counted only on success, not on tapping the button — lots of opens with few completions is where people get stuck',admin_actd_opens:'opens',admin_actd_done:'completed',admin_actd_tx_add:'Logged a record',admin_actd_receipt_scan:'Scanned a receipt/slip',admin_actd_maya_ask:'Asked Maya and got an answer',admin_actd_bank_add:'Added a bank account',admin_actd_budget_set:'Set a category budget',admin_actd_debt_add:'Added a debt',admin_acq_note:'Channels tied to real accounts — tracking started 1 Sep 2026; accounts created before that have no data here',admin_acq_signups:'signed up',admin_acq_still:'still active',share_app_btn:'Share with friends',line_connect_btn:'Connect LINE',line_connected_btn:'LINE Connected',line_notfriend_title:'Bot not added as a friend yet',line_notfriend_desc:'Your account is linked, but LINE can\'t deliver notifications until you add MoneyMind as a friend',line_notfriend_add:'Add as friend',line_notfriend_recheck:'Check again',line_notfriend_qr:'On desktop? Scan the QR with your phone',share_app_message:'Check out the finance app I\'ve been using — AI receipt scanning, built-in tax calculator, records income/expenses in seconds. Free to use.',share_link_copied:'App link copied!',
     sync_not_synced:'Not synced yet',sync_force_title:'Force sync to cloud',uploaded:'Uploaded',loaded_from_cloud:'Loaded from Cloud',no_cloud_data:'No data in Cloud',no_recoverable_data:'No recoverable data found',synced_new_device:'Loaded new data from another device ☁️',db_size_warn:'Your data is nearing the system limit (Firestore 1MB/account). Recommend exporting old data and deleting unneeded items in Settings, or cross-device sync may fail',cloud_load_failed:'Failed to load from cloud',new_data_from_device:'New data from another device ☁️ (will load after closing this form)',synced_from_device:'Synced from another device ☁️',uploaded_to_cloud:'Uploaded data to Cloud',recover_success:'Data recovered successfully ✓',welcome_username:'Welcome! Username',relogin_for_sync:'Please log out and log back in once to enable data sync (security update)',
     port_need_name:'Please enter a portfolio name',port_edited:'Portfolio edited',port_created:'New portfolio created',port_confirm_delete:'Delete this portfolio? Its investments will move to "Unassigned Portfolio"',port_not_found_or_unlinked:'Portfolio not found or not linked to a goal',port_saving_goal_not_found:'Linked savings goal not found',port_sent_to_saving:'Sent {amt} to "{name}"',
     inv_need_name_first:'Please enter a name/ticker first',inv_fetching:'Fetching',inv_price:'Price',inv_fetch_price_failed:'Failed to fetch price',inv_updating_price:'Updating price for',inv_update_failed:'Update failed',inv_edit:'Edit Investment',inv_need_name:'Please enter a name',inv_need_qty:'Please enter a quantity',inv_need_buyprice:'Please enter a buy price',inv_added:'Investment added',inv_confirm_delete:'Delete this investment?',inv_field_type:'Type',inv_field_linked_debt:'Link to Mortgage (optional)',inv_no_linked_debt:'Not linked',inv_linked_debt_hint:'If selected, equity = value − remaining loan balance is calculated automatically',inv_equity:'Equity:',inv_equity_hint:'Equity = value − remaining balance of the linked loan',
@@ -5546,6 +5559,7 @@ function nav(page){
   document.getElementById('page-title').textContent=PAGE_TITLE[page];
   curPage=page;
   renderPage(page);
+  _updateAddFab();
   // นับว่าหน้าไหนในแอปถูกเปิดจริง (ยอดรวมล้วน ไม่ผูกกับบัญชี — ดู privacy.html)
   // ตอบคนละคำถามกับ "ฟีเจอร์ไหนมีข้อมูล": เปิดเยอะแต่ไม่มีข้อมูล = น่าสนใจแต่ใช้ยาก
   try{ if(window.__mmPage) window.__mmPage('/app/'+page); }catch(e){}
@@ -5557,6 +5571,21 @@ function nav(page){
   if(window._isAndroidApp && window.AndroidBridge) window.AndroidBridge.onPageChanged();
 }
 
+// ปุ่ม + ลอย: โชว์เฉพาะมือถือและหน้าที่ไม่มีปุ่มเพิ่มรายการของตัวเอง (dashboard/transactions มีอยู่แล้ว)
+function _updateAddFab(){
+  const b=document.getElementById('add-fab'); if(!b) return;
+  b.classList.toggle('on',!!currentUser&&!['dashboard','transactions','admin','aiusage','learn'].includes(curPage));
+}
+// คีย์ลัด N = เปิดฟอร์มเพิ่มรายการ (เมื่อไม่ได้พิมพ์อยู่ในช่องกรอกและไม่มี modal เปิด)
+document.addEventListener('keydown',function(e){
+  if(e.key!=='n'&&e.key!=='N') return;
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  if(!currentUser) return;
+  const t=document.activeElement; if(t&&(['INPUT','TEXTAREA','SELECT'].includes(t.tagName)||t.isContentEditable)) return;
+  if(document.querySelector('.overlay.show,.plan-modal-bg.active,.modal-bg.active')) return;
+  if(typeof _appLocked!=='undefined'&&_appLocked) return;
+  e.preventDefault(); openTxModal({type:'expense'});
+});
 function renderPage(p){
   if(p==='dashboard') renderDash();
   else if(p==='transactions') renderTx();
@@ -6188,8 +6217,34 @@ function openTxModal(pre=null){
   setTxType(pre?.type||'income');
   _populateTxBankDropdown();
   if(pre){ document.getElementById('tx-amt').value=pre.amount||''; document.getElementById('tx-desc').value=pre.desc||''; document.getElementById('tx-date').value=pre.date||new Date().toISOString().split('T')[0]; if(pre.cat) setTimeout(()=>document.getElementById('tx-cat').value=pre.cat,10); }
+  _fillTxDescList();
   openM('m-tx');
-  setTimeout(()=>document.getElementById('tx-amt').focus(),200);
+  // 2026-09-19: บน iOS การ focus จากโค้ด (ไม่ได้มาจาก gesture) ไม่ดึงคีย์บอร์ดขึ้น — ฟอร์มที่เปิดให้เองครั้งแรก
+  // จะเป็นช่องว่างเปล่าไม่มีแป้นพิมพ์ ให้โชว์คำใบ้แทนการ focus
+  const _iosAuto=!!(pre&&pre.auto)&&/iP(hone|ad|od)/.test(navigator.userAgent);
+  const _hint=document.getElementById('tx-ios-hint'); if(_hint) _hint.style.display=_iosAuto?'block':'none';
+  if(!_iosAuto) setTimeout(()=>document.getElementById('tx-amt').focus(),200);
+}
+// Enter ในช่องจำนวนเงิน/รายละเอียด = บันทึก (เดิมต้องเลื่อนไปกดปุ่มเท่านั้น; แป้นตัวเลขมือถือกด "เสร็จ" แล้วไม่เกิดอะไร)
+function txEnterKey(e){ if(e.key==='Enter'){ e.preventDefault(); saveTx(); } }
+// รายละเอียดที่เคยพิมพ์ 30 รายการล่าสุด (ไม่ซ้ำ, ไม่นับที่เท่ากับชื่อหมวด) เป็น datalist ให้เลือกซ้ำได้เร็ว
+function _fillTxDescList(){
+  const dl=document.getElementById('tx-desc-list'); if(!dl) return;
+  const seen=new Set(); const out=[];
+  const txs=(DB.transactions||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  for(const t of txs){
+    const d=(t.description||'').trim(); if(!d||seen.has(d)) continue;
+    if(d===getCat(t.category,t.type).label) continue;
+    seen.add(d); out.push(d); if(out.length>=30) break;
+  }
+  dl.innerHTML=out.map(d=>'<option value="'+_escHtml(d)+'"></option>').join('');
+}
+// หมวดที่ใช้บ่อย 60 วันล่าสุดของประเภทนี้ (สูงสุด 5) — ใส่ไว้บนสุดของ select และเป็นค่าเริ่มต้นแทน "อาหาร" เสมอ
+function _frequentCats(dbType,limit){
+  const cutoff=new Date(Date.now()-60*86400000).toISOString().slice(0,10);
+  const cnt={};
+  (DB.transactions||[]).forEach(t=>{ if(t.type===dbType&&(t.date||'')>=cutoff&&t.category&&t.category!=='save_tx') cnt[t.category]=(cnt[t.category]||0)+1; });
+  return Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,limit||5);
 }
 
 function editTx(id){
@@ -6262,7 +6317,11 @@ function setTxType(type,btn){
   else document.querySelector('#m-tx .type-btn.'+(dbType==='income'?'inc':'exp'))?.classList.add('active');
   const cats=dbType==='income'?INC_CATS:EXP_CATS;
   const customCats=dbType==='income'?(DB.settings?.customIncCats||[]):(DB.settings?.customExpCats||[]);
-  document.getElementById('tx-cat').innerHTML=cats.map(c=>`<option value="${c.id}">${catLabel(c)}</option>`).join('')+(customCats.length?`<optgroup label="— ${tr('my_categories')} —">`+customCats.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')+'</optgroup>':'');
+  const _allCats=cats.concat(customCats);
+  const _freq=_frequentCats(dbType,5).map(id=>_allCats.find(c=>c.id===id)).filter(Boolean);
+  const _freqHtml=_freq.length?`<optgroup label="★ ${tr('tx_frequent_cats')}">`+_freq.map(c=>`<option value="${c.id}">${c.label?_escHtml(c.label):catLabel(c)}</option>`).join('')+'</optgroup>':'';
+  document.getElementById('tx-cat').innerHTML=_freqHtml+cats.map(c=>`<option value="${c.id}">${catLabel(c)}</option>`).join('')+(customCats.length?`<optgroup label="— ${tr('my_categories')} —">`+customCats.map(c=>`<option value="${c.id}">${_escHtml(c.label)}</option>`).join('')+'</optgroup>':'');
+  if(_freq.length) document.getElementById('tx-cat').value=_freq[0].id; // ค่าเริ่มต้น = หมวดที่ใช้บ่อยสุด (เดิม = ตัวแรกของลิสต์เสมอ)
   if(isSaving) setTimeout(()=>{ document.getElementById('tx-cat').value='save_tx'; },0);
   document.getElementById('carryover-row').style.display=dbType==='income'?'block':'none';
   if(dbType!=='income') document.getElementById('tx-carryover').checked=false;
@@ -6331,7 +6390,7 @@ function saveTx(){
   const isSavMode=cat==='save_tx'||(DB.settings?.savingExpCats||[]).includes(cat);
   const bankId=isSavMode?(document.getElementById('tx-save-src')?.value||''):(document.getElementById('tx-bank')?.value||'');
   const savingDestBankId=isSavMode?(document.getElementById('tx-save-dst')?.value||''):'';
-  if(!amt||amt<=0){ toast(tr('scan_need_amount'),'error'); return; }
+  if(!amt||amt<=0){ toast(tr('tx_need_amount'),'error'); document.getElementById('tx-amt').focus(); return; }
   if(!date){ toast(tr('scan_select_date'),'error'); return; }
   const currencyInfo=curSel!=='THB'?{currency:curSel,origAmount}:{};
   const fixedVal=document.getElementById('tx-fixed-val')?.value;
@@ -6353,7 +6412,7 @@ function saveTx(){
     toast(tr('edited'),'success');
   } else {
     DB.transactions.push({id:uid(),...obj});
-    toast(carryover?'เพิ่มรายการและตั้งเป็นงบเดือนหน้าแล้ว':'เพิ่มรายการแล้ว','success');
+    toast(carryover?tr('tx_added_carry'):tr('tx_added'),'success');
   }
   if(bankId) _adjustBankBalance(bankId, type, amt);
   if(savingDestBankId) _adjustBankBalance(savingDestBankId, 'income', amt);
@@ -6378,14 +6437,23 @@ function _maybeAskReview(){
   }catch(e){}
 }
 
+// 2026-09-19: ลบทันทีแล้วให้ "เลิกทำ" 6 วิ แทน confirm() ของระบบ (ภาษาไทยล้วน, กดพลาดแล้วกู้ไม่ได้)
 function delTx(id){
-  if(!confirm('ต้องการลบรายการนี้?')) return;
-  const tx=DB.transactions.find(t=>t.id===id);
-  if(tx?.bankId) _adjustBankBalance(tx.bankId, tx.type, tx.amount, true); // ย้อนยอดธนาคาร
-  if(tx?.savingDestBankId) _adjustBankBalance(tx.savingDestBankId, 'income', tx.amount, true); // ย้อนปลายทาง
+  const tx=DB.transactions.find(t=>t.id===id); if(!tx) return;
+  if(tx.bankId) _adjustBankBalance(tx.bankId, tx.type, tx.amount, true); // ย้อนยอดธนาคาร
+  if(tx.savingDestBankId) _adjustBankBalance(tx.savingDestBankId, 'income', tx.amount, true); // ย้อนปลายทาง
   _markDeleted('transactions',id);
   DB.transactions=DB.transactions.filter(t=>t.id!==id);
-  saveDB(); renderPage(curPage); toast(tr('deleted'),'info');
+  saveDB(); renderPage(curPage);
+  toast(tr('deleted'),'info',6000,{action:{label:tr('undo_btn'),fn:function(){ _undoDelTx(tx); }}});
+}
+function _undoDelTx(tx){
+  if(!tx||DB.transactions.some(t=>t.id===tx.id)) return;
+  _unmarkDeleted('transactions',tx.id);
+  DB.transactions.push(tx);
+  if(tx.bankId) _adjustBankBalance(tx.bankId, tx.type, tx.amount);
+  if(tx.savingDestBankId) _adjustBankBalance(tx.savingDestBankId, 'income', tx.amount);
+  saveDB(); renderPage(curPage); toast(tr('undo_done'),'success');
 }
 
 // ══════════════════════════════════════════
@@ -7015,8 +7083,8 @@ function saveSav(){
   saveDB(); closeM('m-sav'); renderSavings();
 }
 
-function delSav(id){
-  if(!confirm('ต้องการลบเป้าหมายนี้?')) return;
+async function delSav(id){
+  if(!await mmConfirm(tr('sav_confirm_delete'),{danger:true})) return;
   _markDeleted('savings',id); DB.savings=DB.savings.filter(s=>s.id!==id); saveDB(); renderSavings(); toast(tr('deleted'),'info');
 }
 
@@ -7137,8 +7205,8 @@ function saveDebt(){
   try{ if(window.__mmAct) window.__mmAct('debt_add'); }catch(e){}
 }
 
-function delDebt(id){
-  if(!confirm(tr('debt_confirm_delete'))) return;
+async function delDebt(id){
+  if(!await mmConfirm(tr('debt_confirm_delete'),{danger:true})) return;
   _markDeleted('debts',id); DB.debts=DB.debts.filter(d=>d.id!==id); saveDB(); renderDebts(); toast(tr('deleted'),'info');
 }
 
@@ -7213,8 +7281,8 @@ function savePort(){
   saveDB(); closeModal('port-modal-bg'); renderInv();
   toast(idx>=0?tr('port_edited'):tr('port_created'),'success');
 }
-function deletePort(id){
-  if(!confirm(tr('port_confirm_delete'))) return;
+async function deletePort(id){
+  if(!await mmConfirm(tr('port_confirm_delete'),{danger:true})) return;
   DB.portfolios=getPortfolios().filter(p=>p.id!==id);
   DB.investments.forEach(i=>{ if(i.portId===id) i.portId=null; });
   saveDB(); openPortModal(); renderInv();
@@ -7706,8 +7774,8 @@ async function saveInv(){
   saveDB(); closeM('m-inv'); renderInv();
 }
 
-function delInv(id){
-  if(!confirm(tr('inv_confirm_delete'))) return;
+async function delInv(id){
+  if(!await mmConfirm(tr('inv_confirm_delete'),{danger:true})) return;
   _markDeleted('investments',id); DB.investments=DB.investments.filter(i=>i.id!==id); saveDB(); renderInv(); toast(tr('deleted'),'info');
 }
 
@@ -7893,8 +7961,8 @@ function saveDcaPlan(){
   saveDB(); closeM('m-dca-plan'); renderDcaView();
 }
 
-function deleteDcaPlan(id){
-  if(!confirm(tr('dca_confirm_delete'))) return;
+async function deleteDcaPlan(id){
+  if(!await mmConfirm(tr('dca_confirm_delete'),{danger:true})) return;
   _markDeleted('dcaPlans',id); DB.dcaPlans=getDcaPlans().filter(p=>p.id!==id);
   saveDB(); renderDcaView(); toast(tr('dca_plan_deleted'),'info');
 }
@@ -8294,8 +8362,8 @@ function saveBank(){
   try{ if(window.__mmAct) window.__mmAct('bank_add'); }catch(e){}
 }
 
-function deleteBank(id){
-  if(!confirm(tr('bank_confirm_delete'))) return;
+async function deleteBank(id){
+  if(!await mmConfirm(tr('bank_confirm_delete'),{danger:true})) return;
   DB.banks=getBanks().filter(b=>b.id!==id);
   saveDB(); renderBanks(); renderDashBanks(); toast(tr('deleted'),'info');
 }
@@ -8513,9 +8581,9 @@ function importData(){
   inp.click();
 }
 
-function clearAll(){
-  if(!confirm(tr('clear_all_confirm1'))) return;
-  if(!confirm(tr('clear_all_confirm2'))) return;
+async function clearAll(){
+  if(!await mmConfirm(tr('clear_all_confirm1'),{danger:true})) return;
+  if(!await mmConfirm(tr('clear_all_confirm2'),{danger:true})) return;
   // tombstone ทุก id ก่อนล้าง — ไม่งั้นเครื่องอื่นที่ยังถือข้อมูลอยู่จะ sync กลับมาทั้งหมด (ดู _markDeleted)
   _MERGE_ARRAY_FIELDS.forEach(function(f){ (Array.isArray(DB[f])?DB[f]:[]).forEach(function(i){ if(i&&i.id!=null) _markDeleted(f,i.id); }); });
   const _tombs=DB._deleted;
@@ -8529,11 +8597,36 @@ function clearAll(){
 function openM(id){ document.getElementById(id).classList.add('show'); }
 function closeM(id){ document.getElementById(id).classList.remove('show'); _flushPendingSync(); }
 
+// ── confirm แบบของแอป (2026-09-19) — แทน window.confirm ที่เป็นกล่องระบบภาษาไทยล้วน/แปลไม่ได้ ──
+// ใช้: const ok=await mmConfirm(tr('...'),{ok:tr('delete'),danger:true});
+let _mmConfirmResolve=null;
+function mmConfirm(msg,opts){
+  opts=opts||{};
+  const ov=document.getElementById('m-confirm'); if(!ov) return Promise.resolve(window.confirm(msg));
+  document.getElementById('mm-confirm-msg').textContent=msg;
+  const okBtn=document.getElementById('mm-confirm-ok'), cancelBtn=document.getElementById('mm-confirm-cancel');
+  okBtn.textContent=opts.ok||tr('confirm_ok'); cancelBtn.textContent=opts.cancel||tr('cancel');
+  okBtn.className='btn '+(opts.danger?'btn-danger':'btn-primary');
+  return new Promise(res=>{ _mmConfirmResolve=res; ov.classList.add('show'); setTimeout(()=>okBtn.focus(),50); });
+}
+function _mmConfirmDone(v){ const ov=document.getElementById('m-confirm'); if(ov) ov.classList.remove('show'); const r=_mmConfirmResolve; _mmConfirmResolve=null; if(r) r(v); }
+// ฟอร์มบันทึกรายการมีข้อมูลค้าง → ปิดด้วยการแตะนอกกรอบ/Esc ต้องถามก่อน (เดิมทิ้งที่พิมพ์ทันที)
+function _txFormDirty(){ if(editTxId) return false; const a=document.getElementById('tx-amt'); return !!(a&&a.value); }
+function _tryCloseOverlay(ov){
+  if(ov.id==='m-confirm'){ _mmConfirmDone(false); return; }
+  if(ov.id==='m-tx'&&_txFormDirty()){ mmConfirm(tr('tx_discard_confirm'),{ok:tr('tx_discard_ok'),danger:true}).then(ok=>{ if(ok) closeM('m-tx'); }); return; }
+  ov.classList.remove('show');
+}
 document.querySelectorAll('.overlay').forEach(ov=>{
-  ov.addEventListener('click',e=>{ if(e.target===ov) ov.classList.remove('show'); });
+  ov.addEventListener('click',e=>{ if(e.target===ov) _tryCloseOverlay(ov); });
 });
 
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.overlay.show').forEach(o=>o.classList.remove('show')); });
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape') return;
+  const open=Array.from(document.querySelectorAll('.overlay.show'));
+  if(!open.length) return;
+  _tryCloseOverlay(open[open.length-1]); // ปิดทีละชั้น จากบนสุด
+});
 
 // ══════════════════════════════════════════
 //  TOAST
@@ -8544,9 +8637,15 @@ function toast(msg,type='info',duration=3000,opts){
   const colors={success:'var(--green)',error:'var(--red)',info:'var(--blue)'};
   const el=document.createElement('div'); el.className=`toast ${type}`;
   const body=(opts&&opts.html)?String(msg):_escHtml(msg==null?'':msg);
-  el.innerHTML=`<i class="fas ${icons[type]}" style="color:${colors[type]}"></i> ${body}`;
+  el.innerHTML=`<i class="fas ${icons[type]}" style="color:${colors[type]}"></i> <span>${body}</span>`;
+  if(opts&&opts.action&&typeof opts.action.fn==='function'){ // ปุ่มใน toast เช่น "เลิกทำ" หลังลบ
+    const b=document.createElement('button'); b.className='toast-act'; b.textContent=opts.action.label||tr('undo_btn');
+    b.onclick=function(ev){ ev.stopPropagation(); try{ opts.action.fn(); }finally{ el.remove(); } };
+    el.appendChild(b);
+  }
   document.getElementById('toasts').appendChild(el);
-  setTimeout(()=>{ el.style.animation='tIn .3s ease reverse'; setTimeout(()=>el.remove(),300); },duration);
+  setTimeout(()=>{ if(!el.isConnected) return; el.style.animation='tIn .3s ease reverse'; setTimeout(()=>el.remove(),300); },duration);
+  return el;
 }
 
 // ══════════════════════════════════════════
@@ -10803,8 +10902,8 @@ function saveCustomCat(){
   saveDB(); closeM('m-customcat'); renderSettings(); toast(tr('customcat_saved'),'success');
 }
 
-function deleteCustomCat(id){
-  if(!confirm(tr('customcat_confirm_delete'))) return;
+async function deleteCustomCat(id){
+  if(!await mmConfirm(tr('customcat_confirm_delete'),{danger:true})) return;
   DB.settings.customIncCats=(DB.settings.customIncCats||[]).filter(c=>c.id!==id);
   DB.settings.customExpCats=(DB.settings.customExpCats||[]).filter(c=>c.id!==id);
   saveDB(); renderSettings(); toast(tr('deleted'),'info');
@@ -10896,8 +10995,8 @@ function saveRecur(){
   toast(tr('saved'),'success');
 }
 
-function deleteRecur(id){
-  if(!confirm(tr('recur_confirm_delete'))) return;
+async function deleteRecur(id){
+  if(!await mmConfirm(tr('recur_confirm_delete'),{danger:true})) return;
   DB.recurringTx=getRecurs().filter(r=>r.id!==id);
   saveDB(); renderRecurring();
 }
@@ -11330,14 +11429,14 @@ function maybeAutoSnapshot(){
   if(list.length && list[list.length-1].dateKey===today) return;
   createSnapshot('auto');
 }
-function deleteSnapshot(id){
-  if(!confirm(tr('snap_confirm_delete'))) return;
+async function deleteSnapshot(id){
+  if(!await mmConfirm(tr('snap_confirm_delete'),{danger:true})) return;
   _saveSnapshots(getSnapshots().filter(s=>s.id!==id));
   renderSnapshotList();
 }
-function restoreSnapshot(id){
+async function restoreSnapshot(id){
   const snap=getSnapshots().find(s=>s.id===id); if(!snap) return;
-  if(!confirm(tr('snap_confirm_restore'))) return;
+  if(!await mmConfirm(tr('snap_confirm_restore'),{danger:true})) return;
   createSnapshot('pre-restore'); // เก็บสถานะปัจจุบันไว้ก่อน เผื่อกู้คืนผิดจุดจะได้ย้อนกลับมาได้อีกที
   try{
     DB=JSON.parse(snap.db);
@@ -11796,8 +11895,8 @@ async function _finishPinSetup(){
   saveDB(); closeM('m-pin-setup'); renderSettings();
   toast(tr('pin_set_success'),'success');
 }
-function clearPin(){
-  if(!confirm(tr('pin_confirm_delete'))) return;
+async function clearPin(){
+  if(!await mmConfirm(tr('pin_confirm_delete'),{danger:true})) return;
   delete DB.settings.pinHash; delete DB.settings.pinSalt; saveDB(); renderPinSettings();
   toast(tr('pin_deleted'),'info');
 }
@@ -13079,8 +13178,8 @@ function addOTLog(){
   toast(tr('ot_added_hours').replace('{n}',hours),'success');
 }
 
-function deleteOTLog(id){
-  if(!confirm(tr('ot_confirm_delete'))) return;
+async function deleteOTLog(id){
+  if(!await mmConfirm(tr('ot_confirm_delete'),{danger:true})) return;
   DB.otLogs=(DB.otLogs||[]).filter(function(l){ return l.id!==id; });
   saveDB(); renderOT(); toast(tr('deleted'),'info');
 }
@@ -13185,6 +13284,28 @@ window._txSimpleMode=false;
     var bankRow=document.getElementById('tx-bank-row'); if(bankRow&&simple) bankRow.style.display='none';
     var fixedRow=document.getElementById('tx-fixed-row'); if(fixedRow&&simple) fixedRow.style.display='none';
     var splitBtn=document.getElementById('tx-split-btn'); if(splitBtn&&simple) splitBtn.style.display='none';
+    var modal=document.querySelector('#m-tx .modal'); if(modal) modal.classList.toggle('tx-simple',simple); // ซ่อน ⓘ ทั้ง 10 อันในโหมดง่าย
+    var nextBtn=document.getElementById('tx-save-next-btn'); if(nextBtn) nextBtn.style.display=(simple||editTxId)?'none':'';
+    // ครั้งแรกที่พ้นโหมดง่าย (ครบ 3 รายการ) ฟอร์มโตจาก 4 ช่องเป็น ~10 ช่องแบบไม่บอก — อธิบายครั้งเดียว
+    if(!simple&&!editTxId){
+      var ob=_onbCfg();
+      if(ob.seededAt&&!ob.fullFormExplained&&(DB.transactions||[]).length>=3&&(DB.transactions||[]).length<8){
+        ob.fullFormExplained=true; try{ saveDB(); }catch(e){}
+        toast(tr('tx_full_form_unlocked'),'info',6000);
+      }
+    }
+  };
+})();
+// "บันทึกแล้วเพิ่มต่อ" — wrap หลัง patch ทุกชั้นของ saveTx (tags/split): บันทึกสำเร็จแล้วเปิดฟอร์มใหม่ประเภทเดิมทันที
+(function(){
+  var _origSaveTxNext=saveTx;
+  saveTx=function(){
+    var next=!!window._txSaveAndNext; window._txSaveAndNext=false;
+    var before=(DB.transactions||[]).length, wasEdit=!!editTxId;
+    var uiType=document.querySelector('#m-tx .type-btn.sav.active')?'saving':document.getElementById('tx-type').value;
+    var r=_origSaveTxNext.apply(this,arguments);
+    if(next&&!wasEdit&&(DB.transactions||[]).length>before) setTimeout(function(){ openTxModal({type:uiType}); },150);
+    return r;
   };
 })();
 
@@ -13561,9 +13682,9 @@ function saveIns(){
   else { o.id='ins_'+Date.now(); list.push(o); }
   saveDB(); closeM('m-ins'); renderInsurance(); toast(tr('ins_saved'),'success');
 }
-function deleteIns(){
+async function deleteIns(){
   var id=document.getElementById('ins-eid').value; if(!id) return;
-  if(!confirm(tr('ins_confirm_delete'))) return;
+  if(!await mmConfirm(tr('ins_confirm_delete'),{danger:true})) return;
   _markDeleted('insurance',id); DB.insurance=getIns().filter(function(x){return x.id!==id;});
   saveDB(); closeM('m-ins'); renderInsurance();
 }
@@ -13953,9 +14074,9 @@ function saveLineNotifPref(field, checked){
   saveDB();
 }
 
-function lineDisconnectAccount(){
+async function lineDisconnectAccount(){
   if(!currentUser||!_fs) return;
-  if(!confirm('ยกเลิกการเชื่อมต่อ LINE? คุณจะไม่ได้รับการแจ้งเตือนผ่าน LINE อีก')) return;
+  if(!await mmConfirm('ยกเลิกการเชื่อมต่อ LINE? คุณจะไม่ได้รับการแจ้งเตือนผ่าน LINE อีก',{danger:true})) return;
   _fs.collection('members').doc(currentUser).update({lineUserId:firebase.firestore.FieldValue.delete()})
     .then(function(){
       toast('ยกเลิกการเชื่อมต่อ LINE แล้ว','success');
@@ -14074,7 +14195,7 @@ async function doUsernameChange(){
   var localUsers = getUsers();
   if(localUsers.find(function(u){ return u.username===newUser; })){ setMsg('ชื่อนี้ถูกใช้งานแล้วบนเครื่องนี้','#ef4444'); return; }
   if(!_fs || !_auth || !_auth.currentUser){ setMsg('ยังไม่ได้เชื่อมต่อ Cloud กรุณาลองใหม่หรือเข้าสู่ระบบใหม่อีกครั้ง','#ef4444'); return; }
-  if(!confirm('เปลี่ยนชื่อผู้ใช้เป็น "'+newUser+'"?\n\nระบบจะออกจากระบบให้คุณเข้าสู่ระบบใหม่ด้วยชื่อนี้ กรุณาจำชื่อใหม่ไว้ให้ดี — ไม่สามารถยกเลิกได้')) return;
+  if(!await mmConfirm('เปลี่ยนชื่อผู้ใช้เป็น "'+newUser+'"?\n\nระบบจะออกจากระบบให้คุณเข้าสู่ระบบใหม่ด้วยชื่อนี้ กรุณาจำชื่อใหม่ไว้ให้ดี — ไม่สามารถยกเลิกได้',{danger:true})) return;
 
   if(btn){ btn.disabled=true; btn.style.opacity='.5'; }
   window._usernameRenameInProgress = true;
@@ -16198,8 +16319,8 @@ function saveSub(){
   toast(tr('saved'),'success');
 }
 
-function deleteSub(id){
-  if(!confirm('ลบ subscription นี้?')) return;
+async function deleteSub(id){
+  if(!await mmConfirm(tr('sub_confirm_delete'),{danger:true})) return;
   _markDeleted('subscriptions',id); DB.subscriptions=getSubs().filter(function(s){return s.id!==id;});
   saveDB(); renderSubscriptions();
 }
@@ -16977,9 +17098,9 @@ function applyBulkCat(){
   toast(tr('bulk_changed_n').replace('{n}',n),'success');
 }
 
-function bulkDelete(){
+async function bulkDelete(){
   if(!_bulkSel.size) return;
-  if(!confirm(tr('bulk_confirm_delete').replace('{n}',_bulkSel.size))) return;
+  if(!await mmConfirm(tr('bulk_confirm_delete').replace('{n}',_bulkSel.size),{danger:true})) return;
   const n=_bulkSel.size;
   _bulkSel.forEach(function(id){ _markDeleted('transactions',id); });
   DB.transactions=DB.transactions.filter(t=>!_bulkSel.has(t.id));
@@ -18526,21 +18647,19 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
     ov.innerHTML=`
     <div style="background:#0f1117;border:1px solid rgba(167,139,250,.25);border-radius:24px 24px 0 0;padding:28px 24px 32px;max-width:560px;width:100%;box-shadow:0 -20px 60px rgba(0,0,0,.5)">
       <div style="width:40px;height:4px;border-radius:4px;background:rgba(255,255,255,.15);margin:0 auto 20px"></div>
-      <div style="font-size:18px;font-weight:800;margin-bottom:6px">🔒 นโยบายความเป็นส่วนตัว</div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:6px">🔒 ${tr('pdpa_title')}</div>
       <div style="font-size:13px;color:#94a3b8;line-height:1.7;margin-bottom:20px">
-        MoneyMind เก็บข้อมูลการเงินส่วนตัวของคุณ (รายรับ-รายจ่าย, เงินออม, หนี้สิน ฯลฯ)
-        ไว้บน <strong style="color:#e2e8f0">Firebase Cloud</strong> ที่เข้ารหัสและเข้าถึงได้เฉพาะบัญชีของคุณเท่านั้น
-        เราไม่เปิดเผยข้อมูลให้บุคคลภายนอก ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล (PDPA) พ.ศ. 2562
+        ${tr('pdpa_body')}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;font-size:11px;color:#64748b">
-        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px;text-align:center"><i class="fas fa-lock" style="color:#a78bfa;font-size:16px;margin-bottom:6px;display:block"></i>เข้ารหัสทั้งหมด</div>
-        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px;text-align:center"><i class="fas fa-user-shield" style="color:#10b981;font-size:16px;margin-bottom:6px;display:block"></i>เฉพาะบัญชีคุณ</div>
-        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px;text-align:center"><i class="fas fa-ban" style="color:#06b6d4;font-size:16px;margin-bottom:6px;display:block"></i>ไม่ขายข้อมูล</div>
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px;text-align:center"><i class="fas fa-lock" style="color:#a78bfa;font-size:16px;margin-bottom:6px;display:block"></i>${tr('pdpa_f1')}</div>
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px;text-align:center"><i class="fas fa-user-shield" style="color:#10b981;font-size:16px;margin-bottom:6px;display:block"></i>${tr('pdpa_f2')}</div>
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px;text-align:center"><i class="fas fa-ban" style="color:#06b6d4;font-size:16px;margin-bottom:6px;display:block"></i>${tr('pdpa_f3')}</div>
       </div>
       <button id="pdpa-accept" style="width:100%;background:linear-gradient(135deg,#7c3aed,#6366f1);border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:Sarabun,sans-serif;transition:opacity .2s">
-        ยอมรับและดำเนินการต่อ
+        ${tr('pdpa_accept')}
       </button>
-      <div style="text-align:center;margin-top:12px;font-size:11px;color:#475569">การใช้งานถือว่าคุณยอมรับ <a href="privacy.html" style="color:#a78bfa">นโยบายความเป็นส่วนตัว</a> และ <a href="terms.html" style="color:#a78bfa">ข้อกำหนดการใช้งาน</a></div>
+      <div style="text-align:center;margin-top:12px;font-size:11px;color:#475569">${tr('pdpa_foot')} <a href="privacy.html" target="_blank" style="color:#a78bfa">${tr('privacy_policy')}</a></div>
     </div>`;
     document.body.appendChild(ov);
     document.getElementById('pdpa-accept').onclick=function(){
@@ -18549,12 +18668,12 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
       ov.style.transition='opacity .3s';
       setTimeout(()=>ov.remove(),300);
       // Onboard รอให้ยอมรับ PDPA ก่อนค่อยเปิดฟอร์มบันทึกรายการแรก (sheet นี้ z 99999 ทับ modal z 1000)
-      if(window._onbOpenAfterPdpa){ window._onbOpenAfterPdpa=false; setTimeout(function(){ try{ openTxModal({type:'expense'}); }catch(e){} },400); }
+      if(window._onbOpenAfterPdpa){ window._onbOpenAfterPdpa=false; setTimeout(function(){ try{ openTxModal({type:'expense',auto:true}); }catch(e){} },400); }
     };
   }
-  // แสดงหลัง DOM load เล็กน้อย
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(showPdpa,800));
-  else setTimeout(showPdpa,800);
+  // 2026-09-19: เดิมเด้งตอน DOMContentLoaded+800ms = สิ่งแรกที่คนแปลกหน้าเห็นบนหน้า login คือกล่องกฎหมาย
+  // ก่อนจะได้ตัดสินใจสมัครด้วยซ้ำ (ภาษาไทยล้วน) — ย้ายไปเด้งหลังเข้าแอปสำเร็จ (ดู _enterAppReal) ยังก่อนบันทึกข้อมูลใดๆ
+  window._showPdpaIfNeeded=function(){ setTimeout(showPdpa,800); };
 })();
 
 // ══════════════════════════════════════════
@@ -18669,7 +18788,7 @@ function renderOnboardCard(){
     c.autoOpened=true;
     try{ saveDB(); }catch(e){}
     var pdpaOk=true; try{ pdpaOk=!!localStorage.getItem('mm_pdpa_v1'); }catch(e){}
-    if(pdpaOk) setTimeout(function(){ try{ if(typeof openTxModal==='function') openTxModal({type:'expense'}); }catch(e){} },600);
+    if(pdpaOk) setTimeout(function(){ try{ if(typeof openTxModal==='function') openTxModal({type:'expense',auto:true}); }catch(e){} },600);
     else window._onbOpenAfterPdpa=true; // ให้ปุ่มยอมรับ PDPA เป็นคนเปิดแทน
   }
 
@@ -19777,8 +19896,8 @@ function saveTripLog(){
   _tripLogSyncPin(place,province,country,visited).then(function(){ if(curPage==='travel') renderTravel(); });
 }
 
-function deleteTripLog(id){
-  if(!confirm(tr('travel_journal_confirm_delete'))) return;
+async function deleteTripLog(id){
+  if(!await mmConfirm(tr('travel_journal_confirm_delete'),{danger:true})) return;
   DB.travel.tripLogs=(DB.travel.tripLogs||[]).filter(function(x){return x.id!==id;});
   saveDB();
   if(curPage==='travel') renderTravel();
@@ -19969,8 +20088,8 @@ function saveFavStock(){
   toast(tr('favstock_saved'),'success');
 }
 
-function removeFavStock(id){
-  if(!confirm(tr('favstock_confirm_delete'))) return;
+async function removeFavStock(id){
+  if(!await mmConfirm(tr('favstock_confirm_delete'),{danger:true})) return;
   DB.favStocks=_getFavStocks().filter(function(f){return f.id!==id;});
   saveDB();
   if(curPage==='investments') renderInv();
@@ -20580,6 +20699,17 @@ function closeFieldHint(){ const el=document.getElementById('_fieldHintTip'); if
 
 </script>
 
+<!-- App-styled confirm (2026-09-19) — ดู mmConfirm() -->
+<div id="m-confirm" class="overlay" style="z-index:1200">
+  <div class="modal" style="max-width:360px">
+    <div id="mm-confirm-msg" style="font-size:14px;line-height:1.6;white-space:pre-line;margin-bottom:16px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" id="mm-confirm-cancel" onclick="_mmConfirmDone(false)">ยกเลิก</button>
+      <button class="btn btn-primary" id="mm-confirm-ok" onclick="_mmConfirmDone(true)">ตกลง</button>
+    </div>
+  </div>
+</div>
+
 <!-- Archive old transactions (2026-09-19) -->
 <div id="m-archive" class="overlay" onclick="if(event.target===this)closeM('m-archive')">
   <div class="modal" style="max-width:420px">
@@ -20763,6 +20893,7 @@ function closeFieldHint(){ const el=document.getElementById('_fieldHintTip'); if
 </div>
 
 <!-- AI Chat FAB + Panel -->
+<button class="add-fab" id="add-fab" onclick="openTxModal({type:'expense'})" title="เพิ่มรายการ" data-i18n-title="tx_add_item" aria-label="เพิ่มรายการ"><i class="fas fa-plus"></i></button>
 <button class="chat-fab" onclick="toggleChat()" title="ถามผู้ช่วย AI" data-i18n-title="chat_ask_ai">
   <i class="fas fa-robot"></i>
   <div class="chat-badge" id="chat-badge"></div>
