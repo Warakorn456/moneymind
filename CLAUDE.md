@@ -75,6 +75,10 @@ DB = {
 | `localStorage` | `mm_users` | `[{username, salt, hash}]` — user list |
 | `localStorage` | `mm_session` | `{username, ts}` — session ปัจจุบัน |
 | `localStorage` | `mm_data_<username>` | DB object ของแต่ละ user |
+| `localStorage` | `mm_gkey_<username>` | Gemini API key ส่วนตัว (ต่อเครื่อง ไม่ sync — 2026-09-19) |
+| `localStorage` | `mm_snap_<username>` | snapshot DB สูงสุด 7 ชุด |
+| `localStorage` | `mm_navgrp` / `mm_pin_fail` / `mm_pdpa_v1` | สถานะยุบกลุ่มเมนู / rate-limit PIN / ยอมรับ PDPA |
+| Firestore | `memberPrivate/<username>` | `expoPushToken` (ย้ายจาก members 2026-09-19) |
 | Firebase Firestore | `userdata/<username>` | Cloud backup (db = JSON ทั้งก้อน) — sync 2 ทาง |
 | Firebase Firestore | `members/<username>` | mapping `{username, email, uid, lastSeen}` (ไม่มีข้อมูลการเงิน) |
 
@@ -96,6 +100,28 @@ DB = {
 - redeploy: POST ruleset + PATCH release `cloud.firestore` ที่ `firebaserules.googleapis.com/v1/projects/moneymind-d97f3/...` ด้วย `gcloud auth print-access-token` + header `x-goog-user-project: moneymind-d97f3`
 - **เพิ่ม script ใหม่ที่แตะ Firestore:** ต้อง `import mm_firestore` + แนบ `headers=mm_firestore.auth_header()` ทุก get/patch ไม่งั้น 403
 - **`reports/{doc}` (เพิ่มใน `firestore.rules` local 2026-07-02, ยังไม่ deploy จริง)** — `allow create: if authed()`, `allow read/update/delete: if false` — เก็บ feedback ผู้ใช้ + client error report (ดู "Security Audit" ด้านล่าง); **ต้อง deploy rule นี้ก่อน** ฟีเจอร์ feedback/error-report ถึงจะใช้งานได้จริง (deploy ตามขั้นตอน redeploy ด้านบน)
+
+## รอบปรับปรุงใหญ่ 2026-09-19 (audit 4 กลุ่ม A–D) — อ่านก่อนแตะ sync/ฟอร์ม/PWA
+
+ผลตรวจสอบเต็ม + เหตุผลอยู่ใน plan `~/.claude/plans/mutable-wondering-flute.md`; 5 commit `ac1ca98`→`1e38795`
+
+**A. ข้อมูล/ความปลอดภัย**
+- **Tombstone (`DB._deleted = {field:{id:ts}}`, TTL 30 วัน)** — ทุกจุดที่ลบ item ของ `_MERGE_ARRAY_FIELDS` (ตอนนี้ 8 field รวม `recurringTx`) **ต้องเรียก `_markDeleted(field,id)` ก่อน filter ออก** ไม่งั้นเครื่องอื่น sync คืน; undo ใช้ `_unmarkDeleted`. `_mergeDbSnapshot`/`_mergeForSave` รวม tombstone สองฝั่งแล้วตัด item ทิ้ง; หลัง `fsSave` commit ใช้ `DB=_mergeDbSnapshot(DB,merged)` (ไม่ทับ) กัน push ระหว่าง in-flight หาย; `doLogout` เป็น async: flush `_saveTimer` + `_auth.signOut()`
+- `_writeLocalDB()` ห่อ `localStorage.setItem` — เต็มแล้วตัด snapshot เหลือ 3 แล้วลองใหม่ ไม่ throw ออก; `_SNAP_MAX=7` และไม่เก็บซ้ำถ้า DB ไม่เปลี่ยน
+- `_checkDbSizeWarn` นับ **byte UTF-8** (`_dbDocBytes`, รวม aiUsage/claudeUsage) เตือนที่ 800 KB; ปุ่ม "เก็บถาวรรายการเก่า" (`openArchiveModal`/`runArchive`, `#m-archive`) export JSON ก่อนปีที่เลือกแล้วลบ+tombstone
+- **`firestore.rules`**: `members` create/update ห้ามแตะ `subscriptionActive/subscriptionExpiry/expoPushToken` (SA เท่านั้น); `memberPrivate/{u}` ใหม่เก็บ `expoPushToken` (อ่าน: เจ้าของ+warakorn, เขียน: เจ้าของ); `_ping` เขียนไม่ได้แล้ว. VM: `mm_push.list_member_tokens()` + `activation_nudge.load_members()` อ่าน memberPrivate ก่อน fallback members (deploy VM แล้ว 2026-09-19)
+- Gemini key อยู่ **`localStorage mm_gkey_<user>`** ผ่าน `getApiKey()/setApiKey()` (ไม่ sync/ไม่ export; `_migrateApiKey` ย้ายของเก่าออกจาก `DB.settings.apiKey` อัตโนมัติ) — **ห้ามอ้าง `DB.settings.apiKey` อีก**. `exportData` ผ่าน `_stripSecrets` (`_SECRET_SETTINGS`); `importData` ตรวจโครงสร้าง (`_validateImport`) แล้ว **merge by id** (ไม่ทับ) + snapshot ก่อน
+- PIN: `_storePin()` = PBKDF2-100k + `pinSalt` (hash เก่าแบบ 32-bit migrate ตอนใส่ถูกครั้งแรก), จำกัด 5 ครั้ง/5 นาที (`mm_pin_fail`)
+- **`_ENC` เหลือแค่ `{user:"warakorn"}`** — blob DB เจ้าของ 168 KB ออกจาก HTML แล้ว (สำเนาที่ `D:\wabbest-backup\_ENC_2026-09-19.txt`, git history ยังมี → ควรเปลี่ยนรหัสผ่านเจ้าของ); login/unlock เจ้าของตรวจผ่าน `_ownerAuth(pass)` (reauth ถ้ามี password provider, ไม่งั้น signOut+`ensureAuthForUser`)
+- `toast(msg,type,ms,opts)` **escape msg เสมอ** — ต้องการ HTML ส่ง `{html:true}`; ปุ่มใน toast ส่ง `{action:{label,fn}}`; `_escHtml` ครอบชื่อผู้ใช้ใน txHTML/savings/debts/inv/print แล้ว
+
+**B. UX ฟอร์มบันทึก** — `txEnterKey` (Enter = บันทึก), ปุ่ม `#tx-save-next-btn` (`window._txSaveAndNext`), `_frequentCats()` ปักหมวดใช้บ่อย 60 วันไว้บนสุด+เป็น default, `_fillTxDescList()` datalist, `_txFormDirty()`+`mmConfirm` กันปิดทิ้ง, โหมดง่ายใส่ class `tx-simple` (ซ่อน `.finfo`) และ toast อธิบายครั้งเดียว (`onboard.fullFormExplained`), `pre.auto` → iOS ไม่ focus แต่โชว์ `#tx-ios-hint`. **`mmConfirm(msg,{ok,cancel,danger})`** (`#m-confirm`) แทน `confirm()` — ฟังก์ชันลบทั้งหมดกลายเป็น `async`; `delTx` ลบทันที + toast "เลิกทำ" 6 วิ (`_undoDelTx`). PDPA เด้งหลัง `_enterAppReal` (`window._showPdpaIfNeeded`) ไม่ใช่ตอนโหลดหน้า; ปุ่ม `#add-fab` (มือถือ) + คีย์ `N`
+
+**C. โหลด/PWA/มือถือ** — **`admin.js`** = โค้ด Admin ทั้งหมด (โหลด on-demand โดย `renderAdmin()` → `_loadAdminJs()`; ฟังก์ชันจริงชื่อ `_renderAdminReal`) — **แก้ admin ให้แก้ที่ไฟล์นั้น**. `sw.js` (network-first หน้าเรา, SWR CDN; ไม่ register ใน RN WebView), `manifest.json` icon 192/512/maskable ที่ `assets/`, ปุ่มติดตั้ง `#pwa-install-btn`. ลบ meta no-store แล้ว. CSS: safe-area, `100dvh`, input ≥16px บนมือถือ, `:focus-visible`; `_a11yPass()` ใส่ aria ตอน load; `setLang` อัปเดต `<html lang>`
+
+**D. ฟีเจอร์** — recurring กลับมาเป็น section `#recur-content` ใต้หน้า Subscriptions (`renderSubscriptions` เรียก `renderRecurring`) + checkbox `#tx-recur` ในฟอร์มเต็ม (`_recurFromTx`); quick-add `#quick-add-inp` บนหน้า transactions (เดาหมวดจากรายการชื่อเดียวกัน); Dashboard: `dashShiftMonth()` + `#dash-month-label`, การ์ด `#dash-recent-section`, `_dashTier()` 0/1/2 (tier 1 ซ่อน `THIN_IDS`), `monthTx` memo ภายใน tick; sidebar 3 กลุ่ม (`NAV_GROUPS`, token `#grp` ใน `navOrder`, ยุบ/ขยายเก็บ `mm_navgrp` ต่อเครื่อง)
+
+**สิ่งที่ยังไม่ทำจาก audit (ตั้งใจข้าม):** defer CDN script/lazy Chart.js (inline script หลัก defer ไม่ได้ + `new Chart` 16 จุด), แยก travel/stock ออกเป็นไฟล์, members world-read (login ต้อง lookup email), `unclaimed()` takeover path ของบัญชี legacy, `_rlCheck` ข้อความไทยล้วน
 
 ## Security Audit & Fixes (2026-07-02)
 
