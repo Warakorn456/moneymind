@@ -170,6 +170,8 @@ function _renderAdminUsageSection(summary){
       [tr('admin_adopt_gmail'),t.gmailConnected],
       [tr('admin_adopt_push'),rm.filter(m=>m.hasPush).length],
     ].filter(r=>r[1]!=null);
+    // หน้าที่ไม่มี "ข้อมูล" ให้นับ (เครื่องคิดเลข/ความรู้/ปฏิทิน) — โชว์ยอดเปิดอย่างเดียว เพื่อใช้ตัดสินใจลด/จัดกลุ่มเมนูจากของจริง (2026-09-19)
+    const opensOnly=['ot','loan','tax','calendar','retire','balance','learn','catbudget','profile'].filter(k=>ap[k]).map(k=>[tr(k),null,ap[k]]);
     if(!rows.length||!n) return '';
     const base=Math.max(n,1);
     const bar=(label,cnt,opens)=>{
@@ -246,6 +248,8 @@ function _renderAdminUsageSection(summary){
       +'<i class="fas fa-list-check" style="margin-right:5px"></i>'+tr('admin_adoption')+'</div>'
       +'<div style="font-size:11px;color:var(--muted);margin-top:3px">'+tr('admin_adoption_note').replace('{n}',n)+(Object.keys(window._adminAppPages||{}).length?' · '+tr('admin_v_adopt_note2'):'')+'</div>'
       +rows.map(r=>bar(r[0],r[1],r[2])).join('')
+      +(opensOnly.length?'<div style="margin-top:12px;font-size:11px;color:var(--muted)">'+tr('admin_opens_only')+'</div>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'+opensOnly.sort((x,y)=>y[2]-x[2]).map(r=>'<span style="font-size:11px;padding:3px 9px;border-radius:8px;background:rgba(255,255,255,.05)">'+r[0]+' <b>'+r[2]+'</b></span>').join('')+'</div>':'')
       +actDoneSection
       +actSection
       +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:13px;padding-top:11px;border-top:1px solid rgba(255,255,255,.07)">'
