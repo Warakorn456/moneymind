@@ -22,6 +22,13 @@ service cloud.firestore {
       return authed() && linkedUid(userId) == '';
     }
 
+    // field ใน members ที่ client ห้ามแตะ (เขียนได้ทาง SA เท่านั้น) — เพิ่ม 2026-09-19
+    // subscriptionActive/Expiry: เดิม client เขียน members ได้ทั้ง doc → ใครก็ set PRO ให้ตัวเองผ่าน console ได้
+    // expoPushToken: ย้ายไป memberPrivate (members อ่านได้สาธารณะ → token push ของทุกเครื่องเคยหลุด)
+    function protectedMemberKeys() {
+      return ['subscriptionActive', 'subscriptionExpiry', 'expoPushToken'];
+    }
+
     // ── ข้อมูลการเงินรายคน (1 doc ต่อ 1 user, key = username) ──
     match /userdata/{userId} {
       // ทุกคน (รวม warakorn): เฉพาะ Firebase user ที่ผูกบัญชีนี้เท่านั้น
@@ -36,7 +43,18 @@ service cloud.firestore {
       // เขียน: เจ้าของ doc, หรือ claim บัญชีที่ยังไม่ผูก uid
       // (เดิมมี exception `userId == 'warakorn'` ให้เขียนได้แบบไม่ต้อง auth เลย — เป็นช่องโหว่ให้ session/อุปกรณ์
       // ไหนก็ได้ (หรือแม้แต่ผู้ไม่ auth) แย่งชิง uid ของ owner ได้ ตัดออกแล้ว ไม่มี code path ใดพึ่งพา exception นี้)
-      allow write: if ownsAccount(userId) || unclaimed(userId);
+      allow create: if (ownsAccount(userId) || unclaimed(userId))
+                    && !request.resource.data.keys().hasAny(protectedMemberKeys());
+      allow update: if (ownsAccount(userId) || unclaimed(userId))
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(protectedMemberKeys());
+      allow delete: if ownsAccount(userId);
+    }
+
+    // ── ข้อมูลโปรไฟล์ที่ไม่ควรสาธารณะ (เพิ่ม 2026-09-19): expoPushToken ──
+    // เจ้าของอ่าน/เขียนของตัวเอง; owner (warakorn) อ่านทั้งหมดเพื่อนับในหน้า Admin; สคริปต์ VM ใช้ SA
+    match /memberPrivate/{userId} {
+      allow read: if ownsAccount(userId) || ownsAccount('warakorn');
+      allow write: if ownsAccount(userId);
     }
 
     // ── Gmail bank-alert (multi-user, เพิ่ม 2026-08-22) ──
@@ -78,7 +96,8 @@ service cloud.firestore {
 
     // ── ทดสอบการเชื่อมต่อ ──
     match /_ping/{doc} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if false; // 2026-09-19: เดิมใครก็เขียนได้ไม่จำกัด — client ทดสอบการเชื่อมต่อด้วย get อย่างเดียวแล้ว
     }
 
     // ปฏิเสธทุกอย่างที่เหลือโดยปริยาย
