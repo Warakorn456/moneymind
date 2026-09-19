@@ -2082,6 +2082,7 @@
           <option value="30" data-i18n="set_lock_30">30 นาที</option>
           <option value="60" data-i18n="set_lock_60">1 ชั่วโมง</option>
         </select>
+        <div id="lock-needs-pin-note" style="display:none;font-size:11.5px;color:var(--muted);margin-top:6px" data-i18n="lock_needs_pin">บัญชีนี้ล็อกอินด้วย Google/Apple/LINE — การล็อกอัตโนมัติจะทำงานเมื่อตั้ง PIN ด้านล่างแล้ว</div>
       </div>
       <div style="margin-top:10px">
         <button class="btn btn-ghost" onclick="lockApp()"><i class="fas fa-lock"></i> <span data-i18n="set_lock_now">ล็อกแอปทันที</span></button>
@@ -3306,6 +3307,30 @@ async function pbkdf2Hash(pass, saltBytes){
 }
 function randB64(n){ const a=new Uint8Array(n); crypto.getRandomValues(a); return btoa(String.fromCharCode(...a)); }
 function getUsers(){ try{ return JSON.parse(localStorage.getItem(USERS_KEY)||'[]'); }catch{ return []; } }
+
+// สร้าง username อัตโนมัติจาก email/ชื่อ (ใช้ตอน OAuth สร้างบัญชีใหม่ + auto-heal)
+// 🐛 2026-09-19: เดิมใช้ displayName ก่อน → ชื่อไทยล้วนกลายเป็น underscore ล้วน (มีจริงใน members:
+// ________02, 24______________) และเช็คซ้ำแค่ mm_users ในเครื่อง → ชื่อไทยยาวเท่ากันคนละเครื่องชนกัน
+// members/<autoUser>.set() โดน rules ปฏิเสธ (uid ไม่ตรง) → สมัครไม่ผ่านเงียบๆ
+// ตอนนี้: เอา local-part ของ email ก่อน (Apple relay/LINE synthetic ก็ยังมีตัวอักษร) ถ้า sanitize
+// แล้วไม่เหลือ a-z0-9 เลยค่อย fallback เป็น user+เลขสุ่ม — ฝั่ง Firestore เช็คแยกใน _uniqueAutoUser
+function _sanitizeAutoUser(src){
+  let u=String(src||'').split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'').substring(0,16);
+  if(u.length<3||!/[a-z0-9]/.test(u)) u='user'+Date.now().toString().slice(-5);
+  return u;
+}
+// เช็คว่า members/<u> ว่างหรือเป็นของ uid นี้อยู่แล้ว ไม่งั้นต่อท้ายเลขสุ่ม (ลองสูงสุด 3 ชื่อ) — members อ่านได้สาธารณะ
+async function _uniqueAutoUser(base,uid){
+  let u=base;
+  for(let i=0;i<3;i++){
+    try{
+      const d=await _fs.collection('members').doc(u).get();
+      if(!d.exists||(d.data().uid||'')===uid||!(d.data().uid||'')) return u;
+    }catch(e){ return u; } // offline/อ่านไม่ได้ → ใช้ชื่อเดิม ให้ rules เป็นด่านสุดท้ายเหมือนเดิม
+    u=base.substring(0,11)+'_'+Math.floor(1000+Math.random()*9000);
+  }
+  return u;
+}
 function saveUsers(u){ localStorage.setItem(USERS_KEY,JSON.stringify(u)); }
 
 // ── Ensure a Firebase Auth session for username/password logins ──
@@ -3678,8 +3703,7 @@ async function tryLogin(){
         // (เช่นบัญชีที่ mapping username↔email/uid หลุด — ทำให้ login ด้วย email ไม่ได้ทั้งที่รหัสถูก)
         // สร้าง members doc ใหม่ผูกกับ uid ปัจจุบัน เพื่อให้เข้าใช้งานได้ แทนที่จะขึ้น "ไม่พบบัญชี"
         const fbUser=(fbCredLogin&&fbCredLogin.user)||_auth.currentUser;
-        let autoUser=(user.split('@')[0]||'user').toLowerCase().replace(/[^a-z0-9_]/g,'_').substring(0,16);
-        if(autoUser.length<3) autoUser='user'+Date.now().toString().slice(-5);
+        let autoUser=_sanitizeAutoUser(user);
         try{
           const existDoc=await _fs.collection('members').doc(autoUser).get();
           // ถ้ามี doc ชื่อนี้อยู่แล้วแต่ผูก uid คนอื่น → เลี่ยงไปใช้ชื่อไม่ชนกัน (ห้ามทับของคนอื่น)
@@ -3910,12 +3934,14 @@ async function _handleOAuthResult(result, providerName, lineUserId){
     fsListen();
   } else {
     // ผู้ใช้ใหม่ — สร้างบัญชีอัตโนมัติ
-    let autoUser=((fbUser.displayName||email).split('@')[0]).toLowerCase().replace(/[^a-z0-9_]/g,'_').substring(0,16);
-    if(autoUser.length<3) autoUser='user'+Date.now().toString().slice(-5);
+    // email ก่อน ชื่อทีหลัง — email ที่ขึ้นต้น no-email- คือ synthetic ของ LINE (ไม่มี email จริง) ให้ใช้ displayName แทน
+    const _src=(email&&!/^no-email-/.test(email))?email:(fbUser.displayName||email);
+    let autoUser=_sanitizeAutoUser(_src);
     const existingUsers=getUsers();
     if(existingUsers.find(u=>u.username===autoUser)||autoUser===(_ENC&&_ENC.user||'').toLowerCase()){
       autoUser=autoUser.substring(0,13)+'_'+Date.now().toString().slice(-4);
     }
+    autoUser=await _uniqueAutoUser(autoUser,fbUser.uid);
     await _fs.collection('members').doc(autoUser).set({
       username:autoUser,
       email:email,
@@ -4684,8 +4710,21 @@ async function doForgotEmail(){
 let _lockTimer=null;
 let _appLocked=false;
 
+// บัญชีนี้มีรหัสผ่านจริงที่ผู้ใช้รู้ไหม — owner ใช้ _ENC, บัญชี password ปกติมี record ใน mm_users
+// แบบไม่มี provider; บัญชี Google/Apple/LINE ถูกเก็บด้วย hash ของรหัสสุ่ม (ดู _handleOAuthResult)
+// ที่ไม่มีใครรู้ และเครื่องที่ 2 ไม่มี record เลย → ถือว่า "ไม่มีรหัสผ่าน" ทั้งคู่
+function _hasLocalPassword(){
+  if(!currentUser) return false;
+  if(_ENC&&currentUser===_ENC.user) return true;
+  const rec=getUsers().find(u=>u.username===currentUser);
+  return !!(rec&&!rec.provider);
+}
+
 function getLockTimeout(){
   // นาที — 0=ปิด, default 15 นาที
+  // 🐛 2026-09-19: ผู้ใช้ OAuth (~79% ของทั้งหมด) ไม่มีรหัสผ่านให้ปลดล็อก — หน้าล็อกถามรหัสผ่านที่
+  // ไม่มีวันถูก ออกได้ทางเดียวคือ logout แล้ว sign-in ใหม่ทุก 15 นาที → ไม่ล็อกอัตโนมัติจนกว่าจะตั้ง PIN
+  if(!DB?.settings?.pinHash&&!_hasLocalPassword()) return 0;
   return parseInt(DB?.settings?.lockTimeout??15,10);
 }
 
@@ -5103,7 +5142,7 @@ const I18N = {
     set_sub_title:'AI Subscription',set_sub_desc:'ไม่อยากหา Gemini API Key เอง? สมัคร subscription ใช้ AI ของแอปได้เลย ไม่ต้องมี key ส่วนตัว',sub_active:'Subscription ใช้งานอยู่',sub_until:'ถึงวันที่',sub_subscribe_btn:'สมัคร Subscription ฿299/เดือน',sub_modal_title:'สมัคร AI Subscription',sub_per_month:'เดือน',sub_pay_card:'บัตรเครดิต/เดบิต',sub_card_name:'ชื่อบนบัตร',sub_card_number:'หมายเลขบัตร',sub_pay_now:'ชำระเงิน ฿299',sub_waiting_payment:'สแกน QR เพื่อชำระเงิน — กำลังรอการยืนยัน...',sub_need_relogin:'ต้อง login ใหม่เพื่อสมัคร subscription',sub_fill_all:'กรอกข้อมูลบัตรให้ครบ',sub_processing:'กำลังดำเนินการ...',sub_card_invalid:'ข้อมูลบัตรไม่ถูกต้อง',sub_payment_failed:'ชำระเงินไม่สำเร็จ',sub_pending:'รอการยืนยันการชำระเงิน...',sub_success:'สมัคร Subscription สำเร็จ!',sub_qr_failed:'สร้าง QR ไม่สำเร็จ',sub_poll_timeout:'ยังไม่ได้รับการยืนยัน — ถ้าชำระเงินแล้ว ปิดหน้าต่างนี้แล้วเปิดหน้าตั้งค่าใหม่อีกครั้ง ระบบจะอัปเดตให้เอง',pro_ben_title_promo:'สมัครแล้วได้อะไรบ้าง',pro_ben_title_active:'สิทธิพิเศษของคุณ',pro_ben_maya:'แชทกับมายาเต็มรูปแบบ — สั่งบันทึก แก้ไข ค้นหารายการด้วยข้อความได้',pro_ben_maya_free:'ตอนนี้ตอบได้เฉพาะคำถามสำเร็จรูป',pro_ben_scan:'สแกนใบเสร็จ สลิปเงินเดือน ทวิ 50 และ statement (รูปภาพ) ด้วย AI',pro_ben_nokey:'ไม่ต้องมี Gemini API Key ของตัวเอง',pro_ben_quota_head:'โควตา AI',pro_ben_free_label:'ตอนนี้ (ฟรี)',pro_ben_pro_label:'PRO',pro_ben_per_month:'ครั้ง/เดือน',pro_ben_per_day:'ครั้ง/วัน',pro_ben_used_month:'ใช้ไปเดือนนี้',pro_ben_used_day:'ใช้ไปวันนี้',pro_ben_expiry:'ใช้ได้ถึง',pro_ben_pdf_note:'หมายเหตุ: statement ไฟล์ PDF ยังต้องใช้ Gemini API Key ส่วนตัว',pro_ben_quota_unavailable:'ดึงโควตาไม่ได้ตอนนี้ — ลองใหม่อีกครั้งภายหลัง',
     set_cloud_title:'Firebase Cloud Sync',set_cloud_desc:'ซิงค์ข้อมูลข้ามอุปกรณ์ผ่าน Firebase Firestore',set_test_conn:'ทดสอบการเชื่อมต่อ',set_upload_cloud:'อัปโหลดขึ้น Cloud',set_load_cloud:'โหลดจาก Cloud',set_recover:'กู้คืนข้อมูล',
     set_delacc_title:'ลบบัญชี',set_delacc_desc:'ลบบัญชีและข้อมูลทั้งหมดของคุณอย่างถาวร ทั้งในเครื่องและบนคลาวด์ — การกระทำนี้ไม่สามารถกู้คืนได้',set_delacc_btn:'ลบบัญชีของฉันอย่างถาวร',
-    set_pin_title:'ตั้ง PIN สำหรับปลดล็อก',set_pin_none:'ยังไม่ได้ตั้ง PIN',set_pin_active:'✅ ตั้ง PIN แล้ว — ใช้ปลดล็อกแทนรหัสผ่านได้',set_pin_new:'PIN ใหม่ (6 หลัก)',set_pin_confirm:'ยืนยัน PIN',set_pin_save:'บันทึก PIN',set_pin_delete:'ลบ PIN',
+    set_pin_title:'ตั้ง PIN สำหรับปลดล็อก',set_pin_none:'ยังไม่ได้ตั้ง PIN',lock_needs_pin:'บัญชีนี้ล็อกอินด้วย Google/Apple/LINE — การล็อกอัตโนมัติจะทำงานเมื่อตั้ง PIN ด้านล่างแล้ว',set_pin_active:'✅ ตั้ง PIN แล้ว — ใช้ปลดล็อกแทนรหัสผ่านได้',set_pin_new:'PIN ใหม่ (6 หลัก)',set_pin_confirm:'ยืนยัน PIN',set_pin_save:'บันทึก PIN',set_pin_delete:'ลบ PIN',
     set_security_title:'ความปลอดภัย',set_autolock:'ล็อกแอปอัตโนมัติหลังไม่ใช้งาน',set_lock_off:'ปิด (ไม่ล็อก)',set_lock_5:'5 นาที',set_lock_10:'10 นาที',set_lock_15:'15 นาที (แนะนำ)',set_lock_30:'30 นาที',set_lock_60:'1 ชั่วโมง',set_lock_now:'ล็อกแอปทันที',set_session_expire:'Session หมดอายุหลัง 30 วัน — ต้อง login ใหม่',
     set_data_title:'จัดการข้อมูล',set_export_json:'ส่งออก JSON',set_export_csv:'ส่งออก CSV',set_print_report:'พิมพ์รายงาน',set_shareable:'สรุปแชร์ได้',set_import_json:'นำเข้า JSON',set_clear_all:'ล้างข้อมูลทั้งหมด',
     dh_networth:'ความมั่งคั่งสุทธิ (Net Worth)',dh_assets_minus_debts:'สินทรัพย์ − หนี้สิน',dh_income:'รายรับ',dh_expense:'รายจ่าย',dh_this_month:'เดือนนี้',dh_saving:'ออม',dh_remaining:'คงเหลือ',dh_remaining_formula:'รายรับ − รายจ่าย − ออม',dh_portfolio:'พอร์ตลงทุน',dh_current_value:'มูลค่าปัจจุบัน',dh_exp_by_cat:'รายจ่ายแยกหมวด',dh_hide_transfer:'ซ่อนเงินโอน/ถอน',dh_income_vs_exp:'รายรับ vs รายจ่าย 6 เดือน',
@@ -5209,7 +5248,7 @@ const I18N = {
     set_sub_title:'AI Subscription',set_sub_desc:'Don\'t want to get your own Gemini API Key? Subscribe to use the app\'s AI without a personal key',sub_active:'Subscription active',sub_until:'until',sub_subscribe_btn:'Subscribe ฿299/month',sub_modal_title:'Subscribe to AI',sub_per_month:'month',sub_pay_card:'Credit/Debit Card',sub_card_name:'Name on card',sub_card_number:'Card number',sub_pay_now:'Pay ฿299',sub_waiting_payment:'Scan QR to pay — waiting for confirmation...',sub_need_relogin:'Please log in again to subscribe',sub_fill_all:'Please fill in all card details',sub_processing:'Processing...',sub_card_invalid:'Invalid card details',sub_payment_failed:'Payment failed',sub_pending:'Waiting for payment confirmation...',sub_success:'Subscription successful!',sub_qr_failed:'Failed to generate QR code',sub_poll_timeout:'Still not confirmed — if you have already paid, close this window and reopen Settings; it will update automatically',pro_ben_title_promo:'What you get',pro_ben_title_active:'Your PRO benefits',pro_ben_maya:'Full Maya chat — add, edit and search entries just by typing',pro_ben_maya_free:'Right now she only answers preset questions',pro_ben_scan:'AI scanning for receipts, payslips, tax forms and bank statements (images)',pro_ben_nokey:'No Gemini API Key of your own needed',pro_ben_quota_head:'AI quota',pro_ben_free_label:'Now (free)',pro_ben_pro_label:'PRO',pro_ben_per_month:'/month',pro_ben_per_day:'/day',pro_ben_used_month:'Used this month',pro_ben_used_day:'Used today',pro_ben_expiry:'Active until',pro_ben_pdf_note:'Note: PDF statements still require your own Gemini API Key',pro_ben_quota_unavailable:'Could not load quota right now — try again later',
     set_cloud_title:'Firebase Cloud Sync',set_cloud_desc:'Sync data across devices via Firebase Firestore',set_test_conn:'Test Connection',set_upload_cloud:'Upload to Cloud',set_load_cloud:'Load from Cloud',set_recover:'Recover Data',
     set_delacc_title:'Delete Account',set_delacc_desc:'Permanently delete your account and all your data, both on this device and in the cloud — this cannot be undone.',set_delacc_btn:'Delete My Account Permanently',
-    set_pin_title:'Set Unlock PIN',set_pin_none:'No PIN set',set_pin_active:'✅ PIN is set — use it to unlock instead of password',set_pin_new:'New PIN (6 digits)',set_pin_confirm:'Confirm PIN',set_pin_save:'Save PIN',set_pin_delete:'Delete PIN',
+    set_pin_title:'Set Unlock PIN',set_pin_none:'No PIN set',lock_needs_pin:'This account signs in with Google/Apple/LINE — auto-lock activates once you set a PIN below.',set_pin_active:'✅ PIN is set — use it to unlock instead of password',set_pin_new:'New PIN (6 digits)',set_pin_confirm:'Confirm PIN',set_pin_save:'Save PIN',set_pin_delete:'Delete PIN',
     set_security_title:'Security',set_autolock:'Auto-lock app after inactivity',set_lock_off:'Off (no lock)',set_lock_5:'5 minutes',set_lock_10:'10 minutes',set_lock_15:'15 minutes (recommended)',set_lock_30:'30 minutes',set_lock_60:'1 hour',set_lock_now:'Lock App Now',set_session_expire:"Session expires after 30 days — you'll need to log in again",
     set_data_title:'Data Management',set_export_json:'Export JSON',set_export_csv:'Export CSV',set_print_report:'Print Report',set_shareable:'Shareable Summary',set_import_json:'Import JSON',set_clear_all:'Clear All Data',
     dh_networth:'Net Worth',dh_assets_minus_debts:'Assets − Liabilities',dh_income:'Income',dh_expense:'Expense',dh_this_month:'This Month',dh_saving:'Saved',dh_remaining:'Remaining',dh_remaining_formula:'Income − Expense − Savings',dh_portfolio:'Portfolio',dh_current_value:'Current Value',dh_exp_by_cat:'Expenses by Category',dh_hide_transfer:'Hide Transfer/Cash',dh_income_vs_exp:'Income vs Expense (6 Months)',
@@ -8218,6 +8257,8 @@ function renderSettings(){
   document.getElementById('model-status').textContent='model ที่ใช้งาน: '+active;
   const lt=document.getElementById('lock-timeout-sel');
   if(lt) lt.value=String(DB.settings.lockTimeout??15);
+  const lnote=document.getElementById('lock-needs-pin-note');
+  if(lnote) lnote.style.display=(!DB.settings.pinHash&&!_hasLocalPassword())?'block':'none';
   if(typeof renderCustomCatList==='function') renderCustomCatList();
   if(typeof renderCatBudgetSettings==='function') renderCatBudgetSettings();
   if(typeof renderSubscriptionBox==='function') renderSubscriptionBox();
@@ -11422,6 +11463,7 @@ function switchToPassword(){
 
 function lockApp(){
   if(!currentUser||_appLocked) return;
+  if(!DB.settings?.pinHash&&!_hasLocalPassword()) return; // ไม่มีทางปลดล็อกได้ — อย่าล็อก (ดู getLockTimeout)
   _appLocked=true; clearTimeout(_lockTimer);
   const el=document.getElementById('lock-screen');
   const lbl=document.getElementById('lock-user-label');
@@ -11524,6 +11566,9 @@ function renderPinSettings(){
   if(clearBtn) clearBtn.style.display=hasPin?'inline-flex':'none';
   if(status) status.textContent=hasPin?tr('set_pin_active'):tr('set_pin_none');
   if(form) form.style.display=hasPin?'none':'block';
+  const lnote=document.getElementById('lock-needs-pin-note');
+  if(lnote) lnote.style.display=(!hasPin&&!_hasLocalPassword())?'block':'none';
+  if(hasPin) resetLockTimer(); // ตั้ง PIN แล้ว auto-lock ถึงเริ่มทำงานสำหรับบัญชี OAuth
 }
 
 // ══════════════════════════════════════════
@@ -18323,12 +18368,20 @@ function renderOnboardCard(){
 
   var c=_onbCfg(), st=_onbState();
   // ผู้ใช้เก่าที่ใช้มานานแล้วไม่ต้องเจอการ์ดนี้ — seed ครั้งเดียวตอน render แรกของบัญชีนั้น
+  var freshSeed=false;
   if(!c.seededAt){
-    c.seededAt=Date.now();
+    c.seededAt=Date.now(); freshSeed=true;
     if((DB.transactions||[]).length>=20) c.dismissed=true;
     try{ saveDB(); }catch(e){}
   }
   if(c.dismissed||st.allDone) return;
+  // 2026-09-19: บัญชีใหม่เอี่ยม (เพิ่ง seed + ยังไม่มีอะไรเลย) เปิดฟอร์มบันทึกรายการแรกให้เลยครั้งเดียว
+  // ไม่ต้องหาปุ่มเอง — ข้อมูลจริง: 71% ของผู้ใช้ปิดแอปไปโดยไม่เคยกดถึงฟอร์มนี้ (median 34 วิ)
+  if(freshSeed&&st.count===0&&!c.autoOpened){
+    c.autoOpened=true;
+    try{ saveDB(); }catch(e){}
+    setTimeout(function(){ try{ if(typeof openTxModal==='function') openTxModal({type:'expense'}); }catch(e){} },600);
+  }
 
   var expanded=(st.count===0)||_onbOpen;
   var pct=Math.round(st.count/st.total*100);
@@ -18377,7 +18430,11 @@ function renderOnboardCard(){
   saveTx=function(){
     var before=(DB.transactions||[]).length;
     var r=_origSaveTxOnb.apply(this,arguments);
-    if(before===0&&(DB.transactions||[]).length>0){ try{ toast(tr('onb_first_tx'),'success',5000); }catch(e){} }
+    if(before===0&&(DB.transactions||[]).length>0){
+      try{ toast(tr('onb_first_tx'),'success',5000); }catch(e){}
+      // ขอ push permission ตรงนี้แทนตอน login — ผู้ใช้เพิ่งได้ค่าจากแอปแล้ว ยอมรับง่ายกว่า (ดู _requestPushTokenIfNative)
+      try{ if(typeof _requestPushTokenIfNative==='function') _requestPushTokenIfNative(); }catch(e){}
+    }
     return r;
   };
 })();
@@ -18492,6 +18549,8 @@ function renderOnboardCard(){
     const cont=document.getElementById('pg-dashboard');
     if(!cont) return;
     const notFriend=(_lineBannerStatus==='not-friend');
+    // 2026-09-19: ยังไม่เคยบันทึกอะไรเลย → ไม่ชวนเชื่อม LINE (ครั้งแรกมีของขัดจังหวะพอแล้ว) ยกเว้นเคส not-friend ที่เชื่อมไปแล้ว
+    if(!notFriend&&(DB.transactions||[]).length===0) return;
     // การ์ด "ยังไม่ได้เพิ่มเพื่อน" ปิดไม่ได้โดยตั้งใจ — ถ้าปิดได้แล้วผู้ใช้ปิดทิ้ง เขาจะไม่ได้รับ
     // แจ้งเตือนอะไรเลยตลอดไปโดยไม่รู้สาเหตุ ต่างจากการ์ดชวนเชื่อมต่อที่ปิดได้เพราะไม่ได้เสียหายอะไร
     if(!notFriend && _isDismissed()) return;
@@ -19205,14 +19264,16 @@ function _requestPushTokenIfNative(){
   // ซึ่งอยู่หลังโค้ดนี้ parse เสร็จแล้วเสมอ patch ทันเวลาแน่นอน)
   if(typeof enterApp==='function'){
     var _origEnterAppPush=enterApp;
-    enterApp=function(){ _origEnterAppPush(); _requestPushTokenIfNative(); };
+    // 2026-09-19: บัญชีที่ยังไม่มีรายการเลย (เพิ่งสมัคร) ไม่ขอ push ทันที — OS dialog เด้งใส่หน้าแรก
+    // ก่อนได้เห็นค่าอะไรของแอป ให้ไปขอตอนบันทึกรายการแรกสำเร็จแทน (ดู wrapper saveTx ของ Onboard)
+    enterApp=function(){ _origEnterAppPush(); if((DB.transactions||[]).length>0) _requestPushTokenIfNative(); };
   }
   // เปิดแอปซ้ำโดยมี session เดิมอยู่แล้ว — checkLogin() ถูกเรียกไปแล้วครั้งเดียวที่ INIT block
   // (บรรทัด ~8019) ซึ่งมาก่อนโค้ดนี้ในไฟล์ — patch checkLogin ตรงนี้ "ไม่ทัน" การเรียกครั้งนั้น
   // (เคย patch ผิดมาก่อน ทำให้ token ไม่ถูกขอเลยตอนเปิดแอปซ้ำ) เช็ค currentUser ตรงๆ แทน:
   // ถ้า checkLogin() เจอ session ที่ยังไม่หมดอายุ มันตั้ง currentUser ให้แล้วตอนนี้ (synchronous)
   if(currentUser){
-    _requestPushTokenIfNative();
+    if((DB.transactions||[]).length>0) _requestPushTokenIfNative();
     if(DB.settings&&DB.settings.lang) currentLang=DB.settings.lang;
     applyLang();
   }
