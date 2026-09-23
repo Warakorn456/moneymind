@@ -564,6 +564,22 @@ Static file — ไม่ต้อง build:
 
 **รวมเข้า repo นี้แล้ว 2026-07-02** — เดิมเป็น repo แยกที่ `D:\Mobiy\finance-app` (Expo/React Native) ย้ายเข้ามาด้วย `git subtree add --prefix=mobile` (เก็บ git history เดิมทั้ง 6 commits ไว้ครบ ดูได้ด้วย `git log -- mobile/`)
 
+**✅ สถานะจริง ณ 2026-09-23 (ตรวจสดจาก App Store + Google Play — บันทึกเก่าด้านล่างตกยุคไปหลายรอบ):**
+
+| | iOS | Android |
+|---|---|---|
+| สถานะ | **ขึ้น App Store ขายจริงแล้ว** | **ขึ้น Google Play ขายจริงแล้ว** |
+| เวอร์ชัน live | **1.3.9** (ตรงกับ `app.json`) | **1.3.9** |
+| ปล่อยครั้งแรก | 2026-08-05 | — |
+| อัปเดตล่าสุด | 2026-08-22 | 2026-08-18 |
+| build ปัจจุบันใน `app.json` | `buildNumber` **25** | `versionCode` **18** |
+| ลิงก์ | `apps.apple.com/th/app/moneymind/id6788824042` | `play.google.com/store/apps/details?id=app.moneymind.th` |
+| อื่นๆ | 5.0 ดาว (4 รีวิว), ต้อง iOS 15.1+ | 10+ ดาวน์โหลด |
+
+บันทึกบั๊กด้านล่างที่พูดถึง "build 5/6", "รอทดสอบว่าหายจริง", "ยังไม่ได้ resubmit เข้า App Store review" เป็นเหตุการณ์ช่วง ก.ค. 2026 ที่**ผ่านไปแล้ว** — เก็บไว้เป็นบันทึกบั๊กที่เคยเจอ ไม่ใช่สถานะปัจจุบัน ทั้ง Apple reject "blank screen" และบั๊กเด้งออก Safari **แก้จบแล้ว** (ผ่าน review + ship จริงตั้งแต่ 2026-08-05) และ `google-services.json` ที่เพิ่มเมื่อ 2026-08-07 **ถึงมือผู้ใช้แล้ว** (Play อัปเดต 2026-08-18 หลังจากนั้น) push บน Android จึงไม่ติดปัญหา FirebaseApp not initialized อีก
+
+**⚠️ dead code ใน `mobile/src/` (ตรวจ 2026-09-23):** `App.tsx` เรียก `WebApp` ตัวเดียว — จอ native เดิม 10 ไฟล์ (`DashboardScreen`, `TransactionsScreen`, `SavingsScreen`, `DebtsScreen`, `InvestmentsScreen`, `HistoryScreen`, `LoginScreen`, `MoreScreen`, `AddTransactionScreen`, `PlaceholderScreen`) พร้อม `src/contexts/`, `src/services/`, `src/navigation/`, `src/components/SidebarDrawer.tsx` **ไม่ถูก import จากที่ไหนเลย (0 references)** ไม่ถูก bundle เข้าแอปจริง — ตัวแอปทั้งหมดคือ `src/screens/WebApp.tsx` (1,001 บรรทัด) ไฟล์เดียว
+
 - **สถาปัตยกรรม:** ไม่ใช่แอป native เต็มรูปแบบ — เป็น **WebView wrapper** ที่โหลด `WEB_URL` (`https://app.moneymindth.com/` — custom domain, เปลี่ยนจาก `warakorn456.github.io/moneymind/` เดิมช่วง 2026-07 หลังจดโดเมนและตั้ง CNAME ผ่าน GitHub Pages, ยังชี้ไปไฟล์ `index.html` ตัวเดียวกับ repo นี้) ฟีเจอร์ทั้งหมดอยู่ในเว็บ ฝั่ง native ทำแค่ bridge ที่เว็บ browser ทำเองไม่ได้
 - **🐛 Android push notification ลงทะเบียนไม่ได้เลยตั้งแต่แรก — ไม่มี `google-services.json` (เจอ+แก้ 2026-08-07)** — เจอจากช่อง Telegram feedback/error report (`report_relay.py` → topic 907): `push register: ... Default FirebaseApp is not initialized in this process app.moneymind.th. Make sure to call FirebaseApp.initializeApp(Context) first.` — `Notifications.getExpoPushTokenAsync()` (`WebApp.tsx` ~บรรทัด 399) ต้องพึ่ง Firebase Android SDK ตัวจริงที่ฝั่ง native เพื่อขอ FCM registration token ก่อนแลกเป็น Expo push token แต่โปรเจกต์ `mobile/` **ไม่เคยมีไฟล์ `google-services.json` เลย** และ `app.json` ก็ไม่เคยอ้างถึง `android.googleServicesFile` — Firebase SDK เลยไม่มีวัน initialize ได้บน Android ทำให้ push notification บน Android **ไม่เคยใช้งานได้จริงเลยตั้งแต่เพิ่มฟีเจอร์นี้มา** (ไม่ใช่บั๊กเฉพาะเครื่อง/เฉพาะ user คนใดคนหนึ่ง). **แก้:** เช็ค Firebase project (`moneymind-d97f3`) ผ่าน Firebase Management API พบว่ามี Android app ผูก package `app.moneymind.th` จดทะเบียนไว้แล้วจริง (มี SHA-1 2 ตัวสำหรับ Google Sign-In ด้วย) — ดึง config ผ่าน `androidApps/{appId}/config` endpoint (ใช้ gcloud owner token) ได้ `google-services.json` ตัวจริงมาวางที่ `mobile/google-services.json` + เพิ่ม `"googleServicesFile": "./google-services.json"` ใน `app.json` ส่วน `android` — commit แยกต่างหาก (ไฟล์นี้สร้างผ่าน Bash ไม่ผ่าน auto-commit hook ปกติที่ผูกกับ Edit/Write tool เลย push มือ). **API key ใน `google-services.json` (`AIzaSyCgh0...`) ปลอดภัยที่จะ commit เข้า repo** — เป็น Android API key ที่ Google ออกแบบให้ฝังใน APK ได้ตามปกติ (ผูกกับ package name + SHA-1 fingerprint ที่ restrict ไว้แล้ว) คนละแบบกับ Telegram bot token ที่เคยหลุดไปก่อนหน้านี้ (อันนั้นเป็น bearer credential ล้วนๆ ไม่มี restriction ใดๆ). **⚠️ ยังไม่มีผลกับแอปที่ติดตั้งอยู่แล้ว** — ต้อง `eas build` (Android) รอบใหม่ + อัปโหลดขึ้น Play Store ก่อน APK ที่มี Firebase config ตัวนี้ถึงจะไปถึงมือ user จริง (ตอนนี้แค่แก้ source code/config ในโปรเจกต์เท่านั้น ยังไม่ได้ build/submit)
 - **ไฟล์หลัก:** `mobile/src/screens/WebApp.tsx` — native bridge ทั้งหมดอยู่ที่นี่:
@@ -667,11 +683,11 @@ Static file — ไม่ต้อง build:
 
 ---
 
-## AI Proxy — Gemini key กลางสำหรับ subscription (เริ่ม 2026-07-03, ยังไม่เปิดใช้จริง)
+## AI Proxy — Gemini key กลางสำหรับ subscription (เริ่ม 2026-07-03, ✅ เปิดใช้จริงแล้ว 2026-08-27)
 
 **เป้าหมาย:** แผนอนาคตให้ผู้ใช้ subscription ใช้ AI (Maya chat/สแกนใบเสร็จ/ภาษี) ได้โดยไม่ต้องมี Gemini API key ของตัวเอง — ใช้ key "ของเรา" ผ่าน proxy กลาง (ห้าม key หลุดไปฝั่ง client เด็ดขาด บทเรียนจาก Telegram token เดิม)
 
-**สถานะ:** infra + client wiring + Gemini proxy key + checkout/webhook + auth bug fix พร้อมหมดแล้ว **ทดสอบ end-to-end ผ่านจริงแล้ว 2026-07-06** (subscription active + AI chat ผ่าน proxy ได้คำตอบจริง) **ยังไม่เปิดใช้จริงกับผู้ใช้ทั่วไป** เพราะยังไม่มีระบบรับเงินจริง (Omise KYC submit แล้ว 2026-07-03 รอผลตรวจ, ตอนนี้ใช้ได้แค่ test-mode + manual grant ผ่าน `grant_subscription.py`)
+**สถานะ:** infra + client wiring + Gemini proxy key + checkout/webhook + auth bug fix พร้อมหมดแล้ว **ทดสอบ end-to-end ผ่านจริงแล้ว 2026-07-06** (subscription active + AI chat ผ่าน proxy ได้คำตอบจริง) **✅ เปิดใช้จริงแล้ว (อัปเดต 2026-09-23 — ประโยคเดิมตรงนี้บอกว่า "ยังไม่เปิดใช้จริง เพราะรอ KYC" ซึ่งตกยุคแล้ว):** Omise KYC ผ่าน 2026-08-27, ตั้ง webhook live แล้ว, เทสต์รับเงินจริง PromptPay ฿299 ผ่านครบ end-to-end คืนวันเดียวกัน (Charges=Paid, webhook `charge.create`/`charge.complete` HTTP 200, Firestore `members/warakorn.subscriptionActive` ติดจริง) — ยืนยันในโค้ดแล้วว่า `OMISE_PUBLIC_KEY` (index.html ~15827) เป็น **live key** `pkey_68th1dzc7trcij5z3rw` ไม่ใช่ test key อีกต่อไป. `grant_subscription.py` ยังใช้ grant มือได้อยู่ แต่ไม่ใช่ทางเดียวแล้ว. รายละเอียดเต็ม (ค่าธรรมเนียม, hold 7 วัน, บั๊ก `_subPollStatus`) ดูย่อหน้าท้ายหัวข้อนี้
 
 | ส่วนประกอบ | รายละเอียด |
 |---|---|
