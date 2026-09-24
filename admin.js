@@ -218,7 +218,8 @@ function _renderAdminUsageSection(summary){
     const acts=window._adminActions||{};
     const actDoneSection=Object.keys(acts).length?(()=>{
       const defs=[['tx_add','transactions'],['receipt_scan',''],['maya_ask',''],
-                  ['bank_add','banks'],['budget_set','catbudget'],['debt_add','debts']];
+                  ['bank_add','banks'],['budget_set','catbudget'],['debt_add','debts'],
+                  ['guest_start',''],['guest_convert','']];
       const lines=defs.filter(d=>acts[d[0]]!=null).map(([k,pageKey])=>{
         const done=acts[k]||0, opens=pageKey?(ap[pageKey]||0):0;
         const pct=opens?Math.round(done/opens*100):null;
@@ -681,6 +682,7 @@ async function _renderAdminReal(){
       if(/test|demo/.test(u)||/test|demo/.test(e)) return true; // test1-5, testuser, testerios, traveltestuser, demo, demo_6815
       if(/warakorn/.test(u)) return true; // warakorn_k — บัญชี Google สำรองของ owner
       if(u==='best_05') return true; // ตรวจ userdata แล้ว 0 รายการ + อีเมลโยงกับ owner — เข้าข่ายบัญชีทดสอบ
+      if(/^[a-z]+\.\d{5}@gmail\.com$/.test(e)) return true; // บัญชีรีวิว Google Play (14 บัญชี ชื่อนามสกุล.เลข5หลัก) — ต้องตรงกับ admin_stats.is_test_account()
       return false;
     };
     members.forEach(m=>{ m.isTest=_isTestAccount(m); });
