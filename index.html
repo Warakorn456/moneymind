@@ -96,7 +96,7 @@
     body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;overflow-x:hidden}
 
     /* ── Sidebar ── */
-    .sidebar{width:var(--sw);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s}
+    .sidebar{width:var(--sw);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:995;transition:transform .3s}
     .logo{padding:24px 20px;border-bottom:1px solid var(--border)}
     .logo h1{font-size:20px;font-weight:800;background:linear-gradient(135deg,var(--primary-l),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
     .logo p{font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:.5px}
@@ -104,7 +104,7 @@
        เพราะ .logo h1 ใช้ -webkit-background-clip:text ทำ gradient ตัวอักษร ถ้าเอา img ไปไว้ข้างในเสี่ยงโดน clip หาย */
     .logo-row{display:flex;align-items:center;gap:9px}
     .logo-img{width:26px;height:26px;border-radius:7px;flex-shrink:0;display:block}
-    .nav-wrap{flex:1;padding:10px 0;overflow-y:auto}
+    .nav-wrap{flex:1;padding:10px 0;overflow-y:auto;overscroll-behavior:contain}
     .nav-item{display:flex;align-items:center;gap:12px;padding:11px 20px;cursor:pointer;color:var(--muted);font-size:14px;font-weight:500;position:relative;transition:all .2s}
     .nav-item:hover{background:rgba(124,58,237,.1);color:var(--text)}
     .nav-item.active{background:rgba(124,58,237,.15);color:var(--primary-l)}
@@ -214,7 +214,7 @@
     /* ── Modal ── */
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
     .overlay.show{display:flex}
-    .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;animation:modalIn .25s ease}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;overscroll-behavior:contain;animation:modalIn .25s ease}
     @keyframes modalIn{from{transform:translateY(18px) scale(.97);opacity:0}to{transform:none;opacity:1}}
     .modal-title{font-size:17px;font-weight:700;margin-bottom:22px;display:flex;align-items:center;gap:10px}
     .modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}
@@ -343,7 +343,7 @@
     .chat-head-sub{font-size:11px;color:var(--muted);margin-top:1px}
     .chat-head-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;border-radius:6px;transition:color .2s}
     .chat-head-close:hover{color:var(--text)}
-    .chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+    .chat-msgs{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:16px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
     .chat-msgs::-webkit-scrollbar{width:4px}.chat-msgs::-webkit-scrollbar-track{background:transparent}.chat-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
     .chat-bubble{max-width:88%;padding:10px 14px;border-radius:16px;font-size:13.5px;line-height:1.55;word-break:break-word}
     .chat-bubble.ai{background:var(--surface2);border:1px solid var(--border);border-bottom-left-radius:4px;align-self:flex-start;color:var(--text)}
@@ -394,11 +394,11 @@
     .plan-bar-fill{height:5px;border-radius:3px;transition:width .3s}
     .plan-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center}
     .plan-modal-bg.open{display:flex}
-    .plan-modal{background:#13131f;border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
+    .plan-modal{background:#13131f;border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;overscroll-behavior:contain}
     .plan-tabs{display:flex;gap:8px;margin-bottom:14px}
     .plan-tab{padding:7px 18px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;font-size:13px;font-family:Sarabun,sans-serif;transition:.15s}
     .plan-tab.active{background:var(--primary);border-color:var(--primary);color:#fff}
-    .year-tbl-wrap{overflow-x:auto;max-height:600px;overflow-y:auto;border-radius:12px;border:1px solid var(--border)}
+    .year-tbl-wrap{overflow-x:auto;max-height:600px;overflow-y:auto;overscroll-behavior:contain;border-radius:12px;border:1px solid var(--border)}
     .year-table{width:100%;border-collapse:collapse;font-size:13px;min-width:620px}
     .year-table th{background:#1a1a2e;border-bottom:2px solid var(--border);padding:9px 12px;text-align:center;color:var(--muted);font-weight:600;position:sticky;top:0;z-index:1}
     .year-table td{border-bottom:1px solid var(--border);padding:7px 12px;text-align:right}
@@ -629,7 +629,7 @@
     }
     .hamburger{display:none;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:4px}
     @media(max-width:700px){.hamburger{display:flex}}
-    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:994}
     .sidebar-overlay.show{display:block}
 
     /* ── Budget card ── */
@@ -648,7 +648,7 @@
     .stmt-sum-item{background:var(--surface2);border-radius:10px;padding:12px;text-align:center}
     .stmt-sum-l{font-size:11px;color:var(--muted)}
     .stmt-sum-v{font-size:16px;font-weight:800;margin-top:4px}
-    .stmt-table-wrap{max-height:380px;overflow-y:auto;border:1px solid var(--border);border-radius:10px}
+    .stmt-table-wrap{max-height:380px;overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--border);border-radius:10px}
     .stmt-table{width:100%;border-collapse:collapse;font-size:13px}
     .stmt-table th{position:sticky;top:0;background:var(--surface2);padding:9px 10px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
     .stmt-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
@@ -1275,6 +1275,10 @@
     @media(max-width:700px){ .add-fab.on{display:flex} }
     .toast-act{margin-left:auto;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
     .toast-act:hover{background:rgba(255,255,255,.2)}
+    /* ล็อกการเลื่อนหน้าหลังขณะมีลิ้นชัก/กล่องเด้งเปิดอยู่ — JS ตั้ง top เป็น -scrollY ให้เอง
+       (ดู _syncScrollLock) ต้องตรึงด้วย position:fixed ไม่ใช่ overflow:hidden เพราะ overflow
+       ไม่กันนิ้วเลื่อนบน iOS WKWebView */
+    body.mm-scroll-locked{position:fixed;left:0;right:0;width:100%}
     .tx-simple .finfo{display:none}
     .tx-ios-hint{font-size:12px;color:var(--muted);margin:-4px 0 8px;display:none}
 
@@ -6051,6 +6055,7 @@ function nav(page){
   renderPage(page);
   _updateAddFab();
   _syncTabbar();
+  _syncScrollLock();   // ตาข่ายกันเหนียว: ถ้ามีทางไหนหลุดจนล็อกค้าง เปลี่ยนหน้าแล้วปลดให้เอง
   // นับว่าหน้าไหนในแอปถูกเปิดจริง (ยอดรวมล้วน ไม่ผูกกับบัญชี — ดู privacy.html)
   // ตอบคนละคำถามกับ "ฟีเจอร์ไหนมีข้อมูล": เปิดเยอะแต่ไม่มีข้อมูล = น่าสนใจแต่ใช้ยาก
   try{ if(window.__mmPage) window.__mmPage('/app/'+page); }catch(e){}
@@ -6299,8 +6304,52 @@ function renderAiUsage(){
 // ══════════════════════════════════════════
 //  SIDEBAR (mobile)
 // ══════════════════════════════════════════
-function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sb-overlay').classList.toggle('show'); }
-function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sb-overlay').classList.remove('show'); }
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sb-overlay').classList.toggle('show'); _syncScrollLock(); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sb-overlay').classList.remove('show'); _syncScrollLock(); }
+
+// ── ล็อกการเลื่อนหน้าหลังเมื่อมีชั้นบังอยู่ (2026-09-25) ────────────────────────────
+// user รายงาน: "กดแถบสามขีดแล้วหน้าเมนูเด้งขึ้นมา พอเลื่อนหน้าเมนู บางทีไปหน้าด้านหลังเลื่อนแทน"
+// ก่อนหน้านี้ทั้งไฟล์ไม่มีการล็อกเลย อาการจึงเกิดได้ 3 ทาง: (1) เลื่อนรายการเมนูจนสุดแล้ว scroll
+// chain ต่อไปหน้าหลัง (2) ลากบนส่วนที่ไม่ใช่พื้นที่เลื่อนของลิ้นชัก เช่นหัวลิ้นชัก/แถบปุ่มล่าง
+// (3) ลากบนม่านมืด — ข้อ 2-3 อธิบายคำว่า "บางที" ของ user (ขึ้นกับว่านิ้วเริ่มลากตรงไหน)
+// กล่องเด้งทุกตัว (รวม bottom sheet) มีอาการเดียวกันเพราะไม่เคยล็อกเหมือนกัน
+//
+// ⚠️ ทำไมต้อง derive จาก DOM ไม่ใช่ใช้ตัวนับเปิด/ปิด: มีโค้ด 9 จุดที่ toggle overlay และหลายจุด
+// ไม่ได้ผ่าน openM/closeM (mmConfirm, guestSignup ที่กวาดปิดด้วย querySelectorAll ฯลฯ) ถ้าใช้ตัวนับ
+// แล้วมีทางไหนปิดโดยไม่ลดตัวนับ "หน้าจะค้างเลื่อนไม่ได้ถาวร = แอปใช้งานไม่ได้เลย" ซึ่งร้ายแรงกว่า
+// อาการเดิมมาก — แบบนี้เรียกซ้ำกี่รอบก็ได้ (idempotent) และกู้สถานะเองได้เสมอ
+//
+// ⚠️ ใช้ .plan-modal-bg.open ไม่ใช่ .active — โค้ดเดิม 3 จุดเช็ค .active ซึ่งไม่เคยตรงกับอะไรเลย
+// (JS จริงใส่ classList.add('open') ดู openPlanModal) เป็นความไม่ตรงกันที่มีมาก่อน อย่าลอกตาม
+// #_rankPopupOv กับ .gmail-overlay ถูกสร้าง/ลบแบบ dynamic — อยู่ใน DOM = กำลังเปิดอยู่
+const _BLOCKING_LAYERS='.overlay.show,.sidebar-overlay.show,.plan-modal-bg.open,.gmail-overlay,#_rankPopupOv';
+let _scrollLockY=0;
+function _syncScrollLock(){
+  try{
+    const want=!!document.querySelector(_BLOCKING_LAYERS);
+    const locked=document.body.classList.contains('mm-scroll-locked');
+    if(want===locked) return;
+    if(want){
+      // overflow:hidden เฉยๆ ไม่กันนิ้วเลื่อนบน iOS WKWebView — ต้องตรึง body แล้วเลื่อนขึ้นเท่าที่
+      // scroll ไว้ เพื่อให้เห็นตำแหน่งเดิม (element ที่ position:fixed ไม่นับเป็น scrollable overflow
+      // หน้าจึงไม่มีแถบเลื่อนค้าง และ .sidebar/#mm-tabbar/body::after ที่ fixed อยู่แล้วไม่ขยับตาม
+      // เพราะ body ที่ fixed ไม่ได้สร้าง containing block ให้ fixed descendant)
+      _scrollLockY=window.scrollY||document.documentElement.scrollTop||0;
+      // ชดเชยความกว้างแถบเลื่อนที่กำลังจะหายไป — ไม่งั้นบนเดสก์ท็อปเนื้อหาจะกระตุกไปทางขวา
+      // ตามความกว้างแถบเลื่อน (วัดได้จริง 5px) ทุกครั้งที่เปิด modal. ต้องวัดก่อนล็อกเท่านั้น
+      // เพราะหลังล็อกแถบเลื่อนหายไปแล้ว ผลต่างจะกลายเป็น 0 (มือถือ/WebView ได้ 0 อยู่แล้วจึงไม่มีผล)
+      const sbw=window.innerWidth-document.documentElement.clientWidth;
+      document.body.classList.add('mm-scroll-locked');
+      document.body.style.top=(-_scrollLockY)+'px';
+      if(sbw>0) document.body.style.paddingRight=sbw+'px';
+    } else {
+      document.body.classList.remove('mm-scroll-locked');
+      document.body.style.top='';
+      document.body.style.paddingRight='';
+      window.scrollTo(0,_scrollLockY);   // ห้ามลืม ไม่งั้นปิดแล้วเด้งขึ้นบนสุด
+    }
+  }catch(e){}   // พลาดเมื่อไหร่ให้หน้ายังเลื่อนได้ตามปกติ ห้ามทำให้แอปค้าง
+}
 
 // ══════════════════════════════════════════
 //  DATE
@@ -9193,8 +9242,8 @@ async function clearAll(){
 // ══════════════════════════════════════════
 //  MODAL UTILS
 // ══════════════════════════════════════════
-function openM(id){ document.getElementById(id).classList.add('show'); }
-function closeM(id){ document.getElementById(id).classList.remove('show'); _flushPendingSync(); }
+function openM(id){ document.getElementById(id).classList.add('show'); _syncScrollLock(); }
+function closeM(id){ document.getElementById(id).classList.remove('show'); _syncScrollLock(); _flushPendingSync(); }
 
 // ── confirm แบบของแอป (2026-09-19) — แทน window.confirm ที่เป็นกล่องระบบภาษาไทยล้วน/แปลไม่ได้ ──
 // ใช้: const ok=await mmConfirm(tr('...'),{ok:tr('delete'),danger:true});
@@ -9206,15 +9255,16 @@ function mmConfirm(msg,opts){
   const okBtn=document.getElementById('mm-confirm-ok'), cancelBtn=document.getElementById('mm-confirm-cancel');
   okBtn.textContent=opts.ok||tr('confirm_ok'); cancelBtn.textContent=opts.cancel||tr('cancel');
   okBtn.className='btn '+(opts.danger?'btn-danger':'btn-primary');
-  return new Promise(res=>{ _mmConfirmResolve=res; ov.classList.add('show'); setTimeout(()=>okBtn.focus(),50); });
+  return new Promise(res=>{ _mmConfirmResolve=res; ov.classList.add('show'); _syncScrollLock(); setTimeout(()=>okBtn.focus(),50); });
 }
-function _mmConfirmDone(v){ const ov=document.getElementById('m-confirm'); if(ov) ov.classList.remove('show'); const r=_mmConfirmResolve; _mmConfirmResolve=null; if(r) r(v); }
+function _mmConfirmDone(v){ const ov=document.getElementById('m-confirm'); if(ov) ov.classList.remove('show'); _syncScrollLock(); const r=_mmConfirmResolve; _mmConfirmResolve=null; if(r) r(v); }
 // ฟอร์มบันทึกรายการมีข้อมูลค้าง → ปิดด้วยการแตะนอกกรอบ/Esc ต้องถามก่อน (เดิมทิ้งที่พิมพ์ทันที)
 function _txFormDirty(){ if(editTxId) return false; const a=document.getElementById('tx-amt'); return !!(a&&a.value); }
 function _tryCloseOverlay(ov){
   if(ov.id==='m-confirm'){ _mmConfirmDone(false); return; }
   if(ov.id==='m-tx'&&_txFormDirty()){ mmConfirm(tr('tx_discard_confirm'),{ok:tr('tx_discard_ok'),danger:true}).then(ok=>{ if(ok) closeM('m-tx'); }); return; }
   ov.classList.remove('show');
+  _syncScrollLock();
 }
 document.querySelectorAll('.overlay').forEach(ov=>{
   ov.addEventListener('click',e=>{ if(e.target===ov) _tryCloseOverlay(ov); });
@@ -19416,6 +19466,7 @@ window.handleBackButton=function(){
     if(openModals.length){
       var m=openModals[openModals.length-1];
       m.classList.remove('show'); m.classList.remove('open');
+      if(typeof _syncScrollLock==='function') _syncScrollLock();
       if(typeof _flushPendingSync==='function') _flushPendingSync();
       return true;
     }
@@ -20516,6 +20567,7 @@ function guestSignup(){
   clearInterval(_heartbeatTimer);
   document.querySelectorAll('.overlay.show').forEach(function(o){ o.classList.remove('show'); });
   var p=document.getElementById('_guestPrompt'); if(p) p.remove();
+  if(typeof _syncScrollLock==='function') _syncScrollLock();
   document.getElementById('app-root').style.display='none';
   document.getElementById('login-screen').style.display='flex';
   _updateAddFab();
