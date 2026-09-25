@@ -901,6 +901,24 @@
   @keyframes mmscanflash{ 0%,42%{ transform:scale(1) } 52%{ transform:scale(1.035) }
     64%,100%{ transform:scale(1) } }
 
+  /* สีประจำ tier — อ่านจากคลาสของชื่อที่มีอยู่แล้ว ไม่ต้องแตะ markup
+     เบราว์เซอร์ที่ไม่รองรับ :has() ตกไปใช้สีม่วงเริ่มต้น ไม่พัง */
+  .rank-card:has(.rank-name.bronze){ --tier:#cd7f32 }
+  .rank-card:has(.rank-name.gold){ --tier:#f59e0b }
+  .rank-card:has(.rank-name.diamond){ --tier:#06b6d4 }
+  .rank-card:has(.rank-name.legend){ --tier:#ec4899 }
+
+  /* ── แชทมายา: ฟองข้อความไหลเข้าทีละอัน แล้วค่อยเริ่มจุดพิมพ์ ──────────────
+     ผูกกับ .preview-card.in (กลไกเดียวกับ mmtypingout/mmtypingin ที่มีอยู่แล้ว)
+     ไม่ใช้ .reveal ซ้อนใน .reveal เพราะ observer อาจยิงลูกตั้งแต่ตอนที่พ่อยังโปร่งใสอยู่
+     overflow:hidden กันฟองที่เลื่อนมาจากด้านข้างยื่นพ้นการ์ดระหว่างเคลื่อน */
+  .chat-mock{ overflow:hidden; }
+  html.js .preview-card.in .chat-bubble{ animation:mmbubble .55s cubic-bezier(.16,1,.3,1) backwards; }
+  html.js .preview-card.in .chat-bubble.user{ animation-delay:.15s }
+  html.js .preview-card.in .chat-bubble.ai{ animation-delay:.42s }
+  @keyframes mmbubble{ from{ opacity:0; transform:translateY(10px) scale(.96) }
+    to{ opacity:1; transform:none } }
+
   /* ── ตัวเลขที่นับขึ้น ──────────────────────────────────────────────────────
      tabular-nums บังคับให้ทุกหลักกว้างเท่ากัน ระหว่างนับความกว้างจึงไม่ขยับ → CLS ยัง 0
      (ค่าปลายทางอยู่ใน HTML อยู่แล้ว JS แค่เขียนทับชั่วคราว ปิด JS ก็เห็นเลขจริง) */
@@ -1203,19 +1221,19 @@
   </div>
 
   <section class="section" id="preview">
-    <div class="section-head reveal">
+    <div class="section-head reveal reveal-clip">
       <h2>ดูตัวอย่างการใช้งานจริง</h2>
       <p>ภาพจำลองหน้าจอ — ดูว่าใช้งานจริงเป็นยังไงก่อนตัดสินใจโหลด</p>
     </div>
     <div class="preview-grid reveal-stagger">
-      <div class="preview-card reveal">
+      <div class="preview-card reveal reveal-scale">
         <div class="preview-label"><i class="fas fa-robot"></i> ผู้ช่วย AI "มายา"</div>
         <div class="chat-mock">
           <div class="chat-bubble user">เดือนนี้ใช้เงินไปเท่าไหร่แล้ว</div>
           <div class="chat-bubble ai"><span class="chat-typing"><span></span><span></span><span></span></span><span class="chat-typing-text">เดือนนี้ใช้ไปแล้ว <b>฿18,420</b> ส่วนใหญ่หมวดอาหารกับเดินทางค่ะ 🍜</span></div>
         </div>
       </div>
-      <div class="preview-card reveal">
+      <div class="preview-card reveal reveal-scale">
         <div class="preview-label"><i class="fas fa-camera"></i> สแกนใบเสร็จด้วย AI</div>
         <div class="scan-mock">
           <div class="scan-receipt">
@@ -1229,7 +1247,7 @@
           </div>
         </div>
       </div>
-      <div class="preview-card reveal">
+      <div class="preview-card reveal reveal-scale">
         <div class="preview-label"><i class="fas fa-file-invoice-dollar"></i> คำนวณภาษีเงินได้</div>
         <div class="tax-mock">
           <div class="tax-save-label">ประหยัดภาษีได้เพิ่ม</div>
@@ -1242,7 +1260,7 @@
   </section>
 
   <section class="section" id="features">
-    <div class="section-head reveal">
+    <div class="section-head reveal reveal-clip">
       <h2>ฟีเจอร์ที่แอปจัดการเงินทั่วไปไม่มี</h2>
       <p>ออกแบบมาสำหรับบริบทการเงินแบบไทยโดยเฉพาะ ไม่ใช่แอปแปลจากต่างประเทศ</p>
     </div>
@@ -1327,7 +1345,7 @@
   </section>
 
   <section class="section" id="security">
-    <div class="section-head reveal">
+    <div class="section-head reveal reveal-clip">
       <h2>ความปลอดภัยของข้อมูล</h2>
       <p>ทุกข้อด้านล่างมีรายละเอียดเต็มอยู่ในนโยบายจริง กดเข้าไปอ่านได้เลย ไม่ใช่แค่คำโฆษณา</p>
     </div>
@@ -1372,12 +1390,12 @@
   </section>
 
   <section class="section" id="pricing">
-    <div class="section-head reveal">
+    <div class="section-head reveal reveal-clip">
       <h2>ราคา</h2>
       <p>ฟีเจอร์หลักใช้งานได้ฟรี ไม่ต้องผูกบัตรเพื่อเริ่มต้น — มี AI Subscription เสริมสำหรับคนที่ต้องการโควตา AI มากขึ้น</p>
     </div>
     <div class="pricing-grid reveal-stagger">
-      <div class="price-card reveal">
+      <div class="price-card reveal reveal-scale">
         <div class="price-tag">ฟรี</div>
         <div class="price-amount">฿0</div>
         <ul class="price-list">
@@ -1392,7 +1410,7 @@
         </ul>
         <p class="price-note">ไม่มีค่าใช้จ่ายแอบแฝง ไม่ต้องผูกบัตรเพื่อเริ่มใช้งาน</p>
       </div>
-      <div class="price-card featured reveal">
+      <div class="price-card featured reveal reveal-scale">
         <div class="price-card-badge">สำหรับสายใช้ AI หนัก</div>
         <div class="price-tag">AI Subscription</div>
         <div class="price-amount">฿299<span>/เดือน</span></div>
@@ -1415,7 +1433,7 @@
   </section>
 
   <section class="section" id="faq">
-    <div class="section-head reveal">
+    <div class="section-head reveal reveal-clip">
       <h2>คำถามที่พบบ่อย</h2>
       <p>คำตอบตรงๆ ไม่มีตัวเล็ก — รายละเอียดเต็มอยู่ในนโยบายจริงเสมอ</p>
     </div>
@@ -1448,12 +1466,12 @@
   </section>
 
   <section class="section" id="reviews">
-    <div class="section-head reveal">
+    <div class="section-head reveal reveal-clip">
       <h2>เสียงจากผู้ใช้</h2>
     </div>
 
     <div class="reviews-inner">
-      <div class="rating-card reveal">
+      <div class="rating-card reveal reveal-scale">
         <div class="rating-stars">★★★★★</div>
         <div class="rating-score">5.0</div>
         <div class="rating-source">คะแนนบน App Store</div>
@@ -1490,7 +1508,7 @@
   </section>
 
   <section class="section" id="how">
-    <div class="section-head reveal">
+    <div class="section-head reveal reveal-clip">
       <h2>เริ่มใช้งานได้ใน 3 ขั้นตอน</h2>
     </div>
     <div class="steps reveal-stagger">
