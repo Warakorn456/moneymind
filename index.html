@@ -5392,6 +5392,11 @@ function _restoreSessionUI(u){
   if(aiusageNav) aiusageNav.style.display=_isOwnerNav2?'flex':'none';
   resetLockTimer();
   _startHeartbeat();
+  // ⚠️ เส้นทางนี้ (กู้ session ตอนเปิดแอปซ้ำ) ไม่ผ่าน _enterAppReal() — เป็นกับดักเดิมของไฟล์นี้
+  // ที่เคยทำให้ป้าย PRO ไม่ขึ้นมาแล้ว และเป็นเส้นทางที่ผู้ใช้เจอบ่อยที่สุดในชีวิตประจำวัน
+  // (แอปมือถือปิด cache โหลดสดทุกครั้ง → เข้าทางนี้ทุกครั้งที่เปิดแอป)
+  _updateAddFab();
+  _syncTabbar();
 }
 
 function checkLogin(){
