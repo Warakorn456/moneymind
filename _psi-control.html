@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoneyMind — แอปจัดการเงินส่วนตัว บันทึกรายรับรายจ่าย คำนวณภาษี ฟรี</title>
+<meta name="description" content="MoneyMind แอปจัดการเงินส่วนตัวสำหรับคนไทย บันทึกรายรับ-รายจ่ายด้วย AI สแกนใบเสร็จ คำนวณภาษีเงินได้เต็มรูปแบบ ใช้งานฟรี ดาวน์โหลดได้ทั้ง iOS และ Android">
+<meta name="keywords" content="แอปจัดการเงิน, บันทึกรายรับรายจ่าย, คำนวณภาษี, แอปการเงินส่วนบุคคล, ประหยัดเงิน, วางแผนการเงิน, สแกนใบเสร็จ, ภาษีเงินได้บุคคลธรรมดา">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://app.moneymindth.com/landing.html">
+<link rel="icon" href="mobile/assets/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="mobile/assets/icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a15">
+<link rel="alternate" hreflang="th" href="https://app.moneymindth.com/landing.html">
+<link rel="alternate" hreflang="en" href="https://app.moneymindth.com/landing-en.html">
+<link rel="alternate" hreflang="x-default" href="https://app.moneymindth.com/landing.html">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="MoneyMind">
+<meta property="og:locale" content="th_TH">
+<meta property="og:url" content="https://app.moneymindth.com/landing.html">
+<meta property="og:title" content="MoneyMind — แอปจัดการเงินส่วนตัวที่เข้าใจคนไทย">
+<meta property="og:description" content="บันทึกรายรับ-รายจ่ายด้วย AI สแกนใบเสร็จ คำนวณภาษีเต็มรูปแบบ นำเข้ารายการจากอีเมลธนาคารอัตโนมัติ — ใช้งานฟรี ดาวน์โหลดได้ทั้ง iOS และ Android">
+<meta property="og:image" content="https://app.moneymindth.com/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="MoneyMind — แอปจัดการเงินส่วนตัวที่เข้าใจคนไทย">
+<meta name="twitter:description" content="บันทึกรายรับ-รายจ่ายด้วย AI สแกนใบเสร็จ คำนวณภาษีเต็มรูปแบบ นำเข้ารายการจากอีเมลธนาคารอัตโนมัติ — ใช้งานฟรี">
+<meta name="twitter:image" content="https://app.moneymindth.com/assets/og-image.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" onload="this.onload=null;this.rel='stylesheet'">
+<noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</noscript>
+
+<!-- ต้องรันก่อน render:
+     1) ใส่ธีมที่ผู้ใช้เคยเลือกไว้ ก่อนวาดหน้าจอ ไม่งั้นจะเห็นสีเก่าแวบนึงก่อนเปลี่ยน
+        ถ้ายังไม่เคยเลือก ปล่อยว่างไว้ CSS จะไปตามค่าของระบบ (prefers-color-scheme)
+     2) คลาส .js ใส่เฉพาะตอนที่รองรับ IntersectionObserver
+        → ถ้าไม่รองรับ/ปิด JS ทุกอย่างแสดงตามปกติ ไม่มีอะไรถูกซ่อนค้าง -->
+<script>
+  (function () {
+    var d = document.documentElement;
+    try {
+      var t = localStorage.getItem('mm_landing_theme');
+      if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
+    } catch (e) {}
+    d.classList.add('has-js');
+    if ('IntersectionObserver' in window) d.classList.add('js');
+  })();
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MobileApplication",
+  "name": "MoneyMind",
+  "operatingSystem": "iOS, Android",
+  "applicationCategory": "FinanceApplication",
+  "description": "แอปจัดการเงินส่วนตัวสำหรับคนไทย บันทึกรายรับ-รายจ่ายด้วย AI สแกนใบเสร็จ คำนวณภาษีเงินได้เต็มรูปแบบ นำเข้ารายการจากอีเมลธนาคารอัตโนมัติ ติดตามพอร์ตลงทุนและวางแผนเกษียณ",
+  "inLanguage": "th",
+  "offers": [
+    { "@type": "Offer", "price": "0", "priceCurrency": "THB", "description": "แผนฟรี" },
+    { "@type": "Offer", "price": "299", "priceCurrency": "THB", "description": "AI Subscription รายเดือน" }
+  ],
+  "aggregateRating": { "@type": "AggregateRating", "ratingValue": "5.0", "reviewCount": "3", "bestRating": "5" },
+  "url": "https://app.moneymindth.com/"
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "MoneyMind",
+  "url": "https://app.moneymindth.com/landing.html",
+  "logo": "https://app.moneymindth.com/assets/logo.png",
+  "sameAs": [
+    "https://www.tiktok.com/@moneymind73",
+    "https://www.instagram.com/moneymind339/",
+    "https://apps.apple.com/th/app/id6788824042",
+    "https://play.google.com/store/apps/details?id=app.moneymind.th"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "แอปนี้ฟรีจริงไหม มีดักจ่ายทีหลังไหม",
+      "acceptedAnswer": { "@type": "Answer", "text": "ตอนนี้ใช้งานฟรีทุกฟีเจอร์หลัก (บันทึกรายรับ-รายจ่าย สแกนใบเสร็จ คำนวณภาษี ติดตามพอร์ต) ไม่ต้องผูกบัตรหรือจ่ายเงินก่อนเริ่มใช้งาน" }
+    },
+    {
+      "@type": "Question",
+      "name": "ข้อมูลการเงินของฉันปลอดภัยแค่ไหน",
+      "acceptedAnswer": { "@type": "Answer", "text": "รหัสผ่านเข้ารหัสแบบย้อนกลับไม่ได้ ข้อมูลไม่ถูกขายหรือแบ่งปันให้ใคร และคุณเข้าถึงได้คนเดียว" }
+    },
+    {
+      "@type": "Question",
+      "name": "แอปนี้เชื่อมต่อบัญชีธนาคารของฉันโดยตรงไหม",
+      "acceptedAnswer": { "@type": "Answer", "text": "ไม่เชื่อมต่อและไม่ขอรหัสผ่านธนาคารของคุณเด็ดขาด ระบบนำเข้ารายการทำได้จากอีเมลแจ้งเตือนธุรกรรมที่ธนาคารส่งให้คุณเองเท่านั้น (ไม่ใช่การเชื่อมต่อบัญชีแบบ Open Banking) หรือคุณจะบันทึกรายการด้วยตัวเองก็ได้เช่นกัน" }
+    },
+    {
+      "@type": "Question",
+      "name": "เลิกใช้แล้วเอาข้อมูลออกได้ไหม",
+      "acceptedAnswer": { "@type": "Answer", "text": "ได้ทุกเมื่อ ข้อมูลการเงินที่คุณป้อนเป็นของคุณเสมอ ส่งออกหรือลบทั้งหมดได้จากหน้าตั้งค่าในแอป ไม่ต้องขอใคร" }
+    },
+    {
+      "@type": "Question",
+      "name": "มีปัญหาหรือข้อเสนอแนะ ติดต่อได้ทางไหน",
+      "acceptedAnswer": { "@type": "Answer", "text": "ส่งอีเมลมาได้โดยตรงที่ support@moneymindth.com เราตอบทุกข้อความและนำไปใช้พัฒนาแอปอย่างต่อเนื่อง" }
+    },
+    {
+      "@type": "Question",
+      "name": "แอปนี้เป็นที่ปรึกษาการเงินหรือเปล่า",
+      "acceptedAnswer": { "@type": "Answer", "text": "ไม่ใช่ครับ MoneyMind ไม่ใช่ที่ปรึกษาทางการเงิน การลงทุน ภาษี หรือกฎหมาย ตัวเลขและคำแนะนำในแอป (รวมถึงจาก AI) เป็นการประมาณการเพื่อวางแผนส่วนตัวเท่านั้น ก่อนตัดสินใจทางการเงินจริงควรตรวจสอบกับผู้เชี่ยวชาญที่มีใบอนุญาตเสมอ" }
+    }
+  ]
+}
+</script>
+
+<style>
+  /* ── Theme ────────────────────────────────────────────────────────────────
+     Dark is the base. Light is applied either by explicit choice
+     (html[data-theme="light"]) or by system preference when the visitor has
+     not chosen dark. Both paths assign the same --l-* values, so the light
+     palette itself is written once. */
+  :root{
+    color-scheme:dark;
+    /* light palette (values only — assigned below) */
+    --l-bg:#f4f5fa; --l-surface:#ffffff; --l-surface2:#eceef6;
+    --l-border:rgba(15,23,42,.13); --l-text:#0f172a; --l-muted:#475569;
+    --l-primary:#6d28d9; --l-primary-l:#6d28d9;
+    --l-card:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.66));
+    --l-card2:linear-gradient(180deg,#ffffff,rgba(255,255,255,.78));
+    --l-band:rgba(255,255,255,.6); --l-track:rgba(15,23,42,.1); --l-dot:rgba(15,23,42,.05);
+    --l-glowa:rgba(124,58,237,.13); --l-glowb:rgba(6,182,212,.09);
+    --l-glowc:rgba(167,139,250,.12); --l-glowd:rgba(236,72,153,.07);
+    --l-grada:#7c3aed; --l-gradb:#4f46e5;
+    --l-amber:#b45309; --l-green:#047857; --l-line:rgba(124,58,237,.35);
+
+    /* active tokens — dark by default */
+    --bg:#0a0a15; --surface:#13131f; --surface2:#1a1a2e; --border:rgba(255,255,255,.08);
+    --text:#e2e8f0; --muted:#94a3b8; --primary:#7c3aed; --primary-l:#a78bfa;
+    --card:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.015));
+    --card2:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+    --band:rgba(255,255,255,.015); --track:rgba(255,255,255,.06); --dot:rgba(255,255,255,.03);
+    --glowa:rgba(124,58,237,.20); --glowb:rgba(6,182,212,.10);
+    --glowc:rgba(124,58,237,.10); --glowd:rgba(236,72,153,.08);
+    --grada:#a78bfa; --gradb:#818cf8;
+    --amber:#fbbf24; --green:#34d399; --line:rgba(167,139,250,.5);
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      color-scheme:light;
+      --bg:var(--l-bg); --surface:var(--l-surface); --surface2:var(--l-surface2);
+      --border:var(--l-border); --text:var(--l-text); --muted:var(--l-muted);
+      --primary:var(--l-primary); --primary-l:var(--l-primary-l);
+      --card:var(--l-card); --card2:var(--l-card2);
+      --band:var(--l-band); --track:var(--l-track); --dot:var(--l-dot);
+      --glowa:var(--l-glowa); --glowb:var(--l-glowb); --glowc:var(--l-glowc); --glowd:var(--l-glowd);
+      --grada:var(--l-grada); --gradb:var(--l-gradb);
+      --amber:var(--l-amber); --green:var(--l-green); --line:var(--l-line);
+    }
+  }
+  :root[data-theme="light"]{
+    color-scheme:light;
+    --bg:var(--l-bg); --surface:var(--l-surface); --surface2:var(--l-surface2);
+    --border:var(--l-border); --text:var(--l-text); --muted:var(--l-muted);
+    --primary:var(--l-primary); --primary-l:var(--l-primary-l);
+    --card:var(--l-card); --card2:var(--l-card2);
+    --band:var(--l-band); --track:var(--l-track); --dot:var(--l-dot);
+    --glowa:var(--l-glowa); --glowb:var(--l-glowb); --glowc:var(--l-glowc); --glowd:var(--l-glowd);
+    --grada:var(--l-grada); --gradb:var(--l-gradb);
+    --amber:var(--l-amber); --green:var(--l-green); --line:var(--l-line);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Sarabun',sans-serif; background:var(--bg); color:var(--text);
+    line-height:1.75; -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  body::before{
+    content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(600px 500px at 12% -8%, var(--glowa), transparent 60%),
+      radial-gradient(560px 480px at 92% 10%, var(--glowb), transparent 60%),
+      radial-gradient(520px 440px at 50% 100%, var(--glowc), transparent 60%),
+      radial-gradient(480px 420px at 78% 62%, var(--glowd), transparent 60%),
+      radial-gradient(circle, var(--dot) 1px, transparent 1px);
+    background-size: auto, auto, auto, auto, 24px 24px;
+  }
+  a{color:inherit}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+  /* per-section glow — the ambient body::before backdrop is position:fixed (same everywhere
+     while scrolling), so several sections in a row otherwise sit on an identical background.
+     These scroll normally with content and give each section a distinct, subtle "moment"
+     instead of the whole page reading as one flat surface. */
+  #preview, #rank, #security, #pricing{ position:relative; }
+  #preview::before, #rank::before, #security::before, #pricing::before{ content:''; position:absolute; top:-30px; left:50%;
+    transform:translateX(-50%); width:min(700px,90%); height:280px; z-index:-1; pointer-events:none; }
+  #preview::before{ background:radial-gradient(ellipse at center, var(--glowb), transparent 72%); }
+  #rank::before{ background:radial-gradient(ellipse at center, var(--glowd), transparent 72%); }
+  #security::before{ background:radial-gradient(ellipse at center, var(--glowa), transparent 72%); }
+  #pricing::before{ background:radial-gradient(ellipse at center, var(--glowc), transparent 72%); }
+
+  /* scroll reveal — hidden state applies only when JS is running (html.js),
+     so no-JS visitors and crawlers always see full content */
+  .reveal{ transition:opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1); }
+  html.js .reveal{ opacity:0; transform:translateY(18px); }
+  html.js .reveal.in{ opacity:1; transform:none; }
+  /* stagger children of a revealed grid so cards cascade */
+  html.js .reveal-stagger > *:nth-child(1){ transition-delay:0s }
+  html.js .reveal-stagger > *:nth-child(2){ transition-delay:.07s }
+  html.js .reveal-stagger > *:nth-child(3){ transition-delay:.14s }
+  html.js .reveal-stagger > *:nth-child(4){ transition-delay:.21s }
+  html.js .reveal-stagger > *:nth-child(5){ transition-delay:.07s }
+  html.js .reveal-stagger > *:nth-child(6){ transition-delay:.14s }
+  html.js .reveal-stagger > *:nth-child(7){ transition-delay:.21s }
+  html.js .reveal-stagger > *:nth-child(8){ transition-delay:.28s }
+
+  /* hero entrance (pure CSS on load, no observer — above the fold must never start hidden) */
+  @keyframes mmrise{ from{ opacity:0; transform:translateY(20px) } to{ opacity:1; transform:none } }
+  /* h1 + .sub (child 1-2) are the LCP candidate — skip the fade-in so they paint
+     immediately instead of waiting out animation-delay+duration; keep the fade for
+     store-row/trust-row below since they're never the largest painted element */
+  .hero-text > *:nth-child(n+3){ animation:mmrise .8s cubic-bezier(.16,1,.3,1) backwards; }
+  .hero-text > *:nth-child(3){ animation-delay:.1s }
+  .hero-text > *:nth-child(4){ animation-delay:.2s }
+  .hero-text > *:nth-child(5){ animation-delay:.3s }
+  .hero-text > *:nth-child(6){ animation-delay:.4s }
+  .hero-visual{ animation:mmrise 1s cubic-bezier(.16,1,.3,1) .3s backwards; }
+
+  /* nav — sticky so the CTA stays reachable from anywhere on the page.
+     nav lives inside .wrap (max-width 1080px), so its background is pushed out to
+     full-bleed with a 100vw pseudo-element; body already has overflow-x:hidden,
+     so 100vw can't introduce a horizontal scrollbar. */
+  nav{ position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between; padding:16px 0; gap:20px; }
+  nav::before{ content:''; position:absolute; inset:0; left:50%; transform:translateX(-50%);
+    width:100vw; z-index:-1; background:var(--bg); opacity:.82;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--border); }
+  /* anchor targets must clear the sticky nav, otherwise headings land underneath it */
+  section[id]{ scroll-margin-top:88px; }
+  .logo{ display:flex; align-items:center; gap:11px; text-decoration:none; flex-shrink:0; }
+  .logo-mark{ width:40px; height:40px; border-radius:11px; display:block; flex-shrink:0; }
+  .logo-text{ font-size:1.2rem; font-weight:800; letter-spacing:-.02em; }
+  .nav-links{ display:flex; align-items:center; gap:28px; margin:0 auto; }
+  .nav-links a{ color:var(--muted); text-decoration:none; font-size:.9rem; font-weight:600;
+    transition:color .18s; white-space:nowrap; }
+  .nav-links a:hover{ color:var(--text); }
+  .nav-right{ display:flex; align-items:center; gap:12px; flex-shrink:0; }
+  .nav-cta{ display:inline-flex; align-items:center; height:38px; padding:0 18px;
+    background:linear-gradient(135deg,var(--grada),var(--gradb)); color:#fff; font-size:.86rem;
+    font-weight:700; text-decoration:none; border-radius:10px; white-space:nowrap;
+    transition:transform .18s, box-shadow .18s; }
+  .nav-cta:hover{ transform:translateY(-1px); box-shadow:0 6px 18px rgba(124,58,237,.35); }
+  .lang-switch{ color:var(--muted); text-decoration:none; font-size:.85rem; font-weight:700;
+    padding:8px 10px; border:1px solid var(--border); border-radius:8px;
+    transition:border-color .18s,color .18s; }
+  .lang-switch:hover{ color:var(--text); border-color:rgba(167,139,250,.4); }
+  .mobile-nav{ display:none; position:relative; }
+  .mobile-nav-btn{ display:flex; align-items:center; justify-content:center; width:40px; height:40px;
+    background:var(--card2); border:1px solid var(--border); border-radius:11px; color:var(--text);
+    font-size:1rem; cursor:pointer; list-style:none; }
+  .mobile-nav-btn::-webkit-details-marker{ display:none; }
+  .mobile-nav-btn .fa-xmark{ display:none; }
+  .mobile-nav[open] .mobile-nav-btn .fa-bars{ display:none; }
+  .mobile-nav[open] .mobile-nav-btn .fa-xmark{ display:inline; }
+  .mobile-nav-menu{ position:absolute; top:calc(100% + 10px); right:0; min-width:210px;
+    /* opaque, not var(--card) — that token is a ~3% translucent gradient meant for panels
+       sitting on the near-blank hero backdrop. This menu floats over arbitrary page content
+       (hero heading, body text) so it must fully occlude what's behind it, same reasoning as
+       .detail-modal-panel above. */
+    background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:10px;
+    display:flex; flex-direction:column; gap:2px; box-shadow:0 12px 30px rgba(0,0,0,.35); z-index:20; }
+  /* display:flex above overrides the browser default that hides <details> content when
+     closed, which left the panel laid out (and sticking past the viewport edge) even while
+     invisible — it has to be hidden explicitly */
+  .mobile-nav:not([open]) .mobile-nav-menu{ display:none; }
+  .mobile-nav-menu a{ color:var(--text); text-decoration:none; font-size:.92rem; font-weight:600;
+    padding:10px 12px; border-radius:8px; transition:background .15s; }
+  .mobile-nav-menu a:hover{ background:var(--surface2); }
+  .mobile-nav-divider{ height:1px; background:var(--border); margin:6px 4px; }
+  @media (max-width:820px){
+    .nav-links{ display:none; }
+    .lang-switch{ display:none; }
+    .mobile-nav{ display:block; }
+  }
+  /* on small phones logo + CTA + theme toggle + hamburger together overflow the bar,
+     so the CTA drops out here — the hero's own download buttons sit right below it,
+     and the menu carries an app link too */
+  @media (max-width:560px){
+    .nav-cta{ display:none; }
+  }
+
+  /* theme toggle — only shown when JS can actually drive it */
+  .theme-toggle{ display:none; position:relative; width:40px; height:40px;
+    background:var(--card2); border:1px solid var(--border); border-radius:11px; color:var(--text);
+    font-size:.95rem; cursor:pointer; transition:border-color .2s, transform .18s; }
+  html.has-js .theme-toggle{ display:inline-flex; }
+  .theme-toggle:hover{ border-color:rgba(167,139,250,.45); transform:translateY(-1px); }
+  /* both icons always in the DOM, stacked — lets them cross-fade/rotate instead of
+     being replaced outright (a DOM swap can't transition) */
+  .theme-toggle .icon-sun, .theme-toggle .icon-moon{ position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    transition:opacity .5s ease, transform .5s ease; }
+  .theme-toggle .icon-sun{ opacity:1; transform:rotate(0) scale(1); }
+  .theme-toggle .icon-moon{ opacity:0; transform:rotate(-90deg) scale(.5); }
+  :root[data-theme="light"] .theme-toggle .icon-sun{ opacity:0; transform:rotate(90deg) scale(.5); }
+  :root[data-theme="light"] .theme-toggle .icon-moon{ opacity:1; transform:rotate(0) scale(1); }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]) .theme-toggle .icon-sun{ opacity:0; transform:rotate(90deg) scale(.5); }
+    :root:not([data-theme="dark"]) .theme-toggle .icon-moon{ opacity:1; transform:rotate(0) scale(1); }
+  }
+
+  /* hero */
+  .hero{ padding:80px 0 72px; }
+  .hero-inner{ display:flex; flex-direction:column; align-items:center; gap:44px; text-align:center; }
+  .hero-text{ min-width:0; }
+  h1{ font-size:clamp(34px,6.2vw,62px); font-weight:800; line-height:1.18; letter-spacing:-.025em;
+    text-wrap:balance; max-width:16ch; margin:0 auto 20px; }
+  h1 em{ font-style:normal; background:linear-gradient(135deg,var(--grada),var(--gradb)); -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent; background-clip:text; }
+  .sub{ font-size:1.12rem; color:var(--muted); max-width:52ch; margin:0 auto 34px; text-wrap:balance; }
+
+  /* store row — iOS / Android / Web in equal-sized cells.
+     Official badges keep their own artwork (brand rules), so heights are tuned
+     per badge to make the *visible* rectangles match: the Apple SVG fills its
+     box edge to edge, while Google's PNG carries transparent clear-space and
+     only 76.8% of its height is artwork → 52 / 0.768 ≈ 68px. */
+
+  /* ลองใช้ก่อนสมัคร (2026-09-24) — ปุ่มหลักพาเข้าโหมดทดลองของแอป /?try=1 */
+  .try-btn{ display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:56px; padding:0 28px;
+    border-radius:14px; background:linear-gradient(135deg,#7c3aed,#06b6d4); color:#fff; font-weight:700; font-size:1.05rem;
+    text-decoration:none; box-shadow:0 14px 34px -14px rgba(124,58,237,.75); transition:transform .18s; }
+  .try-btn:hover{ transform:translateY(-2px); }
+  .try-sub{ font-size:.8rem; color:var(--muted); margin:10px 0 22px; }
+  .try-wrap{ display:flex; flex-direction:column; align-items:center; }
+  .hero-text .try-wrap{ align-items:center; }
+  @media(min-width:961px){ .hero-text .try-wrap{ align-items:flex-start; } }
+  .mid-cta{ text-align:center; padding:34px 20px; margin:0 auto; max-width:760px; border-radius:22px;
+    background:var(--surface); border:1px solid rgba(124,58,237,.3); }
+  .mid-cta h3{ font-size:1.35rem; margin:0 0 6px; }
+  .mid-cta p{ color:var(--muted); margin:0 0 18px; font-size:.92rem; }
+  .sticky-try{ position:fixed; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:60;
+    display:none; transform:translateY(140%); transition:transform .25s; }
+  .sticky-try.show{ transform:none; }
+  .sticky-try .try-btn{ width:100%; min-height:52px; }
+  @media(max-width:820px){ .sticky-try{ display:block; } }
+  .store-row{ display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  .store-cell{ width:186px; height:68px; display:flex; align-items:center; justify-content:center;
+    text-decoration:none; transition:transform .18s; }
+  .store-cell:hover{ transform:translateY(-2px); }
+  .store-cell img{ display:block; width:auto; }
+  .store-cell.ios img{ height:52px; }
+  .store-cell.android img{ height:68px; }
+
+  /* our own web button — sized to match the badges' visible rectangle */
+  .web-badge{ display:flex; align-items:center; gap:10px; height:52px; padding:0 18px;
+    background:#000; border:1px solid rgba(255,255,255,.5); border-radius:10px;
+    text-decoration:none; color:#fff; }
+  .web-badge i{ font-size:1.5rem; line-height:1; }
+  .web-badge .wb-txt{ display:flex; flex-direction:column; line-height:1.15; text-align:left; }
+  .web-badge .wb-sm{ font-size:.62rem; font-weight:400; letter-spacing:.01em; }
+  .web-badge .wb-lg{ font-size:1.12rem; font-weight:600; letter-spacing:-.01em; }
+
+  .trust-row{ display:flex; align-items:center; justify-content:center; gap:26px; flex-wrap:wrap;
+    margin-top:38px; font-size:.82rem; color:var(--muted); }
+  /* in the hero the trust chips sit right under the store badges, so they don't need
+     the full standalone gap the closing CTA uses */
+  .hero-text .trust-row{ margin-top:24px; }
+  .trust-row span{ display:inline-flex; align-items:center; gap:7px; }
+  .trust-row i{ color:var(--primary-l); }
+
+  /* hero phone mockup */
+  .hero-visual{ position:relative; width:100%; max-width:300px; margin:0 auto; }
+  .hero-visual::before{ content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:380px; height:380px; max-width:140%; border-radius:50%; z-index:-1; pointer-events:none;
+    background:radial-gradient(circle, var(--glowa), transparent 70%); filter:blur(6px); }
+  .phone-mock{
+    position:relative; width:100%;
+    background:linear-gradient(160deg,#1c1c2e,#100f1c);
+    border:1px solid rgba(255,255,255,.1); border-radius:36px; padding:14px;
+    box-shadow:0 30px 60px -20px rgba(124,58,237,.35), 0 10px 30px rgba(0,0,0,.5);
+  }
+  .phone-notch{ width:80px; height:18px; background:#0a0a15; border-radius:100px; margin:0 auto 10px; }
+  .phone-screen{ background:linear-gradient(180deg,#13131f,#0e0e18); border-radius:22px; padding:16px 14px 20px;
+    color:#e2e8f0; }
+  .mock-topbar{ display:flex; align-items:center; gap:8px; margin-bottom:16px; }
+  .mock-avatar{ width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg,#6366f1,#8b5cf6); flex-shrink:0; }
+  .mock-greeting{ font-size:.78rem; color:#94a3b8; font-weight:600; }
+  .mock-nw-card{ background:linear-gradient(160deg,rgba(124,58,237,.18),rgba(99,102,241,.06));
+    border:1px solid rgba(167,139,250,.25); border-radius:16px; padding:16px; margin-bottom:12px; }
+  .mock-nw-label{ font-size:.7rem; color:#94a3b8; margin-bottom:4px; }
+  .mock-nw-value{ font-size:1.5rem; font-weight:800; letter-spacing:-.02em; margin-bottom:6px; }
+  .mock-nw-badge{ display:inline-block; font-size:.68rem; font-weight:700; color:#34d399;
+    background:rgba(52,211,153,.12); padding:3px 9px; border-radius:100px; margin-bottom:14px; }
+  .mock-bars{ display:flex; align-items:flex-end; gap:5px; height:52px; }
+  .mock-bars span{ flex:1; background:linear-gradient(180deg,#a78bfa,#7c3aed); border-radius:4px 4px 0 0; opacity:.85; }
+  .mock-chips{ display:flex; flex-direction:column; gap:8px; }
+  .mock-chip{ display:flex; align-items:center; gap:8px; font-size:.76rem;
+    background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:9px 11px; color:#94a3b8; }
+  .mock-chip i{ color:#a78bfa; width:16px; text-align:center; }
+  .mock-chip b{ margin-left:auto; color:#e2e8f0; font-weight:700; }
+
+  .float-badge{ position:absolute; display:flex; align-items:center; gap:6px; font-size:.72rem; font-weight:700;
+    background:var(--surface2); border:1px solid var(--border); border-radius:100px; padding:8px 14px;
+    box-shadow:0 8px 24px rgba(0,0,0,.35); animation:mmfloat 4s ease-in-out infinite; white-space:nowrap; }
+  .float-badge i{ color:var(--primary-l); }
+  .float-badge-1{ top:8%; left:-10%; animation-delay:0s; }
+  .float-badge-2{ bottom:10%; right:-8%; animation-delay:1.6s; }
+  @keyframes mmfloat{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-8px); } }
+
+  @media (max-width:520px){
+    .float-badge{ display:none; }
+  }
+  @media (min-width:961px){
+    .hero-inner{ flex-direction:row; align-items:center; text-align:left; gap:56px; }
+    .hero-text{ flex:1; }
+    .hero-text h1{ margin:0 0 18px; }
+    .hero-text .sub{ margin:0 0 34px; }
+    .hero-text .store-row{ justify-content:flex-start; }
+    .hero-text .trust-row{ justify-content:flex-start; }
+    .hero-visual{ flex:0 0 320px; max-width:320px; margin:0; }
+  }
+
+  /* marquee — decorative running band of supported banks */
+  .marquee-band{ padding:22px 0 10px; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+    background:var(--band); }
+  .marquee-label{ text-align:center; font-size:.76rem; font-weight:600; color:var(--muted);
+    letter-spacing:.04em; margin-bottom:14px; }
+  .marquee{ overflow:hidden; padding-bottom:12px;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+    mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
+  .marquee-track{ display:flex; width:max-content; animation:mmmarquee 28s linear infinite; }
+  .marquee:hover .marquee-track{ animation-play-state:paused; }
+  .marquee-set{ display:flex; align-items:center; gap:14px; padding-right:14px; flex-shrink:0; }
+  .bank-pill{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap;
+    font-size:.88rem; font-weight:700; color:var(--text);
+    background:var(--surface2);
+    border:1px solid rgba(167,139,250,.18); border-radius:100px; padding:9px 20px;
+    box-shadow:0 4px 14px rgba(0,0,0,.18); }
+  .bank-pill i{ color:var(--primary-l); font-size:.8rem; }
+  .feature-pill{ display:inline-flex; align-items:center; white-space:nowrap;
+    font-size:.85rem; font-weight:600; color:var(--text);
+    background:var(--surface2);
+    border:1px solid rgba(167,139,250,.18); border-radius:100px; padding:9px 20px;
+    box-shadow:0 4px 14px rgba(0,0,0,.18); }
+  @keyframes mmmarquee{ from{ transform:translateX(0) } to{ transform:translateX(-50%) } }
+  /* opposite direction so two marquees on one page read as distinct, not a glitch */
+  .marquee-track-rev{ animation-name:mmmarquee-rev; }
+  @keyframes mmmarquee-rev{ from{ transform:translateX(-50%) } to{ transform:translateX(0) } }
+
+  /* features */
+  .section{ padding:88px 0; }
+  .section-head{ text-align:center; margin-bottom:52px; }
+  .section-head h2{ font-size:clamp(26px,4vw,40px); font-weight:800; letter-spacing:-.02em;
+    line-height:1.25; margin-bottom:12px; }
+  .section-head p{ color:var(--muted); font-size:.98rem; max-width:48ch; margin:0 auto; }
+
+  .grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  /* #security has 5 cards, not a clean multiple of 4 — auto-fit distributes them evenly
+     instead of leaving one card alone on its own row like a fixed 4-column grid would.
+     :where() keeps this at the same specificity as plain .grid so the mobile breakpoints
+     below (which target .grid directly) still win at narrow widths as originally designed —
+     an #security .grid selector would otherwise out-specificity those and break them. */
+  :where(#security) .grid{ grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
+  .fcard{ background:var(--card);
+    border:1px solid var(--border); border-radius:16px; padding:22px 18px; transition:transform .18s,border-color .18s; }
+  .fcard:hover{ transform:translateY(-3px); border-color:rgba(167,139,250,.35); }
+  .fcard .ico{ width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center;
+    font-size:1.05rem; margin-bottom:14px; }
+  .fcard .title{ font-size:.98rem; font-weight:700; margin-bottom:6px; }
+  .fcard .desc{ font-size:.85rem; color:var(--muted); line-height:1.65; }
+  .fcard .link{ display:inline-block; font-size:.8rem; font-weight:600; color:var(--primary-l);
+    text-decoration:none; margin-top:10px; }
+  .fcard .link:hover{ text-decoration:underline; }
+  .infra-note{ text-align:center; font-size:.82rem; color:var(--muted); margin-top:26px; }
+  .security-details{ max-width:560px; margin:22px auto 0; display:flex; flex-direction:column; gap:12px; }
+  .security-details div{ font-size:.85rem; color:var(--muted); line-height:1.6; display:flex;
+    align-items:flex-start; gap:11px; }
+  .security-details i{ color:var(--primary-l); margin-top:3px; flex-shrink:0; width:14px; text-align:center; }
+
+  /* pricing */
+  .pricing-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; max-width:820px; margin:0 auto; align-items:stretch; }
+  @media (max-width:820px){ .pricing-grid{ grid-template-columns:minmax(0,1fr); max-width:460px; } }
+  @media (max-width:400px){ .price-card{ padding:26px 18px; } }
+  .price-card{ background:var(--card); border:1px solid var(--border);
+    border-radius:20px; padding:32px 30px; text-align:center; display:flex; flex-direction:column; }
+  .price-card.featured{ border-color:var(--primary-l); box-shadow:0 0 0 1px var(--primary-l), 0 20px 50px -20px rgba(139,92,246,.35); position:relative; }
+  .price-card-badge{ position:absolute; top:-13px; left:50%; transform:translateX(-50%); font-size:.72rem; font-weight:700;
+    background:linear-gradient(135deg,var(--grada),var(--gradb)); color:#fff; padding:5px 14px; border-radius:100px; white-space:nowrap; }
+  .price-tag{ display:inline-block; font-size:1.05rem; font-weight:800; color:var(--text); margin-bottom:6px; }
+  .price-card.featured .price-tag{ background:linear-gradient(135deg,var(--grada),var(--gradb)); -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent; background-clip:text; }
+  .price-amount{ font-size:2.1rem; font-weight:800; color:var(--text); margin-bottom:22px; }
+  .price-amount span{ font-size:.95rem; font-weight:600; color:var(--muted); }
+  .price-list{ list-style:none; text-align:left; display:flex; flex-direction:column; gap:12px; margin-bottom:22px; flex:1; }
+  .price-list li{ font-size:.92rem; color:var(--text); display:flex; align-items:flex-start; gap:10px; overflow-wrap:anywhere; min-width:0; }
+  .price-list li i{ color:#34d399; font-size:.85rem; flex-shrink:0; margin-top:3px; }
+  .price-list li.muted-item{ color:var(--muted); }
+  .price-list li.muted-item i{ color:var(--muted); }
+  .price-multiplier{ display:inline-block; font-size:.7rem; font-weight:800; color:#fff;
+    background:linear-gradient(135deg,var(--grada),var(--gradb)); padding:1px 8px; border-radius:100px; margin-left:6px; white-space:nowrap; }
+  .price-baseline{ display:inline-block; font-size:.7rem; font-weight:700; color:var(--muted);
+    background:var(--surface2); border:1px solid var(--border); padding:1px 8px; border-radius:100px; margin-left:6px; white-space:nowrap; }
+  .price-note{ font-size:.8rem; color:var(--muted); }
+  .pricing-footnote{ text-align:center; font-size:.82rem; color:var(--muted); margin-top:20px; max-width:560px; margin-left:auto; margin-right:auto; }
+  .pricing-footnote a{ color:var(--primary-l); text-decoration:underline; text-underline-offset:2px; }
+
+  /* product preview showcase */
+  .preview-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .preview-card{ background:var(--card);
+    border:1px solid var(--border); border-radius:18px; padding:22px; transition:transform .18s,border-color .18s; }
+  .preview-card:hover{ transform:translateY(-3px); border-color:rgba(167,139,250,.35); }
+  .preview-label{ display:flex; align-items:center; gap:8px; font-size:.85rem; font-weight:700;
+    margin-bottom:18px; color:var(--primary-l); }
+
+  .chat-mock{ display:flex; flex-direction:column; gap:10px; }
+  .chat-bubble{ max-width:88%; font-size:.83rem; line-height:1.55; padding:10px 14px; border-radius:16px; }
+  .chat-bubble.user{ align-self:flex-end; background:linear-gradient(135deg,#6366f1,#7c3aed); color:#fff;
+    border-bottom-right-radius:4px; }
+  .chat-bubble.ai{ align-self:flex-start; background:var(--surface2); border:1px solid var(--border);
+    color:var(--text); border-bottom-left-radius:4px; }
+  .chat-bubble b{ color:var(--primary-l); }
+  .chat-typing{ display:inline-flex; gap:4px; vertical-align:middle; }
+  .chat-typing span{ width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.35; }
+  html.js .chat-bubble.ai .chat-typing span{ animation:mmtypingdot 1s ease-in-out infinite; }
+  html.js .chat-bubble.ai .chat-typing span:nth-child(2){ animation-delay:.15s; }
+  html.js .chat-bubble.ai .chat-typing span:nth-child(3){ animation-delay:.3s; }
+  @keyframes mmtypingdot{ 0%,60%,100%{ opacity:.3; transform:translateY(0); } 30%{ opacity:1; transform:translateY(-3px); } }
+  html.js .preview-card.in .chat-bubble.ai .chat-typing{ animation-name:mmtypingout; animation-duration:.01s; animation-delay:1.05s; animation-fill-mode:forwards; }
+  @keyframes mmtypingout{ to{ opacity:0; visibility:hidden; width:0; margin:0; } }
+  html.js .chat-bubble.ai .chat-typing-text{ opacity:0; }
+  html.js .preview-card.in .chat-bubble.ai .chat-typing-text{ animation:mmtypingin .3s ease forwards 1.05s; }
+  @keyframes mmtypingin{ to{ opacity:1; } }
+
+  .scan-mock{ display:flex; align-items:center; gap:12px; }
+  .scan-receipt{ position:relative; width:56px; height:64px; background:var(--surface2); border:1px solid var(--border);
+    border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:1.2rem;
+    flex-shrink:0; overflow:hidden; }
+  .scan-line{ position:absolute; left:0; right:0; top:6%; height:2px;
+    background:linear-gradient(90deg,transparent,#34d399,transparent); animation:mmscan 2.2s ease-in-out infinite; }
+  @keyframes mmscan{ 0%{top:6%} 50%{top:88%} 100%{top:6%} }
+  .scan-arrow{ color:var(--muted); font-size:.85rem; flex-shrink:0; }
+  .scan-result{ flex:1; min-width:0; background:rgba(52,211,153,.08); border:1px solid rgba(52,211,153,.25);
+    border-radius:12px; padding:10px 12px; }
+  .scan-result-top{ display:flex; justify-content:space-between; gap:8px; font-size:.8rem; margin-bottom:6px; }
+  .scan-result-top span{ color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .scan-result-top b{ color:var(--text); flex-shrink:0; }
+  .scan-tag{ display:inline-flex; align-items:center; gap:5px; font-size:.7rem; font-weight:700; color:var(--green);
+    background:rgba(52,211,153,.15); padding:3px 9px; border-radius:100px; }
+
+  .tax-mock{ display:flex; flex-direction:column; }
+  .tax-save-label{ font-size:.76rem; color:var(--muted); margin-bottom:2px; }
+  .tax-save-value{ font-size:1.5rem; font-weight:800; color:var(--amber); margin-bottom:12px; }
+  .tax-save-value span{ font-size:.75rem; font-weight:600; color:var(--muted); }
+  .tax-bar{ height:8px; background:var(--track); border-radius:100px; overflow:hidden; margin-bottom:12px; }
+  .tax-bar-fill{ height:100%; background:linear-gradient(90deg,#f59e0b,var(--amber)); border-radius:100px; }
+  .tax-hint{ display:flex; align-items:center; gap:7px; font-size:.78rem; color:var(--muted); }
+  .tax-hint i{ color:var(--amber); }
+
+  @media (max-width:820px){
+    /* minmax(0,1fr) rather than 1fr: a plain 1fr track refuses to shrink below the
+       card's min-content width, which pushed the grid past the viewport on ~320px screens */
+    .preview-grid{ grid-template-columns:minmax(0,1fr); }
+    .preview-card{ min-width:0; }
+    .preview-label{ overflow-wrap:anywhere; }
+  }
+
+  /* wealth rank showcase */
+  /* rank tiers — tier text is real HTML (the artwork is illustration only),
+     so it stays sharp at any size instead of being baked into a scaled-down image */
+  .rank-row{ display:flex; align-items:flex-start; justify-content:center; gap:16px; flex-wrap:wrap; }
+  .rank-card{ width:150px; text-align:center; }
+  .rank-art{ border-radius:14px; overflow:hidden; border:1px solid var(--border);
+    background:var(--card2);
+    margin-bottom:12px; transition:transform .18s, border-color .18s; }
+  .rank-card:hover .rank-art{ transform:translateY(-4px); border-color:rgba(167,139,250,.4); }
+  .rank-art img{ width:100%; height:auto; display:block; }
+  .rank-name{ font-size:1.02rem; font-weight:800; letter-spacing:-.01em; line-height:1.3; }
+  /* tier colours mirror _RANK_TIERS in index.html; the light set is darkened
+     so each still reads against a white card */
+  .rank-name.bronze{ color:#cd7f32 } .rank-name.gold{ color:#f59e0b }
+  .rank-name.diamond{ color:#06b6d4 } .rank-name.legend{ color:#ec4899 }
+  :root[data-theme="light"] .rank-name.bronze{ color:#9a5b1d }
+  :root[data-theme="light"] .rank-name.gold{ color:#b45309 }
+  :root[data-theme="light"] .rank-name.diamond{ color:#0e7490 }
+  :root[data-theme="light"] .rank-name.legend{ color:#be185d }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]) .rank-name.bronze{ color:#9a5b1d }
+    :root:not([data-theme="dark"]) .rank-name.gold{ color:#b45309 }
+    :root:not([data-theme="dark"]) .rank-name.diamond{ color:#0e7490 }
+    :root:not([data-theme="dark"]) .rank-name.legend{ color:#be185d }
+  }
+  .rank-th{ font-size:.82rem; color:var(--muted); line-height:1.4; }
+  .rank-range{ font-size:.85rem; font-weight:700; margin-top:5px; }
+  .rank-caption{ text-align:center; color:var(--muted); font-size:.88rem; margin-top:28px; }
+  @media (max-width:640px){
+    .rank-row{ gap:12px; }
+    .rank-card{ width:calc(50% - 6px); max-width:150px; }
+  }
+
+  /* faq — native <details>/<summary>, works with zero JS */
+  .faq-list{ max-width:680px; margin:0 auto; display:flex; flex-direction:column; gap:12px; }
+  .faq-item{ background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:4px 20px; transition:border-color .18s; }
+  .faq-item:hover{ border-color:rgba(167,139,250,.3); }
+  .faq-item summary{ list-style:none; cursor:pointer; padding:16px 28px 16px 0; position:relative;
+    font-size:.95rem; font-weight:700; }
+  .faq-item summary::-webkit-details-marker{ display:none; }
+  .faq-item summary::after{ content:'\f078'; font-family:'Font Awesome 6 Free'; font-weight:900;
+    position:absolute; right:0; top:50%; transform:translateY(-50%); font-size:.75rem;
+    color:var(--primary-l); transition:transform .3s cubic-bezier(.16,1,.3,1); }
+  .faq-item[open] summary::after{ transform:translateY(-50%) rotate(180deg); }
+  .faq-a{ font-size:.87rem; color:var(--muted); line-height:1.75; padding-bottom:18px; }
+  .faq-a a{ color:var(--primary-l); }
+
+  /* reviews */
+  .reviews-inner{ display:flex; flex-direction:column; align-items:center; gap:32px; }
+  .rating-card{ display:flex; flex-direction:column; align-items:center; text-align:center;
+    background:var(--card); flex-shrink:0;
+    border:1px solid var(--border); border-radius:18px; padding:28px 22px; width:100%; max-width:300px; }
+  .rating-stars{ color:var(--amber); font-size:1.1rem; letter-spacing:.15em; margin-bottom:8px; }
+  .rating-score{ font-size:2rem; font-weight:800; letter-spacing:-.02em; line-height:1.2; }
+  .rating-source{ font-size:.86rem; color:var(--muted); margin-top:2px; }
+  .rating-note{ font-size:.78rem; color:var(--muted); opacity:.8; margin-top:10px; }
+
+  .review-invite{ text-align:center; max-width:420px; }
+  .review-invite p{ color:var(--muted); font-size:.92rem; margin-bottom:20px; }
+  .dev-note{ font-size:.8rem; color:var(--muted); margin-top:22px; opacity:.85; }
+  .dev-note a{ color:var(--primary-l); text-decoration:none; font-weight:600; }
+  .dev-note a:hover{ text-decoration:underline; }
+  .review-btns{ display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
+  @media (min-width:760px){
+    .reviews-inner{ flex-direction:row; justify-content:center; gap:48px; }
+    .review-invite{ text-align:left; }
+    .review-invite .review-btns{ justify-content:flex-start; }
+  }
+  .review-btn{ display:inline-flex; align-items:center; gap:8px; font-size:.85rem; font-weight:600;
+    text-decoration:none; color:var(--text); background:var(--surface2); border:1px solid var(--border);
+    border-radius:100px; padding:11px 22px; transition:border-color .2s,transform .18s; }
+  .review-btn:hover{ border-color:rgba(167,139,250,.45); transform:translateY(-2px); }
+  .review-btn i{ color:var(--primary-l); }
+
+  /* real review cards — styling ready, filled in once genuine reviews exist */
+  .review-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:28px; }
+  .review-card{ background:var(--card);
+    border:1px solid var(--border); border-radius:16px; padding:22px; }
+  .review-card .stars{ color:var(--amber); font-size:.82rem; letter-spacing:.1em; margin-bottom:10px; }
+  .review-card .quote{ font-size:.9rem; line-height:1.7; margin-bottom:14px; }
+  .review-card .who{ font-size:.8rem; color:var(--muted); }
+  @media (max-width:820px){ .review-grid{ grid-template-columns:1fr; } }
+
+  /* steps */
+  .steps{ position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+  /* เส้นต้องจบตรงกึ่งกลางวงกลมพอดี — วงกลมชิดขอบซ้ายของแต่ละคอลัมน์ (ไม่ได้อยู่กึ่งกลาง)
+     สูตรเดิม 100%/6 คำนวณเหมือนไม่มี gap เลย เส้นเลยไม่ตรงกับวงกลมจริง โดยเฉพาะเส้นที่ 2-3
+     ที่นี่คิดจาก: วงกลมกว้าง 40px (ครึ่งหนึ่ง=20px) + gap 24px คูณจำนวนช่องจริงๆ */
+  .steps::before{ content:''; position:absolute; top:20px; left:20px; right:calc(100%/3 - 36px); height:2px;
+    background:linear-gradient(90deg,var(--line),transparent); z-index:0; }
+  .step{ position:relative; z-index:1; }
+  .step-badge{ width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#6366f1,#8b5cf6);
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.05rem; color:#fff;
+    margin-bottom:16px; box-shadow:0 8px 20px rgba(124,58,237,.35); }
+  .step .title{ font-size:1.02rem; font-weight:700; margin-bottom:7px; }
+  .step .desc{ font-size:.87rem; color:var(--muted); line-height:1.7; }
+  @media (max-width:820px){
+    .steps::before{ display:none; }
+  }
+
+  /* final cta */
+  .cta-block{ background:linear-gradient(135deg,rgba(124,58,237,.14),rgba(99,102,241,.06));
+    border:1px solid rgba(167,139,250,.25); border-radius:22px; padding:48px 28px; text-align:center; }
+  .cta-block h2{ font-size:clamp(22px,3vw,28px); font-weight:800; margin-bottom:10px; }
+  .cta-block p{ color:var(--muted); font-size:.95rem; margin-bottom:26px; }
+
+  /* guide strip — internal links to the article pages. Orphan pages don't rank,
+     so the guides need a real entry point from the landing page, not just the sitemap. */
+  .guide-strip{ padding:44px 0 8px; border-top:1px solid var(--border); }
+  .guide-strip-head{ text-align:center; margin-bottom:26px; }
+  .guide-strip-head h2{ font-size:1.25rem; font-weight:800; letter-spacing:-.01em; margin-bottom:7px; }
+  .guide-strip-head p{ color:var(--muted); font-size:.88rem; }
+  .guide-links{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .guide-links a{ display:flex; flex-direction:column; gap:6px; background:var(--card);
+    border:1px solid var(--border); border-radius:14px; padding:18px 20px; text-decoration:none;
+    transition:transform .18s, border-color .18s; }
+  .guide-links a:hover{ transform:translateY(-2px); border-color:rgba(167,139,250,.35); }
+  .guide-links .g-t{ font-size:.92rem; font-weight:700; line-height:1.5; }
+  .guide-links .g-t i{ color:var(--primary-l); margin-right:7px; }
+  .guide-links .g-d{ font-size:.81rem; color:var(--muted); line-height:1.6; }
+  .guide-links .g-meta{ display:flex; align-items:center; justify-content:space-between; margin-top:auto; padding-top:4px; }
+  .guide-links .g-time{ display:inline-flex; align-items:center; gap:5px; font-size:.72rem; font-weight:700;
+    color:var(--muted); background:var(--surface2); border:1px solid var(--border); padding:2px 9px; border-radius:100px; }
+  .guide-links .g-meta i.fa-chevron-right{ color:var(--primary-l); font-size:.72rem; transition:transform .18s; }
+  .guide-links a:hover .g-meta i.fa-chevron-right{ transform:translateX(3px); }
+  @media (max-width:820px){ .guide-links{ grid-template-columns:1fr; } }
+
+  footer{ margin-top:30px; padding:32px 0 48px; border-top:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; }
+  .foot-contact{ flex-basis:100%; font-size:.78rem; color:var(--muted); opacity:.8; }
+  .foot-contact a{ color:var(--muted); text-decoration:none; }
+  .foot-contact a:hover{ color:var(--primary-l); }
+  .foot-brand{ display:flex; align-items:center; gap:9px; font-size:.85rem; color:var(--muted); }
+  .foot-links{ display:flex; gap:20px; font-size:.85rem; flex-wrap:wrap; }
+  .foot-links a{ color:var(--muted); text-decoration:none; }
+  .foot-links a:hover{ color:var(--primary-l); }
+  .foot-social{ display:flex; gap:14px; }
+  .foot-social a{ display:flex; align-items:center; justify-content:center; width:36px; height:36px;
+    border-radius:100px; background:var(--card); border:1px solid var(--border); color:var(--muted);
+    transition:.2s; }
+  .foot-social a:hover{ color:#fff; border-color:transparent;
+    background:linear-gradient(135deg,var(--grada),var(--gradb)); transform:translateY(-2px); }
+
+  @media (max-width:820px){
+    .grid{ grid-template-columns:repeat(2,1fr); }
+    .steps{ grid-template-columns:1fr; gap:28px; }
+  }
+  @media (max-width:520px){
+    .grid{ grid-template-columns:1fr; }
+    .store-cell{ width:170px; height:62px; }
+    .store-cell.ios img{ height:47px; }
+    .store-cell.android img{ height:61px; }
+    .web-badge{ height:47px; padding:0 15px; }
+    .web-badge i{ font-size:1.35rem; }
+    .web-badge .wb-lg{ font-size:1rem; }
+  }
+
+  /* "ดูรายละเอียด" popup — shows the real clause fetched from privacy.html/terms.html
+     instead of navigating away. visibility (not display:none) is used deliberately so
+     the transition plays on the way OUT as well as in. */
+  body.modal-open{ overflow:hidden; }
+  .detail-modal{ position:fixed; inset:0; z-index:80; display:flex; align-items:center;
+    justify-content:center; padding:20px; visibility:hidden; }
+  .detail-modal.open{ visibility:visible; }
+  .detail-modal-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.55);
+    opacity:0; transition:opacity .35s ease; }
+  .detail-modal.open .detail-modal-backdrop{ opacity:1; }
+  .detail-modal-panel{ position:relative; width:100%; max-width:560px; max-height:82vh;
+    overflow-y:auto; background:var(--surface); border:1px solid var(--border); border-radius:18px;
+    padding:32px 28px 28px; box-shadow:0 30px 70px -20px rgba(0,0,0,.5);
+    opacity:0; transform:translateY(14px) scale(.97);
+    transition:opacity .4s cubic-bezier(.16,1,.3,1), transform .4s cubic-bezier(.16,1,.3,1); }
+  .detail-modal.open .detail-modal-panel{ opacity:1; transform:none; }
+  .detail-modal-close{ position:absolute; top:16px; right:16px; width:34px; height:34px;
+    display:flex; align-items:center; justify-content:center; background:var(--card2);
+    border:1px solid var(--border); border-radius:10px; color:var(--text); cursor:pointer;
+    transition:border-color .2s; }
+  .detail-modal-close:hover{ border-color:rgba(167,139,250,.45); }
+  .detail-modal-panel h3{ font-size:1.15rem; font-weight:800; margin:0 32px 16px 0; letter-spacing:-.01em; }
+  .detail-modal-body{ font-size:.9rem; line-height:1.8; color:var(--text); }
+  .detail-modal-body p, .detail-modal-body ul{ margin-bottom:12px; }
+  .detail-modal-body ul{ padding-left:20px; }
+  .detail-modal-body strong{ color:var(--primary-l); }
+  .detail-modal-body a{ color:var(--primary-l); }
+  .detail-modal-spinner{ display:flex; align-items:center; gap:10px; color:var(--muted); font-size:.85rem; padding:8px 0; }
+  .detail-modal-spinner i{ animation:mmspin 1s linear infinite; }
+  @keyframes mmspin{ to{ transform:rotate(360deg); } }
+  .detail-modal-full{ display:inline-block; margin-top:18px; font-size:.82rem; font-weight:600;
+    color:var(--primary-l); text-decoration:none; }
+  .detail-modal-full:hover{ text-decoration:underline; }
+
+  /* theme-toggle page crossfade (View Transitions API) — browser default is a snappy
+     ~250ms fade, which reads as "switches too fast"; slow it down and give it easing */
+  ::view-transition-old(root), ::view-transition-new(root){
+    animation-duration:.6s; animation-timing-function:ease-in-out;
+  }
+
+  /* respect users who ask for less motion — kills marquee, reveals, float and scan loops */
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration:.01ms!important; animation-iteration-count:1!important;
+      transition-duration:.01ms!important; scroll-behavior:auto!important;
+    }
+    html.js .reveal{ opacity:1!important; transform:none!important; }
+    .marquee{ -webkit-mask-image:none; mask-image:none; }
+    .marquee-track{ animation:none; width:100%; flex-wrap:wrap; justify-content:center; }
+    .marquee-set{ flex-wrap:wrap; justify-content:center; padding-right:0; }
+    .marquee-set[aria-hidden="true"]{ display:none; }
+    ::view-transition-old(root), ::view-transition-new(root){ animation:none!important; }
+    .chat-typing{ display:none!important; }
+    .chat-typing-text{ opacity:1!important; }
+  }
+</style>
+<!-- self-hosted analytics (GoatCounter) — aggregate pageviews only, no cookies, no personal
+     data collected; see privacy.html section 1 for the disclosure -->
+<script data-goatcounter="https://stats.34-134-61-137.sslip.io/count" async src="https://stats.34-134-61-137.sslip.io/count.js"></script>
+<!-- Visit beacon (เพิ่ม 2026-08-27) — GoatCounter นับได้แค่ pageviews และไม่ track time-on-page
+     เลย ตัวนี้จึงเก็บ "คนจริง + อยู่นานแค่ไหน" เพิ่ม → POST /v1/visit บน VM เดียวกับ ai_proxy
+     ไม่มี cookie (ใช้ sessionStorage ที่ตายเมื่อปิดแท็บ) ฝั่ง server แฮช IP ทิ้งทันทีไม่เก็บดิบ
+     ⚠️ inline เท่านั้น ห้ามเพิ่มไฟล์ที่บล็อกการ render (เพิ่งไล่แก้ LCP ไปทั้งชุด) -->
+<script>
+(function(){
+  var U='https://34-134-61-137.sslip.io/v1/visit', K='mm_sid', sid;
+  function rnd(){ return ('0000000'+Math.floor(Math.random()*0xffffffff).toString(16)).slice(-8); }
+  try{ sid=sessionStorage.getItem(K)||(rnd()+rnd()+Date.now().toString(16)); sessionStorage.setItem(K,sid); }
+  catch(e){ sid=rnd()+rnd()+Date.now().toString(16); }   // โหมดส่วนตัว: ใช้ครั้งเดียวทิ้ง ห้ามพัง
+  var q=new URLSearchParams(location.search), sent=false;
+  // ── first-touch: จำว่า user มาจากไหน "ครั้งแรก" ที่เข้าเว็บ (เพิ่ม 2026-08-31) ──
+  // เขียนครั้งเดียวแล้วห้ามทับ — ครั้งหลังๆ referrer จะกลายเป็นเว็บเราเอง ถ้าทับทุกครั้ง
+  // ทุกคนจะกลายเป็น "เข้าตรง" หมด แล้วตอบไม่ได้เลยว่าโพสต์ช่องทางไหนได้ user จริง
+  // ⚠️ เก็บแค่ "ชื่อโดเมน/ชื่อแคมเปญ" ไม่เก็บ URL เต็มหรือ query string (ดู privacy.html)
+  window.__mmAcq=function(){
+    try{ var v=localStorage.getItem('mm_acq'); if(v) return v; }catch(e){}
+    var s=q.get('utm_source')||'';
+    if(!s&&document.referrer){
+      try{
+        var h=new URL(document.referrer).hostname.toLowerCase().replace(/^www\./,'');
+        if(h&&h.indexOf('moneymindth.com')<0) s=h;   // referrer ภายในไม่ใช่ช่องทางหาคนใหม่
+      }catch(e){}
+    }
+    s=(s||'direct').toLowerCase().replace(/[^a-z0-9._-]/g,'').slice(0,40);
+    try{ localStorage.setItem('mm_acq',s); }catch(e){}   // โหมดส่วนตัวโยน error ได้ ห้ามพัง
+    return s;
+  };
+  try{ window.__mmAcq(); }catch(e){}
+  function hit(ev){
+    try{ if(window.__mmDepthScan) window.__mmDepthScan(); }catch(e){}
+    try{ navigator.sendBeacon(U,new Blob([JSON.stringify({
+      sid:sid, ev:ev, page:location.pathname,
+      ref:ev==='start'&&!sent?document.referrer:'',
+      utm:ev==='start'&&!sent?(q.get('utm_source')||''):'',
+      depth:window.__mmDepth||'', clicks:(window.__mmClicks||[]).join(',')
+    })],{type:'text/plain'})); sent=true; }catch(e){}
+  }
+  hit('start');
+  // เปิดให้ nav() ในแอปเรียกได้ — SPA ไม่เปลี่ยน URL ตอนเดินเมนู GoatCounter จึงนับไม่ได้
+  // throttle 2 วิต่อหน้า กันคนกดสลับเมนูรัวๆ แล้วชนเพดาน 60 ครั้ง/IP/นาที
+  var lastPg={};
+  window.__mmPage=function(pg){
+    var now=Date.now(); if(now-(lastPg[pg]||0)<2000) return; lastPg[pg]=now;
+    try{ navigator.sendBeacon(U,new Blob([JSON.stringify({sid:sid,ev:'page',page:pg})],
+      {type:'text/plain'})); }catch(e){}
+  };
+  var t=setInterval(function(){ if(!document.hidden) hit('ping'); },30000);
+  addEventListener('visibilitychange',function(){ if(document.hidden) hit('ping'); });
+  // pagehide ไม่ใช่ beforeunload — Safari/iOS ไม่ยิง beforeunload ให้ตอนปิดแท็บ
+  addEventListener('pagehide',function(){ hit('ping'); clearInterval(t); });
+})();
+</script>
+<!-- อ่านถึง section ไหนแล้วเลิก + กดปุ่มไหน (เพิ่ม 2026-08-27) — บอกว่าควรไปแก้ตรงไหนของหน้า
+     ⚠️ ห้ามยิง beacon เพิ่มต่อการเลื่อน 1 ครั้ง — เก็บค่าไว้ในตัวแปรเฉยๆ แล้วให้ ping 30 วิ /
+     pagehide ที่มีอยู่แล้วพาไปเอง ไม่งั้นชนเพดาน 60 ครั้ง/IP/นาที ตั้งแต่คนแรกที่เลื่อนเร็วๆ
+     ⚠️ ลำดับใน SEC ต้องตรงกับ LANDING_SECTIONS ใน mm_webstats.py เป๊ะ ไม่งั้น funnel อ่านผิด -->
+<script>
+(function(){
+  var SEC=['hero','preview','features','rank','security','pricing','faq','reviews','how','cta'];
+  window.__mmDepth=SEC[0]; window.__mmClicks=[];
+  // เดิมใช้ IntersectionObserver แต่พิสูจน์ไม่ได้ว่ายิงจริง (บนแท็บที่ไม่ได้อยู่หน้าจอ
+  // callback ไม่มาเลยแม้แต่ element ที่มองเห็นอยู่) เปลี่ยนมาคิดจากตำแหน่งตรงๆ แทน —
+  // ตรวจสอบง่าย ไม่มีเงื่อนไข threshold ให้พลาด และไม่ต้องรอ callback ของเบราว์เซอร์
+  // "ถึง section นี้แล้ว" = ขอบบนของมันเลื่อนขึ้นมาเหนือกลางจอ
+  window.__mmDepthScan=function(){
+    var far=0;
+    for(var i=0;i<SEC.length;i++){
+      var el=document.getElementById(SEC[i]);
+      if(el&&el.getBoundingClientRect().top<window.innerHeight*0.5) far=i;
+    }
+    if(SEC.indexOf(window.__mmDepth)<far) window.__mmDepth=SEC[far];
+  };
+  // scroll listener แบบ passive + throttle ด้วย rAF — อัปเดตแค่ตัวแปร ไม่ยิง beacon
+  // (beacon ยังเกาะ ping 30 วิ / pagehide เหมือนเดิม ไม่งั้นชนเพดาน 60 ครั้ง/IP/นาที)
+  var tick=false;
+  addEventListener('scroll',function(){
+    if(tick) return; tick=true;
+    requestAnimationFrame(function(){ tick=false; try{ window.__mmDepthScan(); }catch(e){} });
+  },{passive:true});
+  try{ window.__mmDepthScan(); }catch(e){}
+  addEventListener('click',function(e){
+    var a=e.target&&e.target.closest?e.target.closest('a'):null;
+    if(!a||!a.href) return;
+    var k=a.href.indexOf('apps.apple.com')>-1?'ios'
+         :a.href.indexOf('play.google.com')>-1?'android'
+         :/app\.moneymindth\.com\/?($|\?|#)/.test(a.href)?'app':'';
+    if(k&&window.__mmClicks.indexOf(k)<0) window.__mmClicks.push(k);
+    // แปะแหล่งที่มาไปกับลิงก์เข้าแอปด้วย — ปัจจุบัน landing กับตัวแอปอยู่โฮสต์เดียวกัน
+    // (CNAME = app.moneymindth.com) localStorage จึงข้ามให้อยู่แล้ว แต่ยังทำไว้เพราะ
+    // (1) ถ้าย้าย landing ไปโดเมนแยกเมื่อไหร่ ต้องยังทำงานได้โดยไม่ต้องแก้อะไร
+    // (2) ลิงก์ที่ถูกก๊อปไปแชร์ต่อจะพาแหล่งที่มาติดไปด้วย
+    if(k==='app'){
+      // เช็คด้วย searchParams ไม่ใช่ indexOf('a=') — indexOf จะ false-positive กับ query
+      // อย่าง ?data=1 ที่มีสตริง "a=" อยู่ข้างใน แล้วจะไม่ติดแท็กให้เลย
+      try{
+        var u=new URL(a.href,location.href);
+        if(!u.searchParams.has('a')){ u.searchParams.set('a',window.__mmAcq()); a.href=u.toString(); }
+      }catch(e){}
+    }
+  },true);
+})();
+</script>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <a href="landing.html" class="logo">
+      <img class="logo-mark" src="assets/logo.png" alt="โลโก้ MoneyMind" width="40" height="40">
+      <span class="logo-text">MoneyMind</span>
+    </a>
+    <div class="nav-links">
+      <a href="#features">ฟีเจอร์</a>
+      <a href="#security">ความปลอดภัย</a>
+      <a href="#faq">คำถามที่พบบ่อย</a>
+    </div>
+    <div class="nav-right">
+      <a href="landing-en.html" class="lang-switch">EN</a>
+      <a href="https://app.moneymindth.com/?try=1" class="nav-cta">ลองใช้ฟรี</a>
+      <button type="button" id="theme-toggle" class="theme-toggle" aria-label="สลับโหมดสีสว่าง/มืด">
+        <i class="fas fa-sun icon-sun" aria-hidden="true"></i>
+        <i class="fas fa-moon icon-moon" aria-hidden="true"></i>
+      </button>
+      <details class="mobile-nav">
+        <summary class="mobile-nav-btn" aria-label="เมนู">
+          <i class="fas fa-bars" aria-hidden="true"></i>
+          <i class="fas fa-xmark" aria-hidden="true"></i>
+        </summary>
+        <div class="mobile-nav-menu">
+          <a href="#features">ฟีเจอร์</a>
+          <a href="#security">ความปลอดภัย</a>
+          <a href="#faq">คำถามที่พบบ่อย</a>
+          <div class="mobile-nav-divider"></div>
+          <a href="https://app.moneymindth.com/">เปิดเว็บแอป</a>
+          <a href="landing-en.html">English</a>
+        </div>
+      </details>
+    </div>
+  </nav>
+
+  <section class="hero" id="hero">
+    <div class="hero-inner">
+      <div class="hero-text">
+        <h1>แอป<em>จัดการเงิน</em>ที่เข้าใจคนไทยจริงๆ</h1>
+        <p class="sub">บันทึกรายรับ-รายจ่ายด้วยการสแกนใบเสร็จด้วย AI คำนวณภาษีเงินได้เต็มรูปแบบ และนำเข้ารายการจากอีเมลธนาคารอัตโนมัติ — ทำเรื่องเงินที่ยุ่งยากให้ง่ายในแอปเดียว</p>
+
+        <div class="try-wrap"><a class="try-btn" href="https://app.moneymindth.com/?try=1"><i class="fas fa-bolt"></i> ลองใช้ฟรีทันที — ไม่ต้องสมัคร</a><div class="try-sub">จดรายการแรกได้ใน 10 วินาที ข้อมูลอยู่ในเครื่องจนกว่าคุณจะสมัคร</div></div>
+        <div class="store-row">
+          <a class="store-cell ios" href="https://apps.apple.com/th/app/id6788824042" aria-label="ดาวน์โหลดบน App Store">
+            <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/th-th?size=250x83" alt="ดาวน์โหลดบน App Store" width="120" height="40">
+          </a>
+          <a class="store-cell android" href="https://play.google.com/store/apps/details?id=app.moneymind.th" aria-label="ดาวน์โหลดบน Google Play">
+            <img src="https://play.google.com/intl/en_us/badges/static/images/badges/th_badge_web_generic.png" alt="ดาวน์โหลดบน Google Play" width="646" height="250">
+          </a>
+          <a class="store-cell web" href="https://app.moneymindth.com/" aria-label="ใช้งานบนเว็บเบราว์เซอร์">
+            <span class="web-badge">
+              <i class="fas fa-globe"></i>
+              <span class="wb-txt">
+                <span class="wb-sm">ใช้งานได้ที่</span>
+                <span class="wb-lg">เว็บเบราว์เซอร์</span>
+              </span>
+            </span>
+          </a>
+        </div>
+
+        <div class="trust-row">
+          <span><i class="fas fa-shield-halved"></i> เข้ารหัสข้อมูลตามมาตรฐาน PDPA</span>
+          <span><i class="fas fa-cloud"></i> ซิงค์ข้อมูลข้ามอุปกรณ์อัตโนมัติ</span>
+          <span><i class="fas fa-language"></i> รองรับภาษาไทยและอังกฤษ</span>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="phone-mock">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="mock-topbar">
+              <span class="mock-avatar"></span>
+              <span class="mock-greeting">สวัสดีค่ะ 👋</span>
+            </div>
+            <div class="mock-nw-card">
+              <div class="mock-nw-label">Net Worth ทั้งหมด</div>
+              <div class="mock-nw-value">฿847,392</div>
+              <div class="mock-nw-badge">+12.4% เดือนนี้</div>
+              <div class="mock-bars">
+                <span style="height:35%"></span>
+                <span style="height:55%"></span>
+                <span style="height:40%"></span>
+                <span style="height:70%"></span>
+                <span style="height:60%"></span>
+                <span style="height:85%"></span>
+                <span style="height:95%"></span>
+              </div>
+            </div>
+            <div class="mock-chips">
+              <div class="mock-chip"><i class="fas fa-utensils"></i> อาหาร <b>฿3,200</b></div>
+              <div class="mock-chip"><i class="fas fa-car"></i> เดินทาง <b>฿1,150</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="float-badge float-badge-1"><i class="fas fa-receipt"></i> บันทึกอัตโนมัติ</div>
+        <div class="float-badge float-badge-2"><i class="fas fa-robot"></i> ถามมายาได้เลย</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="marquee-band">
+    <div class="marquee-label">ทำไมต้อง MoneyMind</div>
+    <div class="marquee">
+      <div class="marquee-track marquee-track-rev">
+        <div class="marquee-set">
+          <span class="feature-pill">📸 ถ่ายรูปใบเสร็จ ระบบจัดหมวดให้อัตโนมัติ</span>
+          <span class="feature-pill">🤖 ถามมายาได้ทุกเรื่องเงิน ตอบเป็นภาษาคน</span>
+          <span class="feature-pill">🧮 คำนวณภาษีตามฐานอัตราก้าวหน้าจริงของไทย</span>
+          <span class="feature-pill">📬 เชื่อมอีเมลธนาคาร ดึงรายการให้อัตโนมัติ</span>
+          <span class="feature-pill">📈 ติดตามพอร์ตหุ้น กองทุน คริปโตแบบเรียลไทม์</span>
+          <span class="feature-pill">🏆 ระบบจัดอันดับความมั่งคั่ง 8 ระดับ</span>
+          <span class="feature-pill">☁️ ซิงค์ข้อมูลข้ามอุปกรณ์อัตโนมัติ</span>
+          <span class="feature-pill">🇹🇭 ออกแบบมาสำหรับคนไทยโดยเฉพาะ</span>
+        </div>
+        <div class="marquee-set" aria-hidden="true">
+          <span class="feature-pill">📸 ถ่ายรูปใบเสร็จ ระบบจัดหมวดให้อัตโนมัติ</span>
+          <span class="feature-pill">🤖 ถามมายาได้ทุกเรื่องเงิน ตอบเป็นภาษาคน</span>
+          <span class="feature-pill">🧮 คำนวณภาษีตามฐานอัตราก้าวหน้าจริงของไทย</span>
+          <span class="feature-pill">📬 เชื่อมอีเมลธนาคาร ดึงรายการให้อัตโนมัติ</span>
+          <span class="feature-pill">📈 ติดตามพอร์ตหุ้น กองทุน คริปโตแบบเรียลไทม์</span>
+          <span class="feature-pill">🏆 ระบบจัดอันดับความมั่งคั่ง 8 ระดับ</span>
+          <span class="feature-pill">☁️ ซิงค์ข้อมูลข้ามอุปกรณ์อัตโนมัติ</span>
+          <span class="feature-pill">🇹🇭 ออกแบบมาสำหรับคนไทยโดยเฉพาะ</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="section" id="preview">
+    <div class="section-head reveal">
+      <h2>ดูตัวอย่างการใช้งานจริง</h2>
+      <p>ภาพจำลองหน้าจอ — ดูว่าใช้งานจริงเป็นยังไงก่อนตัดสินใจโหลด</p>
+    </div>
+    <div class="preview-grid reveal-stagger">
+      <div class="preview-card reveal">
+        <div class="preview-label"><i class="fas fa-robot"></i> ผู้ช่วย AI "มายา"</div>
+        <div class="chat-mock">
+          <div class="chat-bubble user">เดือนนี้ใช้เงินไปเท่าไหร่แล้ว</div>
+          <div class="chat-bubble ai"><span class="chat-typing"><span></span><span></span><span></span></span><span class="chat-typing-text">เดือนนี้ใช้ไปแล้ว <b>฿18,420</b> ส่วนใหญ่หมวดอาหารกับเดินทางค่ะ 🍜</span></div>
+        </div>
+      </div>
+      <div class="preview-card reveal">
+        <div class="preview-label"><i class="fas fa-camera"></i> สแกนใบเสร็จด้วย AI</div>
+        <div class="scan-mock">
+          <div class="scan-receipt">
+            <i class="fas fa-receipt"></i>
+            <div class="scan-line"></div>
+          </div>
+          <i class="fas fa-arrow-right scan-arrow"></i>
+          <div class="scan-result">
+            <div class="scan-result-top"><span>ร้านกาแฟบ้านใกล้</span><b>฿120</b></div>
+            <span class="scan-tag"><i class="fas fa-mug-hot"></i> อาหาร</span>
+          </div>
+        </div>
+      </div>
+      <div class="preview-card reveal">
+        <div class="preview-label"><i class="fas fa-file-invoice-dollar"></i> คำนวณภาษีเงินได้</div>
+        <div class="tax-mock">
+          <div class="tax-save-label">ประหยัดภาษีได้เพิ่ม</div>
+          <div class="tax-save-value">฿14,200<span>/ปี</span></div>
+          <div class="tax-bar"><div class="tax-bar-fill" style="width:64%"></div></div>
+          <div class="tax-hint"><i class="fas fa-lightbulb"></i> แนะนำซื้อ RMF เพิ่มอีก ฿32,000</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="section-head reveal">
+      <h2>ฟีเจอร์ที่แอปจัดการเงินทั่วไปไม่มี</h2>
+      <p>ออกแบบมาสำหรับบริบทการเงินแบบไทยโดยเฉพาะ ไม่ใช่แอปแปลจากต่างประเทศ</p>
+    </div>
+    <div class="grid reveal-stagger">
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(124,58,237,.14);color:#a78bfa"><i class="fas fa-camera"></i></div>
+        <div class="title">สแกนใบเสร็จด้วย AI</div>
+        <div class="desc">ถ่ายรูปใบเสร็จหรือสลิปโอนเงิน ระบบอ่านยอดและจัดหมวดหมู่ให้อัตโนมัติ ไม่ต้องพิมพ์เอง</div>
+      </div>
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(6,182,212,.14);color:#22d3ee"><i class="fas fa-file-invoice-dollar"></i></div>
+        <div class="title">คำนวณภาษีเงินได้เต็มรูปแบบ</div>
+        <div class="desc">คำนวณภาษีตามฐานอัตราก้าวหน้าจริงของไทย พร้อมแนะนำลำดับซื้อกองทุนลดหย่อนให้คุ้มที่สุด</div>
+      </div>
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(16,185,129,.14);color:#34d399"><i class="fas fa-envelope-open-text"></i></div>
+        <div class="title">นำเข้ารายการจากอีเมลธนาคาร</div>
+        <div class="desc">เชื่อมอีเมล ระบบดักจับแจ้งเตือนธุรกรรมจากธนาคารแล้วเสนอบันทึกให้ทันที ลดงานพิมพ์ซ้ำ</div>
+      </div>
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(245,158,11,.14);color:#fbbf24"><i class="fas fa-robot"></i></div>
+        <div class="title">ผู้ช่วย AI "มายา"</div>
+        <div class="desc">ถามคำถามเกี่ยวกับเงินของตัวเองเป็นภาษาพูด สั่งบันทึกรายการหรือตั้งเป้าหมายผ่านแชทได้เลย</div>
+      </div>
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(236,72,153,.14);color:#f472b6"><i class="fas fa-chart-line"></i></div>
+        <div class="title">ติดตามพอร์ตลงทุน</div>
+        <div class="desc">ดูมูลค่าพอร์ตหุ้น กองทุน และคริปโตแบบเรียลไทม์ พร้อมเปรียบเทียบกับดัชนีตลาด</div>
+      </div>
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(129,140,248,.14);color:#818cf8"><i class="fas fa-umbrella-beach"></i></div>
+        <div class="title">วางแผนเกษียณ</div>
+        <div class="desc">คำนวณเงินที่ต้องมีตอนเกษียณจากรายจ่าย เงินเฟ้อ และผลตอบแทนที่คาดหวัง เห็นภาพชัดตั้งแต่วันนี้</div>
+      </div>
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(52,211,153,.14);color:#34d399"><i class="fas fa-piggy-bank"></i></div>
+        <div class="title">เป้าหมายออมเงิน + Subscriptions</div>
+        <div class="desc">ตั้งเป้าออมแยกตามเป้าหมาย พร้อมติดตามค่าบริการรายเดือนไม่ให้ลืมจ่ายหรือลืมยกเลิก</div>
+      </div>
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(6,182,212,.14);color:#22d3ee"><i class="fas fa-cloud-arrow-up"></i></div>
+        <div class="title">ซิงค์ข้ามอุปกรณ์</div>
+        <div class="desc">เริ่มบันทึกบนมือถือ เปิดดูต่อบนคอมได้ทันที ข้อมูลอัปเดตอัตโนมัติผ่านคลาวด์</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section" style="padding-top:0;padding-bottom:0"><div class="mid-cta reveal"><h3>เห็นภาพแล้วใช่ไหม? ลองจดรายการแรกดูเลย</h3><p>ไม่ต้องสมัคร ไม่ต้องติดตั้ง เปิดในเบราว์เซอร์ได้ทันที</p><a class="try-btn" href="https://app.moneymindth.com/?try=1"><i class="fas fa-bolt"></i> ลองใช้ฟรีทันที — ไม่ต้องสมัคร</a></div></div>
+
+  <section class="section" id="rank">
+    <div class="section-head">
+      <h2>สนุกกับการออมเงิน ไม่ใช่แค่บันทึกตัวเลข</h2>
+      <p>ระบบจัดอันดับความมั่งคั่งแบบ percentile เทียบกับคนไทยจริง — ฟีเจอร์ที่แอปการเงินทั่วไปไม่มี</p>
+    </div>
+    <div class="rank-row reveal">
+      <div class="rank-card">
+        <div class="rank-art"><img src="assets/rank/bronze.png" alt="ตัวละครระดับ Bronze" loading="lazy" width="288" height="450"></div>
+        <div class="rank-name bronze">Bronze</div>
+        <div class="rank-th">บรอนซ์</div>
+        <div class="rank-range">฿0 – ฿50K</div>
+      </div>
+      <div class="rank-card">
+        <div class="rank-art"><img src="assets/rank/gold.png" alt="ตัวละครระดับ Gold" loading="lazy" width="288" height="450"></div>
+        <div class="rank-name gold">Gold</div>
+        <div class="rank-th">โกลด์</div>
+        <div class="rank-range">฿200K – ฿600K</div>
+      </div>
+      <div class="rank-card">
+        <div class="rank-art"><img src="assets/rank/diamond.png" alt="ตัวละครระดับ Diamond" loading="lazy" width="288" height="450"></div>
+        <div class="rank-name diamond">Diamond</div>
+        <div class="rank-th">ไดมอนด์</div>
+        <div class="rank-range">฿10M – ฿50M</div>
+      </div>
+      <div class="rank-card">
+        <div class="rank-art"><img src="assets/rank/legend.png" alt="ตัวละครระดับ Legend" loading="lazy" width="288" height="450"></div>
+        <div class="rank-name legend">Legend</div>
+        <div class="rank-th">เลเจนด์</div>
+        <div class="rank-range">฿50M ขึ้นไป</div>
+      </div>
+    </div>
+    <p class="rank-caption reveal">ตัวอย่าง 4 จาก 8 ระดับ (Bronze → Legend) — เห็นครบทุกระดับตั้งแต่ Iron เมื่อใช้งานในแอปจริง ยิ่งใช้ยิ่งเห็นอันดับตัวเองชัดขึ้น ไม่ใช่แค่ตัวเลขในบัญชี</p>
+  </section>
+
+  <section class="section" id="security">
+    <div class="section-head reveal">
+      <h2>ความปลอดภัยของข้อมูล</h2>
+      <p>ทุกข้อด้านล่างมีรายละเอียดเต็มอยู่ในนโยบายจริง กดเข้าไปอ่านได้เลย ไม่ใช่แค่คำโฆษณา</p>
+    </div>
+    <div class="grid reveal-stagger">
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(124,58,237,.14);color:#a78bfa"><i class="fas fa-lock"></i></div>
+        <div class="title">รหัสผ่านเข้ารหัสแบบย้อนกลับไม่ได้</div>
+        <div class="desc">รหัสผ่านถูก hash ด้วย PBKDF2 ก่อนจัดเก็บเสมอ — แม้แต่ทีมงานก็ไม่เห็นรหัสผ่านจริงของคุณ</div>
+        <a class="link" href="privacy.html#security">ดูรายละเอียด →</a>
+      </div>
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(239,68,68,.14);color:#f87171"><i class="fas fa-ban"></i></div>
+        <div class="title">ไม่ขาย ไม่แบ่งปันข้อมูลคุณ</div>
+        <div class="desc">ไม่ขาย ไม่เช่า และไม่แบ่งปันข้อมูลส่วนตัวของคุณแก่บุคคลที่สามเพื่อวัตถุประสงค์ทางการตลาดโดยเด็ดขาด</div>
+        <a class="link" href="privacy.html#how-we-use-data">ดูรายละเอียด →</a>
+      </div>
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(16,185,129,.14);color:#34d399"><i class="fas fa-file-export"></i></div>
+        <div class="title">ข้อมูลของคุณเป็นของคุณเสมอ</div>
+        <div class="desc">ส่งออกหรือลบข้อมูลการเงินทั้งหมดได้ทุกเมื่อผ่านหน้าตั้งค่าในแอป ไม่ต้องขอใคร</div>
+        <a class="link" href="terms.html#data-ownership">ดูรายละเอียด →</a>
+      </div>
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(245,158,11,.14);color:#fbbf24"><i class="fas fa-robot"></i></div>
+        <div class="title">ฟีเจอร์ AI ต้องขอความยินยอมก่อนเสมอ</div>
+        <div class="desc">แอปจะขอความยินยอมก่อนใช้งานฟีเจอร์ AI ครั้งแรกเสมอ เลือกไม่ใช้ได้และแอปยังทำงานปกติทุกฟีเจอร์อื่น</div>
+        <a class="link" href="privacy.html#ai-consent">ดูรายละเอียด →</a>
+      </div>
+      <div class="fcard reveal">
+        <div class="ico" style="background:rgba(6,182,212,.14);color:#22d3ee"><i class="fas fa-building-columns"></i></div>
+        <div class="title">ไม่ขอรหัสผ่านธนาคารของคุณเลย</div>
+        <div class="desc">ต่างจากแอปที่เชื่อมบัญชีธนาคารตรงแบบ Plaid ของต่างประเทศ MoneyMind ไม่มีวันขอรหัสผ่านธนาคารของคุณ — นำเข้ารายการได้จากอีเมลแจ้งเตือนที่ธนาคารส่งให้คุณเองเท่านั้น</div>
+        <a class="link" href="#faq-bank-connection">ดูรายละเอียด →</a>
+      </div>
+    </div>
+    <p class="infra-note reveal">ระบบทำงานบน Google Cloud และ Firebase — โครงสร้างพื้นฐานเดียวกับที่บริษัทเทคโนโลยีทั่วโลกใช้งานจริง</p>
+    <div class="security-details reveal">
+      <div><i class="fas fa-lock"></i> เชื่อมต่อด้วย HTTPS/TLS เข้ารหัสข้อมูลระหว่างส่งทุกครั้ง ไม่มีการส่งข้อมูลแบบไม่เข้ารหัส</div>
+      <div><i class="fas fa-key"></i> Firebase Security Rules จำกัดสิทธิ์เข้าถึงข้อมูลบนคลาวด์ให้เฉพาะเจ้าของบัญชีที่ล็อกอินแล้วเท่านั้น</div>
+      <div><i class="fas fa-user-shield"></i> ขอความยินยอมตามกฎหมาย PDPA ก่อนเก็บข้อมูลทุกครั้งที่ใช้งานครั้งแรก</div>
+    </div>
+  </section>
+
+  <section class="section" id="pricing">
+    <div class="section-head reveal">
+      <h2>ราคา</h2>
+      <p>ฟีเจอร์หลักใช้งานได้ฟรี ไม่ต้องผูกบัตรเพื่อเริ่มต้น — มี AI Subscription เสริมสำหรับคนที่ต้องการโควตา AI มากขึ้น</p>
+    </div>
+    <div class="pricing-grid reveal-stagger">
+      <div class="price-card reveal">
+        <div class="price-tag">ฟรี</div>
+        <div class="price-amount">฿0</div>
+        <ul class="price-list">
+          <li><i class="fas fa-check"></i> บันทึกรายรับ-รายจ่ายไม่จำกัด</li>
+          <li><i class="fas fa-check"></i> คำนวณภาษีเงินได้เต็มรูปแบบ</li>
+          <li><i class="fas fa-check"></i> นำเข้ารายการจากอีเมลธนาคารอัตโนมัติ</li>
+          <li><i class="fas fa-check"></i> ติดตามพอร์ตลงทุนแบบเรียลไทม์</li>
+          <li><i class="fas fa-check"></i> ซิงค์ข้อมูลข้ามอุปกรณ์อัตโนมัติ</li>
+          <li><i class="fas fa-check"></i> สแกนใบเสร็จ/สลิป/ทวิ 50 ด้วย AI (5 ครั้ง/วัน, 30 ครั้ง/เดือน)<span class="price-baseline">โควตาเริ่มต้น</span></li>
+          <li class="muted-item"><i class="fas fa-xmark"></i> ผู้ช่วย AI "มายา" ถาม-ตอบ + สั่งบันทึกผ่านแชท</li>
+          <li class="muted-item"><i class="fas fa-xmark"></i> ไม่ต้องพึ่ง Gemini API Key ของตัวเอง</li>
+        </ul>
+        <p class="price-note">ไม่มีค่าใช้จ่ายแอบแฝง ไม่ต้องผูกบัตรเพื่อเริ่มใช้งาน</p>
+      </div>
+      <div class="price-card featured reveal">
+        <div class="price-card-badge">สำหรับสายใช้ AI หนัก</div>
+        <div class="price-tag">AI Subscription</div>
+        <div class="price-amount">฿299<span>/เดือน</span></div>
+        <ul class="price-list">
+          <li><i class="fas fa-check"></i> บันทึกรายรับ-รายจ่ายไม่จำกัด</li>
+          <li><i class="fas fa-check"></i> คำนวณภาษีเงินได้เต็มรูปแบบ</li>
+          <li><i class="fas fa-check"></i> นำเข้ารายการจากอีเมลธนาคารอัตโนมัติ</li>
+          <li><i class="fas fa-check"></i> ติดตามพอร์ตลงทุนแบบเรียลไทม์</li>
+          <li><i class="fas fa-check"></i> ซิงค์ข้อมูลข้ามอุปกรณ์อัตโนมัติ</li>
+          <li><i class="fas fa-check"></i> สแกนใบเสร็จ/สลิป/ทวิ 50 ด้วย AI (30 ครั้ง/วัน, 200 ครั้ง/เดือน)<span class="price-multiplier">มากกว่าฟรี 6 เท่า</span></li>
+          <li><i class="fas fa-check"></i> ผู้ช่วย AI "มายา" ปลดล็อกเต็มรูปแบบ — ถาม-ตอบเรื่องเงิน สั่งบันทึก/แก้ไข/ลบรายการผ่านแชทได้เลย</li>
+          <li><i class="fas fa-check"></i> ไม่ต้องหา Gemini API Key เอง — ใช้ AI ได้ทันทีหลังสมัคร</li>
+          <li><i class="fas fa-check"></i> ชำระผ่านบัตรเครดิต/เดบิต หรือ PromptPay</li>
+          <li><i class="fas fa-check"></i> ยกเลิกเมื่อไหร่ก็ได้ ไม่มีสัญญาผูกมัด</li>
+        </ul>
+        <p class="price-note">อัปเกรดหรือยกเลิกได้ทุกเมื่อจากหน้าตั้งค่าในแอป</p>
+      </div>
+    </div>
+    <p class="pricing-footnote">ยกเลิกได้ทุกเมื่อ ไม่มีสัญญาผูกมัด — อ่าน<a href="terms.html#refund-policy">นโยบายการยกเลิกและคืนเงิน</a><br>ไม่อยากจ่ายรายเดือน? ใส่ Gemini API Key ของคุณเอง (ขอฟรีได้จาก Google AI Studio) ในหน้าตั้งค่า เพื่อใช้ AI สแกน+มายาแบบไม่จำกัดโดยไม่ต้องเสียเงินให้เรา</p>
+  </section>
+
+  <section class="section" id="faq">
+    <div class="section-head reveal">
+      <h2>คำถามที่พบบ่อย</h2>
+      <p>คำตอบตรงๆ ไม่มีตัวเล็ก — รายละเอียดเต็มอยู่ในนโยบายจริงเสมอ</p>
+    </div>
+    <div class="faq-list reveal-stagger">
+      <details class="faq-item reveal">
+        <summary>แอปนี้ฟรีจริงไหม มีดักจ่ายทีหลังไหม</summary>
+        <div class="faq-a">ตอนนี้ใช้งานฟรีทุกฟีเจอร์หลัก (บันทึกรายรับ-รายจ่าย สแกนใบเสร็จ คำนวณภาษี ติดตามพอร์ต) ไม่ต้องผูกบัตรหรือจ่ายเงินก่อนเริ่มใช้งาน</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>ข้อมูลการเงินของฉันปลอดภัยแค่ไหน</summary>
+        <div class="faq-a">รหัสผ่านเข้ารหัสแบบย้อนกลับไม่ได้ ข้อมูลไม่ถูกขายหรือแบ่งปันให้ใคร และคุณเข้าถึงได้คนเดียว — ดูรายละเอียดทั้งหมดได้ที่หัวข้อ <a href="#security">ความปลอดภัยของข้อมูล</a> ด้านบน</div>
+      </details>
+      <details class="faq-item reveal" id="faq-bank-connection">
+        <summary>แอปนี้เชื่อมต่อบัญชีธนาคารของฉันโดยตรงไหม</summary>
+        <div class="faq-a">ไม่เชื่อมต่อและไม่ขอรหัสผ่านธนาคารของคุณเด็ดขาด ระบบนำเข้ารายการทำได้จากอีเมลแจ้งเตือนธุรกรรมที่ธนาคารส่งให้คุณเองเท่านั้น (ไม่ใช่การเชื่อมต่อบัญชีแบบ Open Banking) หรือคุณจะบันทึกรายการด้วยตัวเองก็ได้เช่นกัน</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>เลิกใช้แล้วเอาข้อมูลออกได้ไหม</summary>
+        <div class="faq-a">ได้ทุกเมื่อ ข้อมูลการเงินที่คุณป้อนเป็นของคุณเสมอ ส่งออกหรือลบทั้งหมดได้จากหน้าตั้งค่าในแอป ไม่ต้องขอใคร — รายละเอียดที่ <a href="terms.html#data-ownership">ข้อตกลงการใช้งาน</a></div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>มีปัญหาหรือข้อเสนอแนะ ติดต่อได้ทางไหน</summary>
+        <div class="faq-a">ส่งอีเมลมาได้โดยตรงที่ <a href="mailto:support@moneymindth.com">support@moneymindth.com</a> เราตอบทุกข้อความและนำไปใช้พัฒนาแอปอย่างต่อเนื่อง</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>แอปนี้เป็นที่ปรึกษาการเงินหรือเปล่า</summary>
+        <div class="faq-a">ไม่ใช่ครับ MoneyMind ไม่ใช่ที่ปรึกษาทางการเงิน การลงทุน ภาษี หรือกฎหมาย ตัวเลขและคำแนะนำในแอป (รวมถึงจาก AI) เป็นการประมาณการเพื่อวางแผนส่วนตัวเท่านั้น ก่อนตัดสินใจทางการเงินจริงควรตรวจสอบกับผู้เชี่ยวชาญที่มีใบอนุญาตเสมอ</div>
+      </details>
+    </div>
+  </section>
+
+  <section class="section" id="reviews">
+    <div class="section-head reveal">
+      <h2>เสียงจากผู้ใช้</h2>
+    </div>
+
+    <div class="reviews-inner">
+      <div class="rating-card reveal">
+        <div class="rating-stars">★★★★★</div>
+        <div class="rating-score">5.0</div>
+        <div class="rating-source">คะแนนบน App Store</div>
+        <div class="rating-note">จากผู้ให้คะแนนจริงบน App Store</div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════════════════
+           พอมีรีวิวจริงจากผู้ใช้แล้ว ให้ลบคอมเมนต์ก้อนนี้ออก แล้ววาง .review-grid
+           ด้านล่างนี้เข้าไปแทน (CSS พร้อมใช้งานแล้ว ไม่ต้องแก้อะไรเพิ่ม)
+           ⚠️ ใส่เฉพาะรีวิวที่มีคนพูดจริงเท่านั้น ห้ามแต่งขึ้นเอง
+
+      <div class="review-grid reveal-stagger">
+        <div class="review-card reveal">
+          <div class="stars">★★★★★</div>
+          <div class="quote">(ข้อความรีวิวจริงจากผู้ใช้)</div>
+          <div class="who">— ชื่อผู้ใช้จริง · App Store</div>
+        </div>
+      </div>
+           ══════════════════════════════════════════════════════════════════════ -->
+
+      <div class="review-invite reveal">
+        <p>ถ้าคุณใช้ MoneyMind อยู่ ความเห็นของคุณช่วยเราได้มากจริงๆ รีวิวของคุณอาจเป็นอันแรกที่คนอื่นได้อ่าน</p>
+        <div class="review-btns">
+          <a class="review-btn" href="https://apps.apple.com/th/app/id6788824042?action=write-review">
+            <i class="fab fa-apple"></i> เขียนรีวิวบน App Store
+          </a>
+          <a class="review-btn" href="https://play.google.com/store/apps/details?id=app.moneymind.th">
+            <i class="fab fa-google-play"></i> เขียนรีวิวบน Play Store
+          </a>
+        </div>
+        <p class="dev-note">มีคำถามหรือข้อเสนอแนะ ติดต่อได้โดยตรงที่ <a href="mailto:support@moneymindth.com">support@moneymindth.com</a> — เราตอบกลับทุกข้อความ</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <div class="section-head reveal">
+      <h2>เริ่มใช้งานได้ใน 3 ขั้นตอน</h2>
+    </div>
+    <div class="steps reveal-stagger">
+      <div class="step reveal">
+        <div class="step-badge">1</div>
+        <div class="title">สมัครใช้งานฟรี</div>
+        <div class="desc">ดาวน์โหลดแอปหรือเข้าใช้งานผ่านเว็บ สมัครด้วยอีเมลหรือ Google ใช้เวลาไม่ถึงนาที</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-badge">2</div>
+        <div class="title">บันทึกรายการแรก</div>
+        <div class="desc">สแกนใบเสร็จ พิมพ์เอง หรือเชื่อมอีเมลธนาคารให้ระบบดึงรายการให้อัตโนมัติ</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-badge">3</div>
+        <div class="title">เห็นภาพรวมการเงินทันที</div>
+        <div class="desc">แดชบอร์ดสรุปรายรับ-รายจ่าย เป้าหมายออม และความมั่งคั่งโดยรวมอัปเดตให้เองทุกครั้ง</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="cta">
+    <div class="cta-block reveal">
+      <h2>พร้อมเริ่มจัดการเงินอย่างเป็นระบบหรือยัง?</h2>
+      <p>ใช้งานได้ฟรี ไม่มีค่าใช้จ่ายแอบแฝง</p>
+      <div class="try-wrap"><a class="try-btn" href="https://app.moneymindth.com/?try=1"><i class="fas fa-bolt"></i> ลองใช้ฟรีทันที — ไม่ต้องสมัคร</a><div class="try-sub">จดรายการแรกได้ใน 10 วินาที ข้อมูลอยู่ในเครื่องจนกว่าคุณจะสมัคร</div></div>
+      <div class="store-row" style="margin-bottom:0">
+        <a class="store-cell ios" href="https://apps.apple.com/th/app/id6788824042" aria-label="ดาวน์โหลดบน App Store">
+          <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/th-th?size=250x83" alt="ดาวน์โหลดบน App Store" width="120" height="40">
+        </a>
+        <a class="store-cell android" href="https://play.google.com/store/apps/details?id=app.moneymind.th" aria-label="ดาวน์โหลดบน Google Play">
+          <img src="https://play.google.com/intl/en_us/badges/static/images/badges/th_badge_web_generic.png" alt="ดาวน์โหลดบน Google Play" width="646" height="250">
+        </a>
+        <a class="store-cell web" href="https://app.moneymindth.com/" aria-label="ใช้งานบนเว็บเบราว์เซอร์">
+          <span class="web-badge">
+            <i class="fas fa-globe"></i>
+            <span class="wb-txt">
+              <span class="wb-sm">ใช้งานได้ที่</span>
+              <span class="wb-lg">เว็บเบราว์เซอร์</span>
+            </span>
+          </span>
+        </a>
+      </div>
+      <div class="trust-row cta-trust-row">
+        <span><i class="fas fa-shield-halved"></i> เข้ารหัสข้อมูลตามมาตรฐาน PDPA</span>
+        <span><i class="fas fa-cloud"></i> ซิงค์ข้อมูลข้ามอุปกรณ์อัตโนมัติ</span>
+        <span><i class="fas fa-language"></i> รองรับภาษาไทยและอังกฤษ</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="guide-strip">
+    <div class="guide-strip-head">
+      <h2>คู่มือการเงิน</h2>
+      <p>บทความอธิบายเรื่องภาษีและการจัดการเงินแบบเข้าใจง่าย อ่านฟรี ไม่ต้องสมัคร</p>
+    </div>
+    <div class="guide-links">
+      <a href="guides/thai-income-tax-calculation.html">
+        <span class="g-t"><i class="fas fa-file-invoice-dollar"></i> วิธีคำนวณภาษีเงินได้บุคคลธรรมดา</span>
+        <span class="g-d">เข้าใจภาษีขั้นบันไดทีละขั้น พร้อมตัวอย่างคำนวณจริง</span>
+        <span class="g-meta"><span class="g-time"><i class="fas fa-clock"></i> ~11 นาทีอ่าน</span><i class="fas fa-chevron-right"></i></span>
+      </a>
+      <a href="guides/rmf-ssf-thaiesg-comparison.html">
+        <span class="g-t"><i class="fas fa-chart-pie"></i> RMF, Thai ESG และ SSF ต่างกันยังไง</span>
+        <span class="g-d">เทียบเพดาน เงื่อนไขถือครอง และตัวไหนที่ยังซื้อได้อยู่</span>
+        <span class="g-meta"><span class="g-time"><i class="fas fa-clock"></i> ~9 นาทีอ่าน</span><i class="fas fa-chevron-right"></i></span>
+      </a>
+      <a href="guides/expense-tracking-habit.html">
+        <span class="g-t"><i class="fas fa-list-check"></i> บันทึกรายรับรายจ่ายไม่ให้เลิกกลางทาง</span>
+        <span class="g-d">ทำไมคนส่วนใหญ่เลิกใน 2 สัปดาห์ และวิธีที่ทำให้อยู่ได้ยาว</span>
+        <span class="g-meta"><span class="g-time"><i class="fas fa-clock"></i> ~8 นาทีอ่าน</span><i class="fas fa-chevron-right"></i></span>
+      </a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="foot-contact">ดำเนินการโดย วรากร คำมีมูล · อ.พระนครศรีอยุธยา จ.พระนครศรีอยุธยา · โทร 082-185-4265 · <a href="mailto:support@moneymindth.com">support@moneymindth.com</a></div>
+    <div class="foot-brand"><i class="fas fa-copyright"></i> 2569 MoneyMind — การเงินส่วนบุคคล</div>
+    <div class="foot-links">
+      <a href="https://app.moneymindth.com/">เว็บแอป</a>
+      <a href="privacy.html">ความเป็นส่วนตัว</a>
+      <a href="terms.html">ข้อตกลงการใช้งาน</a>
+      <a href="terms.html#refund-policy">นโยบายยกเลิก/คืนเงิน</a>
+      <a href="support.html">ช่วยเหลือ</a>
+      <a href="mailto:support@moneymindth.com">support@moneymindth.com</a>
+    </div>
+    <div class="foot-social">
+      <a href="https://www.tiktok.com/@moneymind73" target="_blank" rel="noopener" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+      <a href="https://www.instagram.com/moneymind339/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+      <a href="https://www.facebook.com/profile.php?id=61592879445211" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+      <a href="https://line.me/R/ti/p/@159hhnpk" target="_blank" rel="noopener" aria-label="LINE"><i class="fab fa-line"></i></a>
+    </div>
+  </footer>
+</div>
+
+<!-- ป๊อบอัพ "ดูรายละเอียด" — โครงเดียวใช้ซ้ำได้กับทั้ง 4 การ์ดในหัวข้อความปลอดภัย
+     เนื้อหาจริงถูกดึงมาจาก privacy.html/terms.html สดๆ ตอนกด ไม่ได้ก็อปมาแปะไว้ตรงนี้
+     กันข้อความเพี้ยนจากของจริงถ้านโยบายมีการแก้ไขในอนาคต -->
+<div class="detail-modal" id="detail-modal" aria-hidden="true">
+  <div class="detail-modal-backdrop" data-close></div>
+  <div class="detail-modal-panel" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
+    <button type="button" class="detail-modal-close" data-close aria-label="ปิด"><i class="fas fa-xmark"></i></button>
+    <h3 id="detail-modal-title"></h3>
+    <div class="detail-modal-body"></div>
+    <a class="detail-modal-full" href="#">เปิดอ่านฉบับเต็ม →</a>
+  </div>
+</div>
+
+<script>
+  // ปุ่มสลับโหมดสว่าง/มืด — ถ้ายังไม่เคยกด จะตามค่าของระบบไปเรื่อยๆ
+  // พอกดครั้งแรกถึงจะจำค่าที่เลือกไว้ใน localStorage
+  (function () {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) return;
+    var mqLight = window.matchMedia('(prefers-color-scheme: light)');
+    var mqReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function effective() {
+      return document.documentElement.getAttribute('data-theme')
+          || (mqLight.matches ? 'light' : 'dark');
+    }
+    function paint() {
+      // icon itself transitions via CSS off the data-theme attribute (icon-sun/icon-moon
+      // opacity+rotate) — this only has to keep the a11y label in sync
+      var isLight = effective() === 'light';
+      var label = isLight ? 'สลับเป็นโหมดมืด' : 'สลับเป็นโหมดสว่าง';
+      btn.setAttribute('aria-label', label);
+      btn.title = label;
+    }
+    function applyTheme(next) {
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('mm_landing_theme', next); } catch (e) {}
+      paint();
+    }
+
+    btn.addEventListener('click', function () {
+      var next = effective() === 'light' ? 'dark' : 'light';
+      // ไล่สีทั้งหน้าแบบนุ่มนวลด้วย View Transitions API — เบราว์เซอร์ที่ไม่รองรับ
+      // (หรือผู้ใช้ที่ตั้งค่าลดการเคลื่อนไหว) จะสลับทันทีเหมือนเดิม ไม่มีอะไรพัง
+      if (document.startViewTransition && !mqReduced.matches) {
+        var t = document.startViewTransition(function () { applyTheme(next); });
+        // ready ปฏิเสธได้ในบางสถานการณ์ (เช่น แท็บไม่ได้โฟกัสอยู่ตอนกด) — theme สลับไปแล้วเสมอ
+        // เพราะ applyTheme รันใน callback ไม่ขึ้นกับ ready แค่กัน unhandled rejection ไม่ให้ขึ้น console เฉยๆ
+        t.ready.catch(function () {});
+      } else {
+        applyTheme(next);
+      }
+    });
+    // ยังไม่เคยเลือกเอง → ตามระบบ ถ้าผู้ใช้สลับธีมเครื่องระหว่างเปิดหน้าอยู่
+    if (mqLight.addEventListener) mqLight.addEventListener('change', paint);
+    paint();
+  })();
+
+  // เผยเนื้อหาทีละส่วนตอนเลื่อนถึง — ใช้ IntersectionObserver (ทำงานนอก main thread)
+  // แสดงครั้งเดียวแล้วเลิกเฝ้า ไม่ซ่อนกลับตอนเลื่อนขึ้น
+  (function () {
+    var els = document.querySelectorAll('.reveal');
+    if (!els.length) return;
+
+    // ผู้ใช้ที่ขอลดการเคลื่อนไหว → แสดงทุกอย่างทันที ไม่ต้องเฝ้าเลย
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      for (var i = 0; i < els.length; i++) els[i].classList.add('in');
+      return;
+    }
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('in');
+        io.unobserve(entry.target);
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
+
+    for (var j = 0; j < els.length; j++) io.observe(els[j]);
+  })();
+</script>
+
+<script>
+  // ป๊อบอัพ "ดูรายละเอียด" — href ของลิงก์ยังชี้ไปหน้าเต็มตามปกติเสมอ (คลิกกลาง/เปิดแท็บใหม่/
+  // ปิด JS ยังทำงานถูก) ตัวนี้แค่ดัก click ธรรมดาแล้วโชว์เนื้อหาจริงในป๊อบอัพแทนการเปลี่ยนหน้า
+  (function () {
+    var modal = document.getElementById('detail-modal');
+    if (!modal) return;
+    var panel = modal.querySelector('.detail-modal-panel');
+    var titleEl = document.getElementById('detail-modal-title');
+    var bodyEl = modal.querySelector('.detail-modal-body');
+    var fullLinkEl = modal.querySelector('.detail-modal-full');
+    var lastFocused = null;
+    var pageCache = {};
+
+    function showLoading() {
+      bodyEl.innerHTML = '<div class="detail-modal-spinner"><i class="fas fa-circle-notch"></i> กำลังโหลด...</div>';
+    }
+    function showError(fullUrl) {
+      bodyEl.innerHTML = '<p>ขอโทษครับ โหลดเนื้อหาไม่สำเร็จ ลองเปิดฉบับเต็มแทนได้เลย</p>';
+    }
+
+    // ตัด "1. "/"2.1 " ที่ขึ้นต้นหัวข้อออก — เลขนี้มีความหมายแค่ตอนอยู่ในเอกสารเต็มเรียงตามลำดับ
+    function stripNumbering(text) {
+      return text.replace(/^\s*\d+(\.\d+)?\.?\s*/, '');
+    }
+
+    function extractClause(doc, id) {
+      var heading = doc.getElementById(id);
+      if (!heading) return null;
+      var frag = document.createDocumentFragment();
+      var node = heading.nextElementSibling;
+      while (node && node.tagName !== 'H2') {
+        frag.appendChild(node.cloneNode(true));
+        node = node.nextElementSibling;
+      }
+      return { title: stripNumbering(heading.textContent), frag: frag };
+    }
+
+    function openModal(url) {
+      var parts = url.split('#');
+      var path = parts[0];
+      var id = parts[1];
+
+      lastFocused = document.activeElement;
+      fullLinkEl.setAttribute('href', url);
+      titleEl.textContent = '';
+      showLoading();
+
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('modal-open');
+      modal.querySelector('.detail-modal-close').focus();
+
+      var ready = pageCache[path]
+        ? Promise.resolve(pageCache[path])
+        : fetch(path).then(function (res) {
+            if (!res.ok) throw new Error('fetch failed');
+            return res.text();
+          }).then(function (html) {
+            pageCache[path] = html;
+            return html;
+          });
+
+      ready.then(function (html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var clause = extractClause(doc, id);
+        if (!clause) { showError(url); return; }
+        titleEl.textContent = clause.title;
+        bodyEl.innerHTML = '';
+        bodyEl.appendChild(clause.frag);
+      }).catch(function () {
+        showError(url);
+      });
+    }
+
+    function closeModal() {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('modal-open');
+      if (lastFocused && lastFocused.focus) lastFocused.focus();
+    }
+
+    document.addEventListener('click', function (e) {
+      var trigger = e.target.closest('#security .link');
+      // same-page anchors (e.g. "#faq-bank-connection", no path before the #) aren't a
+      // policy-page clause to fetch — let those fall through to native anchor scrolling
+      if (trigger && trigger.getAttribute('href').split('#')[0]) {
+        e.preventDefault();
+        openModal(trigger.getAttribute('href'));
+        return;
+      }
+      if (e.target.closest('[data-close]')) closeModal();
+    });
+
+    // fallback for browsers that don't auto-open a <details> containing the fragment
+    // target (recent Chrome/Firefox/Safari do this natively, but not universally yet)
+    function openDetailsAtHash() {
+      if (!location.hash) return;
+      var el = document.getElementById(location.hash.slice(1));
+      if (el && el.tagName === 'DETAILS') el.open = true;
+    }
+    openDetailsAtHash();
+    window.addEventListener('hashchange', openDetailsAtHash);
+
+    document.addEventListener('keydown', function (e) {
+      if (!modal.classList.contains('open')) return;
+      if (e.key === 'Escape') { closeModal(); return; }
+      // focus trap แบบง่าย — วนอยู่แค่ 2 จุดที่กดได้ในป๊อบอัพ (ปุ่มปิด กับลิงก์อ่านฉบับเต็ม)
+      if (e.key === 'Tab') {
+        var focusables = panel.querySelectorAll('button, a[href]');
+        var first = focusables[0], last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+  })();
+</script>
+
+
+<div class="sticky-try" id="sticky-try"><a class="try-btn" href="https://app.moneymindth.com/?try=1"><i class="fas fa-bolt"></i> ลองใช้ฟรีทันที — ไม่ต้องสมัคร</a></div>
+<script>
+(function(){
+  // แถบลองใช้ติดล่างจอ (มือถือ) — โผล่หลังเลื่อนพ้น hero, ซ่อนเมื่อถึง section ปิดท้ายที่มีปุ่มอยู่แล้ว
+  var bar=document.getElementById('sticky-try'), hero=document.getElementById('hero'), cta=document.getElementById('cta');
+  if(!bar||!hero) return;
+  var tick=false;
+  function upd(){ tick=false; var h=hero.getBoundingClientRect().bottom, c=cta?cta.getBoundingClientRect().top:1e9;
+    bar.classList.toggle('show', h<0 && c>innerHeight*0.6); }
+  addEventListener('scroll',function(){ if(!tick){ tick=true; requestAnimationFrame(upd); } },{passive:true});
+  upd();
+})();
+</script>
+</body>
+</html>
