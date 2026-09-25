@@ -20737,6 +20737,17 @@ function renderDailyReminderSettings(){
 </div>
 
 <!-- AI Chat FAB + Panel -->
+<!-- ══════ Bottom tab bar (มือถือ) ══════
+     โผล่เฉพาะเมื่อ _syncTabbar() ใส่คลาส .on ให้ (เช็ค currentUser) + จอ ≤700px
+     ช่อง "เมนู" เรียก toggleSidebar() เดิม → ทั้ง 18 หน้ายังเข้าถึงได้ครบ ไม่มีฟีเจอร์ไหนหาย
+     ช่องที่ 4 ตั้ง calendar ไว้เป็นค่าเริ่มต้น — เปลี่ยนได้ภายหลังจากข้อมูล app_page_hits จริง -->
+<nav id="mm-tabbar" aria-label="เมนูหลัก">
+  <button class="mm-tab" data-tab="dashboard" onclick="nav('dashboard')"><i class="fas fa-house"></i><span data-i18n="tab_home">หน้าแรก</span></button>
+  <button class="mm-tab" data-tab="transactions" onclick="nav('transactions')"><i class="fas fa-receipt"></i><span data-i18n="tab_tx">รายการ</span></button>
+  <button class="mm-tab mm-tab-add" onclick="openTxModal({type:'expense'})" title="เพิ่มรายการ" data-i18n-title="tx_add_item" aria-label="เพิ่มรายการ"><span class="mm-tab-add-btn"><i class="fas fa-plus"></i></span></button>
+  <button class="mm-tab" data-tab="calendar" onclick="nav('calendar')"><i class="fas fa-calendar-days"></i><span data-i18n="tab_cal">ปฏิทิน</span></button>
+  <button class="mm-tab" data-tab="_menu" onclick="toggleSidebar()"><i class="fas fa-bars"></i><span data-i18n="tab_more">เมนู</span></button>
+</nav>
 <button class="add-fab" id="add-fab" onclick="openTxModal({type:'expense'})" title="เพิ่มรายการ" data-i18n-title="tx_add_item" aria-label="เพิ่มรายการ"><i class="fas fa-plus"></i></button>
 <button class="chat-fab" onclick="toggleChat()" title="ถามผู้ช่วย AI" data-i18n-title="chat_ask_ai">
   <i class="fas fa-robot"></i>
