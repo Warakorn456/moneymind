@@ -5971,6 +5971,7 @@ function nav(page){
   curPage=page;
   renderPage(page);
   _updateAddFab();
+  _syncTabbar();
   // นับว่าหน้าไหนในแอปถูกเปิดจริง (ยอดรวมล้วน ไม่ผูกกับบัญชี — ดู privacy.html)
   // ตอบคนละคำถามกับ "ฟีเจอร์ไหนมีข้อมูล": เปิดเยอะแต่ไม่มีข้อมูล = น่าสนใจแต่ใช้ยาก
   try{ if(window.__mmPage) window.__mmPage('/app/'+page); }catch(e){}
