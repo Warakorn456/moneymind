@@ -1897,6 +1897,9 @@
 
     <!-- ── Hero Card ── -->
     <div class="dash-hero">
+      <!-- แสงกวาดผ่าน (เดสก์ท็อปเท่านั้น) — ต้องเป็น element จริงเพราะ ::before/::after ของ
+           .dash-hero ถูกใช้ทำแสงวงกลม 2 ก้อนไปแล้วทั้งคู่ ซ่อนไว้โดย default ใน CSS -->
+      <div class="dash-hero-sheen" aria-hidden="true"></div>
       <div class="dash-hero-top">
         <div class="dash-hero-nw">
           <div class="dash-hero-label"><i class="fas fa-crown" style="margin-right:5px;opacity:.6"></i><span data-i18n="dh_networth">ความมั่งคั่งสุทธิ (Net Worth)</span></div>
