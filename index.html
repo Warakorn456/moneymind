@@ -1508,10 +1508,15 @@
       background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(6,182,212,.12));
       box-shadow:0 4px 12px -5px rgba(124,58,237,.45),inset 0 1px 0 rgba(255,255,255,.8);
     }
-    .mm-tab-add{flex:0 0 auto;padding:0 6px;justify-content:center}
+    /* ยกทั้ง <button> ขึ้น ไม่ใช่ยกแค่วงกลมข้างใน — ถ้ายกเฉพาะ .mm-tab-add-btn ด้วย margin ลบ
+       ตัววงกลมจะโผล่พ้นขอบปุ่มจริงไปหลายสิบ px แล้วส่วนที่โผล่นั้น "กดไม่โดน"
+       align-self:flex-start จำเป็น เพราะ #mm-tabbar เป็น align-items:flex-end ซึ่งยึดขอบล่างไว้
+       ทำให้ margin ลบไม่มีผล (ทดลองแล้ว: -22px ยังยกขึ้นได้แค่ 2px)
+       ความสูงที่ item นี้กินจริง = 48 − 16 = 32px < ความสูงแท็บอื่น (38px) จึงไม่ดันแถบให้สูงขึ้น */
+    .mm-tab-add{flex:0 0 62px;padding:0;justify-content:center;align-items:center;align-self:flex-start;margin-top:-16px}
     .mm-tab-add::after,.mm-tab-add::before{display:none!important}
     .mm-tab-add-btn{
-      display:flex;align-items:center;justify-content:center;width:48px;height:48px;margin-top:-14px;
+      display:flex;align-items:center;justify-content:center;width:48px;height:48px;
       border-radius:50%;color:#fff;font-size:19px;
       background:linear-gradient(140deg,#a78bfa,#7c3aed 55%,#6d28d9);border:1px solid rgba(255,255,255,.28);
       box-shadow:0 10px 26px -8px rgba(124,58,237,.9),0 2px 6px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 4px rgba(0,0,0,.18);
@@ -1642,11 +1647,28 @@
       .btn{min-height:40px}
       .modal-title{margin-bottom:18px}
     }
+    /* 🐛 320px หลุดขอบ 21px — บั๊กเดิมตั้งแต่ก่อน V2 (ยืนยันด้วยการ probe baseline dd6c776 ได้ตัวเลข
+       เท่ากันเป๊ะ) เพิ่งโผล่ตอนทดสอบด้วย dashboard ที่มีข้อมูลจริง: คอลัมน์ `1fr` ไม่ยอมหดต่ำกว่า
+       min-content ของเนื้อใน และหัวการ์ดกราฟเป็น flex ห้ามตัดบรรทัด (ชื่อ + ปุ่ม white-space:nowrap)
+       → min-content ~324px ดันคอลัมน์กว้างเกิน viewport. แก้ 2 ชั้น: ให้คอลัมน์หดได้ด้วย
+       minmax(0,1fr) และให้หัวการ์ดตัดบรรทัดได้บนจอแคบ */
+    .charts-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .bottom-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    @media(max-width:860px){
+      .charts-grid,.bottom-grid{grid-template-columns:minmax(0,1fr)}
+    }
+    @media(max-width:700px){
+      .charts-grid,.bottom-grid{grid-template-columns:minmax(0,1fr)}
+      .chart-card,.card,.stat-card{min-width:0}
+      .chart-title{flex-wrap:wrap;row-gap:6px}
+      .chart-wrap{min-width:0}
+    }
     @media(max-width:380px){
       .mm-tab{font-size:9.5px}
       .mm-tab i{font-size:16px}
       .mm-tab.active::before{width:40px;height:24px}
-      .mm-tab-add-btn{width:44px;height:44px;font-size:17px;margin-top:-12px}
+      .mm-tab-add{margin-top:-13px}
+      .mm-tab-add-btn{width:44px;height:44px;font-size:17px}
     }
   </style>
 <!-- self-hosted analytics (GoatCounter) — aggregate pageviews only, no cookies, no personal
