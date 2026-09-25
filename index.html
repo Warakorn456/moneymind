@@ -6063,6 +6063,39 @@ function _syncTabbar(){
 // เส้นทาง "เปิดแอปซ้ำแล้วกู้ session" จึงไม่มีวันเห็นแถบเลยถ้าไม่ยิงซ้ำตอน DOM พร้อม
 // (อาการเดียวกันนี้มีอยู่กับ _updateAddFab() อยู่แล้ว แต่รอดเพราะ nav() เรียกซ้ำให้ทีหลัง)
 document.addEventListener('DOMContentLoaded',function(){ try{ _syncTabbar(); }catch(e){} });
+
+// ── safe-area: ตรวจว่า env() ถูกนับซ้ำหรือเปล่า (2026-09-25 รอบ 2) ──────────────────
+// ปัญหา: ในแอปมือถือ env(safe-area-inset-*) เชื่อตรงๆ ไม่ได้ — app.json ตั้ง edgeToEdgeEnabled:true
+// แต่ WebApp.tsx ห่อ WebView ด้วย flex:1 เฉยๆ (ไม่มี SafeAreaView) → RN หักขอบให้ WebView แล้ว
+// ขณะที่ WebView ยังรายงาน env() เป็นค่าของหน้าต่างทั้งจอ → CSS เผื่อขอบซ้ำอีกชั้น
+// (Android เครื่องจริง: ใต้แถบเมนูล่างว่าง ~60px แล้วค่อยมีแถบปุ่มระบบอีก 43px แยกต่างหาก)
+//
+// จะ hardcode เป็น 0 ก็ไม่ได้ เพราะ iPhone ที่ WebView กินเต็มจอจริงยังต้องใช้ค่านั้นกันรอยบาก/ขีด home
+// → ใช้สัญญาณที่แยกสองกรณีออกจากกันได้ตรงๆ: viewport สูงเท่าหน้าจอจริงไหม
+//     screen.height − innerHeight ≈ 0   → กินเต็มจอจริง = edge-to-edge แท้ → ต้องเผื่อขอบ
+//     screen.height − innerHeight ≥ 24  → native หักขอบให้แล้ว = env() เป็นค่าซ้ำ → ห้ามเผื่อซ้ำ
+// ข้อดีคือถูกต้องเองทั้งสองกรณีโดยไม่ต้องรู้ล่วงหน้าว่าเครื่องไหนเป็นแบบไหน และถ้าวันหนึ่งแก้ฝั่ง
+// native ให้ WebView เต็มจอจริง โค้ดนี้กลับไปเผื่อขอบเองอัตโนมัติ ไม่ต้องตามแก้
+//
+// เงื่อนไขเข้มไว้ก่อน (ต้องครบทั้ง 3) — พลาดทางนี้แค่เหลือช่องว่างเกิน แต่ถ้าพลาดอีกทางคือเนื้อหาถูกแถบระบบบัง
+function _syncSafeArea(){
+  try{
+    const root=document.documentElement, cs=getComputedStyle(root);
+    const envTop=parseFloat(cs.getPropertyValue('--sat-env'))||0;
+    const envBot=parseFloat(cs.getPropertyValue('--sab-env'))||0;
+    const inNative=!!(window._isAndroidApp||window._isIOSApp);
+    const gap=(window.screen&&window.screen.height?window.screen.height:0)-window.innerHeight;
+    const doubled = inNative && (envTop>0||envBot>0) && gap>=24;
+    if(doubled){ root.style.setProperty('--sat','0px'); root.style.setProperty('--sab','0px'); }
+    else { root.style.setProperty('--sat','var(--sat-env)'); root.style.setProperty('--sab','var(--sab-env)'); }
+  }catch(e){}   // พลาดเมื่อไหร่ให้ตกกลับไปใช้ค่า env() เดิมใน CSS ห้ามทำให้หน้าเว็บพัง
+}
+document.addEventListener('DOMContentLoaded',function(){ _syncSafeArea(); });
+window.addEventListener('resize',function(){ _syncSafeArea(); },{passive:true});
+window.addEventListener('orientationchange',function(){ setTimeout(_syncSafeArea,150); });
+// viewport ใน WebView ไม่ settle ทันทีตอนโหลด (กับดักเดิมที่เคยทำให้ปุ่มแชทลอยเด้งไปมุมซ้ายบน)
+setTimeout(_syncSafeArea,400);
+
 // ── PWA (2026-09-19): service worker + ปุ่มติดตั้ง ──
 // ไม่ register ในแอปมือถือ (RN WebView ปิด cache โดยตั้งใจ — ดู mobile/src/screens/WebApp.tsx) และไม่ทำบน localhost/file
 let _pwaInstallEvt=null;
