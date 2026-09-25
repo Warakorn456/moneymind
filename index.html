@@ -1248,7 +1248,11 @@
     button,.nav-item,.type-btn,.icon-btn,.btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
     /* โฟกัสด้วยคีย์บอร์ดต้องมองเห็น (มี outline:none อยู่ 19 จุด แต่ไม่มี :focus-visible แทนเลย) */
     .finput:focus-visible,.fselect:focus-visible,.login-inp:focus-visible,.btn:focus-visible,button:focus-visible,.nav-item:focus-visible,a:focus-visible{outline:2px solid var(--primary-l,#a78bfa);outline-offset:2px}
-    @media(prefers-reduced-motion:reduce){ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important} }
+    /* ⚠️ animation-name:none เป็นบรรทัดที่ขาดไม่ได้ (เพิ่ม 2026-09-25) — duration:.01ms อย่างเดียว "ไม่พอ"
+       เพราะอนิเมชัน entrance ที่ใช้ fill-mode:backwards จะค้างอยู่ที่คีย์เฟรมแรก opacity:0 แล้วไม่เดินต่อ
+       = เนื้อหาหายทั้งจอสำหรับคนที่เปิด "ลดการเคลื่อนไหว" (บั๊กนี้เคยเกิดจริงบน landing.html มาแล้ว)
+       ต้องสั่ง animation-name:none ให้ตกกลับไปใช้สถานะพื้นฐานที่มองเห็นได้จริง */
+    @media(prefers-reduced-motion:reduce){ *,*::before,*::after{animation-name:none!important;animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important;scroll-behavior:auto!important} }
     @media(max-width:700px){
       /* Safari ซูมเข้าอัตโนมัติเมื่อ focus input ที่ตัวอักษร <16px — ฟอร์มแทบทุกช่องเป็น 13–15px */
       .finput,.fselect,.login-inp,.prof-field input,.prof-field select,.prof-field textarea,.tx-search-bar input,.tag-input-inp,.month-sel select,.chat-input,input[type=text],input[type=number],input[type=email],input[type=password],input[type=date],select,textarea{font-size:16px!important}
