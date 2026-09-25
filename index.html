@@ -1249,10 +1249,10 @@
     ::-webkit-scrollbar-thumb:hover{background:linear-gradient(rgba(124,58,237,.7),rgba(6,182,212,.55))}
     /* ── มือถือ/iOS (2026-09-19) ── */
     /* viewport-fit=cover ประกาศไว้แต่ไม่เคยใช้ safe-area → บน iPhone มีรอยบาก sidebar/ปุ่มลอย/toast/lock screen ไปซ้อนใต้ notch/home bar */
-    .sidebar{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px)}
-    .chat-fab{bottom:calc(28px + env(safe-area-inset-bottom,0px));right:calc(28px + env(safe-area-inset-right,0px))}
-    .toast-wrap{bottom:calc(28px + env(safe-area-inset-bottom,0px))}
-    #login-screen,#lock-screen{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+    .sidebar{padding-top:var(--sat);padding-bottom:var(--sab);padding-left:env(safe-area-inset-left,0px)}
+    .chat-fab{bottom:calc(28px + var(--sab));right:calc(28px + env(safe-area-inset-right,0px))}
+    .toast-wrap{bottom:calc(28px + var(--sab))}
+    #login-screen,#lock-screen{padding-top:var(--sat);padding-bottom:var(--sab)}
     /* iOS Safari URL bar: 100vh สูงกว่าที่เห็นจริง → ใช้ dvh เมื่อรองรับ */
     @supports(height:100dvh){ body{min-height:100dvh} .main{min-height:100dvh} #app-root{min-height:100dvh!important} .chat-panel{max-height:calc(100dvh - 120px)} }
     button,.nav-item,.type-btn,.icon-btn,.btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
@@ -1266,12 +1266,12 @@
     @media(max-width:700px){
       /* Safari ซูมเข้าอัตโนมัติเมื่อ focus input ที่ตัวอักษร <16px — ฟอร์มแทบทุกช่องเป็น 13–15px */
       .finput,.fselect,.login-inp,.prof-field input,.prof-field select,.prof-field textarea,.tx-search-bar input,.tag-input-inp,.month-sel select,.chat-input,input[type=text],input[type=number],input[type=email],input[type=password],input[type=date],select,textarea{font-size:16px!important}
-      .chat-fab{bottom:calc(18px + env(safe-area-inset-bottom,0px));right:calc(18px + env(safe-area-inset-right,0px))}
-      .toast-wrap{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
-      .topbar{padding-top:calc(10px + env(safe-area-inset-top,0px))}
+      .chat-fab{bottom:calc(18px + var(--sab));right:calc(18px + env(safe-area-inset-right,0px))}
+      .toast-wrap{bottom:calc(80px + var(--sab))}
+      .topbar{padding-top:calc(10px + var(--sat))}
     }
     /* ปุ่ม + เพิ่มรายการ (มือถือ, 2026-09-19) — ทุกหน้าที่ไม่มีปุ่มเพิ่มอยู่แล้ว */
-    .add-fab{display:none;position:fixed;right:18px;bottom:calc(18px + 50px + 14px + env(safe-area-inset-bottom,0px));z-index:7990;width:48px;height:48px;border-radius:50%;background:var(--surface,#13131f);border:1px solid rgba(124,58,237,.5);color:var(--primary-l,#a78bfa);font-size:20px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.35);align-items:center;justify-content:center}
+    .add-fab{display:none;position:fixed;right:18px;bottom:calc(18px + 50px + 14px + var(--sab));z-index:7990;width:48px;height:48px;border-radius:50%;background:var(--surface,#13131f);border:1px solid rgba(124,58,237,.5);color:var(--primary-l,#a78bfa);font-size:20px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.35);align-items:center;justify-content:center}
     @media(max-width:700px){ .add-fab.on{display:flex} }
     .toast-act{margin-left:auto;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
     .toast-act:hover{background:rgba(255,255,255,.2)}
@@ -1460,7 +1460,7 @@
     #mm-tabbar{
       display:none;position:fixed;left:0;right:0;bottom:0;z-index:990;
       align-items:flex-end;justify-content:space-around;gap:2px;overflow:visible;
-      padding:7px max(8px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px));
+      padding:8px max(8px,env(safe-area-inset-left,0px)) calc(8px + var(--sab));
       border-top:1px solid var(--hair);background:var(--glass-3);
       backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);
       box-shadow:0 -10px 34px -18px rgba(0,0,0,.8),var(--rim);
@@ -1472,7 +1472,7 @@
       body.has-tabbar .hamburger{display:none}
       /* พอ hamburger หายไป topbar 2 แถวเดิมก็เสียรูป (space-between ดันปุ่มช่วยเหลือไปสุดขอบ)
          และกินพื้นที่แนวตั้งโดยเปล่าประโยชน์ — ยุบเหลือแถวเดียวแบบแอปจริง */
-      body.has-tabbar .topbar{flex-direction:row;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+      body.has-tabbar .topbar{flex-direction:row;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;padding-top:calc(10px + var(--sat))}
       body.has-tabbar .topbar>div:first-child{justify-content:flex-start;gap:6px;min-width:0;flex:1}
       body.has-tabbar .topbar h2{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       body.has-tabbar .topbar-right{justify-content:flex-end;gap:6px;flex:0 0 auto;flex-wrap:nowrap}
@@ -1510,8 +1510,8 @@
     /* เว้นที่ท้ายหน้าไม่ให้เนื้อหาถูกแถบบัง + ยกของลอยขึ้นเหนือแถบ
        (body.has-tabbar .page มี specificity สูงกว่า .page เปล่าๆ จึงไม่โดน shorthand padding ด้านล่างรีเซ็ต) */
     @media(max-width:700px){
-      body.has-tabbar .page{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom,0px) + 18px)}
-      body.has-tabbar .toast-wrap{bottom:calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom,0px))}
+      body.has-tabbar .page{padding-bottom:calc(var(--tabbar-h) + var(--sab) + 18px)}
+      body.has-tabbar .toast-wrap{bottom:calc(var(--tabbar-h) + 18px + var(--sab))}
       body.has-tabbar .add-fab{display:none!important}
     }
 
@@ -1520,7 +1520,7 @@
       .overlay{align-items:flex-end;padding:0}
       .modal{
         width:100%;max-width:none;max-height:92vh;border-bottom:none;
-        padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px));
+        padding:14px 16px calc(18px + var(--sab));
         animation:sheetUp .34s var(--ease-out);
       }
       /* specificity ต้องเท่า v1 (0,3,0) ด้วยเหตุผลเดียวกับด้านบน */
