@@ -6012,6 +6012,11 @@ function _syncTabbar(){
     t.classList.toggle('active',t.getAttribute('data-tab')===curPage);
   });
 }
+// ⚠️ จำเป็น: checkLogin()/_restoreSessionUI() รันจาก <script> กลาง body ซึ่งตอนนั้น #mm-tabbar
+// (อยู่ท้ายไฟล์) ยังไม่ถูก parse → getElementById คืน null แล้ว _syncTabbar() early-return เงียบๆ
+// เส้นทาง "เปิดแอปซ้ำแล้วกู้ session" จึงไม่มีวันเห็นแถบเลยถ้าไม่ยิงซ้ำตอน DOM พร้อม
+// (อาการเดียวกันนี้มีอยู่กับ _updateAddFab() อยู่แล้ว แต่รอดเพราะ nav() เรียกซ้ำให้ทีหลัง)
+document.addEventListener('DOMContentLoaded',function(){ try{ _syncTabbar(); }catch(e){} });
 // ── PWA (2026-09-19): service worker + ปุ่มติดตั้ง ──
 // ไม่ register ในแอปมือถือ (RN WebView ปิด cache โดยตั้งใจ — ดู mobile/src/screens/WebApp.tsx) และไม่ทำบน localhost/file
 let _pwaInstallEvt=null;
