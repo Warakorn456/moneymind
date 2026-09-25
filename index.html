@@ -5988,6 +5988,20 @@ function _updateAddFab(){
   const b=document.getElementById('add-fab'); if(!b) return;
   b.classList.toggle('on',!!currentUser&&!['dashboard','transactions','admin','aiusage','learn'].includes(curPage));
 }
+// ── แถบเมนูล่างบนมือถือ (2026-09-25) ──
+// ผูกไว้กับ nav() ซึ่งเป็นทางผ่านเดียวของทุกหน้า จึงครอบทั้ง fresh login และ session restore
+// โดยไม่ต้องไปแก้ทั้ง _enterAppReal() และ checkLogin() แยกกัน (checkLogin ไม่ได้เรียก
+// _enterAppReal — เป็น gotcha เดิมของไฟล์นี้ที่เคยทำให้ป้าย PRO ไม่ขึ้นมาแล้ว)
+// class has-tabbar อยู่บน <body> เพื่อให้ CSS เว้นที่ท้ายหน้า/ยกของลอย/ซ่อน hamburger ได้
+function _syncTabbar(){
+  const bar=document.getElementById('mm-tabbar'); if(!bar) return;
+  const on=!!currentUser;
+  bar.classList.toggle('on',on);
+  document.body.classList.toggle('has-tabbar',on);
+  bar.querySelectorAll('.mm-tab').forEach(function(t){
+    t.classList.toggle('active',t.getAttribute('data-tab')===curPage);
+  });
+}
 // ── PWA (2026-09-19): service worker + ปุ่มติดตั้ง ──
 // ไม่ register ในแอปมือถือ (RN WebView ปิด cache โดยตั้งใจ — ดู mobile/src/screens/WebApp.tsx) และไม่ทำบน localhost/file
 let _pwaInstallEvt=null;
