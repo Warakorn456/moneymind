@@ -23,6 +23,9 @@
   <meta name="theme-color" content="#0a0a15">
   <style>
     #login-screen{position:fixed;inset:0;background:#0d0d1a;z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;font-family:'Sarabun',sans-serif}
+    /* 2026-09-25: footer เดิม position:absolute ทับลิงก์ 'สมัครใหม่' บนจอเตี้ยตอนกางฟอร์มรหัสผ่าน — ให้ไหลต่อท้ายกล่องแทน + ให้ทั้งจอเลื่อนได้เมื่อเนื้อหายาวเกินจอ */
+    #login-screen{justify-content:safe center;overflow-y:auto;padding:16px 16px calc(16px + var(--sab,0px))}
+    .login-foot{margin-top:18px;flex-shrink:0}
     .login-box{background:#13131f;border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:40px 36px;width:100%;max-width:380px;text-align:center}
     .login-logo{font-size:24px;font-weight:800;background:linear-gradient(135deg,#a78bfa,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
     .login-sub{font-size:13px;color:#64748b;margin-bottom:32px}
@@ -1870,7 +1873,7 @@
       <div class="login-toggle"><span data-i18n="back_to">กลับไป</span> <span onclick="switchToLogin()" data-i18n="login_link">เข้าสู่ระบบ</span></div>
     </div>
   </div>
-  <div style="position:absolute;left:0;right:0;bottom:20px;text-align:center;font-size:11px;color:#475569">
+  <div class="login-foot" style="text-align:center;font-size:11px;color:#475569">
     <a href="privacy.html" style="color:#64748b" data-i18n="privacy_link">นโยบายความเป็นส่วนตัว</a>
     &nbsp;·&nbsp;
     <a href="terms.html" style="color:#64748b" data-i18n="terms_link">ข้อกำหนดการใช้งาน</a>
