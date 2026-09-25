@@ -3988,6 +3988,7 @@ function _enterAppReal(){
   document.getElementById('app-root').style.display='flex';
   if(typeof window._showPdpaIfNeeded==='function') window._showPdpaIfNeeded();
   _updateAddFab();
+  _syncTabbar();
   // กันปุ่มแชทลอยเด้งไปมุมซ้ายบน (viewport อาจยังไม่ settle ตอน init() เดิมรันตั้งแต่ page load) —
   // เรียกซ้ำตรงจุดที่รับประกันว่า viewport นิ่งแล้วแน่นอน ดู window._repositionChatFab ~16516
   setTimeout(function(){ if(typeof window._repositionChatFab==='function') window._repositionChatFab(); }, 0);
