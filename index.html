@@ -4385,6 +4385,7 @@ async function doLogout(skipConfirm){
   localStorage.removeItem(SESS_KEY);
   currentUser=null;
   _updateAddFab();
+  _syncTabbar();   // ซ่อนแถบเมนูล่าง + ถอด body.has-tabbar ทันทีที่ออกจากระบบ
   // reset สถานะ LINE ที่ค้างไว้ตั้งแต่บัญชีนี้ — กันโชว์ค้างข้ามบัญชีตอน login ใหม่ (ดู
   // window._resetLineBannerStatus ~16736 สำหรับรายละเอียดบั๊ก)
   if(typeof window._resetLineBannerStatus==='function') window._resetLineBannerStatus();
