@@ -17990,7 +17990,8 @@ function _renderTierBadge(){
     const rank=_getRank(tier.lv);
     // chibi character above badge
     let charHtml='';
-    if(window._fcSvgG){
+    // ยังไม่ login = sidebar ซ่อนอยู่ ไม่ต้องโหลดภาพตัวละคร (เคยทำให้หน้า login โหลดรูป 2MB ฟรีๆ)
+    if(window._fcSvgG && typeof currentUser!=='undefined' && currentUser){
       const g=_fcResolveGender();
       const svgRaw=window._fcSvgG(tier.lv,g);
       const vbM=svgRaw.match(/viewBox="[\d.]+ [\d.]+ ([\d.]+) ([\d.]+)"/);
