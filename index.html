@@ -1509,10 +1509,11 @@
       .overlay{align-items:flex-end;padding:0}
       .modal{
         width:100%;max-width:none;max-height:92vh;border-bottom:none;
-        border-radius:var(--r-lg) var(--r-lg) 0 0;
         padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px));
         animation:sheetUp .34s var(--ease-out);
       }
+      /* specificity ต้องเท่า v1 (0,3,0) ด้วยเหตุผลเดียวกับด้านบน */
+      body:not(.light-mode) .modal,body.light-mode .modal{border-radius:var(--r-lg) var(--r-lg) 0 0}
       /* ขีดจับด้านบน — ใช้ sticky ไม่ใช่ absolute เพราะ .modal มี overflow-y:auto
          ถ้าเป็น absolute ขีดจะเลื่อนหายไปพร้อมเนื้อหาตอนสกรอล */
       .modal::before{
