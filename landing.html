@@ -227,9 +227,11 @@
   html.js .reveal-scale{ transform:translateY(14px) scale(.94); }
   html.js .reveal-left{ transform:translateX(-30px); }
   html.js .reveal-right{ transform:translateX(30px); }
-  /* กวาดขึ้นแทนการเลื่อนทั้งก้อน — ใช้กับหัวเรื่อง ตัวอักษรจะไม่ "ไถล" ตอนโผล่ */
-  html.js .reveal-clip{ transform:none; clip-path:inset(0 0 105% 0); }
-  html.js .reveal.in{ opacity:1; transform:none; clip-path:inset(0 0 0 0); }
+  html.js .reveal.in{ opacity:1; transform:none; }
+  /* ⚠️ ห้ามใส่ clip-path ให้ตัว .reveal เองเด็ดขาด — IntersectionObserver คิดพื้นที่ตัดกัน
+     "หลัง" หัก clip ของ element แล้ว พอ clip เหลือศูนย์ ratio จะเป็น 0 ตลอด → ไม่มีวันได้ .in
+     → หายถาวร (เคยทำพลาดมาแล้วกับหัวเรื่องทั้ง 7 อัน) ถ้าอยากได้เอฟเฟกต์กวาด
+     ให้ไป clip "ลูก" ที่ไม่ได้ถูก observe แทน ดูตัวอย่างที่ .section-head h2 ด้านล่าง */
   /* stagger ลูกของ grid ที่เผยพร้อมกัน — JS ท้ายไฟล์เซ็ต --i ตามลำดับจริงของแต่ละ grid
      (ของเดิม hardcode nth-child ไว้แค่ 8 ตัว ซึ่งไม่พอเมื่อจำนวนการ์ดเปลี่ยน) */
   html.js .reveal-stagger > *{ transition-delay:calc(var(--i,0) * 65ms); }
