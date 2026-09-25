@@ -972,7 +972,9 @@
          อนิเมชันที่ขับด้วย timeline จึงยังวิ่งตามการเลื่อนอยู่ดีถ้าไม่สั่งปิดตรงๆ */
       animation-timeline:none!important;
     }
-    html.js .reveal{ opacity:1!important; transform:none!important; clip-path:none!important; }
+    html.js .reveal{ opacity:1!important; transform:none!important; }
+    /* กันไว้สองชั้น — หัวเรื่องหายเป็นความเสียหายที่หนักที่สุดของหน้านี้ */
+    html.js .section-head h2{ clip-path:none!important; }
     /* ปิดไปเลยดีกว่าปล่อยให้ค้างเต็มแถบ — animation ที่ถูกบีบเหลือ .01ms จะกระโดดไป scaleX(1) */
     .scroll-progress{ display:none!important; }
     .phone-mock{ transform:none!important; }
@@ -1230,7 +1232,7 @@
   </div>
 
   <section class="section" id="preview">
-    <div class="section-head reveal reveal-clip">
+    <div class="section-head reveal">
       <h2>ดูตัวอย่างการใช้งานจริง</h2>
       <p>ภาพจำลองหน้าจอ — ดูว่าใช้งานจริงเป็นยังไงก่อนตัดสินใจโหลด</p>
     </div>
@@ -1269,7 +1271,7 @@
   </section>
 
   <section class="section" id="features">
-    <div class="section-head reveal reveal-clip">
+    <div class="section-head reveal">
       <h2>ฟีเจอร์ที่แอปจัดการเงินทั่วไปไม่มี</h2>
       <p>ออกแบบมาสำหรับบริบทการเงินแบบไทยโดยเฉพาะ ไม่ใช่แอปแปลจากต่างประเทศ</p>
     </div>
@@ -1354,7 +1356,7 @@
   </section>
 
   <section class="section" id="security">
-    <div class="section-head reveal reveal-clip">
+    <div class="section-head reveal">
       <h2>ความปลอดภัยของข้อมูล</h2>
       <p>ทุกข้อด้านล่างมีรายละเอียดเต็มอยู่ในนโยบายจริง กดเข้าไปอ่านได้เลย ไม่ใช่แค่คำโฆษณา</p>
     </div>
@@ -1399,7 +1401,7 @@
   </section>
 
   <section class="section" id="pricing">
-    <div class="section-head reveal reveal-clip">
+    <div class="section-head reveal">
       <h2>ราคา</h2>
       <p>ฟีเจอร์หลักใช้งานได้ฟรี ไม่ต้องผูกบัตรเพื่อเริ่มต้น — มี AI Subscription เสริมสำหรับคนที่ต้องการโควตา AI มากขึ้น</p>
     </div>
@@ -1442,7 +1444,7 @@
   </section>
 
   <section class="section" id="faq">
-    <div class="section-head reveal reveal-clip">
+    <div class="section-head reveal">
       <h2>คำถามที่พบบ่อย</h2>
       <p>คำตอบตรงๆ ไม่มีตัวเล็ก — รายละเอียดเต็มอยู่ในนโยบายจริงเสมอ</p>
     </div>
@@ -1475,7 +1477,7 @@
   </section>
 
   <section class="section" id="reviews">
-    <div class="section-head reveal reveal-clip">
+    <div class="section-head reveal">
       <h2>เสียงจากผู้ใช้</h2>
     </div>
 
@@ -1517,7 +1519,7 @@
   </section>
 
   <section class="section" id="how">
-    <div class="section-head reveal reveal-clip">
+    <div class="section-head reveal">
       <h2>เริ่มใช้งานได้ใน 3 ขั้นตอน</h2>
     </div>
     <div class="steps reveal-stagger">
