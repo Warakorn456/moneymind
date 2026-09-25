@@ -133,7 +133,7 @@
     .dash-hero-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px}
     .dash-hero-nw{flex:1}
     .dash-hero-label{font-size:11px;color:rgba(255,255,255,.45);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-    .dash-hero-amount{font-size:38px;font-weight:800;line-height:1;letter-spacing:-1px}
+    .dash-hero-amount{font-size:clamp(30px,7.2vw,52px);font-weight:800;line-height:1.02;letter-spacing:-.025em}
     .dash-hero-sub{font-size:12px;color:rgba(255,255,255,.4);margin-top:6px}
     .dash-hero-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
     .dash-hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -505,7 +505,7 @@
 
     /* ── Responsive ── */
     @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}.port-grid{grid-template-columns:1fr}.dash-hero-stats{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:860px){.charts-grid{grid-template-columns:1fr}.bottom-grid{grid-template-columns:1fr}.dash-hero-amount{font-size:28px}}
+    @media(max-width:860px){.charts-grid{grid-template-columns:1fr}.bottom-grid{grid-template-columns:1fr}}
     @media(max-width:700px){
       body{overflow-x:hidden}
       .sidebar{transform:translateX(-100%)}
@@ -525,7 +525,6 @@
       .page{padding:12px 10px}
 
       .dash-hero{padding:16px;margin-bottom:14px;border-radius:16px}
-      .dash-hero-amount{font-size:26px}
       .dash-hero-stats{grid-template-columns:repeat(2,1fr);gap:8px}
       .dhs-value{font-size:15px}
       .dash-hero-actions .btn{padding:7px 10px;font-size:12px}
@@ -600,21 +599,32 @@
       .stats-grid{grid-template-columns:1fr}
       .budget-nums{grid-template-columns:1fr}
     }
-    /* Performance: ลด backdrop-filter บนมือถือ — ทั้งไฟล์มี blur() 32 จุดจาก Liquid Glass redesign
-       (การ์ด, topbar, sidebar ฯลฯ) แต่ละจุดต้อง recomposite ทุกเฟรมตอนเลื่อนหน้าจอ ซึ่ง WebView บน
-       มือถือ (ทั้งแอป Android/iOS ที่ห่อเว็บนี้ตรงๆ และเบราว์เซอร์มือถือทั่วไป) มี GPU budget น้อยกว่า
-       เดสก์ท็อปมาก ยิ่งมีการ์ดเบลอซ้อนกันหลายใบพร้อมกัน (เช่นหน้า Dashboard) ยิ่งฝืด/กระตุกตอนเลื่อน —
-       เจอจาก user รายงาน "เลื่อนขึ้น-ลงไม่ลื่น ฝืดๆ" บนแอปมือถือ 2026-08-05. ลด blur radius ลงมาก
-       (18-28px → 6px) แทนตัดออกทั้งหมด ยังพอเห็นเป็นกระจกฝ้าอยู่บ้างแต่เบากว่าเดิมมาก — ใช้
-       !important เพราะต้อง override selector ผสม dark/light mode หลายชุดพร้อมกันโดยไม่ต้อง
-       เขียนซ้ำทุก selector */
+    /* ════ Performance: กลยุทธ์ blur บนมือถือ (เขียนใหม่ 2026-09-25) ════
+       ของเดิม (2026-08-05) บังคับ blur(6px)!important ให้ทุกพื้นผิว ~32 จุด เพื่อแก้อาการ "เลื่อนไม่ลื่น
+       ฝืดๆ" ที่ user รายงาน — ได้ผลเรื่องความลื่นบ้าง แต่แลกมาด้วย 2 ข้อเสีย: (1) ยังเหลือ 32 ชั้นที่
+       compositor ต้อง recomposite ทุกเฟรมอยู่ดี แค่ radius เล็กลง (2) กระจกกลายเป็น "ฝ้าขุ่น" ไม่ใช่กระจก
+
+       กลยุทธ์ใหม่ — แยกตามหน้าที่จริงว่า "มีอะไรอยู่ข้างหลังให้เบลอจริงหรือเปล่า":
+       · การ์ดเนื้อหา วางอยู่บน body gradient ที่เป็น background-attachment:fixed (นิ่งสนิท ไม่มี
+         เนื้อหาเลื่อนผ่านข้างหลัง) → backdrop-filter แทบไม่ให้ผลทางสายตาเลย แต่จ่ายค่า GPU เต็ม
+         ตัดทิ้งทั้งหมดแล้วชดเชยด้วยพื้น gradient ที่ทึบขึ้น (ดูบล็อก LIQUID GLASS V2 ท้ายไฟล์)
+       · chrome ที่ "ทับเนื้อหาซึ่งเลื่อนอยู่จริง" (topbar / แถบเมนูล่าง / modal / panel ลอย) คือจุดที่
+         blur ให้ผลจริง → คืน radius ให้แรงพอจะเห็นเป็นกระจกจริง
+       ผลรวม: ชั้น blur ลดจาก ~32 เหลือ ~5 (ลื่นกว่าเดิม) และ 5 ชั้นที่เหลือสวยกว่าเดิมมาก */
     @media(max-width:700px){
-      .topbar,body:not(.light-mode) .topbar,body.light-mode .topbar,
+      .card,.stat-card,.chart-card,.set-card,.tax-card,.scard,.dcard,.toast,.bs-card,
+      .prof-header,.prof-section,.tax-result-panel,.sub-card,.sr-card,.comparison-card,
+      .insights-card,.health-card,.forecast-card,.nw-history-card,.login-box,.btn-ghost,
       .sidebar,body:not(.light-mode) .sidebar,body.light-mode .sidebar,
-      .card,.stat-card,.chart-card,.set-card,.tax-card,.modal,.scard,.dcard,.toast,.bs-card,
-      .prof-header,.prof-section,.tax-result-panel,.sub-card,.sr-card,.gmail-modal,.comparison-card,
-      .insights-card,.health-card,.forecast-card,.nw-history-card,.login-box,.btn-ghost{
-        backdrop-filter:blur(6px)!important;-webkit-backdrop-filter:blur(6px)!important;
+      .dash-hero,#pg-dashboard .dash-hero,#pg-dashboard .dash-hero-stat,.favcat-pill,
+      body.light-mode .card,body.light-mode .stat-card,body.light-mode .chart-card,
+      body.light-mode .set-card,body.light-mode .tax-card,body.light-mode .toast{
+        backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+      }
+      .topbar,body:not(.light-mode) .topbar,body.light-mode .topbar,
+      .modal,body.light-mode .modal,.gmail-modal,.notif-panel,.chat-panel,#mm-tabbar{
+        backdrop-filter:blur(22px) saturate(170%)!important;
+        -webkit-backdrop-filter:blur(22px) saturate(170%)!important;
       }
     }
     .hamburger{display:none;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:4px}
@@ -1267,6 +1277,328 @@
     .toast-act:hover{background:rgba(255,255,255,.2)}
     .tx-simple .finfo{display:none}
     .tx-ios-hint{font-size:12px;color:var(--muted);margin:-4px 0 8px;display:none}
+
+    /* ════════════════════════════════════════════════════════════════════════
+       LIQUID GLASS V2 (2026-09-25) — ระบบดีไซน์ระดับแอป
+       ทำงานที่ชั้น token + class เท่านั้น ไม่แตะ markup ของแต่ละหน้า เพราะไฟล์นี้มี inline
+       style ~2,500 จุด (800 จุดใช้ var(--*) อยู่แล้ว) การแก้ที่ตัวแปรจึงไหลไปทุกหน้าเอง
+       ⚠️ ห้ามเปลี่ยน hue หลัก (violet/cyan/emerald/red/amber) — มี hex hardcode 464 จุดที่เป็น
+          สีเดียวกับตัวแปรอยู่แล้ว เปลี่ยนเมื่อไหร่หลุดกันทั้งแอปทันที
+       ⚠️ ห้ามเปลี่ยนค่า --bg/--surface/--surface2 ด้วยเหตุผลเดียวกัน — ความลึกที่เพิ่มขึ้นมาจาก
+          elevation/เงา/rim light ล้วนๆ ไม่ใช่จากการเปลี่ยนสีพื้น
+       ════════════════════════════════════════════════════════════════════════ */
+
+    /* ── 1. Token layer (เพิ่มใหม่ล้วน ไม่ทับตัวแปรเดิมสักตัว) ── */
+    :root{
+      --r-xs:10px; --r-sm:14px; --r-md:18px; --r-lg:24px; --r-xl:30px;
+      --maxw:1380px;
+      --tabbar-h:62px;
+      --ease-spring:cubic-bezier(.34,1.2,.64,1);
+      --ease-out:cubic-bezier(.22,1,.36,1);
+      --rim:inset 0 1px 0 rgba(255,255,255,.13);
+      --rim-strong:inset 0 1px 0 rgba(255,255,255,.24),inset 0 -1px 0 rgba(0,0,0,.2);
+      --e1:0 1px 2px rgba(0,0,0,.22),0 10px 26px -14px rgba(0,0,0,.6);
+      --e2:0 2px 6px rgba(0,0,0,.26),0 24px 52px -22px rgba(0,0,0,.7);
+      --e3:0 8px 18px rgba(0,0,0,.3),0 36px 72px -28px rgba(0,0,0,.78);
+      --glow-primary:0 20px 52px -28px rgba(124,58,237,.8);
+      --glass-0:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.022));
+      --glass-1:linear-gradient(118deg,rgba(255,255,255,.11) 0%,rgba(255,255,255,.025) 36%,rgba(255,255,255,0) 64%),linear-gradient(162deg,rgba(38,38,62,.72),rgba(18,18,32,.84));
+      --glass-2:linear-gradient(118deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.04) 40%,rgba(255,255,255,0) 68%),linear-gradient(150deg,rgba(124,58,237,.24) 0%,rgba(6,182,212,.14) 52%,rgba(16,185,129,.07) 100%);
+      --glass-3:linear-gradient(118deg,rgba(255,255,255,.13) 0%,rgba(255,255,255,.02) 42%,rgba(255,255,255,0) 70%),linear-gradient(162deg,rgba(32,32,54,.92),rgba(15,15,27,.96));
+      --hair:rgba(255,255,255,.12);
+      --hair-hi:rgba(255,255,255,.2);
+    }
+    body.light-mode{
+      --rim:inset 0 1px 0 rgba(255,255,255,.8);
+      --rim-strong:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(15,23,42,.05);
+      --e1:0 1px 2px rgba(15,23,42,.05),0 8px 22px -14px rgba(15,23,42,.28);
+      --e2:0 2px 6px rgba(15,23,42,.07),0 20px 44px -22px rgba(15,23,42,.3);
+      --e3:0 8px 18px rgba(15,23,42,.1),0 32px 64px -28px rgba(15,23,42,.35);
+      --glow-primary:0 20px 48px -30px rgba(124,58,237,.5);
+      --glass-0:linear-gradient(160deg,rgba(15,23,42,.045),rgba(15,23,42,.02));
+      --glass-1:linear-gradient(118deg,rgba(255,255,255,.62) 0%,rgba(255,255,255,.2) 42%,rgba(255,255,255,.08) 100%);
+      --glass-2:linear-gradient(118deg,rgba(255,255,255,.68) 0%,rgba(255,255,255,.22) 40%,rgba(255,255,255,0) 72%),linear-gradient(150deg,rgba(124,58,237,.13) 0%,rgba(6,182,212,.1) 52%,rgba(16,185,129,.06) 100%);
+      --glass-3:linear-gradient(118deg,rgba(255,255,255,.75) 0%,rgba(255,255,255,.4) 45%,rgba(255,255,255,.3) 100%);
+      --hair:rgba(15,23,42,.08);
+      --hair-hi:rgba(15,23,42,.14);
+    }
+
+    /* ── 2. ฉากหลัง: เพิ่มแหล่งแสงที่ 4 + เกรนละเอียด ──
+       เกรนใช้ z-index:-1 (ไม่ใช่ 0) โดยตั้งใจ — เป็นเทคนิคมาตรฐานที่วาง layer ไว้เหนือพื้นหลัง canvas
+       แต่ใต้เนื้อหาทั้งหมด จึง "ไม่ต้องไปแตะ stacking context ของ element อื่นเลยสักตัว"
+       (ถ้าใช้ z-index:0 จะต้องไล่ใส่ position/z-index ให้ sidebar/main/modal ซึ่งเสี่ยงพังเป็นลูกโซ่)
+       ปิดบนมือถือไว้ก่อนเพื่อความปลอดภัยเรื่องความลื่น */
+    body:not(.light-mode){
+      background:
+        radial-gradient(1200px 620px at 6% -10%, rgba(124,58,237,.26), transparent 56%),
+        radial-gradient(980px 560px at 102% -4%, rgba(6,182,212,.18), transparent 54%),
+        radial-gradient(860px 520px at 26% 108%, rgba(236,72,153,.13), transparent 56%),
+        radial-gradient(720px 460px at 88% 92%, rgba(16,185,129,.1), transparent 58%),
+        var(--bg);
+      background-attachment:fixed;
+    }
+    body.light-mode{
+      background:
+        radial-gradient(1200px 620px at 6% -10%, rgba(124,58,237,.13), transparent 56%),
+        radial-gradient(980px 560px at 102% -4%, rgba(6,182,212,.1), transparent 54%),
+        radial-gradient(860px 520px at 26% 108%, rgba(236,72,153,.08), transparent 56%),
+        radial-gradient(720px 460px at 88% 92%, rgba(16,185,129,.07), transparent 58%),
+        var(--bg);
+      background-attachment:fixed;
+    }
+    body::after{
+      content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.05;
+      background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22/%3E%3C/filter%3E%3Crect width=%22160%22 height=%22160%22 filter=%22url(%23n)%22 opacity=%220.55%22/%3E%3C/svg%3E');
+    }
+    body.light-mode::after{opacity:.032}
+    @media(max-width:700px){ body::after{display:none} }
+
+    /* ── 3. ระบบความลึก 4 ระดับ (แทนกระจกสูตรเดียวที่ใช้กับทุกการ์ดเหมือนกันหมด) ── */
+    /* E1 — การ์ดมาตรฐาน */
+    body:not(.light-mode) .card,body:not(.light-mode) .stat-card,body:not(.light-mode) .chart-card,
+    body:not(.light-mode) .set-card,body:not(.light-mode) .tax-card,body:not(.light-mode) .scard,
+    body:not(.light-mode) .dcard,body:not(.light-mode) .bs-card,body:not(.light-mode) .prof-section,
+    body:not(.light-mode) .sub-card,body:not(.light-mode) .sr-card,body:not(.light-mode) .comparison-card,
+    body:not(.light-mode) .insights-card,body:not(.light-mode) .health-card,
+    body:not(.light-mode) .forecast-card,body:not(.light-mode) .nw-history-card,
+    body.light-mode .card,body.light-mode .stat-card,body.light-mode .chart-card,
+    body.light-mode .set-card,body.light-mode .tax-card,body.light-mode .scard,
+    body.light-mode .dcard,body.light-mode .bs-card,body.light-mode .prof-section,
+    body.light-mode .sub-card,body.light-mode .sr-card,body.light-mode .comparison-card,
+    body.light-mode .insights-card,body.light-mode .health-card,
+    body.light-mode .forecast-card,body.light-mode .nw-history-card{
+      background:var(--glass-1);border-color:var(--hair);box-shadow:var(--e1),var(--rim);
+    }
+    .card,.stat-card,.chart-card,.set-card,.tax-card,.scard,.dcard,.bs-card,.prof-section,
+    .sub-card,.sr-card,.comparison-card{border-radius:var(--r-md)}
+
+    /* E2 — พื้นผิวเด่น (hero / งบ / แผงผลภาษี / กล่อง login) */
+    .dash-hero,#pg-dashboard .dash-hero{
+      background:var(--glass-2);border:1px solid var(--hair-hi);border-radius:var(--r-xl);
+      box-shadow:var(--e2),var(--rim-strong),var(--glow-primary);
+    }
+    .budget-card,.prof-header,.tax-result-panel{
+      border-radius:var(--r-lg);border:1px solid var(--hair);box-shadow:var(--e2),var(--rim);
+    }
+    body:not(.light-mode) .prof-header,body:not(.light-mode) .tax-result-panel,
+    body.light-mode .prof-header,body.light-mode .tax-result-panel{background:var(--glass-1)}
+    /* !important เพราะ body:not(.light-mode) .login-box ด้านบนมี specificity สูงกว่า */
+    .login-box{border-radius:var(--r-xl)!important;box-shadow:var(--e3),var(--rim-strong)!important}
+
+    /* E3 — พื้นผิวที่ลอยทับเนื้อหาซึ่งเลื่อนอยู่จริง = จุดเดียวที่ backdrop-filter คุ้มค่า */
+    body:not(.light-mode) .modal,body:not(.light-mode) .gmail-modal,
+    body.light-mode .modal,body.light-mode .gmail-modal{
+      background:var(--glass-3);border-color:var(--hair-hi);box-shadow:var(--e3),var(--rim-strong);
+    }
+    .modal,.gmail-modal{border-radius:var(--r-lg);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%)}
+    .notif-panel,.chat-panel,.field-hint-tip{
+      background:var(--glass-3);border:1px solid var(--hair);border-radius:var(--r-md);
+      box-shadow:var(--e3),var(--rim);
+      backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);
+    }
+    .overlay,body.light-mode .overlay{backdrop-filter:blur(8px) saturate(120%);-webkit-backdrop-filter:blur(8px) saturate(120%)}
+    .overlay{background:rgba(6,6,14,.62)}
+    body.light-mode .overlay{background:rgba(30,41,59,.32)}
+
+    /* E0 — แถวย่อยภายในการ์ด: ไม่มี blur เลย แค่ tint ให้แยกชั้นออกจากพื้นการ์ด */
+    .tx-item,.prof-entry,.fam-card,.cal-tx-row,.stmt-sum-item{border-radius:var(--r-xs)}
+    body:not(.light-mode) .tx-item,body:not(.light-mode) .prof-entry,body:not(.light-mode) .fam-card,
+    body.light-mode .tx-item,body.light-mode .prof-entry,body.light-mode .fam-card{
+      background:var(--glass-0);border:1px solid var(--hair);
+    }
+    #pg-dashboard .dash-hero-stat{border-radius:var(--r-sm);box-shadow:var(--rim)}
+
+    /* ── 4. Typography ── */
+    body{line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+    .dash-hero-amount,.stat-value,.dhs-value,.scard-cur,.tx-amt,.bnum-v,.dstat-v,.stmt-sum-v,
+    .tax-badge,.year-table td,.inv-table td{font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1}
+    .stat-value,.scard-cur{letter-spacing:-.018em}
+    .flabel,.stat-label,.dhs-label,.dash-hero-label,.budget-title,.tax-section-title{font-weight:700;letter-spacing:.07em;opacity:.8}
+    .sec-title,.chart-title,.set-title,.modal-title{letter-spacing:-.01em}
+    .topbar h2{font-size:19px;letter-spacing:-.015em}
+
+    /* ── 5. Chrome: topbar / sidebar / nav ── */
+    .topbar{border-bottom:1px solid var(--hair)}
+    body:not(.light-mode) .sidebar{background:linear-gradient(180deg,rgba(30,28,54,.62),rgba(13,13,26,.92))}
+    .sidebar{border-right:1px solid var(--hair)}
+    .nav-item{margin:2px 10px;padding:10px 12px;border-radius:var(--r-xs);gap:11px;transition:background .18s,color .18s,transform .18s var(--ease-spring)}
+    .nav-item:hover{transform:translateX(2px)}
+    .nav-item.active::before{display:none}
+    body:not(.light-mode) .nav-item.active{
+      background:linear-gradient(100deg,rgba(124,58,237,.34),rgba(6,182,212,.14));border-radius:var(--r-xs);color:#fff;
+      box-shadow:0 6px 18px -10px rgba(124,58,237,.9),inset 0 1px 0 rgba(255,255,255,.16);
+    }
+    body.light-mode .nav-item.active{
+      background:linear-gradient(100deg,rgba(124,58,237,.16),rgba(6,182,212,.08));border-radius:var(--r-xs);color:var(--primary);
+      box-shadow:0 6px 16px -10px rgba(124,58,237,.5),inset 0 1px 0 rgba(255,255,255,.8);
+    }
+    .logo-img{box-shadow:0 4px 12px -4px rgba(124,58,237,.6)}
+
+    /* ── 6. Bottom tab bar (มือถือ) ──
+       z-index 990 = ต่ำกว่า .overlay (1000) modal จึงทับได้ตามปกติ และต่ำกว่า lock/login (99998/99999)
+       แสดงเมื่อ JS ใส่คลาส .on (เช็ค currentUser) เท่านั้น — ถ้า JS ส่วนนั้นพัง แถบจะไม่โผล่และ
+       .hamburger เดิมยังอยู่ ผู้ใช้จึงเข้าเมนูได้เสมอ ไม่มีทางถูกขังไว้ในหน้าเดียว */
+    #mm-tabbar{
+      display:none;position:fixed;left:0;right:0;bottom:0;z-index:990;
+      align-items:flex-end;justify-content:space-around;gap:2px;overflow:visible;
+      padding:7px max(8px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px));
+      border-top:1px solid var(--hair);background:var(--glass-3);
+      backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);
+      box-shadow:0 -10px 34px -18px rgba(0,0,0,.8),var(--rim);
+    }
+    @media(max-width:700px){ #mm-tabbar.on{display:flex} body.has-tabbar .hamburger{display:none} }
+    .mm-tab{
+      flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+      gap:3px;padding:6px 2px 3px;background:none;border:none;cursor:pointer;position:relative;
+      color:var(--muted);font-family:'Sarabun',sans-serif;font-size:10.5px;font-weight:600;
+      border-radius:var(--r-xs);transition:color .2s,transform .25s var(--ease-spring);
+      -webkit-tap-highlight-color:transparent;
+    }
+    .mm-tab i{font-size:17px;line-height:1;transition:transform .3s var(--ease-spring)}
+    .mm-tab span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+    .mm-tab:active{transform:scale(.92)}
+    .mm-tab.active{color:var(--primary-l)}
+    body.light-mode .mm-tab.active{color:var(--primary)}
+    .mm-tab.active i{transform:translateY(-2px) scale(1.06)}
+    .mm-tab.active::after{
+      content:'';position:absolute;top:0;left:50%;width:22px;height:3px;border-radius:0 0 3px 3px;
+      transform:translateX(-50%);background:linear-gradient(90deg,var(--primary),var(--cyan));
+      box-shadow:0 2px 10px rgba(124,58,237,.8);
+    }
+    .mm-tab-add{flex:0 0 auto;padding:0 6px;justify-content:center}
+    .mm-tab-add::after{display:none!important}
+    .mm-tab-add-btn{
+      display:flex;align-items:center;justify-content:center;width:52px;height:52px;margin-top:-20px;
+      border-radius:50%;color:#fff;font-size:20px;
+      background:linear-gradient(140deg,#a78bfa,#7c3aed 55%,#6d28d9);border:1px solid rgba(255,255,255,.28);
+      box-shadow:0 10px 26px -8px rgba(124,58,237,.9),0 2px 6px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 4px rgba(0,0,0,.18);
+      transition:transform .3s var(--ease-spring);
+    }
+    .mm-tab-add:active .mm-tab-add-btn{transform:scale(.9)}
+    /* เว้นที่ท้ายหน้าไม่ให้เนื้อหาถูกแถบบัง + ยกของลอยขึ้นเหนือแถบ
+       (body.has-tabbar .page มี specificity สูงกว่า .page เปล่าๆ จึงไม่โดน shorthand padding ด้านล่างรีเซ็ต) */
+    @media(max-width:700px){
+      body.has-tabbar .page{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom,0px) + 18px)}
+      body.has-tabbar .toast-wrap{bottom:calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom,0px))}
+      body.has-tabbar .add-fab{display:none!important}
+    }
+
+    /* ── 7. Modal → bottom sheet บนมือถือ (กฎชุดเดียวครอบ modal ทั้ง 29 ตัว) ── */
+    @media(max-width:700px){
+      .overlay{align-items:flex-end;padding:0}
+      .modal{
+        width:100%;max-width:none;max-height:92vh;border-bottom:none;
+        border-radius:var(--r-lg) var(--r-lg) 0 0;
+        padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px));
+        animation:sheetUp .34s var(--ease-out);
+      }
+      /* ขีดจับด้านบน — ใช้ sticky ไม่ใช่ absolute เพราะ .modal มี overflow-y:auto
+         ถ้าเป็น absolute ขีดจะเลื่อนหายไปพร้อมเนื้อหาตอนสกรอล */
+      .modal::before{
+        content:'';display:block;position:sticky;top:0;z-index:2;
+        width:40px;height:4px;border-radius:99px;background:var(--hair-hi);margin:0 auto 12px;
+      }
+    }
+    @supports(max-height:92dvh){ @media(max-width:700px){ .modal{max-height:92dvh} } }
+    @keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+
+    /* ── 8. แท็บเล็ต 701–1024px: sidebar เป็นรางไอคอน+ป้าย ──
+       ไม่ใช้ hover-expand เพราะ iPad ไม่มี hover; --sw เป็นตัวแปรที่ .main{margin-left} อ้างอยู่แล้ว
+       layout จึงขยับตามเองโดยไม่ต้องแก้อะไรเพิ่ม */
+    @media(min-width:701px) and (max-width:1024px){
+      :root{--sw:92px}
+      .logo{padding:18px 8px 14px;text-align:center}
+      .logo-row{flex-direction:column;gap:6px}
+      .logo h1{font-size:12px;letter-spacing:-.01em}
+      .logo p,#_tierBadge,#sync-note{display:none}
+      .nav-item{flex-direction:column;gap:5px;padding:10px 4px;margin:3px 7px;font-size:9.5px;text-align:center;line-height:1.25}
+      .nav-item i{font-size:17px;width:auto}
+      .nav-item:hover{transform:none}
+      .nav-drag-handle{display:none!important}
+      .sidebar-foot{padding:10px 7px}
+      .sidebar-foot button{font-size:0!important;padding:10px 0!important}
+      .sidebar-foot button i{font-size:14px}
+      #sidebar-user-info{justify-content:center;font-size:0;padding:8px}
+      #sidebar-user-info i{font-size:14px}
+      #sync-badge{font-size:10px}
+    }
+
+    /* ── 9. จอใหญ่: หยุดการยืดเต็มความกว้าง ──
+       ใช้ padding-inline แทน max-width เพื่อให้ topbar กับเนื้อหาตรงคอลัมน์กันเป๊ะโดยไม่ต้องเพิ่ม
+       wrapper ใหม่ใน markup — ที่ความกว้างปกติ max() คืน 28px = เท่าเดิมทุกประการ */
+    @media(min-width:701px){
+      .page{padding-inline:max(28px,calc((100% - var(--maxw))/2))}
+      .topbar{padding-inline:max(28px,calc((100% - var(--maxw))/2))}
+    }
+
+    /* ── 10. Motion — เข้มบนคอม เบาบนมือถือ ──
+       (บล็อก prefers-reduced-motion ด้านบนสั่ง animation-name:none ครอบไว้หมดแล้ว) */
+    .page{animation:pageIn .34s var(--ease-out)}
+    @keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    @keyframes riseIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+    @keyframes sheen{0%{transform:translateX(-140%) skewX(-18deg)}100%{transform:translateX(320%) skewX(-18deg)}}
+    .dash-hero-sheen{display:none}
+    @media(min-width:701px) and (prefers-reduced-motion:no-preference){
+      #dash-sortable>*,.stats-grid>*,.savings-grid>*{animation:riseIn .52s var(--ease-out) backwards}
+      #dash-sortable>*:nth-child(1),.stats-grid>*:nth-child(1),.savings-grid>*:nth-child(1){animation-delay:.02s}
+      #dash-sortable>*:nth-child(2),.stats-grid>*:nth-child(2),.savings-grid>*:nth-child(2){animation-delay:.07s}
+      #dash-sortable>*:nth-child(3),.stats-grid>*:nth-child(3),.savings-grid>*:nth-child(3){animation-delay:.12s}
+      #dash-sortable>*:nth-child(4),.stats-grid>*:nth-child(4),.savings-grid>*:nth-child(4){animation-delay:.17s}
+      #dash-sortable>*:nth-child(5),.savings-grid>*:nth-child(5){animation-delay:.22s}
+      #dash-sortable>*:nth-child(6),.savings-grid>*:nth-child(6){animation-delay:.26s}
+      #dash-sortable>*:nth-child(n+7){animation-delay:.3s}
+      /* แสงกวาดผ่าน hero — transform อย่างเดียว ไม่ trigger layout
+         ต้องเป็น element จริง เพราะ ::before/::after ของ .dash-hero ถูกใช้ทำแสงวงกลมไปแล้วทั้งคู่ */
+      .dash-hero-sheen{
+        display:block;position:absolute;top:0;bottom:0;left:0;width:34%;pointer-events:none;z-index:0;
+        background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);
+        animation:sheen 9s ease-in-out 1.2s infinite;will-change:transform;
+      }
+      .dash-hero-top,.dash-quick,.dash-month-nav,.dash-hero-stats{position:relative;z-index:1}
+      .card,.stat-card,.chart-card,.scard{transition:transform .28s var(--ease-spring),box-shadow .28s,border-color .28s}
+      .card:hover,.stat-card:hover,.chart-card:hover,.scard:hover{
+        transform:translateY(-3px);border-color:rgba(124,58,237,.34);
+        box-shadow:var(--e2),var(--rim),0 0 0 1px rgba(124,58,237,.1);
+      }
+    }
+    /* กดแล้วตอบสนอง — เฉพาะสิ่งที่กดได้จริง ไม่ใส่ให้การ์ดทั่วไป */
+    .btn:active,.icon-btn:active,.theme-btn:active,.notif-btn:active,.ftab:active,
+    .type-btn:active,.fixed-btn:active,.dash-month-btn:active,.favcat-pill:active{transform:scale(.94)}
+
+    /* ── 11. Micro-polish ที่ไหลไปทั้งแอปทันทีผ่าน class ที่ใช้ร่วมกัน ── */
+    .icon-btn,.theme-btn,.notif-btn,.dash-month-btn{
+      border-radius:var(--r-xs);border:1px solid var(--hair);background:var(--glass-0);color:var(--muted);
+      box-shadow:var(--rim);transition:background .2s,color .2s,transform .25s var(--ease-spring),box-shadow .2s;
+    }
+    .icon-btn:hover,.theme-btn:hover,.notif-btn:hover,.dash-month-btn:hover{
+      color:var(--text);border-color:var(--hair-hi);box-shadow:var(--e1),var(--rim);
+    }
+    .filter-tabs{background:var(--glass-0);border:1px solid var(--hair);border-radius:99px;padding:4px;box-shadow:var(--rim)}
+    .ftab{border-radius:99px;transition:color .2s,background .25s,box-shadow .25s,transform .25s var(--ease-spring)}
+    body:not(.light-mode) .ftab.active{background:linear-gradient(140deg,rgba(255,255,255,.16),rgba(255,255,255,.05));color:#fff;box-shadow:0 4px 12px -6px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.2)}
+    body.light-mode .ftab.active{background:#fff;color:var(--primary);box-shadow:0 3px 10px -5px rgba(15,23,42,.3),inset 0 1px 0 #fff}
+    .type-btn,.fixed-btn{border-radius:var(--r-xs);border-width:1px;background:var(--glass-0);box-shadow:var(--rim)}
+    .pbar,.budget-bar-wrap,.bracket-bar-bg,.skill-bar-wrap{box-shadow:inset 0 1px 2px rgba(0,0,0,.28)}
+    body.light-mode .pbar,body.light-mode .budget-bar-wrap,body.light-mode .bracket-bar-bg,
+    body.light-mode .skill-bar-wrap{box-shadow:inset 0 1px 2px rgba(15,23,42,.1)}
+    .pfill,.budget-bar-fill,.bracket-bar{box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+    .finput,.fselect,.tax-inp,.login-inp{border-radius:var(--r-xs);transition:border-color .2s,box-shadow .2s,background .2s}
+    .badge,.tag-chip,.ai-badge{box-shadow:var(--rim)}
+    .upload-area,.tax-upload-zone{border-radius:var(--r-sm);transition:border-color .2s,background .2s,transform .25s var(--ease-spring)}
+    .upload-area:hover,.tax-upload-zone:hover{transform:translateY(-1px)}
+    .stat-icon{border-radius:var(--r-xs);box-shadow:var(--rim)}
+    .chat-fab{box-shadow:0 10px 30px -8px rgba(124,58,237,.75),inset 0 1px 0 rgba(255,255,255,.35)}
+    .add-fab{border-radius:50%;background:var(--glass-3);box-shadow:var(--e2),var(--rim)}
+    @media(max-width:700px){
+      .finput,.fselect,.login-inp,.prof-field input,.prof-field select{min-height:44px}
+      .btn{min-height:40px}
+      .modal-title{margin-bottom:18px}
+    }
+    @media(max-width:380px){
+      .mm-tab{font-size:9.5px}
+      .mm-tab i{font-size:16px}
+      .mm-tab-add-btn{width:46px;height:46px;font-size:18px;margin-top:-16px}
+    }
   </style>
 <!-- self-hosted analytics (GoatCounter) — aggregate pageviews only, no cookies, no personal
      data collected; see privacy.html section 1 for the disclosure. This is a single-page
