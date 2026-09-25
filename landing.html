@@ -1067,6 +1067,11 @@
 </script>
 </head>
 <body>
+<!-- ตกแต่งล้วน ไม่มีเนื้อหา → aria-hidden และวางนอก .wrap
+     ทั้งคู่เป็น position:fixed จึงไม่กินพื้นที่ layout และไม่กระทบการวัดระยะของ
+     __mmDepthScan() / แถบ sticky-try ที่อ่าน getBoundingClientRect() ของ section -->
+<div class="scroll-progress" aria-hidden="true"></div>
+<div class="aurora" aria-hidden="true"><b></b><b></b></div>
 
 <div class="wrap">
   <nav>
