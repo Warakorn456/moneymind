@@ -967,10 +967,13 @@
     *, *::before, *::after{
       animation-duration:.01ms!important; animation-iteration-count:1!important;
       transition-duration:.01ms!important; scroll-behavior:auto!important;
-      /* ต้องล้าง delay ด้วย ไม่ใช่แค่ duration — animation ที่ fill:backwards จะค้างอยู่ที่
-         คีย์เฟรมแรก (opacity:0) ตลอดช่วง delay ทำให้ปุ่มดาวน์โหลด/ปุ่มลองใช้ในหน้าแรก
-         หายไปจนกว่า delay จะหมด ซึ่งไม่ควรเกิดกับคนที่ขอ "ลดการเคลื่อนไหว" ตั้งแต่แรก */
       animation-delay:0s!important; transition-delay:0s!important;
+      /* 🐛 บีบ duration เหลือ .01ms ไม่พอ — ทดสอบแล้วว่าอนิเมชันที่ fill:backwards
+         (เช่น mmrise ของปุ่มในหน้าแรก) ค้างอยู่ที่คีย์เฟรมแรก opacity:0 ไม่เดินต่อเลย
+         → ปุ่มลองใช้/ปุ่มดาวน์โหลดทั้งแถบหายไปสำหรับคนที่เปิด "ลดการเคลื่อนไหว"
+         (เป็นมาก่อนหน้านี้แล้วบน production) ปิด animation-name ไปเลยจึงจะตกกลับไปใช้
+         สถานะพื้นฐานที่มองเห็นได้จริง ซึ่งก็คือสิ่งที่ผู้ใช้กลุ่มนี้ต้องการอยู่แล้ว */
+      animation-name:none!important;
       /* ⚠️ จำเป็นต้องมีบรรทัดนี้ — ทดสอบแล้วว่า animation-duration:.01ms ไม่ได้ปิด
          scroll-driven animation (computed animation-timeline ยังเป็น view()/scroll() อยู่)
          อนิเมชันที่ขับด้วย timeline จึงยังวิ่งตามการเลื่อนอยู่ดีถ้าไม่สั่งปิดตรงๆ */
