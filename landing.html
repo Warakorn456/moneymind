@@ -940,8 +940,16 @@
     *, *::before, *::after{
       animation-duration:.01ms!important; animation-iteration-count:1!important;
       transition-duration:.01ms!important; scroll-behavior:auto!important;
+      /* ⚠️ จำเป็นต้องมีบรรทัดนี้ — ทดสอบแล้วว่า animation-duration:.01ms ไม่ได้ปิด
+         scroll-driven animation (computed animation-timeline ยังเป็น view()/scroll() อยู่)
+         อนิเมชันที่ขับด้วย timeline จึงยังวิ่งตามการเลื่อนอยู่ดีถ้าไม่สั่งปิดตรงๆ */
+      animation-timeline:none!important;
     }
-    html.js .reveal{ opacity:1!important; transform:none!important; }
+    html.js .reveal{ opacity:1!important; transform:none!important; clip-path:none!important; }
+    /* ปิดไปเลยดีกว่าปล่อยให้ค้างเต็มแถบ — animation ที่ถูกบีบเหลือ .01ms จะกระโดดไป scaleX(1) */
+    .scroll-progress{ display:none!important; }
+    .phone-mock{ transform:none!important; }
+    .try-btn, .nav-cta{ transform:none!important; }
     .marquee{ -webkit-mask-image:none; mask-image:none; }
     .marquee-track{ animation:none; width:100%; flex-wrap:wrap; justify-content:center; }
     .marquee-set{ flex-wrap:wrap; justify-content:center; padding-right:0; }
