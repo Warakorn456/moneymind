@@ -219,19 +219,23 @@
   #pricing::before{ background:radial-gradient(ellipse at center, var(--glowc), transparent 72%); }
 
   /* scroll reveal — hidden state applies only when JS is running (html.js),
-     so no-JS visitors and crawlers always see full content */
-  .reveal{ transition:opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1); }
-  html.js .reveal{ opacity:0; transform:translateY(18px); }
+     so no-JS visitors and crawlers always see full content.
+     ทุก variant ใช้ transition ชุดเดียวกัน ต่างแค่ "ท่าเริ่มต้น" และกลับสู่สถานะปกติ
+     ด้วย .in เหมือนกันหมด → เพิ่มท่าใหม่ได้โดยไม่ต้องแตะ JS ฝั่ง observer เลย */
+  .reveal{ transition:opacity .85s cubic-bezier(.16,1,.3,1), transform .85s cubic-bezier(.16,1,.3,1),
+    clip-path .85s cubic-bezier(.16,1,.3,1); }
+  html.js .reveal{ opacity:0; transform:translateY(28px); }
+  html.js .reveal-scale{ transform:translateY(14px) scale(.94); }
+  html.js .reveal-left{ transform:translateX(-30px); }
+  html.js .reveal-right{ transform:translateX(30px); }
   html.js .reveal.in{ opacity:1; transform:none; }
-  /* stagger children of a revealed grid so cards cascade */
-  html.js .reveal-stagger > *:nth-child(1){ transition-delay:0s }
-  html.js .reveal-stagger > *:nth-child(2){ transition-delay:.07s }
-  html.js .reveal-stagger > *:nth-child(3){ transition-delay:.14s }
-  html.js .reveal-stagger > *:nth-child(4){ transition-delay:.21s }
-  html.js .reveal-stagger > *:nth-child(5){ transition-delay:.07s }
-  html.js .reveal-stagger > *:nth-child(6){ transition-delay:.14s }
-  html.js .reveal-stagger > *:nth-child(7){ transition-delay:.21s }
-  html.js .reveal-stagger > *:nth-child(8){ transition-delay:.28s }
+  /* ⚠️ ห้ามใส่ clip-path ให้ตัว .reveal เองเด็ดขาด — IntersectionObserver คิดพื้นที่ตัดกัน
+     "หลัง" หัก clip ของ element แล้ว พอ clip เหลือศูนย์ ratio จะเป็น 0 ตลอด → ไม่มีวันได้ .in
+     → หายถาวร (เคยทำพลาดมาแล้วกับหัวเรื่องทั้ง 7 อัน) ถ้าอยากได้เอฟเฟกต์กวาด
+     ให้ไป clip "ลูก" ที่ไม่ได้ถูก observe แทน ดูตัวอย่างที่ .section-head h2 ด้านล่าง */
+  /* stagger ลูกของ grid ที่เผยพร้อมกัน — JS ท้ายไฟล์เซ็ต --i ตามลำดับจริงของแต่ละ grid
+     (ของเดิม hardcode nth-child ไว้แค่ 8 ตัว ซึ่งไม่พอเมื่อจำนวนการ์ดเปลี่ยน) */
+  html.js .reveal-stagger > *{ transition-delay:calc(var(--i,0) * 65ms); }
 
   /* hero entrance (pure CSS on load, no observer — above the fold must never start hidden) */
   @keyframes mmrise{ from{ opacity:0; transform:translateY(20px) } to{ opacity:1; transform:none } }
@@ -779,13 +783,206 @@
     animation-duration:.6s; animation-timing-function:ease-in-out;
   }
 
+  /* ══════════════════════════════════════════════════════════════════════════
+     MOTION LAYER — ทุกอย่างในบล็อกนี้เคลื่อนด้วย transform / opacity / clip-path เท่านั้น
+     ห้ามเพิ่มอะไรที่ animate filter, box-shadow, backdrop-filter หรือ width/height/top/left
+     (เคยเป็นต้นเหตุอาการ "เลื่อนฝืด" บนมือถือมาแล้วในแอปหลัก) และห้ามแตะ h1/.sub
+     ซึ่งเป็น LCP element — การไล่แก้ LCP 4.4s→2.6s มาจากการ "ไม่" หน่วงสองตัวนั้น
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  /* ── แถบความคืบหน้าการเลื่อน ─────────────────────────────────────────────
+     scaleX ไม่ใช่ width — width ทำให้ layout ใหม่ทุกเฟรม ส่วน scaleX อยู่บน compositor
+     วางเป็น element แยก ไม่ยุ่งกับ nav เพื่อไม่ให้ความสูง nav เปลี่ยน (scroll-margin-top:88px) */
+  .scroll-progress{ position:fixed; top:0; left:0; right:0; height:2px; z-index:60;
+    transform-origin:0 50%; transform:scaleX(0); pointer-events:none;
+    background:linear-gradient(90deg,var(--grada),var(--gradb),#06b6d4); }
+  @supports (animation-timeline: scroll()){
+    html.has-js .scroll-progress{ animation:mmprogress linear both; animation-timeline:scroll(root); }
+  }
+  @keyframes mmprogress{ from{ transform:scaleX(0) } to{ transform:scaleX(1) } }
+
+  /* ── aurora ฉากหลัง ──────────────────────────────────────────────────────
+     ⚠️ จงใจเป็น element แยก ไม่ไป animate body::before ที่มีอยู่ — ตัวนั้นเป็น gradient
+     เต็มจอ 5 ชั้น การขยับ background-position ของมันคือ repaint ทั้งจอทุกเฟรม
+     ที่นี่ใช้ radial-gradient (ไม่ใช้ filter:blur) แล้วขยับด้วย transform ล้วน = ไม่ repaint */
+  .aurora{ position:fixed; inset:-25%; z-index:-1; pointer-events:none; display:none;
+    contain:strict; overflow:hidden; }
+  .aurora b{ position:absolute; display:block; border-radius:50%;
+    background:radial-gradient(circle at 50% 50%, var(--c), transparent 68%); }
+  .aurora b:nth-child(1){ --c:var(--glowa); width:46vw; height:46vw; top:6%; left:4%;
+    animation:mmaurora1 34s ease-in-out infinite; }
+  .aurora b:nth-child(2){ --c:var(--glowb); width:40vw; height:40vw; top:38%; right:2%;
+    animation:mmaurora2 44s ease-in-out infinite; }
+  @media (min-width:821px){ html.has-js .aurora{ display:block; } }
+  @keyframes mmaurora1{ 0%,100%{ transform:translate3d(0,0,0) scale(1) }
+    50%{ transform:translate3d(14vw,10vh,0) scale(1.22) } }
+  @keyframes mmaurora2{ 0%,100%{ transform:translate3d(0,0,0) scale(1.1) }
+    50%{ transform:translate3d(-12vw,-12vh,0) scale(.86) } }
+
+  /* ── hero mockup: จมลงตอนเลื่อนผ่าน ─────────────────────────────────────
+     ใส่ที่ .hero-visual ไม่ใช่ #hero — __mmDepthScan() กับแถบ sticky-try วัดจาก
+     getBoundingClientRect() ของ section โดยตรง ถ้า transform ตัว section ตัวเลขจะเพี้ยน */
+  @supports (animation-timeline: view()){
+    @media (min-width:821px){
+      html.has-js .hero-visual{
+        animation:mmrise 1s cubic-bezier(.16,1,.3,1) .3s backwards, mmheroexit linear both;
+        animation-timeline:auto, view();
+        animation-range:normal, exit 0% exit 100%;
+      }
+    }
+  }
+  @keyframes mmheroexit{ from{ transform:none; opacity:1 }
+    to{ transform:translateY(-52px) scale(.93); opacity:.45 } }
+
+  /* ── ขัด phone mockup ให้มีมิติ ──────────────────────────────────────────── */
+  .phone-mock{ overflow:hidden;
+    box-shadow:0 36px 70px -24px rgba(124,58,237,.45), 0 12px 34px rgba(0,0,0,.55),
+      inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(255,255,255,.04); }
+  /* ปุ่มข้างเครื่อง — รายละเอียดเล็กๆ ที่ทำให้อ่านเป็น "เครื่องจริง" ไม่ใช่กล่องมน */
+  .phone-mock::before{ content:''; position:absolute; left:-2px; top:23%; width:2px; height:34px;
+    border-radius:2px; background:rgba(255,255,255,.16); }
+  /* แสงสะท้อนกวาดทแยง — เดสก์ท็อปเท่านั้น ไม่ให้มือถือเสีย CPU กับ loop ที่ไม่จำเป็น */
+  @media (min-width:821px){
+    html.has-js .phone-mock::after{ content:''; position:absolute; top:-70%; left:0;
+      width:58%; height:240%; pointer-events:none;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);
+      animation:mmgloss 8s cubic-bezier(.45,0,.25,1) infinite; }
+  }
+  @keyframes mmgloss{ 0%{ transform:rotate(18deg) translateX(-160%) }
+    55%,100%{ transform:rotate(18deg) translateX(460%) } }
+
+  /* แท่งกราฟโตจากพื้น — scaleY ไม่ใช่ height (height = layout ใหม่ทุกเฟรม) */
+  .mock-bars span{ transform-origin:bottom; }
+  html.has-js .mock-bars span{ animation:mmbar .85s cubic-bezier(.16,1,.3,1) backwards; }
+  html.has-js .mock-bars span:nth-child(1){ animation-delay:.55s }
+  html.has-js .mock-bars span:nth-child(2){ animation-delay:.62s }
+  html.has-js .mock-bars span:nth-child(3){ animation-delay:.69s }
+  html.has-js .mock-bars span:nth-child(4){ animation-delay:.76s }
+  html.has-js .mock-bars span:nth-child(5){ animation-delay:.83s }
+  html.has-js .mock-bars span:nth-child(6){ animation-delay:.90s }
+  html.has-js .mock-bars span:nth-child(7){ animation-delay:.97s }
+  @keyframes mmbar{ from{ transform:scaleY(0) } to{ transform:scaleY(1) } }
+
+  /* ป้ายลอย — เดิมขยับขึ้นลงพร้อมกันเป๊ะทั้งสองอัน ดูเป็นจังหวะเครื่องจักร
+     เพิ่มการเอียงและให้คนละคาบ/คนละเฟส จะอ่านเป็นการลอยจริง */
+  @keyframes mmfloat{ 0%,100%{ transform:translateY(0) rotate(-1.2deg) }
+    50%{ transform:translateY(-10px) rotate(1.4deg) } }
+  .float-badge-1{ animation-duration:5s; animation-delay:0s; }
+  .float-badge-2{ animation-duration:6.4s; animation-delay:-2.4s; }
+
+  /* ── หัวเรื่อง: แสงกวาดครั้งเดียวตอนโผล่ ────────────────────────────────
+     เทคนิค background-clip:text เดียวกับ h1 em ที่ใช้อยู่แล้วในไฟล์นี้
+     จงใจไม่ทำเป็น loop — 7 หัวเรื่องวิ่ง background-position ตลอดเวลาคือการ repaint ฟรีๆ */
+  .section-head h2{
+    background:linear-gradient(100deg, var(--text) 0 45%, var(--primary-l) 55%, var(--text) 65% 100%);
+    background-size:260% 100%; background-position:0 0;
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  /* กวาดขึ้นทีละบรรทัด: clip อยู่ที่ h2 ซึ่ง "ไม่ได้ถูก observe" — ตัว .section-head
+     ที่ถูก observe ยังไม่ถูก clip จึงยัง intersect ได้ตามปกติ (ดูคำเตือนที่บล็อก reveal)
+     ปลายทางเผื่อ -22% บน/ล่าง กันวรรณยุกต์ไทยกับสระบนโดนตัด */
+  html.js .section-head.reveal h2{ clip-path:inset(0 0 105% 0); }
+  html.js .section-head.reveal.in h2{
+    animation:mmclipup .85s cubic-bezier(.16,1,.3,1) forwards,
+              mmsheen 1.5s cubic-bezier(.33,1,.68,1) .3s 1; }
+  @keyframes mmclipup{ from{ clip-path:inset(0 0 105% 0) } to{ clip-path:inset(-22% 0 -22% 0) } }
+  @keyframes mmsheen{ from{ background-position:100% 0 } to{ background-position:0 0 } }
+
+  /* ── #rank: ไล่ระดับ Bronze → Legend ─────────────────────────────────────
+     ผูกกับ .in ของแถว (time-based) แทน scroll timeline เพราะ .rank-art มี transition
+     hover อยู่แล้ว — ใช้ animation ที่ fill:backwards จึงไม่ไปทับ hover หลังจบ */
+  html.js .rank-row.in .rank-art{ animation:mmrankpop .8s cubic-bezier(.16,1,.3,1) backwards; }
+  html.js .rank-row .rank-card:nth-child(1) .rank-art{ animation-delay:.05s }
+  html.js .rank-row .rank-card:nth-child(2) .rank-art{ animation-delay:.19s }
+  html.js .rank-row .rank-card:nth-child(3) .rank-art{ animation-delay:.33s }
+  html.js .rank-row .rank-card:nth-child(4) .rank-art{ animation-delay:.47s }
+  @keyframes mmrankpop{ from{ transform:translateY(30px) scale(.86); opacity:0 }
+    to{ transform:none; opacity:1 } }
+  /* เรืองแสงเป็นสีของ tier ตัวเอง — --tier ตั้งไว้ที่การ์ดแต่ละใบใน markup */
+  .rank-card:hover .rank-art{ transform:translateY(-7px) scale(1.035);
+    border-color:var(--tier,#a78bfa);
+    box-shadow:0 20px 42px -18px var(--tier,#a78bfa); }
+
+  /* ── สแกนใบเสร็จ: ผลลัพธ์วาบตอนเส้นสแกนถึงล่างพอดี (คาบเท่ากับ mmscan 2.2s) ── */
+  html.has-js .scan-result{ animation:mmscanflash 2.2s ease-in-out infinite; }
+  @keyframes mmscanflash{ 0%,42%{ transform:scale(1) } 52%{ transform:scale(1.035) }
+    64%,100%{ transform:scale(1) } }
+
+  /* สีประจำ tier — อ่านจากคลาสของชื่อที่มีอยู่แล้ว ไม่ต้องแตะ markup
+     เบราว์เซอร์ที่ไม่รองรับ :has() ตกไปใช้สีม่วงเริ่มต้น ไม่พัง */
+  .rank-card:has(.rank-name.bronze){ --tier:#cd7f32 }
+  .rank-card:has(.rank-name.gold){ --tier:#f59e0b }
+  .rank-card:has(.rank-name.diamond){ --tier:#06b6d4 }
+  .rank-card:has(.rank-name.legend){ --tier:#ec4899 }
+
+  /* ── แชทมายา: ฟองข้อความไหลเข้าทีละอัน แล้วค่อยเริ่มจุดพิมพ์ ──────────────
+     ผูกกับ .preview-card.in (กลไกเดียวกับ mmtypingout/mmtypingin ที่มีอยู่แล้ว)
+     ไม่ใช้ .reveal ซ้อนใน .reveal เพราะ observer อาจยิงลูกตั้งแต่ตอนที่พ่อยังโปร่งใสอยู่
+     overflow:hidden กันฟองที่เลื่อนมาจากด้านข้างยื่นพ้นการ์ดระหว่างเคลื่อน */
+  .chat-mock{ overflow:hidden; }
+  html.js .preview-card.in .chat-bubble{ animation:mmbubble .55s cubic-bezier(.16,1,.3,1) backwards; }
+  html.js .preview-card.in .chat-bubble.user{ animation-delay:.15s }
+  html.js .preview-card.in .chat-bubble.ai{ animation-delay:.42s }
+  @keyframes mmbubble{ from{ opacity:0; transform:translateY(10px) scale(.96) }
+    to{ opacity:1; transform:none } }
+
+  /* ── ตัวเลขที่นับขึ้น ──────────────────────────────────────────────────────
+     tabular-nums บังคับให้ทุกหลักกว้างเท่ากัน ระหว่างนับความกว้างจึงไม่ขยับ → CLS ยัง 0
+     (ค่าปลายทางอยู่ใน HTML อยู่แล้ว JS แค่เขียนทับชั่วคราว ปิด JS ก็เห็นเลขจริง) */
+  .mock-nw-value, .mock-nw-badge, .mock-chip b, .scan-result-top b,
+  .tax-save-value, .price-amount, .rating-score{ font-variant-numeric:tabular-nums; }
+
+  /* ── ปฏิสัมพันธ์กับเคอร์เซอร์ — เดสก์ท็อปที่มีเมาส์จริงเท่านั้น ────────────
+     JS ก็เช็ค matchMedia('(pointer:fine)') ก่อนผูก listener ด้วย มือถือจึงไม่เสีย CPU เลย */
+  @media (pointer:fine){
+    /* ไฟส่องตามเคอร์เซอร์ — isolation:isolate กัน z-index:-1 ไม่ให้ทะลุไปหลัง section
+       (ลูกที่ z-index ติดลบวาดทับพื้นหลังของการ์ดเอง แต่ยังอยู่ใต้ตัวหนังสือ) */
+    .fcard, .preview-card, .price-card, .rating-card, .guide-links a{
+      position:relative; isolation:isolate; }
+    .fcard::before, .preview-card::before, .price-card::before,
+    .rating-card::before, .guide-links a::before{
+      content:''; position:absolute; inset:0; z-index:-1; border-radius:inherit;
+      pointer-events:none; opacity:0; transition:opacity .35s ease;
+      background:radial-gradient(280px circle at var(--mx,50%) var(--my,0%),
+        rgba(167,139,250,.18), transparent 68%); }
+    .fcard:hover::before, .preview-card:hover::before, .price-card:hover::before,
+    .rating-card:hover::before, .guide-links a:hover::before{ opacity:1; }
+
+    /* ปุ่มแม่เหล็ก — --mgx/--mgy มาจาก JS, ทับ :hover เดิมที่ประกาศไว้ก่อนหน้า */
+    .try-btn, .nav-cta{ transform:translate3d(var(--mgx,0),var(--mgy,0),0);
+      transition:transform .28s cubic-bezier(.22,1,.36,1), box-shadow .18s; }
+    .try-btn:hover{ transform:translate3d(var(--mgx,0),var(--mgy,0),0) scale(1.035); }
+    .nav-cta:hover{ transform:translate3d(var(--mgx,0),var(--mgy,0),0) scale(1.04); }
+
+    /* เอียงเครื่องตามเมาส์ */
+    .hero-visual{ perspective:1100px; }
+    .phone-mock{ transform:rotateX(var(--tiltx,0deg)) rotateY(var(--tilty,0deg));
+      transition:transform .45s cubic-bezier(.16,1,.3,1); }
+  }
+
   /* respect users who ask for less motion — kills marquee, reveals, float and scan loops */
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{
       animation-duration:.01ms!important; animation-iteration-count:1!important;
       transition-duration:.01ms!important; scroll-behavior:auto!important;
+      animation-delay:0s!important; transition-delay:0s!important;
+      /* 🐛 บีบ duration เหลือ .01ms ไม่พอ — ทดสอบแล้วว่าอนิเมชันที่ fill:backwards
+         (เช่น mmrise ของปุ่มในหน้าแรก) ค้างอยู่ที่คีย์เฟรมแรก opacity:0 ไม่เดินต่อเลย
+         → ปุ่มลองใช้/ปุ่มดาวน์โหลดทั้งแถบหายไปสำหรับคนที่เปิด "ลดการเคลื่อนไหว"
+         (เป็นมาก่อนหน้านี้แล้วบน production) ปิด animation-name ไปเลยจึงจะตกกลับไปใช้
+         สถานะพื้นฐานที่มองเห็นได้จริง ซึ่งก็คือสิ่งที่ผู้ใช้กลุ่มนี้ต้องการอยู่แล้ว */
+      animation-name:none!important;
+      /* ⚠️ จำเป็นต้องมีบรรทัดนี้ — ทดสอบแล้วว่า animation-duration:.01ms ไม่ได้ปิด
+         scroll-driven animation (computed animation-timeline ยังเป็น view()/scroll() อยู่)
+         อนิเมชันที่ขับด้วย timeline จึงยังวิ่งตามการเลื่อนอยู่ดีถ้าไม่สั่งปิดตรงๆ */
+      animation-timeline:none!important;
     }
     html.js .reveal{ opacity:1!important; transform:none!important; }
+    /* กันไว้สองชั้น — หัวเรื่องหายเป็นความเสียหายที่หนักที่สุดของหน้านี้ */
+    html.js .section-head h2{ clip-path:none!important; }
+    .scroll-progress{ display:none!important; }
+    .phone-mock{ transform:none!important; }
+    .try-btn, .nav-cta{ transform:none!important; }
     .marquee{ -webkit-mask-image:none; mask-image:none; }
     .marquee-track{ animation:none; width:100%; flex-wrap:wrap; justify-content:center; }
     .marquee-set{ flex-wrap:wrap; justify-content:center; padding-right:0; }
@@ -903,6 +1100,11 @@
 </script>
 </head>
 <body>
+<!-- ตกแต่งล้วน ไม่มีเนื้อหา → aria-hidden และวางนอก .wrap
+     ทั้งคู่เป็น position:fixed จึงไม่กินพื้นที่ layout และไม่กระทบการวัดระยะของ
+     __mmDepthScan() / แถบ sticky-try ที่อ่าน getBoundingClientRect() ของ section -->
+<div class="scroll-progress" aria-hidden="true"></div>
+<div class="aurora" aria-hidden="true"><b></b><b></b></div>
 
 <div class="wrap">
   <nav>
@@ -981,8 +1183,8 @@
             </div>
             <div class="mock-nw-card">
               <div class="mock-nw-label">Total Net Worth</div>
-              <div class="mock-nw-value">฿847,392</div>
-              <div class="mock-nw-badge">+12.4% this month</div>
+              <div class="mock-nw-value" data-count>฿847,392</div>
+              <div class="mock-nw-badge" data-count>+12.4% this month</div>
               <div class="mock-bars">
                 <span style="height:35%"></span>
                 <span style="height:55%"></span>
@@ -994,8 +1196,8 @@
               </div>
             </div>
             <div class="mock-chips">
-              <div class="mock-chip"><i class="fas fa-utensils"></i> Food <b>฿3,200</b></div>
-              <div class="mock-chip"><i class="fas fa-car"></i> Transport <b>฿1,150</b></div>
+              <div class="mock-chip"><i class="fas fa-utensils"></i> Food <b data-count>฿3,200</b></div>
+              <div class="mock-chip"><i class="fas fa-car"></i> Transport <b data-count>฿1,150</b></div>
             </div>
           </div>
         </div>
@@ -1039,14 +1241,14 @@
       <p>Real screen mockups — see how it actually works before you decide to download</p>
     </div>
     <div class="preview-grid reveal-stagger">
-      <div class="preview-card reveal">
+      <div class="preview-card reveal reveal-scale">
         <div class="preview-label"><i class="fas fa-robot"></i> AI Assistant "Maya"</div>
         <div class="chat-mock">
           <div class="chat-bubble user">How much have I spent this month?</div>
-          <div class="chat-bubble ai"><span class="chat-typing"><span></span><span></span><span></span></span><span class="chat-typing-text">You've spent <b>฿18,420</b> so far this month, mostly on food and transport 🍜</span></div>
+          <div class="chat-bubble ai"><span class="chat-typing"><span></span><span></span><span></span></span><span class="chat-typing-text">You've spent <b data-count>฿18,420</b> so far this month, mostly on food and transport 🍜</span></div>
         </div>
       </div>
-      <div class="preview-card reveal">
+      <div class="preview-card reveal reveal-scale">
         <div class="preview-label"><i class="fas fa-camera"></i> AI Receipt Scanning</div>
         <div class="scan-mock">
           <div class="scan-receipt">
@@ -1055,16 +1257,16 @@
           </div>
           <i class="fas fa-arrow-right scan-arrow"></i>
           <div class="scan-result">
-            <div class="scan-result-top"><span>Neighborhood coffee shop</span><b>฿120</b></div>
+            <div class="scan-result-top"><span>Neighborhood coffee shop</span><b data-count>฿120</b></div>
             <span class="scan-tag"><i class="fas fa-mug-hot"></i> Food</span>
           </div>
         </div>
       </div>
-      <div class="preview-card reveal">
+      <div class="preview-card reveal reveal-scale">
         <div class="preview-label"><i class="fas fa-file-invoice-dollar"></i> Income Tax Calculator</div>
         <div class="tax-mock">
           <div class="tax-save-label">Extra tax savings available</div>
-          <div class="tax-save-value">฿14,200<span>/year</span></div>
+          <div class="tax-save-value" data-count>฿14,200<span>/year</span></div>
           <div class="tax-bar"><div class="tax-bar-fill" style="width:64%"></div></div>
           <div class="tax-hint"><i class="fas fa-lightbulb"></i> Consider buying ฿32,000 more in RMF</div>
         </div>
@@ -1124,7 +1326,7 @@
   <div class="section" style="padding-top:0;padding-bottom:0"><div class="mid-cta reveal"><h3>Seen enough? Log your first expense now</h3><p>No sign-up, no install — opens right in your browser</p><a class="try-btn" href="https://app.moneymindth.com/?try=1"><i class="fas fa-bolt"></i> Try it free now — no sign-up</a></div></div>
 
   <section class="section" id="rank">
-    <div class="section-head">
+    <div class="section-head reveal">
       <h2>Saving money, made fun — not just numbers in a ledger</h2>
       <p>A percentile-based wealth ranking system compared against real people in Thailand — a feature other finance apps don't have</p>
     </div>
@@ -1208,7 +1410,7 @@
       <p>Core features are free, no card required to get started — an optional AI Subscription is available for people who want a bigger AI quota</p>
     </div>
     <div class="pricing-grid reveal-stagger">
-      <div class="price-card reveal">
+      <div class="price-card reveal reveal-scale">
         <div class="price-tag">Free</div>
         <div class="price-amount">฿0</div>
         <ul class="price-list">
@@ -1223,10 +1425,10 @@
         </ul>
         <p class="price-note">No hidden charges. No card required to get started.</p>
       </div>
-      <div class="price-card featured reveal">
+      <div class="price-card featured reveal reveal-scale">
         <div class="price-card-badge">For heavy AI users</div>
         <div class="price-tag">AI Subscription</div>
-        <div class="price-amount">฿299<span>/month</span></div>
+        <div class="price-amount" data-count>฿299<span>/month</span></div>
         <ul class="price-list">
           <li><i class="fas fa-check"></i> Unlimited income/expense tracking</li>
           <li><i class="fas fa-check"></i> Full income tax calculator</li>
@@ -1284,9 +1486,9 @@
     </div>
 
     <div class="reviews-inner">
-      <div class="rating-card reveal">
+      <div class="rating-card reveal reveal-scale">
         <div class="rating-stars">★★★★★</div>
-        <div class="rating-score">5.0</div>
+        <div class="rating-score" data-count>5.0</div>
         <div class="rating-source">App Store rating</div>
         <div class="rating-note">From a real App Store review</div>
       </div>
@@ -1634,6 +1836,131 @@
     bar.classList.toggle('show', h<0 && c>innerHeight*0.6); }
   addEventListener('scroll',function(){ if(!tick){ tick=true; requestAnimationFrame(upd); } },{passive:true});
   upd();
+})();
+</script>
+
+<script>
+/* ══ MOTION ══════════════════════════════════════════════════════════════════
+   ทั้งก้อนเป็น progressive enhancement — ถ้าพังหมดทั้งบล็อก หน้าเว็บยังแสดงผลครบ
+   และ reveal / สลับธีม / ป๊อบอัพยังทำงานปกติ (คนละ IIFE กัน)
+   ⚠️ ต้องอยู่ท้าย body เสมอ ห้ามย้ายขึ้น <head> — จะกลายเป็น render-blocking
+   ⚠️ ทุก handler อ่าน layout ใน rAF เท่านั้น ไม่อ่านใน event เพื่อไม่ให้เกิด
+      อ่าน-เขียน-อ่านสลับกันจน browser ต้องคำนวณ layout ซ้ำระหว่างเลื่อน
+   ══════════════════════════════════════════════════════════════════════════ */
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* 1) ลำดับของ stagger — CSS อ่าน calc(var(--i) * 65ms) ไปทำ transition-delay
+        ทำที่นี่แทน nth-child ตายตัว เพื่อให้รองรับจำนวนการ์ดเท่าไหร่ก็ได้ */
+  var grids = document.querySelectorAll('.reveal-stagger');
+  for (var g = 0; g < grids.length; g++){
+    var kids = grids[g].children;
+    for (var k = 0; k < kids.length; k++) kids[k].style.setProperty('--i', k);
+  }
+
+  /* 2) ตัวเลขนับขึ้น
+        · อ่านค่าปลายทางจาก "text node แรก" ของ element ไม่ใช่ textContent
+          → ลูกอย่าง <span>/ปี</span> ไม่ถูกลบทิ้ง และคำต่อท้ายอย่าง "เดือนนี้" ยังอยู่
+        · ล็อกความกว้างก่อนเริ่มนับ ไม่งั้นตอนเลขหลักน้อยกว่าปลายทาง ของข้างๆ จะขยับ = CLS
+          (สำคัญกับเลขที่ชิดขวาใน flex เช่น .mock-chip b และ .scan-result-top b)
+        · ปลดล็อกเมื่อนับจบ กันค่า px ที่ล็อกไว้ค้างข้ามการ resize */
+  var NUM = /-?[\d,]*\d(?:\.\d+)?/;
+  function animateCount(el){
+    var node = el.firstChild;
+    if (!node || node.nodeType !== 3) return;
+    var full = node.nodeValue, m = full.match(NUM);
+    if (!m) return;
+    var raw = m[0], target = parseFloat(raw.replace(/,/g, ''));
+    if (!isFinite(target) || target === 0) return;
+    var dec = (raw.split('.')[1] || '').length;
+    var group = raw.indexOf(',') > -1;
+    var pre = full.slice(0, m.index), post = full.slice(m.index + raw.length);
+
+    var w = el.getBoundingClientRect().width;
+    if (w) el.style.minWidth = w + 'px';
+
+    function fmt(v){
+      var s = dec ? v.toFixed(dec) : String(Math.round(v));
+      if (group){
+        var parts = s.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        s = parts.join('.');
+      }
+      return pre + s + post;
+    }
+    var dur = 1100, t0 = 0;
+    function step(ts){
+      if (!t0) t0 = ts;
+      var p = Math.min((ts - t0) / dur, 1);
+      node.nodeValue = fmt(target * (1 - Math.pow(1 - p, 3)));   // ease-out cubic
+      if (p < 1) requestAnimationFrame(step);
+      else { node.nodeValue = full; el.style.minWidth = ''; }    // จบที่ข้อความเดิมเป๊ะเสมอ
+    }
+    node.nodeValue = fmt(0);
+    requestAnimationFrame(step);
+  }
+
+  var counters = document.querySelectorAll('[data-count]');
+  if (counters.length && !reduce && 'IntersectionObserver' in window){
+    var cio = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (!en.isIntersecting) return;
+        cio.unobserve(en.target);
+        animateCount(en.target);
+      });
+    }, { threshold: .4 });
+    for (var c = 0; c < counters.length; c++) cio.observe(counters[c]);
+  }
+
+  /* 3) ปฏิสัมพันธ์กับเคอร์เซอร์ — ออกตั้งแต่ตรงนี้ถ้าไม่ใช่เมาส์จริง
+        มือถือ/แท็บเล็ตจึงไม่ผูก listener แม้แต่ตัวเดียว */
+  if (reduce || !window.matchMedia || !window.matchMedia('(pointer:fine)').matches) return;
+
+  var SPOT = '.fcard, .preview-card, .price-card, .rating-card, .guide-links a';
+  var spotEl = null, magEl = null, phone = document.querySelector('.phone-mock'),
+      visual = document.querySelector('.hero-visual'),
+      px = 0, py = 0, queued = false;
+
+  function paint(){
+    queued = false;
+    var r;
+    if (spotEl){                                   // ไฟส่องตามเคอร์เซอร์
+      r = spotEl.getBoundingClientRect();
+      spotEl.style.setProperty('--mx', (px - r.left) + 'px');
+      spotEl.style.setProperty('--my', (py - r.top) + 'px');
+    }
+    if (magEl){                                    // ปุ่มแม่เหล็ก
+      r = magEl.getBoundingClientRect();
+      magEl.style.setProperty('--mgx', (((px - (r.left + r.width / 2)) / r.width) * 14).toFixed(2) + 'px');
+      magEl.style.setProperty('--mgy', (((py - (r.top + r.height / 2)) / r.height) * 10).toFixed(2) + 'px');
+    }
+    if (phone && visual){                          // เอียงเครื่องตามเมาส์
+      r = visual.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > innerHeight) return;   // เลื่อนพ้น hero แล้วไม่ต้องคำนวณ
+      phone.style.setProperty('--tilty', ((((px - (r.left + r.width / 2)) / r.width)) * 9).toFixed(2) + 'deg');
+      phone.style.setProperty('--tiltx', ((((py - (r.top + r.height / 2)) / r.height)) * -7).toFixed(2) + 'deg');
+    }
+  }
+  function dropMag(){
+    if (!magEl) return;
+    magEl.style.setProperty('--mgx', '0px');
+    magEl.style.setProperty('--mgy', '0px');
+    magEl = null;
+  }
+
+  document.addEventListener('pointermove', function(e){
+    if (e.pointerType && e.pointerType !== 'mouse') return;
+    var t = e.target, find = t && t.closest ? t.closest.bind(t) : null;
+    spotEl = find ? find(SPOT) : null;
+    var btn = find ? find('.try-btn, .nav-cta') : null;
+    if (btn !== magEl){ dropMag(); magEl = btn; }
+    px = e.clientX; py = e.clientY;
+    if (!queued){ queued = true; requestAnimationFrame(paint); }
+  }, { passive: true });
+
+  /* ออกนอกหน้าต่างไปเลยโดยไม่มี pointermove ปิดท้าย → ปุ่มจะค้างเอียงอยู่ถ้าไม่รีเซ็ตตรงนี้ */
+  document.addEventListener('mouseleave', dropMag);
+  addEventListener('blur', dropMag);
 })();
 </script>
 </body>
