@@ -1292,10 +1292,21 @@
     :root{
       --r-xs:10px; --r-sm:14px; --r-md:18px; --r-lg:24px; --r-xl:30px;
       --maxw:1380px;
-      --tabbar-h:62px;
-      /* safe-area ขอบล่างในรูปที่ JS อ่านค่าได้ (getComputedStyle อ่าน env() ตรงๆ ไม่ได้) —
-         ปุ่มแชทลอยต้องรู้ว่าต้องหยุดเหนือแถบเมนูล่างเท่าไหร่ ดู bottomInset() ใน Chat FAB Drag */
-      --mm-sab:env(safe-area-inset-bottom,0px);
+      --tabbar-h:54px;
+      /* ── safe-area: ต้องผ่านตัวแปรเสมอ ห้ามเรียก env() ตรงๆ ที่อื่นอีก (2026-09-25 รอบ 2) ──
+         เหตุผล: ในแอปมือถือ env() "เชื่อไม่ได้" — mobile/app.json ตั้ง edgeToEdgeEnabled:true แต่
+         WebApp.tsx ห่อ WebView ด้วย flex:1 เฉยๆ ไม่มี SafeAreaView → ฝั่ง RN จัด layout ให้ WebView
+         อยู่ในขอบปลอดภัยไปแล้ว ขณะที่ WebView ยังรายงาน env() เป็นค่าของ "หน้าต่างทั้งจอ" อยู่ดี
+         → CSS เผื่อขอบซ้ำอีกชั้น (user ถ่ายภาพ Android จริงมา: ใต้ป้ายแท็บว่าง ~60px แล้วค่อยเป็น
+         แถบปุ่มระบบอีก 43px แยกต่างหาก / เหนือ "Dashboard" ว่าง ~51px)
+         แก้โดยให้ _syncSafeArea() ตรวจเองว่าเป็นการนับซ้ำหรือ edge-to-edge แท้ แล้วทับ --sat/--sab
+         รวมไว้ตัวแปรเดียวเพื่อให้แก้ครั้งเดียวมีผลครบทุกจุด (เดิมกระจาย 13 จุด แก้ทีละจุดพลาดง่าย)
+         --mm-sab คงชื่อไว้ให้ bottomInset() ใน Chat FAB Drag อ่าน แต่ชี้มาที่ --sab ตัวเดียวกัน */
+      --sat-env:env(safe-area-inset-top,0px);
+      --sab-env:env(safe-area-inset-bottom,0px);
+      --sat:var(--sat-env);
+      --sab:var(--sab-env);
+      --mm-sab:var(--sab);
       --ease-spring:cubic-bezier(.34,1.2,.64,1);
       --ease-out:cubic-bezier(.22,1,.36,1);
       --rim:inset 0 1px 0 rgba(255,255,255,.13);
