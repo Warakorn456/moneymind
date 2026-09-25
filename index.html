@@ -1449,7 +1449,20 @@
       backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);
       box-shadow:0 -10px 34px -18px rgba(0,0,0,.8),var(--rim);
     }
-    @media(max-width:700px){ #mm-tabbar.on{display:flex} body.has-tabbar .hamburger{display:none} }
+    @media(max-width:700px){
+      #mm-tabbar.on{display:flex}
+      /* hamburger ซ้ำซ้อนกับช่อง "เมนู" ในแถบล่างแล้ว — ซ่อนเฉพาะตอนแถบทำงานจริงเท่านั้น
+         ถ้า JS พัง แถบไม่ขึ้น hamburger ก็ยังอยู่ ผู้ใช้ไม่มีทางถูกขังไว้ในหน้าเดียว */
+      body.has-tabbar .hamburger{display:none}
+      /* พอ hamburger หายไป topbar 2 แถวเดิมก็เสียรูป (space-between ดันปุ่มช่วยเหลือไปสุดขอบ)
+         และกินพื้นที่แนวตั้งโดยเปล่าประโยชน์ — ยุบเหลือแถวเดียวแบบแอปจริง */
+      body.has-tabbar .topbar{flex-direction:row;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+      body.has-tabbar .topbar>div:first-child{justify-content:flex-start;gap:6px;min-width:0;flex:1}
+      body.has-tabbar .topbar h2{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      body.has-tabbar .topbar-right{justify-content:flex-end;gap:6px;flex:0 0 auto;flex-wrap:nowrap}
+      body.has-tabbar .topbar-right .btn{flex:0 0 auto}
+      body.has-tabbar .theme-btn,body.has-tabbar .notif-btn{width:34px;height:34px;font-size:14px}
+    }
     .mm-tab{
       flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
       gap:3px;padding:6px 2px 3px;background:none;border:none;cursor:pointer;position:relative;
