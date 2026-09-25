@@ -26,6 +26,8 @@
     /* 2026-09-25: footer เดิม position:absolute ทับลิงก์ 'สมัครใหม่' บนจอเตี้ยตอนกางฟอร์มรหัสผ่าน — ให้ไหลต่อท้ายกล่องแทน + ให้ทั้งจอเลื่อนได้เมื่อเนื้อหายาวเกินจอ */
     #login-screen{justify-content:safe center;overflow-y:auto;padding:16px 16px calc(16px + var(--sab,0px))}
     .login-foot{margin-top:18px;flex-shrink:0}
+    /* 2026-09-25: แผนเกษียณเป็น grid 2 คอลัมน์แบบ inline ไม่มี breakpoint — จอ 390 คอลัมน์ผลลัพธ์ล้นไปถึง 646px แล้วโดนตัดทิ้ง */
+    @media(max-width:700px){.retire-grid{grid-template-columns:minmax(0,1fr)!important}}
     .login-box{background:#13131f;border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:40px 36px;width:100%;max-width:380px;text-align:center}
     .login-logo{font-size:24px;font-weight:800;background:linear-gradient(135deg,#a78bfa,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
     .login-sub{font-size:13px;color:#64748b;margin-bottom:32px}
