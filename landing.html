@@ -218,19 +218,21 @@
   #pricing::before{ background:radial-gradient(ellipse at center, var(--glowc), transparent 72%); }
 
   /* scroll reveal — hidden state applies only when JS is running (html.js),
-     so no-JS visitors and crawlers always see full content */
-  .reveal{ transition:opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1); }
-  html.js .reveal{ opacity:0; transform:translateY(18px); }
-  html.js .reveal.in{ opacity:1; transform:none; }
-  /* stagger children of a revealed grid so cards cascade */
-  html.js .reveal-stagger > *:nth-child(1){ transition-delay:0s }
-  html.js .reveal-stagger > *:nth-child(2){ transition-delay:.07s }
-  html.js .reveal-stagger > *:nth-child(3){ transition-delay:.14s }
-  html.js .reveal-stagger > *:nth-child(4){ transition-delay:.21s }
-  html.js .reveal-stagger > *:nth-child(5){ transition-delay:.07s }
-  html.js .reveal-stagger > *:nth-child(6){ transition-delay:.14s }
-  html.js .reveal-stagger > *:nth-child(7){ transition-delay:.21s }
-  html.js .reveal-stagger > *:nth-child(8){ transition-delay:.28s }
+     so no-JS visitors and crawlers always see full content.
+     ทุก variant ใช้ transition ชุดเดียวกัน ต่างแค่ "ท่าเริ่มต้น" และกลับสู่สถานะปกติ
+     ด้วย .in เหมือนกันหมด → เพิ่มท่าใหม่ได้โดยไม่ต้องแตะ JS ฝั่ง observer เลย */
+  .reveal{ transition:opacity .85s cubic-bezier(.16,1,.3,1), transform .85s cubic-bezier(.16,1,.3,1),
+    clip-path .85s cubic-bezier(.16,1,.3,1); }
+  html.js .reveal{ opacity:0; transform:translateY(28px); }
+  html.js .reveal-scale{ transform:translateY(14px) scale(.94); }
+  html.js .reveal-left{ transform:translateX(-30px); }
+  html.js .reveal-right{ transform:translateX(30px); }
+  /* กวาดขึ้นแทนการเลื่อนทั้งก้อน — ใช้กับหัวเรื่อง ตัวอักษรจะไม่ "ไถล" ตอนโผล่ */
+  html.js .reveal-clip{ transform:none; clip-path:inset(0 0 105% 0); }
+  html.js .reveal.in{ opacity:1; transform:none; clip-path:inset(0 0 0 0); }
+  /* stagger ลูกของ grid ที่เผยพร้อมกัน — JS ท้ายไฟล์เซ็ต --i ตามลำดับจริงของแต่ละ grid
+     (ของเดิม hardcode nth-child ไว้แค่ 8 ตัว ซึ่งไม่พอเมื่อจำนวนการ์ดเปลี่ยน) */
+  html.js .reveal-stagger > *{ transition-delay:calc(var(--i,0) * 65ms); }
 
   /* hero entrance (pure CSS on load, no observer — above the fold must never start hidden) */
   @keyframes mmrise{ from{ opacity:0; transform:translateY(20px) } to{ opacity:1; transform:none } }
