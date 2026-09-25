@@ -10104,7 +10104,7 @@ function renderRetire(){
   const curPort=(DB.investments||[]).reduce((s,i)=>s+i.value,0);
 
   el.innerHTML=`
-  <div style="display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:18px;align-items:start">
+  <div class="retire-grid" style="display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:18px;align-items:start">
 
     <!-- ── INPUT PANEL ── -->
     <div style="display:flex;flex-direction:column;gap:14px">
