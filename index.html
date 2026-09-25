@@ -18318,14 +18318,22 @@ function _renderWealthRank(){
       // ถ้า viewport เปลี่ยนขนาดมาก (เช่น WebView resize ตอนโหลดครั้งแรก) ตำแหน่งเดิมอาจอยู่นอกจอไปแล้ว
       // ทำให้คำนวณ "ขอบที่ใกล้สุด" ผิดพลาด ปุ่มเด้งไปมุมผิด (เจอจริง: เด้งไปทับมุมซ้ายบนแทนขวาล่าง)
       // แก้: clamp ทั้ง 2 แกนให้อยู่ในจอเสมอ ไม่ต้อง snap ไปขอบใดขอบหนึ่ง
+      // 🐛 2026-09-25: clamp อย่างเดียวทำให้ปุ่มค้างพิกัด px เดิม — จอ 390→1440 ปุ่มไปกลางจอทับตัวเลข Net Worth
+      // แก้: ยึดระยะจากขอบที่ใกล้กว่า (วัดกับขนาดจอ "ก่อน" resize) แล้วค่อย clamp
       var r=fab.getBoundingClientRect();
       var W=window.innerWidth, H=window.innerHeight;
       var fw=fab.offsetWidth||56, fh=fab.offsetHeight||56;
-      var nx=Math.max(MARGIN,Math.min(W-fw-MARGIN,r.left));
-      var ny=Math.max(MARGIN,Math.min(H-fh-MARGIN-bottomInset(),r.top));
+      var pW=lastW||W, pH=lastH||H;
+      var nx=(r.left+fw/2 > pW/2) ? W-fw-(pW-r.right) : r.left;
+      var ny=(r.top+fh/2 > pH/2) ? H-fh-(pH-r.bottom) : r.top;
+      nx=Math.max(MARGIN,Math.min(W-fw-MARGIN,nx));
+      ny=Math.max(MARGIN,Math.min(H-fh-MARGIN-bottomInset(),ny));
       setPos(nx,ny,false);
+      lastW=W; lastH=H;
     });
+    lastW=window.innerWidth; lastH=window.innerHeight;
   }
+  var lastW=0, lastH=0;
 
   document.addEventListener('DOMContentLoaded', init);
   setTimeout(init, 500);
