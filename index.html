@@ -18094,6 +18094,7 @@ window._showAllRanksDetail=function(){
     }).join('');
     var body=document.getElementById('_rankPopupBody');
     if(!body)return;
+    _destroyChar3D();
     body.innerHTML=''
       +'<button onclick="window._setRankPopupScope(\''+_rankPopupScope+'\')" style="position:absolute;top:12px;left:12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;cursor:pointer;color:var(--muted);font-size:12px">← ย้อนกลับ</button>'
       +'<button onclick="document.getElementById(\'_rankPopupOv\').remove()" style="position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--muted);font-size:15px;display:flex;align-items:center;justify-content:center">✕</button>'
