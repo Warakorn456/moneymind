@@ -1551,6 +1551,10 @@
       body.has-tabbar .page{padding-bottom:calc(var(--tabbar-h) + var(--sab) + 18px)}
       body.has-tabbar .toast-wrap{bottom:calc(var(--tabbar-h) + 18px + var(--sab))}
       body.has-tabbar .add-fab{display:none!important}
+      /* 2026-09-26: ปุ่ม "เมนู" อยู่ช่องขวาสุดของแถบล่าง → ลิ้นชักเลื่อนออกจากขวาให้อยู่ฝั่งเดียวกัน
+         (ไม่มีแถบล่าง = ใช้แฮมเบอร์เกอร์มุมซ้ายบน ลิ้นชักยังออกซ้ายเหมือนเดิม) */
+      body.has-tabbar .sidebar{left:auto;right:0;transform:translateX(100%);border-right:0;border-left:1px solid var(--hair);padding-left:0;padding-right:env(safe-area-inset-right,0px)}
+      body.has-tabbar .sidebar.open{transform:none}
     }
 
     /* ── 7. Modal → bottom sheet บนมือถือ (กฎชุดเดียวครอบ modal ทั้ง 29 ตัว) ── */
