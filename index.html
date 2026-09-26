@@ -18024,13 +18024,68 @@ window._setRankPopupScope=function(s){
   _rankPopupScope=s;
   const body=document.getElementById('_rankPopupBody');
   if(body) body.innerHTML=_buildRankPopupBody(calcNetWorth().netWorth,s);
+  _mountRank3D();
 };
 
 // ── ตัวละครในป๊อบอัพ: ภาพวาด assets/rank/{lv}{f|m}.webp + อนิเมชัน idle CSS (.rank-stage) ──
 // แตะ = เด้งดีใจ; เมาส์ขยับ = เอียงตาม (เฉพาะ pointer:fine — มือถือไม่ผูกอะไรเพิ่ม)
 function _rankCharTap(el){
+  const mv=el.querySelector('model-viewer.ready');
+  if(mv){ // โมเดล 3D: สลับเล่นท่ากระโดด/หมุน 1 รอบแล้วกลับ idle
+    if(mv._busy) return; mv._busy=true;
+    mv.animationName=(mv._tapN=(mv._tapN||0)+1)%2?'hop':'spin';
+    mv.play({repetitions:1});
+    return;
+  }
   el.classList.remove('hop'); void el.offsetWidth; el.classList.add('hop');
   clearTimeout(el._hopT); el._hopT=setTimeout(()=>el.classList.remove('hop'),650);
+}
+
+// ── ตัวละคร 3D (ทดลอง): โมเดลจาก TRELLIS.2 (ฟรี, MIT) + ท่าขยับทั้งตัว idle/hop/spin ที่ใส่ใน glb ด้วย build_char.mjs ──
+// ⚠️ ยังเป็นโหมดทดลอง: เปิดเฉพาะ localhost หรือ ?char3d=1 — ไฟล์ assets/rank3d/*.glb ยังไม่ได้ขึ้นเว็บจริง
+// ตัวไหนไม่มีใน _RANK3D_KEYS หรือโหลดไม่ได้ = ใช้ภาพวาดเดิม (ไม่พัง)
+const _RANK3D_KEYS=new Set(['4f']);
+let _mvLoading=null;
+function _rank3dEnabled(){ return location.hostname==='localhost'||/[?&]char3d=1/.test(location.search); }
+function _loadModelViewer(){
+  if(window.customElements&&customElements.get('model-viewer')) return Promise.resolve();
+  if(!_mvLoading){
+    _mvLoading=new Promise((res,rej)=>{
+      const s=document.createElement('script'); s.type='module';
+      s.src='https://cdn.jsdelivr.net/npm/@google/model-viewer@4.0.0/dist/model-viewer.min.js';
+      s.onerror=()=>{ _mvLoading=null; s.remove(); rej(new Error('model-viewer')); };
+      document.head.appendChild(s);
+      customElements.whenDefined('model-viewer').then(res);
+      setTimeout(()=>rej(new Error('model-viewer timeout')),15000);
+    }).then(()=>{ customElements.get('model-viewer').meshoptDecoderLocation='https://cdn.jsdelivr.net/npm/meshoptimizer@0.22.0/meshopt_decoder.js'; });
+  }
+  return _mvLoading;
+}
+async function _mountRank3D(){
+  if(!_rank3dEnabled()) return;
+  const st=document.querySelector('#_rankPopupBody .rank-stage');
+  if(!st||!_RANK3D_KEYS.has(st.dataset.key)||st.querySelector('model-viewer')) return;
+  try{ await _loadModelViewer(); }catch(e){ return; }
+  if(!st.isConnected) return;
+  const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const mv=document.createElement('model-viewer');
+  mv.setAttribute('src','assets/rank3d/'+st.dataset.key+'.glb');
+  mv.setAttribute('alt','ตัวละครแรงค์ 3D');
+  if(!reduce) mv.setAttribute('autoplay','');
+  mv.setAttribute('animation-name','idle');
+  mv.setAttribute('camera-controls',''); mv.setAttribute('disable-zoom',''); mv.setAttribute('disable-pan','');
+  mv.setAttribute('interaction-prompt','none');
+  mv.setAttribute('camera-orbit','0deg 82deg auto'); mv.setAttribute('min-camera-orbit','auto 60deg auto'); mv.setAttribute('max-camera-orbit','auto 100deg auto');
+  mv.setAttribute('field-of-view','26deg');
+  mv.setAttribute('tone-mapping','neutral'); mv.setAttribute('shadow-intensity','0.9'); mv.setAttribute('exposure','1.05');
+  mv.style.cssText='position:absolute;inset:0;width:100%;height:100%;background:transparent;--poster-color:transparent;opacity:0;transition:opacity .45s';
+  mv.addEventListener('load',()=>{
+    mv.classList.add('ready'); mv.style.opacity='1';
+    const t=st.querySelector('.rank-tilt'); if(t){ t.style.transition='opacity .45s'; t.style.opacity='0'; }
+  });
+  mv.addEventListener('finished',()=>{ mv._busy=false; mv.animationName='idle'; if(!reduce) mv.play(); });
+  mv.addEventListener('error',()=>mv.remove());
+  st.appendChild(mv);
 }
 function _rankCharTilt(e,el){
   if(!(window.matchMedia&&matchMedia('(pointer:fine)').matches)) return;
