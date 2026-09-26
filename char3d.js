@@ -48,12 +48,12 @@
 
     const scene=new T.Scene();
     const camera=new T.PerspectiveCamera(30,W/H,0.1,50);
-    camera.position.set(0,1.18,5.3);
-    camera.lookAt(0,1.12,0);
+    camera.position.set(0,1.2,5.7);
+    camera.lookAt(0,1.14,0);
 
     scene.add(new T.HemisphereLight(0xffffff,0x6b5b7b,1.15));
     const key=new T.DirectionalLight(0xffffff,1.6); key.position.set(2,4,5); scene.add(key);
-    const rim=new T.DirectionalLight(new T.Color(rankColor),1.8); rim.position.set(-3,2.5,-3); scene.add(rim);
+    const rim=new T.DirectionalLight(new T.Color(rankColor),1.1); rim.position.set(-3,2.5,-4); scene.add(rim);
 
     // toon ramp 3 ขั้น → ดูเป็นของเล่นการ์ตูน
     const ramp=new T.DataTexture(new Uint8Array([110,110,110,255, 190,190,190,255, 255,255,255,255]),3,1,T.RGBAFormat);
@@ -108,8 +108,7 @@
     if(fit.scarf){ const s=mesh(new T.TorusGeometry(0.2,0.065,8,20),toon(fit.scarf),0,0.99,0,body); s.rotation.x=Math.PI/2; }
     if(fit.belt){ const b=mesh(new T.TorusGeometry(0.29,0.035,6,24),toon(fit.belt),0,0.52,0,body); b.rotation.x=Math.PI/2; b.scale.y=0.85; }
     if(fit.cape){
-      const cp=mesh(new T.CylinderGeometry(0.3,0.55,0.9,20,1,true,Math.PI*0.55,Math.PI*0.9),toon(fit.cape,{side:T.DoubleSide}),0,0.55,-0.02,body);
-      cp.rotation.y=Math.PI;
+      const cp=mesh(new T.CylinderGeometry(0.3,0.55,0.9,20,1,true,Math.PI*0.55,Math.PI*0.9),toon(fit.cape,{side:T.DoubleSide}),0,0.55,-0.04,body);
     }
 
     // ── แขน (pivot ที่ไหล่ จะได้โบกมือได้)
@@ -133,7 +132,7 @@
     if(female){
       const lh=mesh(new T.CapsuleGeometry(0.42,0.5,6,16),toon(hairC),0,HY-0.5,-0.3,head); lh.scale.set(1.25,1,0.45);
       if(!fit.crown){ // โบว์
-        const bow=new T.Group(); bow.position.set(0.42,HY+0.42,0.12); bow.rotation.z=-0.5; head.add(bow);
+        const bow=new T.Group(); bow.position.set(0.4,HY+0.4,0.34); bow.rotation.z=-0.5; head.add(bow);
         [-1,1].forEach(s=>{ const b=mesh(new T.ConeGeometry(0.12,0.22,12),toon(rankColor),s*0.11,0,0,bow); b.rotation.z=-s*Math.PI/2; b.scale.z=0.5; });
         mesh(new T.SphereGeometry(0.06,10,8),toon(rankColor),0,0,0.02,bow);
       }
