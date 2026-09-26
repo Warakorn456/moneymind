@@ -219,7 +219,7 @@ function _renderAdminUsageSection(summary){
     const actDoneSection=Object.keys(acts).length?(()=>{
       const defs=[['tx_add','transactions'],['receipt_scan',''],['maya_ask',''],
                   ['bank_add','banks'],['budget_set','catbudget'],['debt_add','debts'],
-                  ['guest_start',''],['guest_convert','']];
+                  ['guest_start',''],['guest_sample_clear',''],['guest_tx',''],['guest_convert','']];
       const lines=defs.filter(d=>acts[d[0]]!=null).map(([k,pageKey])=>{
         const done=acts[k]||0, opens=pageKey?(ap[pageKey]||0):0;
         const pct=opens?Math.round(done/opens*100):null;
