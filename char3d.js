@@ -132,7 +132,7 @@
     if(female){
       const lh=mesh(new T.CapsuleGeometry(0.42,0.5,6,16),toon(hairC),0,HY-0.5,-0.3,head); lh.scale.set(1.25,1,0.45);
       if(!fit.crown){ // โบว์
-        const bow=new T.Group(); bow.position.set(0.4,HY+0.4,0.34); bow.rotation.z=-0.5; head.add(bow);
+        const bow=new T.Group(); bow.position.set(0.44,HY+0.4,0.3); bow.rotation.set(0,0.5,-0.5); bow.scale.setScalar(1.45); head.add(bow);
         [-1,1].forEach(s=>{ const b=mesh(new T.ConeGeometry(0.12,0.22,12),toon(rankColor),s*0.11,0,0,bow); b.rotation.z=-s*Math.PI/2; b.scale.z=0.5; });
         mesh(new T.SphereGeometry(0.06,10,8),toon(rankColor),0,0,0.02,bow);
       }
