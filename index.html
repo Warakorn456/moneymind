@@ -17974,7 +17974,8 @@ function _buildRankPopupBody(nw, scope){
       overflow:hidden;position:relative">
       <div style="position:absolute;top:12%;left:50%;transform:translateX(-50%);width:62%;height:52%;background:radial-gradient(circle,${rank.color}4d,transparent 70%);filter:blur(10px)"></div>
       <div style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);width:50%;height:10px;background:radial-gradient(ellipse,rgba(0,0,0,.55),transparent 75%)"></div>
-      <div style="position:relative;line-height:0">${(window._fcSvgG||window._fcSVG||function(){return '';})(tier.lv, fcGender)}</div>
+      <div id="_char2dFallback" style="position:relative;line-height:0;transition:opacity .4s">${(window._fcSvgG||window._fcSVG||function(){return '';})(tier.lv, fcGender)}</div>
+      <div id="_char3dHost" data-lv="${tier.lv}" data-g="${fcGender}" title="ลากเพื่อหมุน · แตะให้กระโดด" style="position:absolute;inset:0;opacity:0;transition:opacity .4s"></div>
     </div>
     <div style="font-size:24px;font-weight:800;color:${rank.color}">${rank.name}</div>
     <div style="font-size:12px;color:var(--muted);margin-top:3px">${rank.th} · Lv.${tier.lv}/8 · ${sm.label} (${sm.pop})</div>
