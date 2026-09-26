@@ -1666,7 +1666,8 @@
     /* ปุ่มแชทลอย z-index 8000 อยู่เหนือ .overlay (1000) — พอ modal กลายเป็น bottom sheet เต็มความกว้าง
        ปุ่มจึงไปนั่งทับช่องกรอกในฟอร์มพอดี (เห็นชัดตอนทดสอบที่ 390px) ซ่อนระหว่างมี modal เปิดอยู่
        :has() ไม่รองรับบน iOS 15.1–15.3 → กฎถูกข้ามไปเฉยๆ พฤติกรรมตกกลับเป็นแบบเดิม ไม่พัง */
-    body:has(.overlay.show) .chat-fab,body:has(.overlay.show) .add-fab{opacity:0;visibility:hidden;pointer-events:none}
+    body:has(.overlay.show) .chat-fab,body:has(.overlay.show) .add-fab,
+    body:has(.sidebar.open) .chat-fab{opacity:0;visibility:hidden;pointer-events:none}
     .add-fab{border-radius:50%;background:var(--glass-3);box-shadow:var(--e2),var(--rim)}
     @media(max-width:700px){
       .finput,.fselect,.login-inp,.prof-field input,.prof-field select{min-height:44px}
