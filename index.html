@@ -17978,10 +17978,14 @@ function _buildRankPopupBody(nw, scope){
       box-shadow:0 10px 32px ${rank.glow},inset 0 0 0 1.5px ${rank.color}45;
       background:radial-gradient(ellipse at 50% 24%,${rank.color}2e,${rank.color}06 72%);
       overflow:hidden;position:relative">
-      <div style="position:absolute;top:12%;left:50%;transform:translateX(-50%);width:62%;height:52%;background:radial-gradient(circle,${rank.color}4d,transparent 70%);filter:blur(10px)"></div>
-      <div style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);width:50%;height:10px;background:radial-gradient(ellipse,rgba(0,0,0,.55),transparent 75%)"></div>
-      <div id="_char2dFallback" style="position:relative;line-height:0;transition:opacity .4s">${(window._fcSvgG||window._fcSVG||function(){return '';})(tier.lv, fcGender)}</div>
-      <div id="_char3dHost" data-lv="${tier.lv}" data-g="${fcGender}" title="ลากเพื่อหมุน · แตะให้กระโดด" style="position:absolute;inset:0;opacity:0;transition:opacity .4s"></div>
+      <div class="rank-stage" style="--rc:${rank.color}" onclick="_rankCharTap(this)" onpointermove="_rankCharTilt(event,this)" onpointerleave="_rankCharTilt(null,this)" title="แตะตัวละคร">
+        <div class="rank-aura"></div>
+        <div class="rank-shadow"></div>
+        <div class="rank-tilt"><img class="rank-char" src="assets/rank/${tier.lv}${fcGender===1?'m':'f'}.webp" alt="${rank.name}" draggable="false"></div>
+        <i class="rank-spark" style="--x:14%;--y:24%;--d:0s"></i><i class="rank-spark" style="--x:82%;--y:16%;--d:.7s"></i>
+        <i class="rank-spark" style="--x:88%;--y:52%;--d:1.4s"></i><i class="rank-spark" style="--x:10%;--y:60%;--d:2.1s"></i>
+        <i class="rank-spark" style="--x:50%;--y:6%;--d:1s"></i>
+      </div>
     </div>
     <div style="font-size:24px;font-weight:800;color:${rank.color}">${rank.name}</div>
     <div style="font-size:12px;color:var(--muted);margin-top:3px">${rank.th} · Lv.${tier.lv}/8 · ${sm.label} (${sm.pop})</div>
