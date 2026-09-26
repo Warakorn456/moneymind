@@ -9892,12 +9892,17 @@ function calcNetWorth(){
   const plan=getPlan();
   const invVal=(DB.investments||[]).reduce((s,inv)=>s+inv.value,0);
   const extraAssetsTotal=(plan.extraAssets||[]).reduce((s,a)=>s+a.amount,0);
-  const totalAssets=invVal+extraAssetsTotal;
+  // 2026-09-26: เดิมไม่นับเงินในบัญชีธนาคารและไม่หักยอดค้างบัตรเครดิต ทั้งที่ _adjustBankBalance ตัดยอดตามรายการอยู่แล้ว
+  // ⚠️ สูตร Python ต้องตรงกัน: admin_stats.net_worth / line_bot.calc_net_worth / line_daily_summary.calc_net_worth
+  const _bk=(DB.banks||[]).filter(b=>b&&typeof b==='object');
+  const bankCash=_bk.filter(b=>b.type!=='บัตรเครดิต').reduce((s,b)=>s+(Number(b.balance)||0),0);
+  const ccDebt=_bk.filter(b=>b.type==='บัตรเครดิต').reduce((s,b)=>s+(Number(b.balance)||0),0);
+  const totalAssets=invVal+extraAssetsTotal+bankCash;
   const trackedDebts=(DB.debts||[]).reduce((s,d)=>s+(d.remaining||d.amount),0);
   const extraDebtsTotal=(plan.extraDebts||[]).reduce((s,d)=>s+d.amount,0);
-  const debts=trackedDebts+extraDebtsTotal;
+  const debts=trackedDebts+extraDebtsTotal+ccDebt;
   const netWorth=totalAssets-debts;
-  return {invVal,extraAssetsTotal,totalAssets,trackedDebts,extraDebtsTotal,debts,netWorth};
+  return {invVal,extraAssetsTotal,bankCash,ccDebt,totalAssets,trackedDebts,extraDebtsTotal,debts,netWorth};
 }
 
 // ══════════════════════════════════════════
