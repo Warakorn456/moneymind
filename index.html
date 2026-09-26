@@ -18150,9 +18150,9 @@ function _renderTierBadge(){
             <!-- aura behind character -->
             <div style="position:absolute;top:11%;left:50%;transform:translateX(-50%);width:68%;height:60%;background:radial-gradient(circle,${rank.color}55,transparent 70%);filter:blur(7px)"></div>
             <!-- floor shadow -->
-            <div style="position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:54%;height:7px;background:radial-gradient(ellipse,rgba(0,0,0,.6),transparent 75%)"></div>
+            <div class="tier-char-shadow" style="position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:54%;height:7px;background:radial-gradient(ellipse,rgba(0,0,0,.6),transparent 75%)"></div>
             <!-- character -->
-            <div style="position:relative;line-height:0;margin-bottom:5px">${svgRaw.replace(/width="\d+" height="\d+"/,`width="${sw}" height="${sh}"`)}</div>
+            <div class="tier-char-idle" style="position:relative;line-height:0;margin-bottom:5px">${svgRaw.replace(/width="\d+" height="\d+"/,`width="${sw}" height="${sh}"`)}</div>
             <!-- top sheen -->
             <div style="position:absolute;top:0;left:0;right:0;height:38%;background:linear-gradient(rgba(255,255,255,.09),transparent);pointer-events:none"></div>
           </div>
