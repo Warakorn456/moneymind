@@ -17991,7 +17991,7 @@ function _buildRankPopupBody(nw, scope){
       box-shadow:0 10px 32px ${rank.glow},inset 0 0 0 1.5px ${rank.color}45;
       background:radial-gradient(ellipse at 50% 24%,${rank.color}2e,${rank.color}06 72%);
       overflow:hidden;position:relative">
-      <div class="rank-stage" style="--rc:${rank.color}" onclick="_rankCharTap(this)" onpointermove="_rankCharTilt(event,this)" onpointerleave="_rankCharTilt(null,this)" title="แตะตัวละคร">
+      <div class="rank-stage" data-key="${tier.lv}${fcGender===1?'m':'f'}" style="--rc:${rank.color}" onclick="_rankCharTap(this)" onpointermove="_rankCharTilt(event,this)" onpointerleave="_rankCharTilt(null,this)" title="แตะตัวละคร">
         <div class="rank-aura"></div>
         <div class="rank-shadow"></div>
         <div class="rank-tilt"><img class="rank-char" src="assets/rank/${tier.lv}${fcGender===1?'m':'f'}.webp" alt="${rank.name}" draggable="false"></div>
