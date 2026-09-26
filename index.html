@@ -1697,6 +1697,12 @@
       .mm-tab-add{margin-top:-13px}
       .mm-tab-add-btn{width:44px;height:44px;font-size:17px}
     }
+    /* ตัวละครแรงค์ใน sidebar — ลอย+หายใจเบาๆ (ตัว 3D จริงอยู่ในป๊อบอัพ char3d.js)
+       reduced-motion: บล็อกบรรทัด ~1283 สั่ง animation-name:none ครอบไว้แล้ว */
+    .tier-char-idle{animation:tierCharBob 3s ease-in-out infinite;transform-origin:50% 100%}
+    .tier-char-shadow{animation:tierCharShadow 3s ease-in-out infinite}
+    @keyframes tierCharBob{0%,100%{transform:translateY(0) scale(1,1)}25%{transform:translateY(-1px) scale(1.01,.985)}50%{transform:translateY(-4px) scale(.99,1.015)}}
+    @keyframes tierCharShadow{0%,100%{transform:translateX(-50%) scaleX(1);opacity:1}50%{transform:translateX(-50%) scaleX(.78);opacity:.65}}
   </style>
 <!-- self-hosted analytics (GoatCounter) — aggregate pageviews only, no cookies, no personal
      data collected; see privacy.html section 1 for the disclosure. This is a single-page
