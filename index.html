@@ -18022,12 +18022,12 @@ function _loadChar3D(){
   if(!_char3dLoad){
     _char3dLoad=(async()=>{
       if(!window.THREE) await _loadScript(_THREE_URL);
-      await _loadScript('char3d.js?v=1');
+      await _loadScript('char3d.js?v=2');
       if(!window.MMChar3D) throw new Error('char3d not ready');
     })().catch(e=>{
       _char3dLoad=null;
       // _loadScript เจอ tag เดิมจะรอ maplibregl — ลบ tag ที่ล้มเหลวทิ้งให้ลองใหม่ได้ครั้งหน้า
-      document.querySelectorAll('script[data-dyn="'+_THREE_URL+'"],script[data-dyn="char3d.js?v=1"]').forEach(s=>s.remove());
+      document.querySelectorAll('script[data-dyn="'+_THREE_URL+'"],script[data-dyn="char3d.js?v=2"]').forEach(s=>s.remove());
       throw e;
     });
   }
