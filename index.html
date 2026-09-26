@@ -18503,14 +18503,13 @@ function _renderWealthRank(){
     if(typeof lv==='string'){const LM={F:1,E:2,D:3,C:4,B:5,A:6,S:8};lv=LM[lv]||4;}
     lv=Math.max(1,Math.min(8,parseInt(lv)||4));
     const gm=(gender===1);
-    // assets/char3d.webp = ภาพนิ่งจากตัวละคร 3D ใน char3d.js (MMChar3D.snapshot) 8 แรงค์ × 2 แถว (หญิงบน/ชายล่าง)
-    // cell 256×384 พื้นใส — แก้หน้าตาใน char3d.js แล้วต้องเรนเดอร์ sheet นี้ใหม่ด้วย
-    const cw=256, ch=384;
-    const sx=(lv-1)*cw, sy=gm?ch:0;
+    // ภาพวาด chibi (Canva AI) แยกไฟล์ต่อแรงค์: assets/rank/{lv}{f|m}-s.webp 200×300 พื้นใส (ป๊อบอัพใช้ตัวใหญ่ {lv}{f|m}.webp)
+    // โหลดเฉพาะแรงค์ที่แสดง ไม่ใช่ทั้ง sheet — ผู้เรียกยัง parse viewBox จากค่านี้อยู่ ห้ามเปลี่ยนรูปแบบ SVG
+    const cw=200, ch=300;
     const dw=140, dh=Math.round(dw*ch/cw);
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${sx} ${sy} ${cw} ${ch}"
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${cw} ${ch}"
       width="${dw}" height="${dh}" style="display:block;overflow:hidden">
-      <image href="assets/char3d.webp" x="0" y="0" width="2048" height="768" preserveAspectRatio="none"/>
+      <image href="assets/rank/${lv}${gm?'m':'f'}-s.webp" x="0" y="0" width="${cw}" height="${ch}" preserveAspectRatio="none"/>
     </svg>`;
   }
 
