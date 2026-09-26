@@ -1699,6 +1699,19 @@
     }
     /* ตัวละครแรงค์ใน sidebar — ลอย+หายใจเบาๆ (ตัว 3D จริงอยู่ในป๊อบอัพ char3d.js)
        reduced-motion: บล็อกบรรทัด ~1283 สั่ง animation-name:none ครอบไว้แล้ว */
+    /* ป๊อบอัพแรงค์: ภาพวาด chibi + idle แบบเกมมือถือ (หายใจ/ลอย/ออร่า/ประกาย/แตะเด้ง) */
+    .rank-stage{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;perspective:700px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .rank-aura{position:absolute;left:50%;top:14%;width:86%;height:62%;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle,var(--rc) 0%,transparent 68%);opacity:.38;filter:blur(12px);animation:rankAura 2.8s ease-in-out infinite}
+    .rank-shadow{position:absolute;bottom:8px;left:50%;width:54%;height:12px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.5),transparent 72%);animation:rankShadow 3.2s ease-in-out infinite}
+    .rank-tilt{position:relative;transition:transform .25s ease-out;transform-style:preserve-3d}
+    .rank-char{display:block;width:150px;height:auto;margin-bottom:6px;transform-origin:50% 100%;animation:rankIdle 3.2s ease-in-out infinite;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3));user-select:none;-webkit-user-drag:none;pointer-events:none}
+    .rank-stage.hop .rank-char{animation:rankHop .6s cubic-bezier(.3,1.5,.5,1)}
+    .rank-spark{position:absolute;left:var(--x);top:var(--y);width:12px;height:12px;background:#fff;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);filter:drop-shadow(0 0 4px var(--rc));opacity:0;animation:rankSpark 2.8s ease-in-out infinite;animation-delay:var(--d);pointer-events:none}
+    @keyframes rankIdle{0%,100%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-4px) scale(.992,1.018)}60%{transform:translateY(-6px) scale(1,1.008)}}
+    @keyframes rankShadow{0%,100%{transform:translateX(-50%) scaleX(1);opacity:1}60%{transform:translateX(-50%) scaleX(.82);opacity:.7}}
+    @keyframes rankAura{0%,100%{opacity:.3;transform:translateX(-50%) scale(.94)}50%{opacity:.5;transform:translateX(-50%) scale(1.04)}}
+    @keyframes rankSpark{0%,100%{opacity:0;transform:scale(.2) rotate(0)}45%{opacity:1;transform:scale(1) rotate(45deg)}70%{opacity:0;transform:scale(.4) rotate(90deg)}}
+    @keyframes rankHop{0%{transform:translateY(0) scale(1.06,.92)}35%{transform:translateY(-26px) scale(.96,1.06)}65%{transform:translateY(0) scale(1.05,.94)}100%{transform:translateY(0) scale(1,1)}}
     .tier-char-idle{animation:tierCharBob 3s ease-in-out infinite;transform-origin:50% 100%}
     .tier-char-shadow{animation:tierCharShadow 3s ease-in-out infinite}
     @keyframes tierCharBob{0%,100%{transform:translateY(0) scale(1,1)}25%{transform:translateY(-1px) scale(1.01,.985)}50%{transform:translateY(-4px) scale(.99,1.015)}}
