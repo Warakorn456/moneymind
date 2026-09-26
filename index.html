@@ -18033,8 +18033,11 @@ function _rankCharTap(el){
   const mv=el.querySelector('model-viewer.ready');
   if(mv){ // โมเดล 3D: สลับเล่นท่ากระโดด/หมุน 1 รอบแล้วกลับ idle
     if(mv._busy) return; mv._busy=true;
-    mv.animationName=(mv._tapN=(mv._tapN||0)+1)%2?'hop':'spin';
+    const clip=(mv._tapN=(mv._tapN||0)+1)%2?'hop':'spin';
+    mv.animationName=clip; mv.currentTime=0;
     mv.play({repetitions:1});
+    // สำรองกรณี 'finished' ไม่ยิง (แท็บพื้นหลัง/เบราว์เซอร์บางตัว) — กลับ idle ตามความยาวคลิป
+    clearTimeout(mv._tapT); mv._tapT=setTimeout(()=>mv._backToIdle&&mv._backToIdle(),({hop:800,spin:1100}[clip])+250);
     return;
   }
   el.classList.remove('hop'); void el.offsetWidth; el.classList.add('hop');
