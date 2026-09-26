@@ -20590,6 +20590,66 @@ function startGuest(){
   setSyncStatus('local');
 }
 
+// ── ข้อมูลตัวอย่าง (เพิ่ม 2026-09-26) ──
+// ข้อมูลจริง 24–26 ก.ย.: เริ่มโหมดทดลอง 19 ครั้ง แต่จดรายการแค่ ~2 — คนแปลกหน้าจาก Facebook เจอ PDPA เต็มจอ
+// → ฟอร์มเด้งเอง → Dashboard ฿0 ทุกช่อง ไม่เคยได้เห็นว่าแอปทำอะไรได้ จึงเปิดมาด้วยข้อมูลตัวอย่าง 2 เดือนก่อน
+// ⚠️ ทุกชิ้นติด _sample:true และ _mergeGuestData ข้ามทิ้งเสมอ — ข้อมูลตัวอย่างห้ามหลุดเข้าบัญชีจริง
+function _guestHasSample(){
+  if(!_isGuest()||typeof DB==='undefined'||!DB) return false;
+  return _GUEST_ARRAY_FIELDS.some(function(f){ return Array.isArray(DB[f])&&DB[f].some(function(i){ return i&&i._sample; }); });
+}
+function _seedGuestSample(){
+  var now=new Date(), y=now.getFullYear(), m=now.getMonth(), today=now.getDate();
+  function ds(yy,mm,dd){ var last=new Date(yy,mm+1,0).getDate(); var dt=new Date(yy,mm,Math.min(dd,last)); return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
+  var plan=[[1,'income','salary','smp_salary',25000],[1,'expense','housing','smp_rent',5500],[2,'expense','food','smp_rice',50],
+    [3,'expense','transport','smp_bts',44],[5,'expense','utility','smp_elec',890],[6,'expense','food','smp_coffee',65],
+    [8,'expense','shopping','smp_shopee',459],[9,'expense','food','smp_noodle',60],[11,'expense','utility','smp_phone',399],
+    [12,'expense','entertainment','smp_netflix',419],[14,'expense','fuel','smp_fuel',800],[15,'expense','food','smp_market',320],
+    [17,'expense','entertainment','smp_movie',240],[19,'expense','food','smp_dinner',680],[21,'expense','transport','smp_grab',135],
+    [24,'expense','food','smp_rice',55],[26,'expense','food','smp_coffee',75]];
+  var tx=[], n=0;
+  [[m-1,false],[m,true]].forEach(function(pair){
+    plan.forEach(function(p,i){
+      if(pair[1]&&p[0]>today) return;               // เดือนนี้ใส่เฉพาะวันที่ผ่านมาแล้ว
+      var amt=p[1]==='income'||p[2]==='housing'?p[4]:Math.round(p[4]*(pair[1]?1:(0.85+((i*37)%30)/100)));
+      tx.push({id:'smp_t'+(n++),date:ds(y,pair[0],p[0]),type:p[1],amount:amt,description:tr(p[3]),category:p[2],tags:[],_sample:true});
+    });
+  });
+  DB.transactions=(DB.transactions||[]).concat(tx);
+  DB.banks=(DB.banks||[]).concat([{id:'smp_b1',name:tr('smp_bank'),type:'ออมทรัพย์',accountNo:'',balance:18500,note:'',_sample:true}]);
+  DB.savings=(DB.savings||[]).concat([{id:'smp_s1',name:tr('smp_goal'),target:60000,current:22000,deadline:'',color:'#06b6d4',_sample:true}]);
+  if(!DB.settings.catBudgets||!Object.keys(DB.settings.catBudgets).length){ DB.settings.catBudgets={food:4000}; DB.settings.guestSampleBudget=true; }
+  DB.settings.guestSampleUsed=true;
+}
+function _clearGuestSample(){
+  _GUEST_ARRAY_FIELDS.forEach(function(f){ if(Array.isArray(DB[f])) DB[f]=DB[f].filter(function(i){ return !(i&&i._sample); }); });
+  if(DB.settings.guestSampleBudget){ DB.settings.catBudgets={}; delete DB.settings.guestSampleBudget; }
+  delete DB.settings.streak;          // streak ที่คำนวณจากวันที่ของตัวอย่าง ไม่ใช่ของผู้ใช้
+  if(DB.settings.onboard) DB.settings.onboard.seededAt=0;
+  saveDB();
+}
+// ปุ่ม "เริ่มจดของฉัน" บนแบนเนอร์
+function guestStartOwn(){
+  if(!_isGuest()) return;
+  _clearGuestSample();
+  try{ if(window.__mmAct) window.__mmAct('guest_sample_clear'); }catch(e){}
+  toast(tr('guest_sample_cleared'),'success');
+  try{ renderPage(curPage); }catch(e){}
+  setTimeout(function(){ try{ openTxModal({type:'expense'}); }catch(e){} },350);
+}
+// จดรายการของตัวเองได้แล้ว (ทางไหนก็ได้) → นับ guest_tx ครั้งแรก + ล้างตัวอย่างให้เอง
+function _guestAfterOwnAdd(){
+  if(!_isGuest()||!DB) return;
+  var own=(DB.transactions||[]).filter(function(t){ return t&&!t._sample; });
+  if(!own.length) return;
+  if(!DB.settings.guestTxFired){ DB.settings.guestTxFired=true; try{ if(window.__mmAct) window.__mmAct('guest_tx'); }catch(e){} }
+  if(_guestHasSample()){
+    _clearGuestSample();
+    toast(tr('guest_sample_auto_cleared'),'success',5000);
+    setTimeout(function(){ try{ renderPage(curPage); }catch(e){} },50);
+  } else saveLocalOnly();
+}
+
 // ออกจากโหมดทดลองไปหน้าสมัคร/ล็อกอิน — ไม่ลบข้อมูล และตั้ง flag ให้รวมเข้าบัญชีที่กำลังจะเข้า
 function guestSignup(){
   try{ localStorage.setItem(_GUEST_MERGE_KEY,'1'); localStorage.removeItem(SESS_KEY); }catch(e){}
