@@ -18000,8 +18000,49 @@ function _buildRankPopupBody(nw, scope){
 window._setRankPopupScope=function(s){
   _rankPopupScope=s;
   const body=document.getElementById('_rankPopupBody');
+  _destroyChar3D();
   if(body) body.innerHTML=_buildRankPopupBody(calcNetWorth().netWorth,s);
+  _mountChar3D();
 };
+
+// ── ตัวละคร 3D ในป๊อบอัพ (char3d.js + Three.js โหลดเฉพาะตอนเปิดป๊อบอัพ) ──
+// โหลด/สร้างไม่ได้ (เน็ตล่ม, ไม่มี WebGL) = ค้างภาพ 2D เดิมไว้ ไม่พัง
+// char3d.js หยุด loop + dispose เองเมื่อ canvas หลุดจาก DOM จึงไม่ต้องไล่ hook ทุกทางที่ปิดป๊อบอัพ
+let _char3dInst=null, _char3dLoad=null;
+const _THREE_URL='https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.min.js';
+function _destroyChar3D(){ if(_char3dInst){ try{_char3dInst.destroy();}catch(e){} _char3dInst=null; } }
+function _loadChar3D(){
+  if(window.MMChar3D) return Promise.resolve();
+  if(!_char3dLoad){
+    _char3dLoad=(async()=>{
+      if(!window.THREE) await _loadScript(_THREE_URL);
+      await _loadScript('char3d.js?v=1');
+      if(!window.MMChar3D) throw new Error('char3d not ready');
+    })().catch(e=>{
+      _char3dLoad=null;
+      // _loadScript เจอ tag เดิมจะรอ maplibregl — ลบ tag ที่ล้มเหลวทิ้งให้ลองใหม่ได้ครั้งหน้า
+      document.querySelectorAll('script[data-dyn="'+_THREE_URL+'"],script[data-dyn="char3d.js?v=1"]').forEach(s=>s.remove());
+      throw e;
+    });
+  }
+  return _char3dLoad;
+}
+async function _mountChar3D(){
+  _destroyChar3D();
+  const host=document.getElementById('_char3dHost');
+  if(!host) return;
+  try{ await _loadChar3D(); }catch(e){ return; }
+  if(!host.isConnected||host.childElementCount) return;
+  const lv=parseInt(host.dataset.lv)||1;
+  try{
+    _destroyChar3D();
+    _char3dInst=window.MMChar3D.mount(host,{lv,gender:parseInt(host.dataset.g)||0,color:_getRank(lv).color});
+    if(_char3dInst){
+      host.style.opacity='1';
+      const fb=document.getElementById('_char2dFallback'); if(fb) fb.style.opacity='0';
+    }
+  }catch(e){ console.warn('char3d',e); }
+}
 
 function _showRankPopup(){
   try{
