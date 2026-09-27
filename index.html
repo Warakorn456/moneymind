@@ -1716,6 +1716,30 @@
     .tier-char-shadow{animation:tierCharShadow 3s ease-in-out infinite}
     @keyframes tierCharBob{0%,100%{transform:translateY(0) scale(1,1)}25%{transform:translateY(-1px) scale(1.01,.985)}50%{transform:translateY(-4px) scale(.99,1.015)}}
     @keyframes tierCharShadow{0%,100%{transform:translateX(-50%) scaleX(1);opacity:1}50%{transform:translateX(-50%) scaleX(.78);opacity:.65}}
+    /* ════ PAGE POLISH (2026-09-27) — ตั้งค่า/พอร์ต/งบดุล ════ */
+    #set-groups{display:flex;flex-direction:column;gap:26px}
+    .set-group-h{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted);margin:0 4px 10px}
+    .set-group-h i{color:var(--primary-l);font-size:12px}
+    .set-group-sec[data-grp=danger] .set-group-h,.set-group-sec[data-grp=danger] .set-group-h i{color:var(--red)}
+    .set-group{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
+    .set-group>.set-card{margin:0!important}
+    @media(min-width:1100px){.set-group{grid-template-columns:repeat(2,minmax(0,1fr))}.set-group>.set-card:only-child{grid-column:1/-1}}
+    .set-danger-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+    .inv-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+    .inv-noport{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;min-height:170px;padding:24px}
+    .inv-noport>i{font-size:26px;color:var(--primary-l);opacity:.75;margin-bottom:4px}
+    .inv-noport-t{font-size:14px;font-weight:600;color:var(--text)}
+    .inv-noport-s{font-size:12.5px;color:var(--muted);margin-bottom:6px}
+    .inv-row-act>div{display:flex;gap:6px;justify-content:flex-end;flex-wrap:nowrap}
+    @media(max-width:700px){
+      .inv-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .inv-toolbar{width:100%}
+      .inv-tabs{width:100%}
+      .inv-tabs>.ftab{flex:1;justify-content:center}
+      .inv-ibtn{width:40px;height:40px;padding:0;justify-content:center}
+      .inv-ibtn .inv-lbl{display:none}
+      #inv-btn-add{flex:1;justify-content:center}
+    }
   </style>
 <!-- self-hosted analytics (GoatCounter) — aggregate pageviews only, no cookies, no personal
      data collected; see privacy.html section 1 for the disclosure. This is a single-page
@@ -2345,15 +2369,15 @@
           <span id="inv-countdown" style="color:var(--muted)"></span>
         </div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <div style="display:flex;gap:3px;background:var(--surface2);padding:3px;border-radius:9px">
+      <div class="inv-toolbar" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <div class="inv-tabs" style="display:flex;gap:3px;background:var(--surface2);padding:3px;border-radius:9px">
           <button id="inv-tab-port" class="ftab active" onclick="switchInvTab('portfolio')"><i class="fas fa-chart-pie"></i> <span data-i18n="inv_tab_port">พอร์ต</span></button>
           <button id="inv-tab-dca" class="ftab" onclick="switchInvTab('dca')"><i class="fas fa-arrows-rotate"></i> DCA</button>
           <button id="inv-tab-fav" class="ftab" onclick="switchInvTab('favstocks')"><i class="fas fa-star"></i> <span data-i18n="favstock_title">หุ้นที่ชื่นชอบ</span></button>
         </div>
-        <button class="btn btn-ghost" id="inv-btn-refresh" onclick="refreshAllInvPrices()"><i class="fas fa-rotate"></i> <span data-i18n="inv_refresh_prices">ดึงราคา</span></button>
-        <button class="btn btn-ghost" id="inv-btn-rebal" onclick="toggleRebalPanel(this)"><i class="fas fa-balance-scale"></i> Rebalancing</button>
-        <button class="btn btn-ghost" id="inv-btn-port" onclick="openPortModal()"><i class="fas fa-layer-group"></i> <span data-i18n="inv_manage_port">จัดการพอร์ต</span></button>
+        <button class="btn btn-ghost inv-ibtn" id="inv-btn-refresh" onclick="refreshAllInvPrices()" title="ดึงราคา" aria-label="ดึงราคา" data-i18n-title="inv_refresh_prices"><i class="fas fa-rotate"></i> <span class="inv-lbl" data-i18n="inv_refresh_prices">ดึงราคา</span></button>
+        <button class="btn btn-ghost inv-ibtn" id="inv-btn-rebal" onclick="toggleRebalPanel(this)" title="Rebalancing" aria-label="Rebalancing"><i class="fas fa-balance-scale"></i> <span class="inv-lbl">Rebalancing</span></button>
+        <button class="btn btn-ghost inv-ibtn" id="inv-btn-port" onclick="openPortModal()" title="จัดการพอร์ต" aria-label="จัดการพอร์ต" data-i18n-title="inv_manage_port"><i class="fas fa-layer-group"></i> <span class="inv-lbl" data-i18n="inv_manage_port">จัดการพอร์ต</span></button>
         <button class="btn btn-primary" id="inv-btn-add" onclick="openInvModal()"><i class="fas fa-plus"></i> <span data-i18n="inv_add">เพิ่มการลงทุน</span></button>
       </div>
     </div>
@@ -2364,7 +2388,7 @@
   <!-- ════ TAX ════ -->
   <div id="pg-tax" class="page">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-      <select id="tax-year" class="finput" style="width:110px" onchange="onTaxYearChange()"></select>
+      <select id="tax-year" class="finput" style="width:auto;min-width:150px" onchange="onTaxYearChange()"></select>
       <button class="btn btn-ghost" onclick="autoFillTax()"><i class="fas fa-magic"></i> <span data-i18n="tax_autofill">ดึงรายได้อัตโนมัติ</span></button>
       <span id="tax-autofill-note" style="font-size:12px;color:var(--muted)"></span>
     </div>
@@ -2566,7 +2590,7 @@
         <div class="spinner" style="margin:0 auto"></div>
       </div>
     </div>
-    <div class="set-card">
+    <div class="set-card" id="set-sync-card">
       <div class="set-title"><i class="fas fa-cloud" style="color:#06b6d4"></i> <span data-i18n="set_cloud_title">Firebase Cloud Sync</span></div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:10px" data-i18n="set_cloud_desc">ซิงค์ข้อมูลข้ามอุปกรณ์ผ่าน Firebase Firestore</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -2576,12 +2600,16 @@
         <button class="btn btn-ghost" style="border-color:#f59e0b;color:#f59e0b" onclick="recoverData().then(r=>{ if(!r) toast(tr('no_recoverable_data'),'info'); })"><i class="fas fa-life-ring"></i> <span data-i18n="set_recover">กู้คืนข้อมูล</span></button>
       </div>
     </div>
-    <div class="set-card" style="border-color:rgba(239,68,68,.35)">
+    <div class="set-card" id="set-delacc-card" style="border-color:rgba(239,68,68,.35)">
       <div class="set-title"><i class="fas fa-user-slash" style="color:#ef4444"></i> <span data-i18n="set_delacc_title">ลบบัญชี</span></div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.7" data-i18n="set_delacc_desc">ลบบัญชีและข้อมูลทั้งหมดของคุณอย่างถาวร ทั้งในเครื่องและบนคลาวด์ — การกระทำนี้ไม่สามารถกู้คืนได้</div>
       <button class="btn" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ef4444" onclick="deleteMyAccount()"><i class="fas fa-trash-alt"></i> <span data-i18n="set_delacc_btn">ลบบัญชีของฉันอย่างถาวร</span></button>
+      <div class="set-danger-row">
+        <div><div style="font-size:13.5px;font-weight:600" data-i18n="set_clear_all">ล้างข้อมูลทั้งหมด</div><div style="font-size:12px;color:var(--muted)" data-i18n="set_clear_all_desc">ลบรายการทั้งหมดในบัญชีนี้ แต่ยังเก็บบัญชีไว้</div></div>
+        <button class="btn btn-danger" onclick="clearAll()"><i class="fas fa-trash"></i> <span data-i18n="set_clear_all">ล้างข้อมูลทั้งหมด</span></button>
+      </div>
     </div>
-    <div class="set-card">
+    <div class="set-card" id="set-pin-card">
       <div class="set-title"><i class="fas fa-keypad" style="color:#a78bfa"></i> <span data-i18n="set_pin_title">ตั้ง PIN สำหรับปลดล็อก</span></div>
       <div id="pin-status" style="font-size:13px;margin-bottom:14px;color:var(--muted)" data-i18n="set_pin_none">ยังไม่ได้ตั้ง PIN</div>
       <div id="pin-inline-form">
@@ -2601,7 +2629,7 @@
       <button class="btn btn-ghost" id="pin-clear-btn" onclick="clearPin()" style="display:none;margin-top:8px"><i class="fas fa-trash"></i> <span data-i18n="set_pin_delete">ลบ PIN</span></button>
     </div>
 
-    <div class="set-card">
+    <div class="set-card" id="set-security-card">
       <div class="set-title"><i class="fas fa-shield-alt" style="color:#10b981"></i> <span data-i18n="set_security_title">ความปลอดภัย</span></div>
       <div class="fg">
         <label class="flabel" data-i18n="set_autolock">ล็อกแอปอัตโนมัติหลังไม่ใช้งาน</label>
@@ -2620,32 +2648,31 @@
       </div>
       <div style="font-size:12px;color:var(--muted);margin-top:8px"><i class="fas fa-info-circle"></i> <span data-i18n="set_session_expire">Session หมดอายุหลัง 30 วัน — ต้อง login ใหม่</span></div>
     </div>
-    <div class="set-card">
+    <div class="set-card" id="set-2fa-card">
       <div class="set-title"><i class="fas fa-mobile-alt" style="color:#f59e0b"></i> <span data-i18n="set_2fa_title">ยืนยันตัวตน 2 ขั้นตอน (2FA)</span></div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:12px" data-i18n="set_2fa_desc">เพิ่มความปลอดภัยอีกชั้นตอน login — ใช้แอป Authenticator (Google Authenticator, Authy ฯลฯ) นอกเหนือจากรหัสผ่าน</div>
       <div id="totp-status-box"></div>
     </div>
-    <div class="set-card">
+    <div class="set-card" id="set-snap-card">
       <div class="set-title"><i class="fas fa-history" style="color:#10b981"></i> <span data-i18n="snap_title">ประวัติข้อมูล & กู้คืนย้อนหลัง</span></div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:12px" data-i18n="snap_desc">ระบบจะเก็บจุดคืนค่าอัตโนมัติวันละ 1 ครั้ง (เก็บย้อนหลังสูงสุด 30 จุด) หรือกดสร้างเองได้ก่อนแก้ไขข้อมูลครั้งใหญ่ — เก็บไว้ในเครื่องนี้เท่านั้น ไม่ sync ข้ามอุปกรณ์</div>
       <button class="btn btn-ghost" onclick="createSnapshot('manual');renderSnapshotList();toast(tr('snap_created'),'success')" style="margin-bottom:12px"><i class="fas fa-camera"></i> <span data-i18n="snap_create_btn">สร้างจุดคืนค่าตอนนี้</span></button>
       <div id="snapshot-list"></div>
     </div>
-    <div class="set-card">
+    <div class="set-card" id="set-data-card">
       <div class="set-title"><i class="fas fa-database" style="color:var(--amber)"></i> <span data-i18n="set_data_title">จัดการข้อมูล</span></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-ghost" onclick="exportData()"><i class="fas fa-download"></i> <span data-i18n="set_export_json">ส่งออก JSON</span></button>
         <button class="btn btn-ghost" onclick="exportCSV()"><i class="fas fa-file-csv"></i> <span data-i18n="set_export_csv">ส่งออก CSV</span></button>
-        <button class="btn btn-ghost" onclick="printMonthlyReport()" style="border-color:rgba(16,185,129,.4);color:#10b981"><i class="fas fa-print"></i> <span data-i18n="set_print_report">พิมพ์รายงาน</span></button>
-        <button class="btn btn-ghost" onclick="openShareModal()" style="border-color:rgba(6,182,212,.4);color:var(--cyan)"><i class="fas fa-share-alt"></i> <span data-i18n="set_shareable">สรุปแชร์ได้</span></button>
+        <button class="btn btn-ghost" onclick="printMonthlyReport()"><i class="fas fa-print"></i> <span data-i18n="set_print_report">พิมพ์รายงาน</span></button>
+        <button class="btn btn-ghost" onclick="openShareModal()"><i class="fas fa-share-alt"></i> <span data-i18n="set_shareable">สรุปแชร์ได้</span></button>
         <button class="btn btn-ghost" onclick="importData()"><i class="fas fa-upload"></i> <span data-i18n="set_import_json">นำเข้า JSON</span></button>
         <button class="btn btn-ghost" onclick="openArchiveModal()"><i class="fas fa-box-archive"></i> <span data-i18n="set_archive">เก็บถาวรรายการเก่า</span></button>
-        <button class="btn btn-ghost" id="pwa-install-btn" onclick="pwaInstall()" style="display:none;border-color:rgba(124,58,237,.4);color:var(--primary-l)"><i class="fas fa-mobile-screen"></i> <span data-i18n="set_install_app">ติดตั้งเป็นแอป</span></button>
-        <button class="btn btn-danger" onclick="clearAll()"><i class="fas fa-trash"></i> <span data-i18n="set_clear_all">ล้างข้อมูลทั้งหมด</span></button>
+        <button class="btn btn-ghost" id="pwa-install-btn" onclick="pwaInstall()" style="display:none"><i class="fas fa-mobile-screen"></i> <span data-i18n="set_install_app">ติดตั้งเป็นแอป</span></button>
       </div>
     </div>
 
-    <div class="set-card">
+    <div class="set-card" id="set-onb-card">
       <div class="set-title"><i class="fas fa-rocket" style="color:var(--primary-l)"></i> <span data-i18n="onb_title">เริ่มต้นใช้งาน</span></div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7" data-i18n="onb_sub">ทำ 6 ขั้นนี้ให้ครบ แล้วคุณจะได้ประโยชน์จาก MoneyMind เต็มที่</p>
       <button class="btn btn-ghost" onclick="_onbReopen()"><i class="fas fa-list-check"></i> <span data-i18n="onb_reopen">ดูขั้นตอนเริ่มต้นใช้งานอีกครั้ง</span></button>
@@ -5859,7 +5886,7 @@ const I18N = {
     set_delacc_title:'ลบบัญชี',set_delacc_desc:'ลบบัญชีและข้อมูลทั้งหมดของคุณอย่างถาวร ทั้งในเครื่องและบนคลาวด์ — การกระทำนี้ไม่สามารถกู้คืนได้',set_delacc_btn:'ลบบัญชีของฉันอย่างถาวร',
     set_pin_title:'ตั้ง PIN สำหรับปลดล็อก',set_pin_none:'ยังไม่ได้ตั้ง PIN',lock_needs_pin:'บัญชีนี้ล็อกอินด้วย Google/Apple/LINE — การล็อกอัตโนมัติจะทำงานเมื่อตั้ง PIN ด้านล่างแล้ว',set_pin_active:'✅ ตั้ง PIN แล้ว — ใช้ปลดล็อกแทนรหัสผ่านได้',set_pin_new:'PIN ใหม่ (6 หลัก)',set_pin_confirm:'ยืนยัน PIN',set_pin_save:'บันทึก PIN',set_pin_delete:'ลบ PIN',
     set_security_title:'ความปลอดภัย',set_autolock:'ล็อกแอปอัตโนมัติหลังไม่ใช้งาน',set_lock_off:'ปิด (ไม่ล็อก)',set_lock_5:'5 นาที',set_lock_10:'10 นาที',set_lock_15:'15 นาที (แนะนำ)',set_lock_30:'30 นาที',set_lock_60:'1 ชั่วโมง',set_lock_now:'ล็อกแอปทันที',set_session_expire:'Session หมดอายุหลัง 30 วัน — ต้อง login ใหม่',
-    set_data_title:'จัดการข้อมูล',set_export_json:'ส่งออก JSON',set_export_csv:'ส่งออก CSV',set_print_report:'พิมพ์รายงาน',set_shareable:'สรุปแชร์ได้',set_import_json:'นำเข้า JSON',set_clear_all:'ล้างข้อมูลทั้งหมด',
+    set_data_title:'จัดการข้อมูล',set_export_json:'ส่งออก JSON',set_export_csv:'ส่งออก CSV',set_print_report:'พิมพ์รายงาน',set_shareable:'สรุปแชร์ได้',set_import_json:'นำเข้า JSON',set_clear_all:'ล้างข้อมูลทั้งหมด',set_grp_account:'บัญชี',set_grp_ai:'AI',set_grp_connect:'การเชื่อมต่อ & แจ้งเตือน',set_grp_security:'ความปลอดภัย',set_grp_data:'ข้อมูล',set_grp_other:'อื่นๆ',set_grp_danger:'โซนอันตราย',set_clear_all_desc:'ลบรายการทั้งหมดในบัญชีนี้ แต่ยังเก็บบัญชีไว้',inv_cost_total:'ต้นทุนรวม',inv_asset_count:'จำนวนสินทรัพย์',inv_in_ports:'ใน {n} พอร์ต',inv_no_port_group:'ยังไม่ได้แบ่งพอร์ต',plan_inc_year:'รายรับ/ปี',plan_exp_year:'รายจ่าย/ปี',plan_nw_accum:'ทรัพย์สินสะสม',plan_inc:'รายรับ',plan_exp:'รายจ่าย',plan_bal_month:'คงเหลือ/เดือน',
     dh_networth:'ความมั่งคั่งสุทธิ (Net Worth)',dh_assets_minus_debts:'สินทรัพย์ − หนี้สิน',dh_income:'รายรับ',dh_expense:'รายจ่าย',dh_this_month:'เดือนนี้',dh_saving:'ออม',dh_remaining:'คงเหลือ',dh_remaining_formula:'รายรับ − รายจ่าย − ออม',dh_portfolio:'พอร์ตลงทุน',dh_current_value:'มูลค่าปัจจุบัน',dh_exp_by_cat:'รายจ่ายแยกหมวด',dh_hide_transfer:'ซ่อนเงินโอน/ถอน',dh_income_vs_exp:'รายรับ vs รายจ่าย 6 เดือน',
     vs_month:'เทียบกับ',budget_per_month:'งบ/เดือน',baht_per_month:'฿/เดือน',budget_by_cat:'งบประมาณแยกหมวด',over_budget:'เกิน!',set_budget_title:'งบประมาณตามหมวดหมู่',set_budget_desc:'ตั้งงบต่อเดือนแยกตามหมวดหมู่ — เปิด "จัดสรรทุกบาท" เพื่อดูว่ารายรับที่ยังไม่ได้จัดสรรเหลือเท่าไหร่ และเปิด "ทบงบไปเดือนถัดไป" ให้งบที่เหลือใช้จากเดือนก่อนรวมเข้าเดือนนี้อัตโนมัติ',set_budget_income_target:'รายรับเป้าหมาย/เดือน (ว่าง = ใช้รายรับจริงเดือนนี้)',set_budget_rollover:'ทบงบที่เหลือไปเดือนถัดไป (Rollover)',catbudget:'งบประมาณตามหมวดหมู่',budget_zb_income:'รายรับเป้าหมาย',budget_zb_assigned:'จัดสรรแล้ว',budget_zb_unassigned:'ยังไม่ได้จัดสรร',budget_zb_effective:'งบที่ใช้ได้จริง:',budget_zb_carry:'ทบมา',
     hs_savings_rate:'อัตราการออม',hs_of_income:'ของรายรับ',hs_debt_burden:'ภาระหนี้',hs_debt:'หนี้',hs_no_debt:'ไม่มีหนี้',hs_emergency_fund:'เงินสำรองฉุกเฉิน',hs_months:'เดือน',hs_investment:'การลงทุน',hs_portfolio:'พอร์ต',hs_excellent:'ดีเยี่ยม',hs_good:'ดี',hs_fair:'พอใช้',hs_needs_work:'ต้องปรับปรุง',hs_calc_note:'คำนวณจากค่าเฉลี่ย 6 เดือนย้อนหลัง',
@@ -5965,7 +5992,7 @@ const I18N = {
     set_delacc_title:'Delete Account',set_delacc_desc:'Permanently delete your account and all your data, both on this device and in the cloud — this cannot be undone.',set_delacc_btn:'Delete My Account Permanently',
     set_pin_title:'Set Unlock PIN',set_pin_none:'No PIN set',lock_needs_pin:'This account signs in with Google/Apple/LINE — auto-lock activates once you set a PIN below.',set_pin_active:'✅ PIN is set — use it to unlock instead of password',set_pin_new:'New PIN (6 digits)',set_pin_confirm:'Confirm PIN',set_pin_save:'Save PIN',set_pin_delete:'Delete PIN',
     set_security_title:'Security',set_autolock:'Auto-lock app after inactivity',set_lock_off:'Off (no lock)',set_lock_5:'5 minutes',set_lock_10:'10 minutes',set_lock_15:'15 minutes (recommended)',set_lock_30:'30 minutes',set_lock_60:'1 hour',set_lock_now:'Lock App Now',set_session_expire:"Session expires after 30 days — you'll need to log in again",
-    set_data_title:'Data Management',set_export_json:'Export JSON',set_export_csv:'Export CSV',set_print_report:'Print Report',set_shareable:'Shareable Summary',set_import_json:'Import JSON',set_clear_all:'Clear All Data',
+    set_data_title:'Data Management',set_export_json:'Export JSON',set_export_csv:'Export CSV',set_print_report:'Print Report',set_shareable:'Shareable Summary',set_import_json:'Import JSON',set_clear_all:'Clear All Data',set_grp_account:'Account',set_grp_ai:'AI',set_grp_connect:'Connections & Alerts',set_grp_security:'Security',set_grp_data:'Data',set_grp_other:'Other',set_grp_danger:'Danger Zone',set_clear_all_desc:'Delete every record in this account but keep the account',inv_cost_total:'Total Cost',inv_asset_count:'Assets',inv_in_ports:'in {n} portfolios',inv_no_port_group:'No portfolio groups yet',plan_inc_year:'Income/yr',plan_exp_year:'Expense/yr',plan_nw_accum:'Accumulated assets',plan_inc:'Income',plan_exp:'Expense',plan_bal_month:'Balance/mo',
     dh_networth:'Net Worth',dh_assets_minus_debts:'Assets − Liabilities',dh_income:'Income',dh_expense:'Expense',dh_this_month:'This Month',dh_saving:'Saved',dh_remaining:'Remaining',dh_remaining_formula:'Income − Expense − Savings',dh_portfolio:'Portfolio',dh_current_value:'Current Value',dh_exp_by_cat:'Expenses by Category',dh_hide_transfer:'Hide Transfer/Cash',dh_income_vs_exp:'Income vs Expense (6 Months)',
     vs_month:'vs.',budget_per_month:'Budget/month',baht_per_month:'฿/month',budget_by_cat:'Budget by Category',over_budget:'Over!',set_budget_title:'Category Budget',set_budget_desc:'Set a monthly budget per category — turn on "Assign every baht" to see how much unassigned income is left, and "Roll over unused budget" to carry last month\'s leftover into this month automatically.',set_budget_income_target:'Target income/month (blank = use this month\'s actual income)',set_budget_rollover:'Roll over unused budget (Rollover)',catbudget:'Category Budget',budget_zb_income:'Target Income',budget_zb_assigned:'Assigned',budget_zb_unassigned:'Unassigned',budget_zb_effective:'Available:',budget_zb_carry:'rolled over',
     hs_savings_rate:'Savings Rate',hs_of_income:'of income',hs_debt_burden:'Debt Burden',hs_debt:'Debt',hs_no_debt:'No debt',hs_emergency_fund:'Emergency Fund',hs_months:'months',hs_investment:'Investment',hs_portfolio:'Portfolio',hs_excellent:'Excellent',hs_good:'Good',hs_fair:'Fair',hs_needs_work:'Needs Work',hs_calc_note:'Calculated from 6-month average',
@@ -6733,7 +6760,7 @@ function renderTxChart(year,month){
   if(_txChart){_txChart.destroy();_txChart=null;}
   if(!DB.transactions.length){el.innerHTML='';return;}
   const now=new Date(); const nowY=now.getFullYear();
-  const fmtK=v=>v>=1000000?'฿'+(v/1000000).toFixed(1)+'M':v>=1000?'฿'+(v/1000).toFixed(0)+'K':'฿'+Math.round(v);
+  const fmtK=v=>{ const a=Math.abs(v), sg=v<0?'-':''; return sg+(a>=1000000?'฿'+(a/1000000).toFixed(1)+'M':a>=1000?'฿'+(a/1000).toFixed(0)+'K':'฿'+Math.round(a)); };
   const MN=monthShortArr();
   let labels=[],datasets=[],yearList=[];
 
@@ -8019,9 +8046,9 @@ function _invTableRows(list){
       <td data-label="ราคาปัจจุบัน"><div style="font-weight:600;color:var(--cyan)">${curP}</div>${updAt}</td>
       <td data-label="มูลค่า" style="font-weight:700">${fmt(inv.value)}${equityLine}</td>
       <td data-label="กำไร/ขาดทุน" style="color:${pnl>=0?'var(--green)':'var(--red)'};font-weight:700">${pnl>=0?'+':''}${fmt(pnl)}<div style="font-size:11px;opacity:.75">${pnl>=0?'+':''}${pnlP}%</div></td>
-      <td><button class="icon-btn" onclick="refreshInvPrice('${inv.id}')" title="อัปเดตราคา"><i class="fas fa-sync-alt"></i></button>
-        <button class="icon-btn" onclick="editInv('${inv.id}')"><i class="fas fa-pen"></i></button>
-        <button class="icon-btn del" onclick="delInv('${inv.id}')"><i class="fas fa-trash"></i></button></td>
+      <td class="inv-row-act"><div><button class="icon-btn" onclick="refreshInvPrice('${inv.id}')" title="อัปเดตราคา" aria-label="อัปเดตราคา"><i class="fas fa-sync-alt"></i></button>
+        <button class="icon-btn" onclick="editInv('${inv.id}')" aria-label="แก้ไข"><i class="fas fa-pen"></i></button>
+        <button class="icon-btn del" onclick="delInv('${inv.id}')" aria-label="ลบ"><i class="fas fa-trash"></i></button></div></td>
     </tr>`;
   }).join('');
 }
@@ -8107,10 +8134,11 @@ function renderInv(){
   }
 
   // Summary bar
-  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px">
+  let html=`<div class="inv-stat-grid">
     <div class="stat-card sc-blue"><div class="stat-label">${tr('inv_total_value')}</div><div class="stat-value" style="font-size:20px">${fmt(totVal)}</div></div>
     <div class="stat-card ${totPnL>=0?'sc-green':'sc-red'}"><div class="stat-label">${tr('inv_total_pnl')}</div><div class="stat-value" style="font-size:20px;color:${totPnL>=0?'var(--green)':'var(--red)'}">${totPnL>=0?'+':''}${fmt(totPnL)}</div><div class="stat-sub">${totPnL>=0?'+':''}${totPP}%</div></div>
-    <div class="stat-card sc-amber"><div class="stat-label">${tr('inv_num_ports')}</div><div class="stat-value" style="font-size:20px">${ports.length||'-'}</div><div class="stat-sub">${tr('inv_num_assets')} ${allInv.length}</div></div>
+    <div class="stat-card sc-blue"><div class="stat-label">${tr('inv_cost_total')}</div><div class="stat-value" style="font-size:20px">${fmt(totCost)}</div></div>
+    <div class="stat-card sc-amber"><div class="stat-label">${tr('inv_asset_count')}</div><div class="stat-value" style="font-size:20px">${allInv.length}</div>${ports.length?`<div class="stat-sub">${tr('inv_in_ports').replace('{n}',ports.length)}</div>`:''}</div>
   </div>`;
 
   // Pie chart + portfolio list
@@ -8118,7 +8146,7 @@ function renderInv(){
     <div class="chart-card"><div class="chart-title"><i class="fas fa-chart-pie" style="color:var(--amber)"></i> ${tr('inv_allocation')}</div>
       <div class="chart-wrap" id="port-chart-wrap"><canvas id="ch-port"></canvas></div></div>
     <div style="display:flex;flex-direction:column;gap:8px">
-      ${ports.length===0?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;color:var(--muted);font-size:13px"><i class="fas fa-layer-group" style="font-size:28px;display:block;margin-bottom:8px;opacity:.3"></i>${tr('inv_no_port')}<br>${tr('inv_no_port_hint')}</div>`:
+      ${ports.length===0?`<div class="card inv-noport"><i class="fas fa-layer-group"></i><div class="inv-noport-t">${tr('inv_no_port_group')}</div><div class="inv-noport-s">${tr('inv_no_port_hint')}</div><button class="btn btn-ghost btn-sm" onclick="openPortModal()"><i class="fas fa-layer-group"></i> ${tr('inv_manage_port')}</button></div>`:
         ports.map((p,i)=>{
           const pInv=allInv.filter(x=>x.portId===p.id);
           const pVal=pInv.reduce((s,x)=>s+x.value,0);
@@ -9552,7 +9580,7 @@ function calcTaxLive(){
     </div>`).join('')||`<div style="font-size:13px;color:var(--muted)">${tr('tax_exempt')}</div>`;
 
   p.innerHTML=`
-    <div style="font-size:15px;font-weight:700;margin-bottom:14px">📊 ${tr('tax_result_title')}</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="fas fa-chart-column" style="color:var(--primary-l)"></i> ${tr('tax_result_title')}</div>
     <div class="tax-res-row"><span>${tr('tax_total_income')}</span><span>${fmt(totalInc)}</span></div>
     <div class="tax-res-row"><span>${tr('tax_less_expense')}</span><span style="color:var(--green)">−${fmt(totalExp)}</span></div>
     <div class="tax-res-row"><span>${tr('tax_less_deduct')}</span><span style="color:var(--green)">−${fmt(totalDeduct+dDonation)}</span></div>
@@ -9815,11 +9843,11 @@ function renderPlanChart(year){
   if(!canvas) return;
   if(_planChart){ _planChart.destroy(); _planChart=null; }
 
-  const fmtK=v=>v>=1000000?'฿'+(v/1000000).toFixed(1)+'M':v>=1000?'฿'+(v/1000).toFixed(0)+'K':'฿'+Math.round(v);
+  const fmtK=v=>{ const a=Math.abs(v), sg=v<0?'-':''; return sg+(a>=1000000?'฿'+(a/1000000).toFixed(1)+'M':a>=1000?'฿'+(a/1000).toFixed(0)+'K':'฿'+Math.round(a)); };
   const tooltipFmt=ctx=>'  '+ctx.dataset.label+': ฿'+Math.round(ctx.raw).toLocaleString('th-TH');
   const scaleOpts={
     x:{ticks:{color:_chartTickColor(),font:{family:'Sarabun',size:11}},grid:{color:_chartGridColor(.05)}},
-    y:{ticks:{color:_chartTickColor(),font:{family:'Sarabun',size:10},callback:fmtK},grid:{color:_chartGridColor(.06)},beginAtZero:true},
+    y:{ticks:{color:_chartTickColor(),font:{family:'Sarabun',size:10},callback:fmtK,precision:0},grid:{color:_chartGridColor(.06)},beginAtZero:true},
   };
 
   if(year==null){
@@ -9840,20 +9868,22 @@ function renderPlanChart(year){
     _planChart=new Chart(canvas,{
       type:'bar',
       data:{labels,datasets:[
-        {type:'bar',label:'รายรับ/ปี',data:inc,backgroundColor:'rgba(16,185,129,.65)',borderRadius:5,order:2},
-        {type:'bar',label:'รายจ่าย/ปี',data:exp,backgroundColor:'rgba(239,68,68,.65)',borderRadius:5,order:2},
-        {type:'line',label:'ทรัพย์สินสะสม',data:nwArr,borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.08)',borderWidth:2,pointRadius:3,fill:true,yAxisID:'y2',order:1},
+        {type:'bar',label:tr('plan_inc_year'),data:inc,backgroundColor:'rgba(16,185,129,.65)',borderRadius:5,order:2},
+        {type:'bar',label:tr('plan_exp_year'),data:exp,backgroundColor:'rgba(239,68,68,.65)',borderRadius:5,order:2},
+        {type:'line',label:tr('plan_nw_accum'),data:nwArr,borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.08)',borderWidth:2,pointRadius:3,fill:true,yAxisID:'y2',order:1},
       ]},
       options:{
         responsive:true,maintainAspectRatio:false,
         onClick(e,els){
-          if(els.length){ renderPlanChart(sy+els[0].index); }
+          // ห้าม destroy กราฟใน onClick ตรงๆ (Chart.js ยัง deref legend หลัง callback) — เลื่อนไป tick ถัดไป
+          if(els.length){ const y=sy+els[0].index; setTimeout(()=>renderPlanChart(y),0); }
         },
         plugins:{
           legend:{labels:{color:_chartTickColor(),font:{family:'Sarabun',size:12}}},
           tooltip:{callbacks:{label:tooltipFmt}},
         },
         scales:{...scaleOpts,
+          y:{...scaleOpts.y,display:inc.some(v=>v)||exp.some(v=>v)},
           y2:{position:'right',ticks:{color:'#a78bfa',font:{family:'Sarabun',size:10},callback:fmtK},grid:{display:false}},
         },
       }
@@ -9875,9 +9905,9 @@ function renderPlanChart(year){
     _planChart=new Chart(canvas,{
       type:'bar',
       data:{labels:MN,datasets:[
-        {type:'bar',label:'รายรับ',data:inc,backgroundColor:'rgba(16,185,129,.65)',borderRadius:5,order:2},
-        {type:'bar',label:'รายจ่าย',data:exp,backgroundColor:'rgba(239,68,68,.65)',borderRadius:5,order:2},
-        {type:'line',label:'คงเหลือ/เดือน',data:bal,borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.08)',borderWidth:2,pointRadius:5,pointHoverRadius:7,fill:true,order:1},
+        {type:'bar',label:tr('plan_inc'),data:inc,backgroundColor:'rgba(16,185,129,.65)',borderRadius:5,order:2},
+        {type:'bar',label:tr('plan_exp'),data:exp,backgroundColor:'rgba(239,68,68,.65)',borderRadius:5,order:2},
+        {type:'line',label:tr('plan_bal_month'),data:bal,borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.08)',borderWidth:2,pointRadius:5,pointHoverRadius:7,fill:true,order:1},
       ]},
       options:{
         responsive:true,maintainAspectRatio:false,
@@ -21027,6 +21057,74 @@ function renderDailyReminderSettings(){
   if(typeof renderSettings!=='function') return;
   var _origRSRem=renderSettings;
   renderSettings=function(){ var r=_origRSRem.apply(this,arguments); try{ renderDailyReminderSettings(); }catch(e){} return r; };
+})();
+
+// ══════════════════════════════════════════
+// SETTINGS GROUPS (2026-09-27) — จัดการ์ดตั้งค่าเป็นกลุ่ม
+// การ์ดถูก append เข้า #pg-settings จากหลายจุด (sync+async, บางตัวนอก renderSettings)
+// จึงใช้ MutationObserver บน children โดยตรง แทนการ patch ต่อท้ายทีละที่ — การ์ดใหม่
+// ที่ไม่รู้จัก id ตกไปกลุ่ม "อื่นๆ" เสมอ ไม่มีวันหาย
+// ══════════════════════════════════════════
+(function(){
+  var GROUPS=[
+    ['account','fa-user-circle',['username-change-card','email-settings-card','google-link-card']],
+    ['ai','fa-robot',['ai-scan-card','ai-sub-card']],
+    ['connect','fa-plug',['line-connect-card','gmail-connect-card','daily-reminder-card','gmail-import-section']],
+    ['security','fa-shield-halved',['set-pin-card','set-security-card','set-2fa-card']],
+    ['data','fa-database',['set-sync-card','set-snap-card','set-data-card','set-onb-card']],
+    ['other','fa-ellipsis',[]],
+    ['danger','fa-triangle-exclamation',['set-delacc-card']]
+  ];
+  function arrange(){
+    var pg=document.getElementById('pg-settings'); if(!pg) return;
+    var cards=[].slice.call(pg.children).filter(function(c){ return c.classList&&c.classList.contains('set-card'); });
+    var wrap=document.getElementById('set-groups');
+    if(!cards.length && wrap) return _tidy(wrap);
+    if(!wrap){
+      wrap=document.createElement('div'); wrap.id='set-groups';
+      GROUPS.forEach(function(g){
+        var sec=document.createElement('section'); sec.className='set-group-sec'; sec.setAttribute('data-grp',g[0]);
+        sec.innerHTML='<div class="set-group-h"><i class="fas '+g[1]+'"></i><span data-i18n="set_grp_'+g[0]+'">'+tr('set_grp_'+g[0])+'</span></div><div class="set-group"></div>';
+        wrap.appendChild(sec);
+      });
+    }
+    pg.appendChild(wrap);
+    cards.forEach(function(c){
+      var g=null; for(var i=0;i<GROUPS.length;i++){ if(c.id && GROUPS[i][2].indexOf(c.id)>=0){ g=GROUPS[i]; break; } }
+      if(!g) g=GROUPS[5];
+      var box=wrap.querySelector('[data-grp="'+g[0]+'"] .set-group');
+      // การ์ดที่ถูกสร้างใหม่ (id เดิม) แทนของเก่า — ลบใบเก่าในกลุ่มทิ้ง กันซ้อน
+      if(c.id){ [].slice.call(box.children).forEach(function(o){ if(o!==c && o.id===c.id) o.remove(); }); }
+      box.appendChild(c);
+    });
+    _tidy(wrap);
+  }
+  function _tidy(wrap){
+    GROUPS.forEach(function(g){
+      var box=wrap.querySelector('[data-grp="'+g[0]+'"] .set-group'); if(!box) return;
+      var order=g[2];
+      [].slice.call(box.children).sort(function(a,b){
+        var ia=order.indexOf(a.id), ib=order.indexOf(b.id);
+        return (ia<0?999:ia)-(ib<0?999:ib);
+      }).forEach(function(c){ box.appendChild(c); });
+      var gi=document.getElementById('gmail-import-section');
+      if(gi) gi.style.display=(DB&&DB.settings&&DB.settings.gmailImportUrl)?'':'none';
+      var visible=[].slice.call(box.children).some(function(c){ return c.style.display!=='none' && getComputedStyle(c).display!=='none'; });
+      box.parentNode.style.display=visible?'':'none';
+    });
+  }
+  var _pending=false, _mo=null;
+  function schedule(){ if(_pending) return; _pending=true; Promise.resolve().then(function(){ _pending=false; try{ arrange(); }catch(e){} }); }
+  function init(){
+    var pg=document.getElementById('pg-settings'); if(!pg||_mo) return;
+    _mo=new MutationObserver(function(list){
+      for(var i=0;i<list.length;i++){ if(list[i].addedNodes.length){ schedule(); return; } }
+    });
+    _mo.observe(pg,{childList:true});
+    schedule();
+  }
+  window._arrangeSettings=arrange;
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
 
 </script>
