@@ -1,17 +1,22 @@
 {
   "permissions": {
-    "defaultMode": "dontAsk",
     "allow": [
-    "Bash(cd /d \"D:\\\\wabbest\")",
-    "Bash(start \"\" \"http://localhost:8080\")",
-    "Bash(python -m http.server 8080)",
-    "Bash(python *)",
-    "Bash(git --version)",
-    "Bash(gh --version)",
-     "Bash(git *)",
-    "Edit",
-    "Write"
-  ]
+      "Bash(cd /d \"D:\\\\wabbest\")",
+      "Bash(start \"\" \"http://localhost:8080\")",
+      "Bash(python -m http.server 8080)",
+      "Bash(python *)",
+      "Bash(git --version)",
+      "Bash(gh --version)",
+      "Bash(git *)",
+      "Bash(npx eas submit*)",
+      "Bash(cd /d/wabbest/mobile && npx eas submit*)",
+      "Edit",
+      "Write",
+      "Bash(curl -s \"https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=https%3A%2F%2Fapp.moneymindth.com%2Flanding.html&strategy=mobile&category=performance\" -o .playwright-mcp/psi-before.json)",
+      "Bash(python -c ' *)",
+      "Bash(python -)"
+    ],
+    "defaultMode": "dontAsk"
   },
   "hooks": {
     "PostToolUse": [
@@ -20,8 +25,8 @@
         "hooks": [
           {
             "type": "command",
-            "shell": "powershell",
             "command": "$data = $input | Out-String | ConvertFrom-Json; $f = $data.tool_input.file_path; if ($f) { git -C 'D:\\wabbest' add $f; if ($?) { $name = Split-Path $f -Leaf; git -C 'D:\\wabbest' commit -m \"Auto-update: $name\"; git -C 'D:\\wabbest' push } }",
+            "shell": "powershell",
             "timeout": 30,
             "statusMessage": "Pushing to GitHub..."
           }

@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { View, ActivityIndicator, StyleSheet, BackHandler, Platform, Text, Alert, Linking, Pressable, Image, Animated, Easing, AccessibilityInfo } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, BackHandler, Platform, Text, Alert, Linking, Pressable, Image, Animated, Easing, AccessibilityInfo, ScrollView } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { WebViewErrorEvent, WebViewHttpErrorEvent, ShouldStartLoadRequest, WebViewOpenWindowEvent } from 'react-native-webview/lib/WebViewTypes';
 import * as FileSystem from 'expo-file-system';
@@ -287,6 +287,12 @@ export default function WebApp() {
   const [webSource, setWebSource] = useState<{ uri: string }>({ uri: WEB_URL });
   const lastGoodUrlRef = useRef<string>(WEB_URL);
 
+  // 🔍 Diagnostic build (iOS LINE app-switch investigation) — no Mac available to attach
+  // Safari Web Inspector, so surface captured line.me navigation URLs directly on-screen
+  // instead of console.log, so the user can just screenshot and send them back. Remove this
+  // whole overlay once the real fix (step 2 of the plan) lands and the URL pattern is known.
+  const [lineDiag, setLineDiag] = useState<string[]>([]);
+
   // Safety-net สำหรับ Apple Guideline 2.1.0 "App launches into a blank screen":
   // onLoadEnd ของ WebView บอกแค่ว่า HTML โหลดเสร็จ ไม่ได้แปลว่าเว็บแอป render UI สำเร็จจริง
   // ถ้า JS ฝั่งเว็บ crash ระหว่าง init (ก่อน checkLogin()/render เสร็จ) หน้าจอจะว่างเปล่าค้างถาวร
@@ -527,7 +533,16 @@ export default function WebApp() {
     // อาจใช้ระหว่าง flow เช่น การยืนยัน 2FA) โหลด inline ในแอปได้เลย ไม่ต้องเด้งออก external
     // browser เหมือนลิงก์ทั่วไป — ผู้ใช้ authorize เสร็จแล้ว LINE redirect กลับมาที่ WEB_HOST
     // ตามปกติ (ตรงกับ allowlist เดิมด้านบนอยู่แล้ว ไม่ต้องแก้อะไรเพิ่ม)
-    if (host && (host === 'line.me' || host.endsWith('.line.me'))) return true;
+    if (host && (host === 'line.me' || host.endsWith('.line.me'))) {
+      // 🔍 Diagnostic build (iOS LINE app-switch investigation) — capture what URL LINE
+      // actually navigates to when the user taps "Log-in with LINE app" on iOS, before we
+      // write any matching logic. Remove once the real fix (step 2 of the plan) lands.
+      if (Platform.OS === 'ios') {
+        console.log('[MM-LINE-DIAG]', req.isTopFrame, url);
+        setLineDiag((prev) => [...prev, `top=${req.isTopFrame} ${url}`].slice(-15));
+      }
+      return true;
+    }
     // ⚠️ ต้อง return false แบบ synchronous ทันที — native ฝั่ง Android block UI thread รอ JS ตอบ
     // แค่ 250ms (RNCWebViewClient.java: SHOULD_OVERRIDE_URL_LOADING_TIMEOUT) ถ้าตอบไม่ทันมันจะ
     // "ปล่อยให้โหลด" เองแล้วพัง — งานเปิดแอปจึงต้องโยนออกไปนอก call stack นี้เสมอ
@@ -734,7 +749,10 @@ export default function WebApp() {
         status = req.status;
       }
       if (status !== 'granted') {
-        injectPushError('ผู้ใช้ไม่อนุญาต notification permission (status=' + status + ')');
+        // user กด "ไม่อนุญาต" เองเป็นพฤติกรรมปกติ ไม่ใช่ error — เดิมยิงเข้า pipeline error report
+        // (Telegram + admin/errorStats) ปนกับบั๊กจริงจนอ่านไม่ออก; จำนวนคนที่เปิด push ดูได้จาก
+        // Admin Dashboard หัวข้อ admin_adopt_push อยู่แล้ว
+        console.log('[push] permission not granted:', status);
         return;
       }
       // projectId: ลอง extra.eas ก่อน (SDK ปกติ) fallback easConfig (บาง build type ไม่มี expoConfig เต็ม)
@@ -898,6 +916,26 @@ export default function WebApp() {
           </Pressable>
         </View>
       )}
+      {/* 🔍 Diagnostic build (iOS LINE app-switch investigation) — remove this whole block
+          once step 2 of the plan lands. No Mac available to attach Safari Web Inspector, so
+          this shows captured line.me navigation URLs on-screen — screenshot and send instead. */}
+      {Platform.OS === 'ios' && lineDiag.length > 0 && (
+        <View style={s.diagBox} pointerEvents="box-none">
+          <View style={s.diagInner}>
+            <View style={s.diagHeader}>
+              <Text style={s.diagTitle}>🔍 LINE diag ({lineDiag.length})</Text>
+              <Pressable onPress={() => setLineDiag([])}>
+                <Text style={s.diagClear}>ล้าง</Text>
+              </Pressable>
+            </View>
+            <ScrollView style={s.diagScroll}>
+              {lineDiag.map((line, i) => (
+                <Text key={i} style={s.diagLine} selectable>{line}</Text>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -905,6 +943,30 @@ export default function WebApp() {
 const s = StyleSheet.create({
   wrap:   { flex: 1, backgroundColor: C.bg },
   web:    { flex: 1, backgroundColor: C.bg },
+  diagBox: {
+    position: 'absolute',
+    top: 50,
+    left: 8,
+    right: 8,
+    maxHeight: 260,
+  },
+  diagInner: {
+    backgroundColor: 'rgba(10,10,20,0.94)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    padding: 10,
+  },
+  diagHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  diagTitle: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  diagClear: { color: C.primaryL, fontSize: 12, fontWeight: '700', paddingHorizontal: 6 },
+  diagScroll: { maxHeight: 210 },
+  diagLine: { color: '#d1d5db', fontSize: 10, marginBottom: 6 },
   loader: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: C.bg,
