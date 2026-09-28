@@ -18103,7 +18103,12 @@ function _loadModelViewer(){
 // ── ตัวละคร 2D ขยับ: เฟรม assets/rank/anim/{key}-{blink|ท่า}.webp ซ้อนบนภาพหลัก ──
 // กระพริบตาทุก 4–7 วิ · เปลี่ยนท่าทุก 10 วิ (ค้าง 4 วิ, เฟด .7s) วนตามลำดับ · ตัวที่ไม่อยู่ใน _RANK2D_ANIM = ภาพเดียวเหมือนเดิม
 // เฟรมทำจาก Gemini "แก้ภาพเดิม" + จัดตำแหน่งให้ตรงภาพหลัก (เฟรมหลับตาแทนแค่บริเวณตา) — เพิ่มตัวใหม่: commit ไฟล์ก่อนแล้วค่อยเพิ่ม key
-const _RANK2D_ANIM={'4m':['pose','hips','cross','thumb']};
+const _RANK2D_ANIM={
+  '1f':['pose','hips','cross','thumb'], '1m':['pose','hips','cross','thumb'],
+  '2f':['pose','hips','cross','thumb'], '2m':['pose','hips','cross'],
+  '3f':['pose','hips','cross','thumb'],
+  '4f':['pose','hips','cross','thumb'], '4m':['pose','hips','cross','thumb']
+};
 function _startRank2DAnim(){
   const st=document.querySelector('#_rankPopupBody .rank-stage');
   if(!st||st._anim) return;
