@@ -18119,9 +18119,7 @@ function _startRank2DAnim(){
   };
   Promise.all(['blink',...poses].map(load)).then(fr=>{
     if(!st.isConnected) return;
-    fr.forEach(im=>{ if(im) tilt.appendChild(im); });
-    // ให้ท่าหายใจลอยของทุกเฟรมเดินพร้อมภาพหลัก ไม่งั้นสลับเฟรมแล้วตัวกระตุก
-    try{ const a0=base.getAnimations()[0]; fr.forEach(im=>{ const a=im&&im.getAnimations()[0]; if(a0&&a) a.startTime=a0.startTime; }); }catch(e){}
+    fr.forEach(im=>{ if(im) bob.appendChild(im); });
     const blink=fr[0], ps=fr.slice(1).filter(Boolean);
     let posing=false, i=0;
     const doBlink=()=>{
