@@ -18109,7 +18109,7 @@ function _startRank2DAnim(){
   if(!st||st._anim) return;
   const key=st.dataset.key, poses=_RANK2D_ANIM[key];
   if(!poses||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
-  const tilt=st.querySelector('.rank-tilt'), base=tilt&&tilt.querySelector('.rank-char');
+  const bob=st.querySelector('.rank-bob'), base=bob&&bob.querySelector('.rank-char');
   if(!base) return;
   st._anim=true;
   const load=n=>{
