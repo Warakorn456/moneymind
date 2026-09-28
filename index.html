@@ -1704,7 +1704,8 @@
     .rank-aura{position:absolute;left:50%;top:14%;width:86%;height:62%;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle,var(--rc) 0%,transparent 68%);opacity:.38;filter:blur(12px);animation:rankAura 2.8s ease-in-out infinite}
     .rank-shadow{position:absolute;bottom:8px;left:50%;width:54%;height:12px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.5),transparent 72%);animation:rankShadow 3.2s ease-in-out infinite}
     .rank-tilt{position:relative;transition:transform .25s ease-out;transform-style:preserve-3d}
-    .rank-char{display:block;width:150px;height:auto;margin-bottom:6px;transform-origin:50% 100%;animation:rankIdle 3.2s ease-in-out infinite;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3));user-select:none;-webkit-user-drag:none;pointer-events:none}
+    .rank-bob{position:relative;transform-origin:50% 100%;animation:rankIdle 3.2s ease-in-out infinite}
+    .rank-char{display:block;width:150px;height:auto;margin-bottom:6px;transform-origin:50% 100%;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3));user-select:none;-webkit-user-drag:none;pointer-events:none}
     .rank-stage.hop .rank-char{animation:rankHop .6s cubic-bezier(.3,1.5,.5,1)}
     /* 2D ขยับ: เฟรมท่าอื่นซ้อนทับภาพหลัก แล้วเฟดสลับ (_startRank2DAnim) */
     .rank-tilt>.rank-char{transition:opacity .7s ease}
