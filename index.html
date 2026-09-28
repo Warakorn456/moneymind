@@ -18098,7 +18098,47 @@ function _loadModelViewer(){
   }
   return _mvLoading;
 }
+// ── ตัวละคร 2D ขยับ: เฟรม assets/rank/anim/{key}-{blink|ท่า}.webp ซ้อนบนภาพหลัก ──
+// กระพริบตาทุก 4–7 วิ · เปลี่ยนท่าทุก 10 วิ (ค้าง 4 วิ, เฟด .7s) วนตามลำดับ · ตัวที่ไม่อยู่ใน _RANK2D_ANIM = ภาพเดียวเหมือนเดิม
+// เฟรมทำจาก Gemini "แก้ภาพเดิม" + จัดตำแหน่งให้ตรงภาพหลัก (เฟรมหลับตาแทนแค่บริเวณตา) — เพิ่มตัวใหม่: commit ไฟล์ก่อนแล้วค่อยเพิ่ม key
+const _RANK2D_ANIM={'4m':['pose','hips','cross','thumb']};
+function _startRank2DAnim(){
+  const st=document.querySelector('#_rankPopupBody .rank-stage');
+  if(!st||st._anim) return;
+  const key=st.dataset.key, poses=_RANK2D_ANIM[key];
+  if(!poses||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+  const tilt=st.querySelector('.rank-tilt'), base=tilt&&tilt.querySelector('.rank-char');
+  if(!base) return;
+  st._anim=true;
+  const load=n=>{
+    const im=new Image(); im.className='rank-char rank-fr'+(n==='blink'?' rank-blink':''); im.alt=''; im.draggable=false;
+    im.src='assets/rank/anim/'+key+'-'+n+'.webp';
+    return im.decode().then(()=>im,()=>null);
+  };
+  Promise.all(['blink',...poses].map(load)).then(fr=>{
+    if(!st.isConnected) return;
+    fr.forEach(im=>{ if(im) tilt.appendChild(im); });
+    // ให้ท่าหายใจลอยของทุกเฟรมเดินพร้อมภาพหลัก ไม่งั้นสลับเฟรมแล้วตัวกระตุก
+    try{ const a0=base.getAnimations()[0]; fr.forEach(im=>{ const a=im&&im.getAnimations()[0]; if(a0&&a) a.startTime=a0.startTime; }); }catch(e){}
+    const blink=fr[0], ps=fr.slice(1).filter(Boolean);
+    let posing=false, i=0;
+    const doBlink=()=>{
+      if(!st.isConnected) return;
+      if(blink&&!posing){ blink.style.opacity='1'; setTimeout(()=>{ blink.style.opacity='0'; },150); }
+      setTimeout(doBlink,4000+Math.random()*3000);
+    };
+    const doPose=()=>{
+      if(!st.isConnected||!ps.length) return;
+      const p=ps[i++%ps.length]; posing=true;
+      p.style.opacity='1'; base.style.opacity='0';
+      setTimeout(()=>{ p.style.opacity='0'; base.style.opacity=''; setTimeout(()=>{ posing=false; },700); },4000);
+      setTimeout(doPose,10000);
+    };
+    setTimeout(doBlink,2000); setTimeout(doPose,3000);
+  });
+}
 async function _mountRank3D(){
+  _startRank2DAnim();
   if(!_rank3dEnabled()) return;
   const st=document.querySelector('#_rankPopupBody .rank-stage');
   if(!st||!_RANK3D_KEYS.has(st.dataset.key)||st.querySelector('model-viewer')) return;
