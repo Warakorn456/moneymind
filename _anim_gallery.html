@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8"><title>Rank 2D Gallery</title>
+<meta name="robots" content="noindex">
+<style>
+body{margin:0;background:#12121e;color:#e2e8f0;font-family:system-ui,sans-serif}
+h1{font-size:18px;margin:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;padding:0 16px 24px}
+.cell{background:#1c1c2e;border-radius:14px;padding:8px;text-align:center}
+.cell b{display:block;font-size:13px;margin-top:4px}
+.cell small{color:#94a3b8;font-size:11px}
+.bob{position:relative;width:100%;aspect-ratio:2/3;transform-origin:50% 100%;animation:idle 3.2s ease-in-out infinite}
+.bob img{position:absolute;inset:0;width:100%;height:100%}
+.base{transition:opacity .7s ease}
+.fr{opacity:0;transition:opacity .7s ease}
+.fr.blink{transition:none}
+.lbl{position:absolute;left:4px;top:4px;font-size:10px;background:#0008;padding:1px 5px;border-radius:6px}
+@keyframes idle{0%,100%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-4px) scale(.992,1.018)}60%{transform:translateY(-6px) scale(1,1.008)}}
+</style></head><body>
+<h1>ตัวละครแรงค์ 2D ขยับ — ครบ 16 ตัว (กระพริบ 4–7 วิ · เปลี่ยนท่าทุก 10 วิ ค้าง 4 วิ)</h1>
+<div class="grid" id="g"></div>
+<script>
+const A={
+  '1f':['pose','hips','cross','thumb'],'1m':['pose','hips','cross','thumb'],
+  '2f':['pose','hips','cross','thumb'],'2m':['pose','hips','cross'],
+  '3f':['pose','hips','cross','thumb'],'3m':['pose','hips','cross','thumb'],
+  '4f':['pose','hips','cross','thumb'],'4m':['pose','hips','cross','thumb'],
+  '5f':['pose','hips','thumb'],'5m':['pose','staff','thumb'],
+  '6f':['pose','hips','cross','thumb'],'6m':['pose','hips','cross','thumb'],
+  '7f':['pose','hips','cross','thumb'],'7m':['pose','hips','cross','thumb'],
+  '8f':['pose','hips'],'8m':['pose']};
+const NAME=['','Iron','Bronze','Silver','Gold','Platinum','Sapphire','Diamond','Legend'];
+const g=document.getElementById('g');
+for(const k of Object.keys(A)){
+  const c=document.createElement('div');c.className='cell';
+  c.innerHTML=`<div class="bob"><img class="base" src="assets/rank/${k}.webp"><span class="lbl"></span></div><b>${k} · ${NAME[k[0]]} ${k[1]==='f'?'หญิง':'ชาย'}</b><small>${A[k].length} ท่า</small>`;
+  g.appendChild(c);
+  const bob=c.querySelector('.bob'),base=c.querySelector('.base'),lbl=c.querySelector('.lbl');
+  const mk=n=>{const i=new Image();i.className='fr'+(n==='blink'?' blink':'');i.src=`assets/rank/anim/${k}-${n}.webp`;bob.insertBefore(i,lbl);return i;};
+  const blink=mk('blink'),ps=A[k].map(n=>({n,im:mk(n)}));
+  let posing=false,i=0;
+  const doBlink=()=>{if(!posing){blink.style.opacity='1';setTimeout(()=>blink.style.opacity='0',150);}setTimeout(doBlink,4000+Math.random()*3000);};
+  const doPose=()=>{const p=ps[i++%ps.length];posing=true;lbl.textContent=p.n;p.im.style.opacity='1';base.style.opacity='0';
+    setTimeout(()=>{p.im.style.opacity='0';base.style.opacity='';lbl.textContent='';setTimeout(()=>posing=false,700);},4000);setTimeout(doPose,10000);};
+  setTimeout(doBlink,1500+Math.random()*2000);setTimeout(doPose,2000+Math.random()*4000);
+}
+</script></body></html>
