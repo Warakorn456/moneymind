@@ -1708,9 +1708,10 @@
     .rank-char{display:block;width:150px;height:auto;margin-bottom:6px;transform-origin:50% 100%;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3));user-select:none;-webkit-user-drag:none;pointer-events:none}
     .rank-stage.hop .rank-char{animation:rankHop .6s cubic-bezier(.3,1.5,.5,1)}
     /* 2D ขยับ: เฟรมท่าอื่นซ้อนทับภาพหลัก แล้วเฟดสลับ (_startRank2DAnim) */
-    .rank-tilt>.rank-char{transition:opacity .7s ease}
-    .rank-tilt>.rank-fr{position:absolute;left:0;top:0;opacity:0}
-    .rank-tilt>.rank-fr.rank-blink{transition:none}
+    /* ท่าหายใจลอยอยู่ที่ .rank-bob ที่ครอบทุกเฟรม — เฟรมจึงขยับพร้อมกันเสมอ ไม่เหลื่อมตอนสลับ */
+    .rank-bob>.rank-char{transition:opacity .7s ease}
+    .rank-bob>.rank-fr{position:absolute;left:0;top:0;opacity:0}
+    .rank-bob>.rank-fr.rank-blink{transition:none}
     .rank-spark{position:absolute;left:var(--x);top:var(--y);width:12px;height:12px;background:#fff;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);filter:drop-shadow(0 0 4px var(--rc));opacity:0;animation:rankSpark 2.8s ease-in-out infinite;animation-delay:var(--d);pointer-events:none}
     @keyframes rankIdle{0%,100%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-4px) scale(.992,1.018)}60%{transform:translateY(-6px) scale(1,1.008)}}
     @keyframes rankShadow{0%,100%{transform:translateX(-50%) scaleX(1);opacity:1}60%{transform:translateX(-50%) scaleX(.82);opacity:.7}}
