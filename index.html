@@ -7949,6 +7949,7 @@ function renderDebts(){
   if(sumEl) sumEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">'
     +'<div class="card" style="padding:14px"><div style="color:var(--muted);font-size:12px">'+tr('debt_total_remaining_all')+'</div><div style="font-size:22px;font-weight:800;color:var(--red)">'+fmt(totalRemaining)+'</div></div>'
     +'<div class="card" style="padding:14px"><div style="color:var(--muted);font-size:12px">'+tr('debt_total_monthly_all')+'</div><div style="font-size:22px;font-weight:800">'+fmt(totalMonthly)+'</div></div>'
+    +(_ccCards().length?ccStat:'')
     +'</div>';
   el.innerHTML=computed.map(({d,months,pm,paidCount,paidAmt,calcRemaining,pct})=>{
     const chips=months.map(m=>{
