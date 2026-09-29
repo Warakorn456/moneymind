@@ -8027,7 +8027,7 @@ function renderDebts(){
     }).join('');
     return `<div class="dcard">
       <div class="dcard-hd">
-        <div><div class="dcard-name">${_escHtml(d.name||"")}</div>${d.dueDate?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${tr('debt_due_at')} ${fmtD(d.dueDate)}</div>`:''}</div>
+        <div><div class="dcard-name">${_escHtml(d.name||"")}</div>${(()=>{ const c=d.cardId&&getBanks().find(x=>x.id===d.cardId); return c?`<div style="font-size:11px;color:#a78bfa;margin-top:2px">💳 ${tr('debt_card_badge').replace('{name}',_escHtml(c.name||''))}</div>`:''; })()}${d.dueDate?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${tr('debt_due_at')} ${fmtD(d.dueDate)}</div>`:''}</div>
         <div style="display:flex;align-items:center;gap:10px">
           <div style="text-align:right"><div style="font-size:22px;font-weight:800;color:${calcRemaining<=0?'var(--green)':'var(--red)'}">${fmt(calcRemaining)}</div><div style="font-size:11px;color:var(--muted)">${tr('debt_remaining')}</div></div>
           <div style="display:flex;gap:5px"><button class="icon-btn" onclick="editDebt('${d.id}')"><i class="fas fa-pen"></i></button><button class="icon-btn del" onclick="delDebt('${d.id}')"><i class="fas fa-trash"></i></button></div>
