@@ -16333,7 +16333,7 @@ function renderSubscriptions(){
         +'<div style="display:flex;align-items:center;justify-content:space-between;padding-left:8px;flex-wrap:wrap;gap:6px">'
           +'<div style="display:flex;align-items:center;gap:8px">'
             +'<span class="sub-badge" style="background:'+s.color+'22;color:'+s.color+'"><i class="fas fa-sync-alt" style="font-size:10px"></i>'+fmt(Math.round(mo))+'/'+tr('month_short')+'</span>'
-            +dueStr
+            +(s.active!==false&&_subIsPaidNow(s)?'<span style="font-size:11px;color:#10b981;font-weight:700">✓ '+tr('sub_paid_this_period')+'</span>':dueStr)
           +'</div>'
           +'<div style="display:flex;gap:4px">'
             +'<button onclick="toggleSubActive(\''+s.id+'\')" class="btn btn-ghost" style="padding:4px 8px;font-size:11px" title="'+(s.active===false?tr('sub_activate'):tr('sub_pause'))+'">'
