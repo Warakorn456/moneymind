@@ -16343,6 +16343,21 @@ function renderSubscriptions(){
             +'<button onclick="deleteSub(\''+s.id+'\')" class="btn btn-ghost" style="padding:4px 8px;font-size:11px;color:var(--red)"><i class="fas fa-trash"></i></button>'
           +'</div>'
         +'</div>'
+        +(s.active===false?'':(function(){
+          var per=_subPeriods(s), pp=s.paidPeriods||[];
+          var n=per.filter(function(p){return pp.indexOf(p.key)>=0;}).length;
+          var chips=per.map(function(p){
+            var paid=pp.indexOf(p.key)>=0;
+            return '<button onclick="toggleSubPaid(\''+s.id+'\',\''+p.key+'\')" style="padding:4px 9px;border-radius:8px;font-size:11px;font-weight:'+(p.isCur?700:400)+';cursor:pointer;font-family:Sarabun,sans-serif;border:1px solid;transition:.15s;background:'+(paid?'rgba(16,185,129,.18)':p.isCur?'rgba(124,58,237,.12)':'rgba(255,255,255,.03)')+';color:'+(paid?'#10b981':p.isCur?'#a78bfa':'var(--muted)')+';border-color:'+(paid?'rgba(16,185,129,.45)':p.isCur?'rgba(124,58,237,.4)':'var(--border)')+'">'+(paid?'✓ ':'')+p.label+'</button>';
+          }).join('');
+          return '<div style="margin-left:8px;border-top:1px solid var(--border);padding-top:10px">'
+            +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px">'
+              +'<span style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.4px">'+tr('sub_check_paid')+'</span>'
+              +'<span style="font-size:11px;color:'+(n>0?'#10b981':'var(--muted)')+'">'+tr('sub_paid_n_of').replace('{n}',n).replace('{total}',per.length)+'</span>'
+            +'</div>'
+            +'<div style="display:flex;flex-wrap:wrap;gap:5px">'+chips+'</div>'
+          +'</div>';
+        })())
       +'</div>';
     }).join('');
   }
