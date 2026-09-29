@@ -14381,9 +14381,12 @@ function _upcomingBills(until){
     if(dbt.dueDate){ var fin=new Date(dbt.dueDate); if(!isNaN(fin)&&d&&d>fin) return; }
     if(inWin(d)) out.push({date:d,label:tr('bills_debt_prefix')+' '+(dbt.name||''),amount:Math.min(Number(dbt.pay)||0,Number(dbt.remaining)||0),kind:'debt',type:'expense'});
   });
-  (DB.banks||[]).filter(function(b){ return b&&b.type==='บัตรเครดิต'&&(Number(b.balance)||0)>0&&b.dueDate; }).forEach(function(b){
+  (DB.banks||[]).filter(function(b){ return b&&b.type==='บัตรเครดิต'&&b.dueDate; }).forEach(function(b){
     var d=nextDay(b.dueDate);
-    if(inWin(d)) out.push({date:d,label:tr('bills_cc_prefix')+' '+(b.name||''),amount:Number(b.balance)||0,kind:'cc',type:'expense'});
+    if(!inWin(d)) return;
+    var key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    var amt=(Number(b.balance)||0)+_ccInstDue(b,key);
+    if(amt>0) out.push({date:d,label:tr('bills_cc_prefix')+' '+(b.name||''),amount:amt,kind:'cc',type:'expense'});
   });
   out.sort(function(x,y){ return x.date-y.date; });
   return out;
