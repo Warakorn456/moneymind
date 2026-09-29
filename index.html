@@ -8091,7 +8091,8 @@ function saveDebt(){
   const dueDate=document.getElementById('debt-due').value;
   if(!name){ toast(tr('debt_need_name'),'error'); return; }
   if(!total||total<=0){ toast(tr('debt_need_total'),'error'); return; }
-  const obj={name,total,remaining:remaining||total,rate,pay,startDate,dueDate};
+  const cardId=document.getElementById('debt-card')?.value||'';
+  const obj={name,total,remaining:remaining||total,rate,pay,startDate,dueDate,cardId};
   if(id){ const i=DB.debts.findIndex(d=>d.id===id); if(i>=0) DB.debts[i]={...DB.debts[i],...obj}; toast(tr('edited'),'success'); }
   else { DB.debts.push({id:uid(),...obj}); toast(tr('debt_added'),'success'); }
   saveDB(); closeM('m-debt'); renderDebts();
