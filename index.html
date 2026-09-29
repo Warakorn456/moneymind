@@ -7913,10 +7913,18 @@ function renderDebtCards(){
           +'<div style="background:var(--surface2);border-radius:12px;padding:10px 12px">'
             +'<div style="font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:4px">'+tr('cc_to_pay')+'<button onclick="openUpdateBalanceModal(\''+b.id+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:0"><i class="fas fa-pen" style="font-size:10px"></i></button></div>'
             +'<div style="font-size:19px;font-weight:800;color:'+(bal>0?'var(--red)':'var(--green)')+'">'+fmt(bal)+'</div>'
-            +'<div style="font-size:10px;color:'+dueCol+'">'+tr('cc_due_on').replace('{d}',d2(due))+' · '+(days<=0?tr('cc_due_today'):tr('cc_due_in').replace('{n}',days))+'</div>'
+            +(paidNow
+              ?'<div style="font-size:10px;color:#10b981;font-weight:700">✓ '+tr('cc_paid_this')+'</div>'
+              :'<div style="font-size:10px;color:'+dueCol+'">'+tr('cc_due_on').replace('{d}',d2(due))+' · '+(days<=0?tr('cc_due_today'):tr('cc_due_in').replace('{n}',days))+'</div>')
           +'</div>'
         +'</div>'
-        +(bal>0?'<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px;justify-content:center" onclick="payCcBill(\''+b.id+'\')"><i class="fas fa-check"></i> '+tr('cc_paid_btn')+'</button>':'')
+        +'<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px">'
+            +'<span style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.4px">'+tr('cc_check_paid')+'</span>'
+            +'<span style="font-size:11px;color:'+(nPaid>0?'#10b981':'var(--muted)')+'">'+tr('cc_paid_n_of').replace('{n}',nPaid).replace('{total}',12)+'</span>'
+          +'</div>'
+          +'<div style="display:flex;flex-wrap:wrap;gap:5px">'+chips+'</div>'
+        +'</div>'
       +'</div>';
     }).join('')
     +'</div><div style="font-size:11px;color:var(--muted);margin-top:8px"><i class="fas fa-circle-info"></i> '+tr('cc_hint')+'</div>';
