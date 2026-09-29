@@ -7899,6 +7899,16 @@ function renderDebtCards(){
       const barColor=pct>=90?'#ef4444':pct>=70?'#f97316':'#22c55e';
       const due=_ccNextDue(b), days=Math.round((due-t0)/86400000);
       const dueCol=bal<=0?'var(--muted)':days<=3?'#f87171':days<=7?'#fbbf24':'var(--muted)';
+      const pc=(b.paidCycles&&typeof b.paidCycles==='object')?b.paidCycles:{};
+      const curKey=_ccDueKey(b), paidNow=Object.prototype.hasOwnProperty.call(pc,curKey);
+      const yr=t0.getFullYear(), MN=monthShortArr();
+      let nPaid=0;
+      const chips=MN.map((mn,i)=>{
+        const key=yr+'-'+String(i+1).padStart(2,'0');
+        const paid=Object.prototype.hasOwnProperty.call(pc,key), isCur=key===curKey;
+        if(paid) nPaid++;
+        return '<button onclick="toggleCcPaid(\''+b.id+'\',\''+key+'\')" style="padding:4px 9px;border-radius:8px;font-size:11px;font-weight:'+(isCur?700:400)+';cursor:pointer;font-family:Sarabun,sans-serif;border:1px solid;transition:.15s;background:'+(paid?'rgba(16,185,129,.18)':isCur?'rgba(124,58,237,.12)':'rgba(255,255,255,.03)')+';color:'+(paid?'#10b981':isCur?'#a78bfa':'var(--muted)')+';border-color:'+(paid?'rgba(16,185,129,.45)':isCur?'rgba(124,58,237,.4)':'var(--border)')+'">'+(paid?'✓ ':'')+mn+'\''+String(beYear(yr)).slice(2)+'</button>';
+      }).join('');
       return '<div class="dcard" style="margin:0">'
         +'<div class="dcard-hd"><div><div class="dcard-name">'+_escHtml(b.name||'')+(b.accountNo?' <span style="font-size:11px;color:var(--muted);font-weight:400">····'+_escHtml(b.accountNo)+'</span>':'')+'</div>'
           +(limit>0?'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+tr('cc_limit_used').replace('{pct}',pct.toFixed(0))+' · '+fmt(limit)+'</div>':'')+'</div>'
