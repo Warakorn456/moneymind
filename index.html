@@ -7918,7 +7918,11 @@ function renderDebts(){
   try{ renderDebtCards(); }catch(e){ console.warn('[cc]',e); }
   const ccOwed=_ccCards().reduce((s,b)=>s+(Number(b.balance)||0),0);
   const ccStat='<div class="card" style="padding:14px"><div style="color:var(--muted);font-size:12px">'+tr('cc_owed_total')+'</div><div style="font-size:22px;font-weight:800;color:var(--red)">'+fmt(ccOwed)+'</div></div>';
-  if(!DB.debts.length){ if(sumEl) sumEl.innerHTML=''; el.innerHTML='<div class="empty"><i class="fas fa-check-circle"></i><p>'+tr('debt_none_great')+'</p></div>'; return; }
+  if(!DB.debts.length){
+    if(sumEl) sumEl.innerHTML=_ccCards().length?'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">'+ccStat+'</div>':'';
+    el.innerHTML=_ccCards().length?'':'<div class="empty"><i class="fas fa-check-circle"></i><p>'+tr('debt_none_great')+'</p></div>';
+    return;
+  }
   const now=new Date();
   const nowY=now.getFullYear(), nowM=now.getMonth()+1;
   const MN=monthShortArr();
