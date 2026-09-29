@@ -8076,6 +8076,7 @@ function editDebt(id){
   document.getElementById('debt-pay').value=d.pay||'';
   document.getElementById('debt-start').value=d.startDate||'';
   document.getElementById('debt-due').value=d.dueDate||'';
+  _fillDebtCardSelect(d.cardId||'');
   openM('m-debt');
 }
 
