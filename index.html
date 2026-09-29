@@ -7998,6 +7998,8 @@ function renderDebts(){
     else { sy=nowY; sm=nowM-11; if(sm<=0){sm+=12;sy--;} }
     if(d.dueDate){ [ey,em]=d.dueDate.split('-').map(Number); }
     else { ey=nowY; em=nowM; }
+    // เดือนที่ติ๊กล่วงหน้า (เช่น จ่ายผ่านบัตรรอบเดือนหน้า) ต้องอยู่ในช่วงด้วย ไม่งั้นนับไม่ถึง
+    (d.paidMonths||[]).forEach(ym=>{ const [py,pmn]=String(ym).split('-').map(Number); if(py&&pmn&&(py>ey||(py===ey&&pmn>em))){ ey=py; em=pmn; } });
     const months=[];
     let cy=sy,cm=sm;
     while(cy<ey||(cy===ey&&cm<=em)){
