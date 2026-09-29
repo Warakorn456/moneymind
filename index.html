@@ -2962,6 +2962,7 @@
       <div class="fg"><label class="flabel"><span data-i18n="debt_start_date">วันเริ่มผ่อน</span><i class="fas fa-circle-info finfo" onclick="showFieldHint(event,'debt_start_date')"></i></label><input type="date" id="debt-start" class="finput"></div>
       <div class="fg"><label class="flabel"><span data-i18n="debt_due_date">วันครบกำหนด</span><i class="fas fa-circle-info finfo" onclick="showFieldHint(event,'debt_due_date')"></i></label><input type="date" id="debt-due" class="finput"></div>
     </div>
+    <div class="fg" id="debt-card-row" style="display:none"><label class="flabel">💳 <span data-i18n="debt_via_card">ผ่อนผ่านบัตรเครดิต</span></label><select id="debt-card" class="fselect"></select></div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeM('m-debt')" data-i18n="cancel">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveDebt()" data-i18n="save">บันทึก</button>
