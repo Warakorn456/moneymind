@@ -16395,6 +16395,7 @@ function renderSubscriptions(){
       +'<div class="sub-stat"><div class="sub-stat-val">'+fmt(Math.round(totalYearly))+'</div><div class="sub-stat-lbl">'+tr('sub_total_yearly')+'</div></div>'
       +'<div style="width:1px;background:rgba(124,58,237,.25);height:40px"></div>'
       +'<div class="sub-stat"><div class="sub-stat-val">'+activeList.length+'</div><div class="sub-stat-lbl">'+tr('sub_active_count')+'</div></div>'
+      +(activeList.length?'<div style="width:1px;background:rgba(124,58,237,.25);height:40px"></div><div class="sub-stat"><div class="sub-stat-val" style="color:#10b981">'+activeList.filter(_subIsPaidNow).length+'/'+activeList.length+'</div><div class="sub-stat-lbl">'+tr('sub_paid_summary')+'</div></div>':'')
       +(inactiveList.length?'<div style="width:1px;background:rgba(124,58,237,.25);height:40px"></div><div class="sub-stat"><div class="sub-stat-val" style="color:var(--muted)">'+inactiveList.length+'</div><div class="sub-stat-lbl">'+tr('sub_paused')+'</div></div>':'')
     +'</div>':'')
     // upcoming
