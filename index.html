@@ -8055,7 +8055,14 @@ function openDebtModal(){
   document.getElementById('debt-eid').value='';
   document.getElementById('debt-m-title').textContent=tr('debt_add_full');
   ['debt-name','debt-total','debt-rem','debt-rate','debt-pay','debt-start','debt-due'].forEach(id=>document.getElementById(id).value='');
+  _fillDebtCardSelect('');
   openM('m-debt');
+}
+function _fillDebtCardSelect(sel){
+  const row=document.getElementById('debt-card-row'), el=document.getElementById('debt-card'); if(!row||!el) return;
+  const cards=getBanks().filter(b=>b.type==='บัตรเครดิต');
+  row.style.display=cards.length?'':'none';
+  el.innerHTML='<option value="">'+tr('debt_no_card')+'</option>'+cards.map(b=>'<option value="'+b.id+'"'+(b.id===sel?' selected':'')+'>💳 '+_escHtml(b.name||'')+(b.accountNo?' ····'+_escHtml(b.accountNo):'')+'</option>').join('');
 }
 
 function editDebt(id){
