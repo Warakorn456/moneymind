@@ -7958,6 +7958,13 @@ function renderDebtCards(){
               :'<div style="font-size:10px;color:'+dueCol+'">'+tr('cc_due_on').replace('{d}',d2(due))+' · '+(days<=0?tr('cc_due_today'):tr('cc_due_in').replace('{n}',days))+'</div>')
           +'</div>'
         +'</div>'
+        +(insts.length?'<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">'
+          +'<div style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.4px;margin-bottom:6px">'+tr('cc_inst_title')+'</div>'
+          +insts.map(x=>'<div onclick="editDebt(\''+x.d.id+'\')" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;font-size:12px;cursor:pointer">'
+            +'<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(x.paid?'<span style="color:#10b981">✓</span> ':'')+_escHtml(x.d.name||'')+'</span>'
+            +'<span style="flex-shrink:0;color:var(--muted)">'+fmt(Number(x.d.pay)||0)+'/'+tr('month_short')+' · '+tr('cc_inst_left').replace('{n}',x.left)+'</span></div>').join('')
+          +'<div style="font-size:10px;color:var(--muted);margin-top:4px">'+tr('cc_inst_hint')+'</div>'
+        +'</div>':'')
         +'<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">'
           +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px">'
             +'<span style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.4px">'+tr('cc_check_paid')+'</span>'
