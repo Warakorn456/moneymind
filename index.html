@@ -7901,7 +7901,7 @@ function renderDebtCards(){
       const dueCol=bal<=0?'var(--muted)':days<=3?'#f87171':days<=7?'#fbbf24':'var(--muted)';
       const pc=(b.paidCycles&&typeof b.paidCycles==='object')?b.paidCycles:{};
       const curKey=_ccDueKey(b), paidNow=Object.prototype.hasOwnProperty.call(pc,curKey);
-      const yr=t0.getFullYear(), MN=monthShortArr();
+      const yr=due.getFullYear(), MN=monthShortArr(); // ปีของเดือนครบกำหนดถัดไป (ธ.ค. ครบกำหนด ม.ค. ปีหน้า)
       let nPaid=0;
       const chips=MN.map((mn,i)=>{
         const key=yr+'-'+String(i+1).padStart(2,'0');
