@@ -7951,7 +7951,8 @@ function renderDebtCards(){
           +'</div>'
           +'<div style="background:var(--surface2);border-radius:12px;padding:10px 12px">'
             +'<div style="font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:4px">'+tr('cc_to_pay')+'<button onclick="openUpdateBalanceModal(\''+b.id+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:0"><i class="fas fa-pen" style="font-size:10px"></i></button></div>'
-            +'<div style="font-size:19px;font-weight:800;color:'+(bal>0?'var(--red)':'var(--green)')+'">'+fmt(bal)+'</div>'
+            +'<div style="font-size:19px;font-weight:800;color:'+(toPay>0?'var(--red)':'var(--green)')+'">'+fmt(toPay)+'</div>'
+            +(instDue>0?'<div style="font-size:10px;color:var(--muted)">'+tr('cc_swipe_inst').replace('{a}',fmt(bal)).replace('{b}',fmt(instDue))+'</div>':'')
             +(paidNow
               ?'<div style="font-size:10px;color:#10b981;font-weight:700">✓ '+tr('cc_paid_this')+'</div>'
               :'<div style="font-size:10px;color:'+dueCol+'">'+tr('cc_due_on').replace('{d}',d2(due))+' · '+(days<=0?tr('cc_due_today'):tr('cc_due_in').replace('{n}',days))+'</div>')
