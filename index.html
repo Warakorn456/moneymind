@@ -7858,16 +7858,28 @@ function editCcSpent(id){
   else { const n=parseFloat(String(v).replace(/,/g,'')); if(isNaN(n)||n<0){ toast(tr('bank_invalid_balance'),'error'); return; } b.spentOverride={key:cur.cycle.key,amount:n}; }
   saveDB(); renderDebts();
 }
-function payCcBill(id){
+// ติ๊กเดือนที่จ่ายบัตรแล้ว — b.paidCycles={"YYYY-MM"(เดือนครบกำหนด): ยอดที่หักจากยอดค้างตอนติ๊ก}
+function _ccDueKey(b){ const d=_ccNextDue(b); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function toggleCcPaid(id,key){
   const b=getBanks().find(x=>x.id===id); if(!b) return;
+  if(!b.paidCycles||typeof b.paidCycles!=='object') b.paidCycles={};
   const bal=Number(b.balance)||0;
-  const v=prompt(tr('cc_pay_prompt').replace('{name}',b.name).replace('{bal}',fmt(bal)),bal);
-  if(v===null) return;
-  const n=parseFloat(String(v).replace(/,/g,''));
-  if(isNaN(n)||n<=0){ toast(tr('bank_invalid_balance'),'error'); return; }
-  b.balance=Math.max(0,bal-n); b.updatedAt=new Date().toLocaleDateString('th-TH');
+  if(Object.prototype.hasOwnProperty.call(b.paidCycles,key)){
+    b.balance=bal+(Number(b.paidCycles[key])||0); // เอาติ๊กออก → คืนยอดที่เคยหัก
+    delete b.paidCycles[key];
+  } else if(key===_ccDueKey(b)&&bal>0){
+    const v=prompt(tr('cc_pay_prompt').replace('{name}',b.name).replace('{bal}',fmt(bal)),bal);
+    if(v===null) return;
+    const n=parseFloat(String(v).replace(/,/g,''));
+    if(isNaN(n)||n<0){ toast(tr('bank_invalid_balance'),'error'); return; }
+    const paid=Math.min(n,bal);
+    b.balance=bal-paid; b.paidCycles[key]=paid;
+    toast(tr('cc_paid_done'),'success');
+  } else {
+    b.paidCycles[key]=0; // เดือนอื่น = บันทึกสถานะอย่างเดียว ไม่แตะยอดค้าง
+  }
+  b.updatedAt=new Date().toLocaleDateString('th-TH');
   saveDB(); renderDebts(); try{ renderBanks(); renderDashBanks(); }catch(e){}
-  toast(tr('cc_paid_done'),'success');
 }
 function renderDebtCards(){
   const el=document.getElementById('debt-cc-section'); if(!el) return;
