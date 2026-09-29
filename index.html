@@ -14374,7 +14374,8 @@ function _upcomingBills(until){
     var d=new Date(x.nextDate); d.setHours(0,0,0,0);
     if(inWin(d)) out.push({date:d,label:x.name,amount:Number(x.price)||0,kind:'sub',type:'expense'});
   });
-  (DB.debts||[]).filter(function(d){ return d&&(Number(d.remaining)||0)>0&&(Number(d.pay)||0)>0; }).forEach(function(dbt){
+  var _ccIds=(DB.banks||[]).filter(function(b){ return b&&b.type==='บัตรเครดิต'; }).map(function(b){ return b.id; });
+  (DB.debts||[]).filter(function(d){ return d&&(Number(d.remaining)||0)>0&&(Number(d.pay)||0)>0&&!(d.cardId&&_ccIds.indexOf(d.cardId)>=0); }).forEach(function(dbt){ // ผ่อนผ่านบัตร → รวมในบิลบัตรด้านล่าง
     var day=dbt.startDate?parseInt(String(dbt.startDate).slice(8,10)):1;
     var d=nextDay(day);
     if(dbt.dueDate){ var fin=new Date(dbt.dueDate); if(!isNaN(fin)&&d&&d>fin) return; }
