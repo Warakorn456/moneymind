@@ -7861,23 +7861,50 @@ function editCcSpent(id){
 }
 // ติ๊กเดือนที่จ่ายบัตรแล้ว — b.paidCycles={"YYYY-MM"(เดือนครบกำหนด): ยอดที่หักจากยอดค้างตอนติ๊ก}
 function _ccDueKey(b){ const d=_ccNextDue(b); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+// ผ่อนสินค้าผ่านบัตร: หนี้ที่ d.cardId===b.id — ค่างวดถูกเรียกเก็บในบิลบัตร (ยอดคงเหลือนับในหนี้ที่เดียว ไม่รวมใน balance บัตร)
+function _debtRemain(d){ return Math.max(0,(Number(d.total)||0)-((d.paidMonths||[]).length)*(Number(d.pay)||0)); }
+function _ccInstallments(b,key){
+  return (DB.debts||[]).filter(d=>d.cardId===b.id&&(Number(d.pay)||0)>0).map(d=>{
+    const paid=(d.paidMonths||[]).includes(key);
+    const rem=_debtRemain(d);
+    return {d,pay:Math.min(Number(d.pay)||0,paid?Number(d.pay)||0:rem),paid,rem,left:Math.ceil(rem/(Number(d.pay)||1))};
+  }).filter(x=>x.paid||x.rem>0);
+}
+function _ccInstDue(b,key){ return _ccInstallments(b,key).filter(x=>!x.paid).reduce((s,x)=>s+x.pay,0); }
+function _setDebtMonth(d,ym,on){
+  if(!d.paidMonths) d.paidMonths=[];
+  const i=d.paidMonths.indexOf(ym);
+  if(on&&i<0) d.paidMonths.push(ym); else if(!on&&i>=0) d.paidMonths.splice(i,1);
+  d.remaining=_debtRemain(d);
+}
 function toggleCcPaid(id,key){
   const b=getBanks().find(x=>x.id===id); if(!b) return;
   if(!b.paidCycles||typeof b.paidCycles!=='object') b.paidCycles={};
+  if(!b.paidInst||typeof b.paidInst!=='object') b.paidInst={};
   const bal=Number(b.balance)||0;
   if(Object.prototype.hasOwnProperty.call(b.paidCycles,key)){
     b.balance=bal+(Number(b.paidCycles[key])||0); // เอาติ๊กออก → คืนยอดที่เคยหัก
     delete b.paidCycles[key];
-  } else if(key===_ccDueKey(b)&&bal>0){
-    const v=prompt(tr('cc_pay_prompt').replace('{name}',b.name).replace('{bal}',fmt(bal)),bal);
-    if(v===null) return;
-    const n=parseFloat(String(v).replace(/,/g,''));
-    if(isNaN(n)||n<0){ toast(tr('bank_invalid_balance'),'error'); return; }
-    const paid=Math.min(n,bal);
-    b.balance=bal-paid; b.paidCycles[key]=paid;
-    toast(tr('cc_paid_done'),'success');
+    (b.paidInst[key]||[]).forEach(did=>{ const d=(DB.debts||[]).find(x=>x.id===did); if(d) _setDebtMonth(d,key,false); });
+    delete b.paidInst[key];
   } else {
-    b.paidCycles[key]=0; // เดือนอื่น = บันทึกสถานะอย่างเดียว ไม่แตะยอดค้าง
+    const inst=_ccInstallments(b,key).filter(x=>!x.paid);
+    const instSum=inst.reduce((s,x)=>s+x.pay,0);
+    if(key===_ccDueKey(b)&&bal+instSum>0){
+      const total=bal+instSum;
+      const v=prompt(tr('cc_pay_prompt').replace('{name}',b.name).replace('{bal}',fmt(total)),total);
+      if(v===null) return;
+      const n=parseFloat(String(v).replace(/,/g,''));
+      if(isNaN(n)||n<0){ toast(tr('bank_invalid_balance'),'error'); return; }
+      // จ่ายค่างวดก่อน ที่เหลือไปลดยอดรูด
+      let left=n; const ticked=[];
+      inst.forEach(x=>{ if(left>=x.pay){ left-=x.pay; _setDebtMonth(x.d,key,true); ticked.push(x.d.id); } });
+      const paid=Math.min(left,bal);
+      b.balance=bal-paid; b.paidCycles[key]=paid; if(ticked.length) b.paidInst[key]=ticked;
+      toast(tr('cc_paid_done'),'success');
+    } else {
+      b.paidCycles[key]=0; // เดือนอื่น = บันทึกสถานะอย่างเดียว ไม่แตะยอดค้าง
+    }
   }
   b.updatedAt=new Date().toLocaleDateString('th-TH');
   saveDB(); renderDebts(); try{ renderBanks(); renderDashBanks(); }catch(e){}
