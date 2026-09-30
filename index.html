@@ -21512,6 +21512,8 @@ Object.assign(I18N.en,{tx_today:'Today',tx_yesterday:'Yesterday',dash_more_show:
   window._toggleDashMore=function(){
     more=!isMore();
     try{ localStorage.setItem('mm_dash_more',more?'1':'0'); }catch(e){}
+    // render แรกจาก checkLogin() เกิดก่อน patch การ์ดวิเคราะห์ถูกนิยาม การ์ดจึงอาจยังว่าง — render ใหม่ตอนกาง
+    if(more&&typeof renderDash==='function'){ try{ renderDash(); }catch(e){} }
     apply();
     if(!more){ var w=document.getElementById('dash-more-wrap'); if(w) w.scrollIntoView({block:'end'}); }
   };
