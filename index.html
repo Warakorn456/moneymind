@@ -1746,6 +1746,35 @@
       .inv-ibtn .inv-lbl{display:none}
       #inv-btn-add{flex:1;justify-content:center}
     }
+    /* ── MOBILE UX 2026-09-30 — ดู section "MOBILE UX 2026-09-30" ท้าย script ── */
+    .dash-more-wrap{display:none}
+    .tx-cat-chips{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 12px}
+    .tx-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:100px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font:500 12.5px Sarabun,sans-serif;cursor:pointer;line-height:1.2}
+    .tx-chip i{font-size:11px}
+    .tx-chip.on{border-color:var(--primary);background:rgba(124,58,237,.18);color:var(--primary-l)}
+    .tx-date-quick{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
+    .tx-date-quick .tx-chip{padding:4px 10px;font-size:12px}
+    .tx-date-th{font-size:11.5px;color:var(--muted);margin-left:auto}
+    .catbud-meta{width:100%;font-size:11.5px;color:var(--muted);margin:-6px 0 0 16px;display:flex;flex-direction:column;gap:4px}
+    .catbud-meta b{color:var(--text);font-weight:600}
+    .catbud-bar{height:4px;border-radius:4px;background:var(--surface2);overflow:hidden;max-width:260px}
+    .catbud-bar>i{display:block;height:100%;background:var(--green)}
+    .catbud-bar>i.over{background:var(--red)}
+    .catbud-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .catbud-other{margin-top:4px}
+    .catbud-other>summary{cursor:pointer;font-size:13px;color:var(--muted);padding:8px 0;list-style:none}
+    .catbud-other>summary::-webkit-details-marker{display:none}
+    .txchart-bar{width:100%;display:flex;align-items:center;gap:8px;padding:11px 14px;margin-bottom:12px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font:600 13px Sarabun,sans-serif;cursor:pointer;text-align:left}
+    .txchart-bar .fa-chevron-down{margin-left:auto;color:var(--muted)}
+    .txchart-hide{display:flex;justify-content:flex-end;margin:-4px 0 8px}
+    @media(max-width:700px){
+      body:not(.dash-more) .dash-extra{display:none!important}
+      .dash-more-wrap{display:flex;justify-content:center;margin:4px 0 18px}
+      body.has-tabbar #tx-add-top{display:none}
+      #pg-transactions .txh-lbl{display:none}
+      #pg-transactions .tx-head-actions .btn{padding:8px 11px}
+      #pg-transactions .tx-filter-row #tx-cat-filter{flex:1;max-width:none!important}
+    }
   </style>
 <!-- self-hosted analytics (GoatCounter) — aggregate pageviews only, no cookies, no personal
      data collected; see privacy.html section 1 for the disclosure. This is a single-page
