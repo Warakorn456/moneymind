@@ -21482,7 +21482,7 @@ Object.assign(I18N.th,{tx_today:'วันนี้',tx_yesterday:'เมื่�
 Object.assign(I18N.en,{tx_today:'Today',tx_yesterday:'Yesterday',dash_more_show:'Show more insights ({n})',dash_more_hide:'Hide insights',txchart_show:'Income vs expense overview — tap to show chart',txchart_hide:'Hide chart',budget_spent_now:'This month',budget_avg3:'3-month avg',budget_other_cats:'Categories with no spending yet ({n})',budget_fill_avg:'Fill budgets from my average',budget_fill_avg_confirm:'Fill {n} empty categories with your 3-month average spending (rounded up to the nearest 100)?',budget_fill_avg_none:'No empty categories with spending history to calculate from',budget_fill_avg_done:'Budgets set for {n} categories'});
 
 (function(){
-  var EXTRA=['dash-ytd-section','dash-comparison-section','dash-sr-section','dash-health-section','dash-insights-section','dash-emergency-section','dash-503020-section','dash-nw-history-section','dash-fixedcosts-card','_wrankWrap'];
+  var EXTRA=['dash-bs-section','dash-ytd-section','dash-comparison-section','dash-sr-section','dash-health-section','dash-insights-section','dash-emergency-section','dash-503020-section','dash-nw-history-section','dash-fixedcosts-card','_wrankWrap'];
   var more=null;
   function isMore(){ if(more===null){ try{ more=localStorage.getItem('mm_dash_more')==='1'; }catch(e){ more=false; } } return more; }
   function apply(){
