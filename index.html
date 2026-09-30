@@ -21437,6 +21437,160 @@ function renderDailyReminderSettings(){
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
 
+// ══════════════════════════════════════════
+// MOBILE UX 2026-09-30 — ลดการเลื่อน/การเดาบนมือถือ
+// 1) Dashboard: พับการ์ดวิเคราะห์ (.dash-extra) หลังปุ่ม "ดูบทวิเคราะห์เพิ่มเติม" (CSS ≤700px เท่านั้น)
+//    + migration dashV=2 ย้าย "รายการล่าสุด" ขึ้นหน้าสุดให้คนที่เคยจัดลำดับเอง
+// 2) หน้ารายการ: กราฟพับเป็นแถบบนมือถือ (เดิมกราฟ 478px ดันรายการแรกไป y=942)
+// 3) ฟอร์มบันทึก: ชิปหมวดใช้บ่อย + ชิปวันนี้/เมื่อวาน + วันที่แบบไทย
+// ใช้ class/CSS ไม่ใช่ style.display — ไม่ชนกับ _applyEmptyDash() ที่ใช้ inline display + data-mm-empty
+// ══════════════════════════════════════════
+Object.assign(I18N.th,{tx_today:'วันนี้',tx_yesterday:'เมื่อวาน',dash_more_show:'ดูบทวิเคราะห์เพิ่มเติม ({n})',dash_more_hide:'ซ่อนบทวิเคราะห์',txchart_show:'ภาพรวมรายรับ-รายจ่าย — แตะเพื่อดูกราฟ',txchart_hide:'ซ่อนกราฟ',budget_spent_now:'เดือนนี้',budget_avg3:'เฉลี่ย 3 เดือน',budget_other_cats:'หมวดที่ยังไม่มีรายจ่าย ({n})',budget_fill_avg:'ตั้งงบตามค่าเฉลี่ยให้เลย',budget_fill_avg_confirm:'เติมงบให้ {n} หมวดที่ยังว่าง ตามค่าเฉลี่ยรายจ่าย 3 เดือน (ปัดขึ้นหลักร้อย)?',budget_fill_avg_none:'ไม่มีหมวดที่ยังว่างและมีประวัติรายจ่ายให้คำนวณ',budget_fill_avg_done:'ตั้งงบแล้ว {n} หมวด'});
+Object.assign(I18N.en,{tx_today:'Today',tx_yesterday:'Yesterday',dash_more_show:'Show more insights ({n})',dash_more_hide:'Hide insights',txchart_show:'Income vs expense overview — tap to show chart',txchart_hide:'Hide chart',budget_spent_now:'This month',budget_avg3:'3-month avg',budget_other_cats:'Categories with no spending yet ({n})',budget_fill_avg:'Fill budgets from my average',budget_fill_avg_confirm:'Fill {n} empty categories with your 3-month average spending (rounded up to the nearest 100)?',budget_fill_avg_none:'No empty categories with spending history to calculate from',budget_fill_avg_done:'Budgets set for {n} categories'});
+
+(function(){
+  var EXTRA=['dash-ytd-section','dash-comparison-section','dash-sr-section','dash-health-section','dash-insights-section','dash-emergency-section','dash-503020-section','dash-nw-history-section','dash-fixedcosts-card','_wrankWrap'];
+  var more=null;
+  function isMore(){ if(more===null){ try{ more=localStorage.getItem('mm_dash_more')==='1'; }catch(e){ more=false; } } return more; }
+  function apply(){
+    document.body.classList.toggle('dash-more',isMore());
+    var pg=document.getElementById('pg-dashboard'); if(!pg) return;
+    var n=0;
+    EXTRA.forEach(function(id){
+      var el=document.getElementById(id); if(!el) return;
+      el.classList.add('dash-extra');
+      if(el.style.display!=='none'&&el.innerHTML.trim()) n++;
+    });
+    var w=document.getElementById('dash-more-wrap');
+    if(!w){ w=document.createElement('div'); w.id='dash-more-wrap'; w.className='dash-more-wrap'; }
+    if(w.parentNode!==pg||pg.lastElementChild!==w) pg.appendChild(w); // ท้ายสุดเสมอ (_wrankWrap บางทีถูก append ทีหลัง)
+    w.style.display=n?'':'none';
+    var m=isMore();
+    w.innerHTML='<button class="btn btn-ghost" onclick="_toggleDashMore()"><i class="fas '+(m?'fa-chevron-up':'fa-chart-simple')+'"></i> '+_escHtml(m?tr('dash_more_hide'):tr('dash_more_show').replace('{n}',n))+'</button>';
+  }
+  function migrate(){
+    var s=(typeof DB!=='undefined'&&DB)?DB.settings:null; if(!s||(s.dashV||0)>=2) return;
+    if(s.dashOrder&&s.dashOrder.length){
+      s.dashOrder=['dash-recent-section'].concat(s.dashOrder.filter(function(id){ return id!=='dash-recent-section'; }));
+    }
+    s.dashV=2;
+    try{ saveDB(); }catch(e){}
+  }
+  window._toggleDashMore=function(){
+    more=!isMore();
+    try{ localStorage.setItem('mm_dash_more',more?'1':'0'); }catch(e){}
+    apply();
+    if(!more){ var w=document.getElementById('dash-more-wrap'); if(w) w.scrollIntoView({block:'end'}); }
+  };
+  if(typeof renderDash==='function'){
+    var _origRDMore=renderDash;
+    renderDash=function(){
+      try{ migrate(); }catch(e){}
+      var r=_origRDMore.apply(this,arguments);
+      try{ apply(); }catch(e){}
+      setTimeout(function(){ try{ apply(); }catch(e){} },400);
+      return r;
+    };
+  }
+})();
+
+(function(){
+  if(typeof renderTxChart!=='function') return;
+  var _origTxChart=renderTxChart, open=null;
+  function isOpen(){ if(open===null){ try{ open=localStorage.getItem('mm_txchart_open')==='1'; }catch(e){ open=false; } } return open; }
+  function mobile(){ return !!(window.matchMedia&&window.matchMedia('(max-width:700px)').matches); }
+  renderTxChart=function(year,month){
+    var el=document.getElementById('tx-chart-card');
+    if(el&&mobile()&&!isOpen()&&(DB.transactions||[]).length){
+      _txChartYear=(year==null)?null:year; _txChartMonth=(month==null)?null:month;
+      if(_txChart){ _txChart.destroy(); _txChart=null; }
+      el.innerHTML='<button class="txchart-bar" onclick="_setTxChartOpen(true)"><i class="fas fa-chart-column" style="color:var(--primary-l)"></i> '+_escHtml(tr('txchart_show'))+' <i class="fas fa-chevron-down"></i></button>';
+      return;
+    }
+    var r=_origTxChart.apply(this,arguments);
+    if(el&&mobile()&&el.innerHTML.trim()) el.insertAdjacentHTML('afterbegin','<div class="txchart-hide"><button class="btn btn-ghost btn-sm" onclick="_setTxChartOpen(false)"><i class="fas fa-chevron-up"></i> '+_escHtml(tr('txchart_hide'))+'</button></div>');
+    return r;
+  };
+  // เลื่อนออก 1 tick เสมอ — กันถูกเรียกระหว่าง event ของ Chart.js (กฎห้าม destroy ใน onClick)
+  window._setTxChartOpen=function(v){
+    open=!!v;
+    try{ localStorage.setItem('mm_txchart_open',open?'1':'0'); }catch(e){}
+    setTimeout(function(){ renderTxChart(_txChartYear,_txChartMonth); },0);
+  };
+})();
+
+(function(){
+  var SKIP={save_tx:1,other_exp:1,other_inc:1,transfer:1,cash:1};
+  function localISO(d){ return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+  function thDate(v){ var p=(v||'').split('-'); if(p.length<3) return ''; return (+p[2])+' '+monthShortArr()[+p[1]-1]+' '+beYear(+p[0]); }
+  function markCats(){
+    var sel=document.getElementById('tx-cat'), box=document.getElementById('tx-cat-chips'); if(!sel||!box) return;
+    [].forEach.call(box.querySelectorAll('[data-c]'),function(b){ b.classList.toggle('on',b.getAttribute('data-c')===sel.value); });
+  }
+  function renderDates(){
+    var dq=document.getElementById('tx-date-quick'), di=document.getElementById('tx-date'); if(!dq||!di) return;
+    var t=localISO(new Date()), y=localISO(new Date(Date.now()-86400000));
+    dq.innerHTML='<button type="button" class="tx-chip'+(di.value===t?' on':'')+'" data-d="'+t+'">'+_escHtml(tr('tx_today'))+'</button>'
+      +'<button type="button" class="tx-chip'+(di.value===y?' on':'')+'" data-d="'+y+'">'+_escHtml(tr('tx_yesterday'))+'</button>'
+      +(currentLang==='en'?'':'<span class="tx-date-th">'+_escHtml(thDate(di.value))+'</span>');
+  }
+  window._renderTxQuick=function(){
+    var sel=document.getElementById('tx-cat'), box=document.getElementById('tx-cat-chips');
+    if(sel&&box){
+      var type=(document.getElementById('tx-type')||{}).value||'expense';
+      var saving=!!document.querySelector('#m-tx .type-btn.sav.active');
+      if(saving){ box.innerHTML=''; box.style.display='none'; }
+      else{
+        var all=type==='income'?getAllIncCats():getAllExpCats();
+        var ids=_frequentCats(type,5).filter(function(id){ return !SKIP[id]; });
+        all.forEach(function(c){ if(ids.length<5&&ids.indexOf(c.id)<0&&!SKIP[c.id]) ids.push(c.id); });
+        var html=ids.map(function(id){
+          var c=all.find(function(x){ return x.id===id; }); if(!c) return '';
+          return '<button type="button" class="tx-chip" data-c="'+_escHtml(c.id)+'"><i class="fas '+_escHtml(c.icon||'fa-tag')+'" style="color:'+_escHtml(c.color||'var(--muted)')+'"></i>'+_escHtml(catLabel(c))+'</button>';
+        }).join('');
+        box.innerHTML=html; box.style.display=html?'':'none';
+        markCats();
+      }
+      if(!box._mmBound){
+        box._mmBound=true;
+        box.addEventListener('click',function(e){
+          var b=e.target.closest('[data-c]'); if(!b) return;
+          sel.value=b.getAttribute('data-c'); sel.dispatchEvent(new Event('change')); markCats();
+        });
+        sel.addEventListener('change',markCats);
+      }
+    }
+    var dq=document.getElementById('tx-date-quick'), di=document.getElementById('tx-date');
+    if(dq&&di){
+      renderDates();
+      if(!dq._mmBound){
+        dq._mmBound=true;
+        dq.addEventListener('click',function(e){
+          var b=e.target.closest('[data-d]'); if(!b) return;
+          di.value=b.getAttribute('data-d'); di.dispatchEvent(new Event('change')); renderDates();
+        });
+        di.addEventListener('change',renderDates); di.addEventListener('input',renderDates);
+      }
+    }
+  };
+  var _oOpen=openTxModal;
+  openTxModal=function(){
+    var r=_oOpen.apply(this,arguments);
+    try{
+      var amtFg=document.getElementById('tx-amt').closest('.fg');
+      if(amtFg) amtFg.style.gridColumn=window._txSimpleMode?'1 / -1':''; // .frow เป็น grid — flex:1 1 100% เดิมไม่มีผล
+      _renderTxQuick();
+    }catch(e){}
+    return r;
+  };
+  var _oType=setTxType;
+  setTxType=function(){ var r=_oType.apply(this,arguments); try{ _renderTxQuick(); }catch(e){} return r; };
+  if(typeof editTx==='function'){
+    var _oEdit=editTx;
+    editTx=function(){ var r=_oEdit.apply(this,arguments); try{ _renderTxQuick(); }catch(e){} return r; };
+  }
+})();
+
 </script>
 
 <!-- App-styled confirm (2026-09-19) — ดู mmConfirm() -->
