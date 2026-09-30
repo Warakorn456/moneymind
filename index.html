@@ -2140,6 +2140,11 @@
 
     <!-- ── Sortable Container ── -->
     <div id="dash-sortable">
+    <!-- รายการล่าสุดขึ้นเป็นการ์ดแรก (2026-09-30) — เดิมอยู่ลึก ~3,500px บนมือถือ ผู้ใช้เก่าที่จัดลำดับเองได้ migration dashV=2 -->
+    <div id="dash-recent-section" class="card" style="margin-bottom:18px;display:none">
+      <div class="sec-hd" style="margin-bottom:8px"><div class="sec-title"><i class="fas fa-receipt" style="color:var(--primary-l)"></i> <span data-i18n="dash_recent_title">รายการล่าสุด</span></div><button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="nav('transactions')"><span data-i18n="dash_recent_all">ดูทั้งหมด</span> <i class="fas fa-chevron-right"></i></button></div>
+      <div id="recent-tx"></div>
+    </div>
 
     <!-- budget-card hidden (ถอดออก) -->
     <div id="budget-card" style="display:none">
