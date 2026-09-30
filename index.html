@@ -21622,7 +21622,15 @@ Object.assign(I18N.en,{tx_today:'Today',tx_yesterday:'Yesterday',dash_more_show:
     return r;
   };
   var _oType=setTxType;
-  setTxType=function(){ var r=_oType.apply(this,arguments); try{ _renderTxQuick(); }catch(e){} return r; };
+  setTxType=function(){
+    var r=_oType.apply(this,arguments);
+    try{
+      // setTxType เดิมเปิดแถวธนาคารคืนทุกครั้งที่สลับประเภท — โหมดง่ายต้องซ่อนต่อ
+      if(window._txSimpleMode){ var br=document.getElementById('tx-bank-row'); if(br) br.style.display='none'; }
+      _renderTxQuick();
+    }catch(e){}
+    return r;
+  };
   if(typeof editTx==='function'){
     var _oEdit=editTx;
     editTx=function(){ var r=_oEdit.apply(this,arguments); try{ _renderTxQuick(); }catch(e){} return r; };
