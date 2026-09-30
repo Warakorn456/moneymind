@@ -21525,6 +21525,9 @@ Object.assign(I18N.en,{tx_today:'Today',tx_yesterday:'Yesterday',dash_more_show:
       return r;
     };
   }
+  // checkLogin() กลางไฟล์ render Dashboard ไปแล้วก่อน section นี้ถูกนิยาม — apply ทันทีด้วย
+  try{ apply(); }catch(e){}
+  document.addEventListener('DOMContentLoaded',function(){ try{ apply(); }catch(e){} });
 })();
 
 (function(){
