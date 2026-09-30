@@ -12694,18 +12694,51 @@ function renderCatBudgetSettings(){
     </div>`;
   }
 
-  el.innerHTML=cats.map(c=>{
+  // ยอดใช้จริงต่อหมวด (2026-09-30) — เดิมเป็นช่องว่าง 25 ช่องให้เดาเลขเอง
+  const stats=_catBudgetStats();
+  const row=c=>{
     const budgeted=DB.settings.catBudgets[c.id]||0;
     const carry=budgeted?_catBudgetRollover(c.id,budgeted,selMonth,selYear):0;
     const showCarry=DB.settings.budgetRolloverEnabled&&budgeted>0;
+    const st=stats[c.id]||{now:0,avg:0};
+    const pct=budgeted>0?Math.min(100,Math.round(st.now/budgeted*100)):0;
+    const meta=(st.now||st.avg)?`<div class="catbud-meta"><span>${tr('budget_spent_now')} <b>${fmt(st.now)}</b> · ${tr('budget_avg3')} ${fmt(Math.round(st.avg))}</span>${budgeted>0?`<div class="catbud-bar"><i class="${st.now>budgeted?'over':''}" style="width:${pct}%"></i></div>`:''}</div>`:'';
     return `<div class="catbud-row">
-      <div class="catbud-label" title="${c.label}"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${c.color};margin-right:6px"></span>${c.label}</div>
-      <input type="number" class="catbud-inp" value="${budgeted||''}" placeholder="0" min="0" step="100"
+      <div class="catbud-label" title="${_escHtml(catLabel(c))}"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${c.color};margin-right:6px"></span>${_escHtml(catLabel(c))}</div>
+      <input type="number" inputmode="numeric" class="catbud-inp" value="${budgeted||''}" placeholder="${st.avg?Math.ceil(st.avg/100)*100:0}" min="0" step="100"
         onchange="saveCatBudget('${c.id}',this.value)" title="${tr('budget_per_month')}">
       <div style="font-size:11px;color:var(--muted);margin-left:4px">${tr('baht_per_month')}</div>
+      ${meta}
       ${showCarry?`<div style="font-size:11px;color:${carry>=0?'var(--green)':'var(--red)'};width:100%;margin-left:26px">${tr('budget_zb_effective')} ${fmt(budgeted+carry)} (${carry>=0?'+':''}${fmt(carry)} ${tr('budget_zb_carry')})</div>`:''}
     </div>`;
-  }).join('');
+  };
+  const active=cats.filter(c=>(DB.settings.catBudgets[c.id]||0)>0||(stats[c.id]&&(stats[c.id].now||stats[c.id].avg)))
+    .sort((a,b)=>((stats[b.id]||{}).avg||0)+((stats[b.id]||{}).now||0)-((stats[a.id]||{}).avg||0)-((stats[a.id]||{}).now||0));
+  const rest=cats.filter(c=>active.indexOf(c)<0);
+  const canFill=active.some(c=>!(DB.settings.catBudgets[c.id]>0)&&stats[c.id]&&stats[c.id].avg>0);
+  el.innerHTML=(canFill?`<div class="catbud-tools"><button class="btn btn-ghost btn-sm" onclick="fillCatBudgetAvg()"><i class="fas fa-wand-magic-sparkles"></i> ${tr('budget_fill_avg')}</button></div>`:'')
+    +active.map(row).join('')
+    +(rest.length?(active.length?`<details class="catbud-other"><summary><i class="fas fa-chevron-down"></i> ${tr('budget_other_cats').replace('{n}',rest.length)}</summary>${rest.map(row).join('')}</details>`:rest.map(row).join('')):'');
+}
+// {catId:{now, avg}} — now = เดือนที่เลือก, avg = เฉลี่ย 3 เดือนก่อนหน้า (นับเฉพาะรายจ่ายจริงแบบเดียวกับ Dashboard)
+function _catBudgetStats(){
+  const out={};
+  const add=(arr,key,div)=>arr.filter(isRealExp).forEach(t=>{ const o=out[t.category]||(out[t.category]={now:0,avg:0}); o[key]+=t.amount/div; });
+  add(monthTx(selMonth,selYear),'now',1);
+  for(let i=1;i<=3;i++){ const d=new Date(selYear,selMonth-i,1); add(monthTx(d.getMonth(),d.getFullYear()),'avg',3); }
+  return out;
+}
+async function fillCatBudgetAvg(){
+  if(!DB.settings.catBudgets) DB.settings.catBudgets={};
+  const stats=_catBudgetStats();
+  const todo=getAllExpCats().filter(c=>c.id!=='other_exp'&&!(DB.settings.catBudgets[c.id]>0)&&stats[c.id]&&stats[c.id].avg>0);
+  if(!todo.length){ toast(tr('budget_fill_avg_none'),'info'); return; }
+  if(!(await mmConfirm(tr('budget_fill_avg_confirm').replace('{n}',todo.length)))) return;
+  todo.forEach(c=>{ DB.settings.catBudgets[c.id]=Math.ceil(stats[c.id].avg/100)*100; });
+  saveDB();
+  try{ if(window.__mmAct) window.__mmAct('budget_set'); }catch(e){}
+  renderCatBudgetSettings(); renderCatBudgetProgress(); checkNotifications();
+  toast(tr('budget_fill_avg_done').replace('{n}',todo.length),'success');
 }
 
 function saveCatBudget(catId,val){
