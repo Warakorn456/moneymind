@@ -2226,11 +2226,11 @@
         <button class="ftab" onclick="setFilter('income',this)" data-i18n="dh_income">รายรับ</button>
         <button class="ftab" onclick="setFilter('expense',this)" data-i18n="dh_expense">รายจ่าย</button>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-ghost" onclick="openImgModal()"><i class="fas fa-camera"></i> <span data-i18n="tx_scan_receipt">สแกนใบเสร็จ</span></button>
-        <button class="btn btn-ghost" onclick="openStmtModal()" style="border-color:rgba(6,182,212,.4);color:var(--cyan)"><i class="fas fa-file-alt"></i> Bank Statement</button>
-        <button class="btn btn-ghost" onclick="printMonthlyReport()" title="พิมพ์รายงาน PDF" data-i18n-title="tx_print_pdf"><i class="fas fa-file-pdf" style="color:#ef4444"></i> PDF</button>
-        <button class="btn btn-primary" onclick="openTxModal({type:'expense'})"><i class="fas fa-plus"></i> <span data-i18n="tx_add_item">เพิ่มรายการ</span></button>
+      <div class="tx-head-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="openImgModal()" title="สแกนใบเสร็จ" data-i18n-title="tx_scan_receipt"><i class="fas fa-camera"></i> <span class="txh-lbl" data-i18n="tx_scan_receipt">สแกนใบเสร็จ</span></button>
+        <button class="btn btn-ghost" onclick="openStmtModal()" title="Bank Statement" style="border-color:rgba(6,182,212,.4);color:var(--cyan)"><i class="fas fa-file-alt"></i> <span class="txh-lbl">Bank Statement</span></button>
+        <button class="btn btn-ghost" onclick="printMonthlyReport()" title="พิมพ์รายงาน PDF" data-i18n-title="tx_print_pdf"><i class="fas fa-file-pdf" style="color:#ef4444"></i> <span class="txh-lbl">PDF</span></button>
+        <button id="tx-add-top" class="btn btn-primary" onclick="openTxModal({type:'expense'})"><i class="fas fa-plus"></i> <span data-i18n="tx_add_item">เพิ่มรายการ</span></button>
       </div>
     </div>
     <!-- Quick add (2026-09-19): quickAdd() มีอยู่แต่ไม่มีช่องกรอกในหน้าไหนเลย — พิมพ์ "ข้าว 50" แล้ว Enter -->
